@@ -1,4 +1,5 @@
 module SuiteSparseGraphBLAS
+
 using Libdl
 import Base.show
 
