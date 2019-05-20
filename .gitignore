@@ -1,2 +1,3 @@
 deps/usr
 deps/deps.jl
+*.log
