@@ -1,3 +1,5 @@
+export @GxB_Matrix_fprint
+
 function GxB_Matrix_fprint(A::GrB_Matrix, name::String, pr::GxB_Print_Level)
     function fn(path, io)
         FILE = Libc.FILE(io)

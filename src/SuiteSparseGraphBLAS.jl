@@ -49,7 +49,7 @@ function __init__()
     for op in unary_operators
         for t in types
             varname = "GrB_" * op * "_" * t
-            @eval const $(Symbol(varname, t)) = $(GrB_UnaryOp(load_global(varname)))
+            @eval const $(Symbol(varname)) = $(GrB_UnaryOp(load_global(varname)))
         end
     end
 
@@ -61,7 +61,7 @@ function __init__()
     for op in binary_operators
         for t in types
             varname = "GrB_" * op * "_" * t
-            @eval const $(Symbol(varname, t)) = $(GrB_BinaryOp(load_global(varname)))
+            @eval const $(Symbol(varname)) = $(GrB_BinaryOp(load_global(varname)))
         end
     end
 end
@@ -112,7 +112,7 @@ for s in instances(GrB_Mode)
     @eval export $(Symbol(s))
 end
 
-for s in instances(GrB_Print_level)
+for s in instances(GxB_Print_Level)
     @eval export $(Symbol(s))
 end
 
