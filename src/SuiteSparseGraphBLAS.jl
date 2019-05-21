@@ -76,7 +76,10 @@ export
 GrB_init, GrB_wait, GrB_finalize, GrB_error,
 
 # Matrix Methods
-GrB_Matrix_new, GrB_Matrix_build
+GrB_Matrix_new, GrB_Matrix_build,
+
+# Print function
+@GxB_Matrix_fprint
 
 # Export global variables
 
