@@ -4,7 +4,8 @@ function GrB_Matrix_new(A::GrB_Matrix, type::GrB_Type, nrows::T, ncols::T) where
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, "GrB_Matrix_new"),
-                Cint, (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
+                Cint, 
+                (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
                 A_ptr, type.p, nrows, ncols
             )
         )
