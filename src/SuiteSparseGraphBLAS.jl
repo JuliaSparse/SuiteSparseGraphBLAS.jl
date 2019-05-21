@@ -30,7 +30,7 @@ function __init__()
     #load global types
     for t in types
         x = GrB_Type(load_global("GrB_"*t))
-        @eval $(Symbol(:GrB_, t)) = $x
+        @eval const $(Symbol(:GrB_, t)) = $x
     end
 
     #load global unary operators
@@ -38,7 +38,7 @@ function __init__()
 
     for op in ["GrB_IDENTITY_", "GrB_AINV_", "GrB_MINV_"]
         for t in types
-            @eval $(Symbol(:($op), t)) = $(GrB_UnaryOp(load_global(op*t)))
+            @eval const $(Symbol(:($op), t)) = $(GrB_UnaryOp(load_global(op*t)))
         end
     end
 
@@ -51,7 +51,7 @@ function __init__()
                 "GrB_LE_", "GrB_FIRST_", "GrB_SECOND_", "GrB_MIN_", "GrB_MAX_", 
                 "GrB_PLUS_", "GrB_MINUS_", "GrB_TIMES_", "GrB_DIV_"]
         for t in types
-            @eval $(Symbol(:($op), t)) = $(GrB_BinaryOp(load_global(op*t)))
+            @eval const $(Symbol(:($op), t)) = $(GrB_BinaryOp(load_global(op*t)))
         end
     end
 end
