@@ -1,6 +1,6 @@
 module SuiteSparseGraphBLAS
 
-using Libdl
+import Libdl: dlopen_e, dlsym
 
 const depsjl_path = joinpath(@__DIR__, "..", "deps", "deps.jl")
 if !isfile(depsjl_path)
@@ -10,20 +10,27 @@ end
 include(depsjl_path)
 include("Structures.jl")
 
-const types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16",
-                "INT32", "UINT32", "INT64", "UINT64", "FP32", "FP64"]
+types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", 
+         "INT64", "UINT64", "FP32", "FP64"]
+
+unary_operators = ["IDENTITY", "AINV", "MINV"]
+
+binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX", 
+                    "PLUS", "MINUS", "TIMES", "DIV"]
 
 const GrB_LNOT = GrB_UnaryOp()
 const GrB_LOR = GrB_BinaryOp(); const GrB_LAND = GrB_BinaryOp(); const GrB_LXOR = GrB_BinaryOp()
+graphblas_lib = C_NULL
 
 function __init__()
     check_deps()
 
     global libgraphblas
-    hdl = dlopen(libgraphblas)
+    
+    global graphblas_lib = dlopen_e(libgraphblas)
 
     function load_global(str)
-        x = dlsym(hdl, str)
+        x = dlsym(graphblas_lib, str)
         return unsafe_load(cglobal(x, Ptr{Cvoid}))
     end
 
@@ -36,9 +43,10 @@ function __init__()
     #load global unary operators
     GrB_LNOT.p = load_global("GrB_LNOT")
 
-    for op in ["GrB_IDENTITY_", "GrB_AINV_", "GrB_MINV_"]
+    for op in unary_operators
         for t in types
-            @eval const $(Symbol(:($op), t)) = $(GrB_UnaryOp(load_global(op*t)))
+            varname = "GrB_" * op * "_" * t
+            @eval const $(Symbol(varname, t)) = $(GrB_UnaryOp(load_global(varname)))
         end
     end
 
@@ -47,16 +55,18 @@ function __init__()
     GrB_LAND.p = load_global("GrB_LAND")
     GrB_LXOR.p = load_global("GrB_LXOR")
 
-    for op in ["GrB_EQ_", "GrB_NE_", "GrB_GT_", "GrB_LT_", "GrB_GE_", 
-                "GrB_LE_", "GrB_FIRST_", "GrB_SECOND_", "GrB_MIN_", "GrB_MAX_", 
-                "GrB_PLUS_", "GrB_MINUS_", "GrB_TIMES_", "GrB_DIV_"]
+    for op in binary_operators
         for t in types
-            @eval const $(Symbol(:($op), t)) = $(GrB_BinaryOp(load_global(op*t)))
+            varname = "GrB_" * op * "_" * t
+            @eval const $(Symbol(varname, t)) = $(GrB_BinaryOp(load_global(varname)))
         end
     end
 end
 
-export  
+include("Enums.jl")
+include("Context_Methods.jl")
+
+export
 # Types
         
 GrB_BOOL, GrB_INT8, GrB_UINT8, GrB_INT16, GrB_UINT16, GrB_INT32, 
@@ -122,6 +132,20 @@ GrB_TIMES_BOOL, GrB_TIMES_INT8, GrB_TIMES_UINT8, GrB_TIMES_INT16, GrB_TIMES_UINT
 GrB_TIMES_UINT32, GrB_TIMES_INT64, GrB_TIMES_UINT64, GrB_TIMES_FP32, GrB_TIMES_FP64, 
 # GrB_DIV_<type>
 GrB_DIV_BOOL, GrB_DIV_INT8, GrB_DIV_UINT8, GrB_DIV_INT16, GrB_DIV_UINT16, GrB_DIV_INT32, GrB_DIV_UINT32, 
-GrB_DIV_INT64, GrB_DIV_UINT64, GrB_DIV_FP32, GrB_DIV_FP64
+GrB_DIV_INT64, GrB_DIV_UINT64, GrB_DIV_FP32, GrB_DIV_FP64,
+
+# Context Methods
+
+GrB_init, GrB_wait, GrB_finalize, GrB_error
+
+# Enums
+
+for s in instances(GrB_Info)
+    @eval export $(Symbol(s))
+end
+
+for s in instances(GrB_Mode)
+    @eval export $(Symbol(s))
+end
 
 end

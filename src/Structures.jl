@@ -1,7 +1,5 @@
 import Base.show
 
-export GrB_Type, GrB_UnaryOp, GrB_BinaryOp
-
 mutable struct GrB_Type
     p::Ptr{Cvoid}
 end
