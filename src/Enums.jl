@@ -19,3 +19,10 @@ end
     GrB_NONBLOCKING = 0
     GrB_BLOCKING = 1
 end
+
+@enum GxB_Print_Level begin
+    GxB_SILENT = 0
+    GxB_SUMMARY = 1
+    GxB_SHORT = 2
+    GxB_COMPLETE = 3
+end

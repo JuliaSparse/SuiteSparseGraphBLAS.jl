@@ -13,6 +13,9 @@ include("Structures.jl")
 types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", 
          "INT64", "UINT64", "FP32", "FP64"]
 
+GrB_Index = Union{Int64, UInt64}
+valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
+
 unary_operators = ["IDENTITY", "AINV", "MINV"]
 
 binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX", 
@@ -26,7 +29,7 @@ function __init__()
     check_deps()
 
     global libgraphblas
-    
+
     global graphblas_lib = dlopen_e(libgraphblas)
 
     function load_global(str)
@@ -65,10 +68,15 @@ end
 
 include("Enums.jl")
 include("Context_Methods.jl")
+include("Object_Methods/Matrix_Methods.jl")
+include("Object_Methods/Print_Objects.jl")
 
 export
 # Context Methods
-GrB_init, GrB_wait, GrB_finalize, GrB_error
+GrB_init, GrB_wait, GrB_finalize, GrB_error,
+
+# Matrix Methods
+GrB_Matrix_new, GrB_Matrix_build
 
 # Export global variables
 
@@ -101,6 +109,10 @@ for s in instances(GrB_Info)
 end
 
 for s in instances(GrB_Mode)
+    @eval export $(Symbol(s))
+end
+
+for s in instances(GrB_Print_level)
     @eval export $(Symbol(s))
 end
 
