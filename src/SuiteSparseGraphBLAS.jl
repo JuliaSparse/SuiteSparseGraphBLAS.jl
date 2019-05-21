@@ -8,7 +8,7 @@ if !isfile(depsjl_path)
 end
 
 include(depsjl_path)
-include("GB_Objects.jl")
+include("Structures.jl")
 
 const types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16",
                 "INT32", "UINT32", "INT64", "UINT64", "FP32", "FP64"]
