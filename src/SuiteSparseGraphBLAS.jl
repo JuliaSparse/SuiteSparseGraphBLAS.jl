@@ -10,7 +10,7 @@ end
 include(depsjl_path)
 include("Structures.jl")
 
-types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32", 
+types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
          "INT64", "UINT64", "FP32", "FP64"]
 
 GrB_Index = Union{Int64, UInt64}
@@ -18,7 +18,7 @@ valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt
 
 unary_operators = ["IDENTITY", "AINV", "MINV"]
 
-binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX", 
+binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX",
                     "PLUS", "MINUS", "TIMES", "DIV"]
 
 const GrB_LNOT = GrB_UnaryOp()
