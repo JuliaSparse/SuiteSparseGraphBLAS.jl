@@ -90,6 +90,17 @@ function GrB_Matrix_dup(C::GrB_Matrix, A::GrB_Matrix)
         )
 end
 
+function GrB_Matrix_clear(A::GrB_Matrix)
+    return GrB_Info(
+        ccall(
+                dlsym(graphblas_lib, "GrB_Matrix_clear"),
+                Cint,
+                (Ptr{Cvoid}, ),
+                A.p
+            )
+        )
+end
+
 function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_types}
     fn_name = "GrB_Matrix_setElement_" * get_suffix(T)
     return GrB_Info(
@@ -119,4 +130,28 @@ function GrB_Matrix_extractElement(A::GrB_Matrix, row_index::U, col_index::U) wh
                 )
     result != GrB_SUCCESS && return result
     return T(element[])
+end
+
+function GrB_Matrix_extractTuples(A::GrB_Matrix)
+    res, A_type = GxB_Matrix_type(A)
+    res != GrB_SUCCESS && return res
+    suffix, T = get_suffix_and_type(A_type)
+    nvals = GrB_Matrix_nvals(A)
+    U = typeof(nvals)
+    row_indices = Vector{U}(undef, nvals)
+    col_indices = Vector{U}(undef, nvals)
+    vals = Vector{T}(undef, nvals)
+    n = Ref(UInt64(nvals))
+
+    fn_name = "GrB_Matrix_extractTuples_" * suffix
+    result = GrB_Info(
+                ccall(
+                        dlsym(graphblas_lib, fn_name),
+                        Cint,
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{UInt64}, Ptr{Cvoid}),
+                        pointer(row_indices), pointer(col_indices), pointer(vals), n, A.p
+                    )
+                )
+    result != GrB_SUCCESS && return result
+    return row_indices, col_indices, vals
 end
