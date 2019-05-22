@@ -33,6 +33,57 @@ function GrB_Matrix_build(C::GrB_Matrix, I::Vector{U}, J::Vector{U}, X::Vector{T
         )
 end
 
+function GrB_Matrix_nrows(A::GrB_Matrix)
+    nrows = Ref(UInt64(0))
+    result = GrB_Info(
+                ccall(
+                        dlsym(graphblas_lib, "GrB_Matrix_nrows"),
+                        Cint,
+                        (Ptr{UInt64}, Ptr{Cvoid}),
+                        nrows, A.p
+                    )
+                )
+    result != GrB_SUCCESS && return result
+    if nrows[] > typemax(Int64)
+        return nrows[]
+    end
+    return Int64(nrows[])
+end
+
+function GrB_Matrix_ncols(A::GrB_Matrix)
+    ncols = Ref(UInt64(0))
+    result = GrB_Info(
+                ccall(
+                        dlsym(graphblas_lib, "GrB_Matrix_ncols"),
+                        Cint,
+                        (Ptr{UInt64}, Ptr{Cvoid}),
+                        ncols, A.p
+                    )
+                )
+    result != GrB_SUCCESS && return result
+    if ncols[] > typemax(Int64)
+        return ncols[]
+    end
+    return Int64(ncols[])
+end
+
+function GrB_Matrix_nvals(A::GrB_Matrix)
+    nvals = Ref(UInt64(0))
+    result = GrB_Info(
+                ccall(
+                        dlsym(graphblas_lib, "GrB_Matrix_nvals"),
+                        Cint,
+                        (Ptr{UInt64}, Ptr{Cvoid}),
+                        nvals, A.p
+                    )
+                )
+    result != GrB_SUCCESS && return result
+    if nvals[] > typemax(Int64)
+        return nvals[]
+    end
+    return Int64(nvals[])
+end
+
 function GrB_Matrix_dup(C::GrB_Matrix, A::GrB_Matrix)
     C_ptr = pointer_from_objref
 
