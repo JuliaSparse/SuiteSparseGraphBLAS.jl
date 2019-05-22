@@ -78,7 +78,7 @@ function GrB_Matrix_nvals(A::GrB_Matrix)
 end
 
 function GrB_Matrix_dup(C::GrB_Matrix, A::GrB_Matrix)
-    C_ptr = pointer_from_objref
+    C_ptr = pointer_from_objref(C)
 
     return GrB_Info(
         ccall(
@@ -86,17 +86,6 @@ function GrB_Matrix_dup(C::GrB_Matrix, A::GrB_Matrix)
                 Cint,
                 (Ptr{Cvoid}, Ptr{Cvoid}),
                 C_ptr, A.p
-            )
-        )
-end
-
-function GrB_Matrix_clear(A::GrB_Matrix)
-    return GrB_Info(
-        ccall(
-                dlsym(graphblas_lib, "GrB_Matrix_dup"),
-                Cint,
-                (Ptr{Cvoid}, ),
-                A.p
             )
         )
 end
