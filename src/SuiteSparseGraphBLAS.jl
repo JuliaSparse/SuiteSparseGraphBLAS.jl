@@ -76,7 +76,8 @@ export
 GrB_init, GrB_wait, GrB_finalize, GrB_error,
 
 # Matrix Methods
-GrB_Matrix_new, GrB_Matrix_build,
+GrB_Matrix_new, GrB_Matrix_build, GrB_Matrix_dup, GrB_Matrix_clear,
+GrB_Matrix_setElement,
 
 # Print function
 @GxB_Matrix_fprint
