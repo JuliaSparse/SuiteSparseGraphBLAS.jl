@@ -68,6 +68,7 @@ end
 
 include("Enums.jl")
 include("Context_Methods.jl")
+include("Utils.jl")
 include("Object_Methods/Matrix_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 
@@ -78,6 +79,7 @@ GrB_init, GrB_wait, GrB_finalize, GrB_error,
 # Matrix Methods
 GrB_Matrix_new, GrB_Matrix_build, GrB_Matrix_dup, GrB_Matrix_clear,
 GrB_Matrix_nrows, GrB_Matrix_ncols, GrB_Matrix_nvals, GrB_Matrix_setElement,
+GrB_Matrix_extractElement,
 
 # Print function
 @GxB_Matrix_fprint

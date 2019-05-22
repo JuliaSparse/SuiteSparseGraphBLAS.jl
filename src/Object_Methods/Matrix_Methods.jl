@@ -11,18 +11,11 @@ function GrB_Matrix_new(A::GrB_Matrix, type::GrB_Type, nrows::T, ncols::T) where
         )
 end
 
-function GrB_Matrix_build(C::GrB_Matrix, I::Vector{U}, J::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where {U <: GrB_Index, T <: valid_types}
+function GrB_Matrix_build(C::GrB_Matrix, I::Vector{U}, J::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
     I_ptr = pointer(I)
     J_ptr = pointer(J)
     X_ptr = pointer(X)
-
-    fn_name = "GrB_Matrix_build_" * uppercase("$(T)")
-    if T == Float32
-        fn_name = "GrB_Matrix_build_FP32"
-    elseif T == Float64
-        fn_name = "GrB_Matrix_build_FP64"
-    end
-
+    fn_name = "GrB_Matrix_build_" * get_suffix(T)
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
@@ -108,15 +101,9 @@ function GrB_Matrix_clear(A::GrB_Matrix)
         )
 end
 
-function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::GrB_Index, J::GrB_Index) where T <: valid_types
-    fn_name = "GrB_Matrix_setElement_" * uppercase("$(T)")
-    if T == Float32
-        fn_name = "GrB_Matrix_setElement_FP32"
-    elseif T == Float64
-        fn_name = "GrB_Matrix_setElement_FP64"
-    end
-
-    GrB_Info(
+function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_types}
+    fn_name = "GrB_Matrix_setElement_" * get_suffix(T)
+    return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
@@ -124,4 +111,23 @@ function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::GrB_Index, J::GrB_Index) 
                 C.p, X, I, J
             )
         )
+end
+
+function GrB_Matrix_extractElement(A::GrB_Matrix, row_index::U, col_index::U) where U <: GrB_Index
+    res, A_type = GxB_Matrix_type(A)
+    res != GrB_SUCCESS && return res
+    suffix, T = get_suffix_and_type(A_type)
+    fn_name = "GrB_Matrix_extractElement_" * suffix
+
+    element = Ref(UInt64(0))
+    result = GrB_Info(
+                ccall(
+                        dlsym(graphblas_lib, fn_name),
+                        Cint,
+                        (Ptr{UInt64}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
+                        element, A.p, row_index, col_index
+                    )
+                )
+    result != GrB_SUCCESS && return result
+    return T(element[])
 end
