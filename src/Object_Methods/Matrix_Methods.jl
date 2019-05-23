@@ -92,7 +92,7 @@ function GrB_Matrix_clear(A::GrB_Matrix)
         )
 end
 
-function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: Integer}
+function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_int_types}
     fn_name = "GrB_Matrix_setElement_" * get_suffix(T)
     return GrB_Info(
         ccall(
