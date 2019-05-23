@@ -1,10 +1,26 @@
 function get_suffix(T::DataType)
-    if T == Float32
+    if T == Bool
+        return "BOOL" 
+    elseif T == Int8
+        return "INT8" 
+    elseif T == UInt8
+        return "UINT8" 
+    elseif T == Int16
+        return "INT16" 
+    elseif T == UInt16
+        return "UINT16" 
+    elseif T == Int32
+        return "INT32" 
+    elseif T == UInt32
+        return "UINT32" 
+    elseif T == Int64
+        return "INT64" 
+    elseif T == UInt64
+        return "UINT64" 
+    elseif  T == Float32
         return "FP32"
-    elseif T == Float64
-        return "FP64"
     end
-    return uppercase("$(T)") 
+    return "FP64"
 end
 
 function get_suffix_and_type(T::GrB_Type)
@@ -27,7 +43,7 @@ function get_suffix_and_type(T::GrB_Type)
     elseif T == GrB_UINT64
         return "UINT64", UInt64
     elseif  T == GrB_FP32
-        return "UINT32", Float32
+        return "FP32", Float32
     end
     return "FP64", Float64
 end
