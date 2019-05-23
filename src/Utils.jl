@@ -1,22 +1,22 @@
 function get_suffix(T::DataType)
     if T == Bool
-        return "BOOL" 
+        return "BOOL"
     elseif T == Int8
-        return "INT8" 
+        return "INT8"
     elseif T == UInt8
-        return "UINT8" 
+        return "UINT8"
     elseif T == Int16
-        return "INT16" 
+        return "INT16"
     elseif T == UInt16
-        return "UINT16" 
+        return "UINT16"
     elseif T == Int32
-        return "INT32" 
+        return "INT32"
     elseif T == UInt32
-        return "UINT32" 
+        return "UINT32"
     elseif T == Int64
-        return "INT64" 
+        return "INT64"
     elseif T == UInt64
-        return "UINT64" 
+        return "UINT64"
     elseif  T == Float32
         return "FP32"
     end
@@ -57,6 +57,20 @@ function GxB_Matrix_type(A::GrB_Matrix)
                 Cint,
                 (Ptr{Cvoid}, Ptr{Cvoid}),
                 type_ptr, A.p
+            )
+        )
+    return result, type
+end
+
+function GxB_Vector_type(v::GrB_Vector)
+    type = GrB_Type()
+    type_ptr = pointer_from_objref(type)
+    result = GrB_Info(
+            ccall(
+                dlsym(graphblas_lib, "GxB_Vector_type"),
+                Cint,
+                (Ptr{Cvoid}, Ptr{Cvoid}),
+                type_ptr, v.p
             )
         )
     return result, type

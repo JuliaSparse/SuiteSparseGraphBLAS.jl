@@ -1,6 +1,6 @@
 import Base.show
 import Base.==
-export GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Matrix
+export GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Vector, GrB_Matrix
 
 mutable struct GrB_Type
     p::Ptr{Cvoid}
@@ -22,6 +22,12 @@ mutable struct GrB_BinaryOp
 end
 GrB_BinaryOp() = GrB_BinaryOp(Ptr{Cvoid}(0))
 Base.show(io::IO, ::GrB_BinaryOp) = print("GrB_BinaryOp")
+
+mutable struct GrB_Vector
+    p::Ptr{Cvoid}
+end
+GrB_Vector() = GrB_Vector(Ptr{Cvoid}(0))
+Base.show(io::IO, ::GrB_Vector) = print("GrB_Vector")
 
 mutable struct GrB_Matrix
     p::Ptr{Cvoid}

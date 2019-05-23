@@ -71,6 +71,7 @@ include("Enums.jl")
 include("Context_Methods.jl")
 include("Utils.jl")
 include("Object_Methods/Matrix_Methods.jl")
+include("Object_Methods/Vector_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 
 export
@@ -82,8 +83,12 @@ GrB_Matrix_new, GrB_Matrix_build, GrB_Matrix_dup, GrB_Matrix_clear,
 GrB_Matrix_nrows, GrB_Matrix_ncols, GrB_Matrix_nvals, GrB_Matrix_setElement,
 GrB_Matrix_extractElement, GrB_Matrix_extractTuples,
 
-# Print function
-@GxB_Matrix_fprint
+# Vector Methods
+GrB_Vector_new, GrB_Vector_build, GrB_Vector_dup, GrB_Vector_clear, GrB_Vector_size,
+GrB_Vector_nvals, GrB_Vector_setElement, GrB_Vector_extractElement, GrB_Vector_extractTuples,
+
+# Print functions
+@GxB_Matrix_fprint, @GxB_Vector_fprint
 
 # Export global variables
 
