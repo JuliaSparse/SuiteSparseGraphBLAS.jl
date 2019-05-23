@@ -61,3 +61,8 @@ function GxB_Matrix_type(A::GrB_Matrix)
         )
     return result, type
 end
+
+function _GrB_Index(x::T) where T <: GrB_Index
+    x > typemax(Int64) && return x
+    return Int64(x)
+end

@@ -37,10 +37,7 @@ function GrB_Matrix_nrows(A::GrB_Matrix)
                     )
                 )
     result != GrB_SUCCESS && return result
-    if nrows[] > typemax(Int64)
-        return nrows[]
-    end
-    return Int64(nrows[])
+    return _GrB_Index(nrows[])
 end
 
 function GrB_Matrix_ncols(A::GrB_Matrix)
@@ -54,10 +51,7 @@ function GrB_Matrix_ncols(A::GrB_Matrix)
                     )
                 )
     result != GrB_SUCCESS && return result
-    if ncols[] > typemax(Int64)
-        return ncols[]
-    end
-    return Int64(ncols[])
+    return _GrB_Index(ncols[])
 end
 
 function GrB_Matrix_nvals(A::GrB_Matrix)
@@ -71,10 +65,7 @@ function GrB_Matrix_nvals(A::GrB_Matrix)
                     )
                 )
     result != GrB_SUCCESS && return result
-    if nvals[] > typemax(Int64)
-        return nvals[]
-    end
-    return Int64(nvals[])
+    return _GrB_Index(nvals[])
 end
 
 function GrB_Matrix_dup(C::GrB_Matrix, A::GrB_Matrix)
