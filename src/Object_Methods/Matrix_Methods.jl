@@ -101,7 +101,7 @@ function GrB_Matrix_clear(A::GrB_Matrix)
         )
 end
 
-function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_types}
+function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: Integer}
     fn_name = "GrB_Matrix_setElement_" * get_suffix(T)
     return GrB_Info(
         ccall(
@@ -113,23 +113,47 @@ function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_
         )
 end
 
+function GrB_Matrix_setElement(C::GrB_Matrix, X::Float32, I::U, J::U) where U <: GrB_Index
+    fn_name = "GrB_Matrix_setElement_FP32"
+    return GrB_Info(
+        ccall(
+                dlsym(graphblas_lib, fn_name),
+                Cint,
+                (Ptr{Cvoid}, Cfloat, Cintmax_t, Cintmax_t),
+                C.p, X, I, J
+            )
+        )
+end
+
+function GrB_Matrix_setElement(C::GrB_Matrix, X::Float64, I::U, J::U) where U <: GrB_Index
+    fn_name = "GrB_Matrix_setElement_FP64"
+    return GrB_Info(
+        ccall(
+                dlsym(graphblas_lib, fn_name),
+                Cint,
+                (Ptr{Cvoid}, Cdouble, Cintmax_t, Cintmax_t),
+                C.p, X, I, J
+            )
+        )
+end
+
 function GrB_Matrix_extractElement(A::GrB_Matrix, row_index::U, col_index::U) where U <: GrB_Index
     res, A_type = GxB_Matrix_type(A)
     res != GrB_SUCCESS && return res
     suffix, T = get_suffix_and_type(A_type)
     fn_name = "GrB_Matrix_extractElement_" * suffix
 
-    element = Ref(UInt64(0))
+    element = Ref(T(0))
     result = GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, fn_name),
                         Cint,
-                        (Ptr{UInt64}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
                         element, A.p, row_index, col_index
                     )
                 )
     result != GrB_SUCCESS && return result
-    return T(element[])
+    return element[]
 end
 
 function GrB_Matrix_extractTuples(A::GrB_Matrix)
