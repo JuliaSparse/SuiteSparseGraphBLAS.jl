@@ -1,3 +1,8 @@
+"""
+    GrB_Vector_new(v, type, n)
+
+Create a new vector with specified domain and size.
+"""
 function GrB_Vector_new(v::GrB_Vector, type::GrB_Type, n::T) where T <: GrB_Index
     v_ptr = pointer_from_objref(v)
 
@@ -11,6 +16,11 @@ function GrB_Vector_new(v::GrB_Vector, type::GrB_Type, n::T) where T <: GrB_Inde
         )
 end
 
+"""
+    GrB_Vector_dup(w, u)
+
+Create a new vector with the same domain, size, and contents as another vector.
+"""
 function GrB_Vector_dup(w::GrB_Vector, u::GrB_Vector)
     w_ptr = pointer_from_objref(w)
 
@@ -24,6 +34,11 @@ function GrB_Vector_dup(w::GrB_Vector, u::GrB_Vector)
         )
 end
 
+"""
+    GrB_Vector_clear(v)
+    
+Remove all the elements (tuples) from a vector.
+"""
 function GrB_Vector_clear(v::GrB_Vector)
     return GrB_Info(
         ccall(
@@ -35,6 +50,11 @@ function GrB_Vector_clear(v::GrB_Vector)
         )
 end
 
+"""
+    GrB_Vector_size(v)
+
+Return the size of a vector if successful else return value of type GrB Info.
+"""
 function GrB_Vector_size(v::GrB_Vector)
     n = Ref(UInt64(0))
     result = GrB_Info(
@@ -49,6 +69,12 @@ function GrB_Vector_size(v::GrB_Vector)
     return _GrB_Index(n[])
 end
 
+"""
+    GrB_Vector_nvals(v)
+
+Return the number of stored elements in a vector if successful.
+Else return value of type GrB Info.
+"""
 function GrB_Vector_nvals(v::GrB_Vector)
     nvals = Ref(UInt64(0))
     result = GrB_Info(
@@ -63,6 +89,11 @@ function GrB_Vector_nvals(v::GrB_Vector)
     return _GrB_Index(nvals[])
 end
 
+"""
+    GrB_Vector_build(w, I, X, nvals, dup)
+
+Store elements from tuples into a vector.
+"""
 function GrB_Vector_build(w::GrB_Vector, I::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
     I_ptr = pointer(I)
     X_ptr = pointer(X)
@@ -78,6 +109,11 @@ function GrB_Vector_build(w::GrB_Vector, I::Vector{U}, X::Vector{T}, nvals::U, d
         )
 end
 
+"""
+    GrB_Vector_setElement(w, x, i)
+
+Set one element of a vector to a given value, w[i] = x.
+"""
 function GrB_Vector_setElement(w::GrB_Vector, x::T, i::U) where {U <: GrB_Index, T <: valid_int_types}
     fn_name = "GrB_Vector_setElement_" * get_suffix(T)
     return GrB_Info(
@@ -114,6 +150,12 @@ function GrB_Vector_setElement(w::GrB_Vector, x::Float64, i::U) where U <: GrB_I
         )
 end
 
+"""
+    GrB_Vector_extractElement(v, i)
+
+Return element of a vector at a given index (v[i]) if successful.
+Else return value of type GrB Info.
+"""
 function GrB_Vector_extractElement(v::GrB_Vector, i::U) where U <: GrB_Index
     res, v_type = GxB_Vector_type(v)
     res != GrB_SUCCESS && return res
@@ -133,6 +175,11 @@ function GrB_Vector_extractElement(v::GrB_Vector, i::U) where U <: GrB_Index
     return element[]
 end
 
+"""
+    GrB_Vector_extractTuples(v)
+
+Return tuples stored in a vector.
+"""
 function GrB_Vector_extractTuples(v::GrB_Vector)
     res, v_type = GxB_Vector_type(v)
     res != GrB_SUCCESS && return res
