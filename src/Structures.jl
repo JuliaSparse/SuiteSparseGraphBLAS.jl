@@ -1,6 +1,6 @@
 import Base.show
 import Base.==
-export GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Vector, GrB_Matrix
+export GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Vector, GrB_Matrix, GrB_Descriptor
 
 mutable struct GrB_Type
     p::Ptr{Cvoid}
@@ -34,3 +34,9 @@ mutable struct GrB_Matrix{T}
 end
 GrB_Matrix{T}() where T = GrB_Matrix{T}(Ptr{Cvoid}(0))
 Base.show(io::IO, ::GrB_Matrix{T}) where T = print("GrB_Matrix{" * string(T) * "}")
+
+mutable struct GrB_Descriptor
+    p::Ptr{Cvoid}
+end
+GrB_Descriptor() = GrB_Descriptor(Ptr{Cvoid}(0))
+Base.show(io::IO, ::GrB_Descriptor) = print("GrB_Descriptor")

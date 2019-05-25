@@ -27,3 +27,18 @@ macro GxB_Vector_fprint(v, pr)
     name = string(v)
     return :(GxB_Vector_fprint($(esc(v)), $name, $pr))
 end
+
+function GxB_Descriptor_fprint(desc::GrB_Descriptor, name::String, pr::GxB_Print_Level)
+    function fn(path, io)
+        FILE = Libc.FILE(io)
+        ccall(dlsym(graphblas_lib, "GxB_Descriptor_fprint"), Cint, (Ptr{Cvoid}, Ptr{UInt8}, Cint, Ptr{Cvoid}), desc.p, pointer(name), pr, FILE)
+        ccall(:fclose, Cint, (Ptr{Cvoid},), FILE)
+        foreach(println, eachline(path))
+    end
+    mktemp(fn)
+end
+
+macro GxB_Descriptor_fprint(desc, pr)
+    name = string(desc)
+    return :(GxB_Descriptor_fprint($(esc(desc)), $name, $pr))
+end

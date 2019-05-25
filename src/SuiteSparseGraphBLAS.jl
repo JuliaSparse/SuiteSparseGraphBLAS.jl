@@ -72,6 +72,7 @@ include("Context_Methods.jl")
 include("Utils.jl")
 include("Object_Methods/Matrix_Methods.jl")
 include("Object_Methods/Vector_Methods.jl")
+include("Object_Methods/Descriptor_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 
 export
@@ -87,8 +88,11 @@ GrB_Matrix_extractElement, GrB_Matrix_extractTuples,
 GrB_Vector_new, GrB_Vector_build, GrB_Vector_dup, GrB_Vector_clear, GrB_Vector_size,
 GrB_Vector_nvals, GrB_Vector_setElement, GrB_Vector_extractElement, GrB_Vector_extractTuples,
 
+# Descriptor Methods
+GrB_Descriptor_new, GrB_Descriptor_set,
+
 # Print functions
-@GxB_Matrix_fprint, @GxB_Vector_fprint
+@GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint
 
 # Export global variables
 
@@ -116,16 +120,28 @@ for op in binary_operators
 end
 
 # Enums
+export GrB_Info
 for s in instances(GrB_Info)
     @eval export $(Symbol(s))
 end
 
+export GrB_Mode
 for s in instances(GrB_Mode)
     @eval export $(Symbol(s))
 end
 
+export GxB_Print_Level
 for s in instances(GxB_Print_Level)
     @eval export $(Symbol(s))
 end
 
+export GrB_Desc_Field
+for s in instances(GrB_Desc_Field)
+    @eval export $(Symbol(s))
+end
+
+export GrB_Desc_Value
+for s in instances(GrB_Desc_Value)
+    @eval export $(Symbol(s))
+end
 end #end of module

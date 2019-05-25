@@ -34,3 +34,21 @@ end
     GxB_SHORT = 2                   # short description about 30 entries of a matrix
     GxB_COMPLETE = 3                # print the entire contents of the object
 end
+
+@enum GrB_Desc_Field begin
+    GrB_OUTP = 0                    # descriptor for output of a method
+    GrB_MASK = 1                    # descriptor for the mask input of a method
+    GrB_INP0 = 2                    # descriptor for the first input of a method
+    GrB_INP1 = 3                    # descriptor for the second input of a method
+end
+
+@enum GrB_Desc_Value begin
+    # for all GrB_Descriptor fields:
+    GxB_DEFAULT = 0                 # default behavior of the method
+    # for GrB_OUTP only:
+    GrB_REPLACE = 1                 # clear the output before assigning new values to it
+    # for GrB_MASK only:
+    GrB_SCMP = 2                    # use the structural complement of the input
+    # for GrB_INP0 and GrB_INP1 only:
+    GrB_TRAN = 3                    # use the transpose of the input
+end
