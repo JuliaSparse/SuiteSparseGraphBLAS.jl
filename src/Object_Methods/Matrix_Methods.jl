@@ -10,16 +10,18 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 ```
 """
-function GrB_Matrix_new(A::GrB_Matrix, type::GrB_Type, nrows::T, ncols::T) where T <: GrB_Index
+function GrB_Matrix_new(A::GrB_Matrix{T}, type::GrB_Type, nrows::U, ncols::U) where {U <: GrB_Index, T <: valid_types}
     A_ptr = pointer_from_objref(A)
-
+    if jl_type(type) != T
+        error("Given domain and matrix type do not match")
+    end
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, "GrB_Matrix_new"),
@@ -42,8 +44,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -73,11 +75,11 @@ row: 3 : 1 entries [4:4]
 
 ```
 """
-function GrB_Matrix_build(C::GrB_Matrix, I::Vector{U}, J::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
+function GrB_Matrix_build(C::GrB_Matrix{T}, I::Vector{U}, J::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
     I_ptr = pointer(I)
     J_ptr = pointer(J)
     X_ptr = pointer(X)
-    fn_name = "GrB_Matrix_build_" * get_suffix(T)
+    fn_name = "GrB_Matrix_build_" * suffix(T)
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
@@ -101,8 +103,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -138,8 +140,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -175,8 +177,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -216,8 +218,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -227,8 +229,8 @@ julia> I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
 julia> GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> B = GrB_Matrix()
-GrB_Matrix
+julia> B = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_dup(B, MAT)
 GrB_SUCCESS::GrB_Info = 0
@@ -252,7 +254,7 @@ row: 3 : 1 entries [4:4]
 
 ```
 """
-function GrB_Matrix_dup(C::GrB_Matrix, A::GrB_Matrix)
+function GrB_Matrix_dup(C::GrB_Matrix{T}, A::GrB_Matrix{T}) where T <: valid_types
     C_ptr = pointer_from_objref(C)
 
     return GrB_Info(
@@ -277,8 +279,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -321,8 +323,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -343,8 +345,8 @@ julia> GrB_Matrix_extractElement(MAT, 1, 1)
 7
 ```
 """
-function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_int_types}
-    fn_name = "GrB_Matrix_setElement_" * get_suffix(T)
+function GrB_Matrix_setElement(C::GrB_Matrix{T}, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_int_types}
+    fn_name = "GrB_Matrix_setElement_" * suffix(T)
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
@@ -355,7 +357,7 @@ function GrB_Matrix_setElement(C::GrB_Matrix, X::T, I::U, J::U) where {U <: GrB_
         )
 end
 
-function GrB_Matrix_setElement(C::GrB_Matrix, X::Float32, I::U, J::U) where U <: GrB_Index
+function GrB_Matrix_setElement(C::GrB_Matrix{Float32}, X::Float32, I::U, J::U) where U <: GrB_Index
     fn_name = "GrB_Matrix_setElement_FP32"
     return GrB_Info(
         ccall(
@@ -367,7 +369,7 @@ function GrB_Matrix_setElement(C::GrB_Matrix, X::Float32, I::U, J::U) where U <:
         )
 end
 
-function GrB_Matrix_setElement(C::GrB_Matrix, X::Float64, I::U, J::U) where U <: GrB_Index
+function GrB_Matrix_setElement(C::GrB_Matrix{Float64}, X::Float64, I::U, J::U) where U <: GrB_Index
     fn_name = "GrB_Matrix_setElement_FP64"
     return GrB_Info(
         ccall(
@@ -392,8 +394,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -407,11 +409,8 @@ julia> GrB_Matrix_extractElement(MAT, 1, 1)
 2
 ```
 """
-function GrB_Matrix_extractElement(A::GrB_Matrix, row_index::U, col_index::U) where U <: GrB_Index
-    res, A_type = GxB_Matrix_type(A)
-    res != GrB_SUCCESS && return res
-    suffix, T = get_suffix_and_type(A_type)
-    fn_name = "GrB_Matrix_extractElement_" * suffix
+function GrB_Matrix_extractElement(A::GrB_Matrix{T}, row_index::U, col_index::U) where {U <: GrB_Index, T <: valid_types}
+    fn_name = "GrB_Matrix_extractElement_" * suffix(T)
 
     element = Ref(T(0))
     result = GrB_Info(
@@ -438,8 +437,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> MAT = GrB_Matrix()
-GrB_Matrix
+julia> MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
 
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -453,10 +452,7 @@ julia> GrB_Matrix_extractTuples(MAT)
 ([1, 2, 2, 2, 3], [1, 1, 2, 3, 3], Int8[2, 4, 3, 5, 6])
 ```
 """
-function GrB_Matrix_extractTuples(A::GrB_Matrix)
-    res, A_type = GxB_Matrix_type(A)
-    res != GrB_SUCCESS && return res
-    suffix, T = get_suffix_and_type(A_type)
+function GrB_Matrix_extractTuples(A::GrB_Matrix{T}) where T <: valid_types
     nvals = GrB_Matrix_nvals(A)
     U = typeof(nvals)
     row_indices = Vector{U}(undef, nvals)
@@ -464,7 +460,7 @@ function GrB_Matrix_extractTuples(A::GrB_Matrix)
     vals = Vector{T}(undef, nvals)
     n = Ref(UInt64(nvals))
 
-    fn_name = "GrB_Matrix_extractTuples_" * suffix
+    fn_name = "GrB_Matrix_extractTuples_" * suffix(T)
     result = GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, fn_name),

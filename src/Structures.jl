@@ -23,14 +23,14 @@ end
 GrB_BinaryOp() = GrB_BinaryOp(Ptr{Cvoid}(0))
 Base.show(io::IO, ::GrB_BinaryOp) = print("GrB_BinaryOp")
 
-mutable struct GrB_Vector
+mutable struct GrB_Vector{T}
     p::Ptr{Cvoid}
 end
-GrB_Vector() = GrB_Vector(Ptr{Cvoid}(0))
-Base.show(io::IO, ::GrB_Vector) = print("GrB_Vector")
+GrB_Vector{T}() where T = GrB_Vector{T}(Ptr{Cvoid}(0))
+Base.show(io::IO, ::GrB_Vector{T}) where T = print("GrB_Vector{" * string(T) * "}")
 
-mutable struct GrB_Matrix
+mutable struct GrB_Matrix{T}
     p::Ptr{Cvoid}
 end
-GrB_Matrix() = GrB_Matrix(Ptr{Cvoid}(0))
-Base.show(io::IO, ::GrB_Matrix) = print("GrB_Matrix")
+GrB_Matrix{T}() where T = GrB_Matrix{T}(Ptr{Cvoid}(0))
+Base.show(io::IO, ::GrB_Matrix{T}) where T = print("GrB_Matrix{" * string(T) * "}")

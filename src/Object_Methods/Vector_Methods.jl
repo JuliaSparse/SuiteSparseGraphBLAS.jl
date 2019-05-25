@@ -10,16 +10,18 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 ```
 """
-function GrB_Vector_new(v::GrB_Vector, type::GrB_Type, n::T) where T <: GrB_Index
+function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type, n::U) where {U <: GrB_Index, T <: valid_types}
     v_ptr = pointer_from_objref(v)
-
+    if jl_type(type) != T
+        error("Given domain and vector type do not match")
+    end
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, "GrB_Vector_new"),
@@ -42,8 +44,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Int64}()
+GrB_Vector{Int64}
 
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
@@ -53,8 +55,8 @@ julia> I = [1, 2, 4]; X = [2, 32, 4]; n = 3;
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> B = GrB_Vector()
-GrB_Vector
+julia> B = GrB_Vector{Int64}()
+GrB_Vector{Int64}
 
 julia> GrB_Vector_dup(B, V)
 GrB_SUCCESS::GrB_Info = 0
@@ -74,7 +76,7 @@ column: 0 : 3 entries [0:2]
 
 ```
 """
-function GrB_Vector_dup(w::GrB_Vector, u::GrB_Vector)
+function GrB_Vector_dup(w::GrB_Vector{T}, u::GrB_Vector{T}) where T <: valid_types
     w_ptr = pointer_from_objref(w)
 
     return GrB_Info(
@@ -99,8 +101,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Int64}()
+GrB_Vector{Int64}
 
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
@@ -144,8 +146,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -186,8 +188,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -222,8 +224,8 @@ Store elements from tuples into a vector.
 
 # Examples
 ```jldoctest
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -248,10 +250,10 @@ column: 0 : 3 entries [0:2]
 
 ```
 """
-function GrB_Vector_build(w::GrB_Vector, I::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
+function GrB_Vector_build(w::GrB_Vector{T}, I::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
     I_ptr = pointer(I)
     X_ptr = pointer(X)
-    fn_name = "GrB_Vector_build_" * get_suffix(T)
+    fn_name = "GrB_Vector_build_" * suffix(T)
 
     return GrB_Info(
         ccall(
@@ -275,8 +277,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Int64}()
+GrB_Vector{Int64}
 
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
@@ -296,8 +298,8 @@ julia> GrB_Vector_extractElement(V, 2)
 7
 ```
 """
-function GrB_Vector_setElement(w::GrB_Vector, x::T, i::U) where {U <: GrB_Index, T <: valid_int_types}
-    fn_name = "GrB_Vector_setElement_" * get_suffix(T)
+function GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::U) where {U <: GrB_Index, T <: valid_int_types}
+    fn_name = "GrB_Vector_setElement_" * suffix(T)
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
@@ -308,7 +310,7 @@ function GrB_Vector_setElement(w::GrB_Vector, x::T, i::U) where {U <: GrB_Index,
         )
 end
 
-function GrB_Vector_setElement(w::GrB_Vector, x::Float32, i::U) where U <: GrB_Index
+function GrB_Vector_setElement(w::GrB_Vector{Float32}, x::Float32, i::U) where U <: GrB_Index
     fn_name = "GrB_Vector_setElement_FP32"
     return GrB_Info(
         ccall(
@@ -320,7 +322,7 @@ function GrB_Vector_setElement(w::GrB_Vector, x::Float32, i::U) where U <: GrB_I
         )
 end
 
-function GrB_Vector_setElement(w::GrB_Vector, x::Float64, i::U) where U <: GrB_Index
+function GrB_Vector_setElement(w::GrB_Vector{Float64}, x::Float64, i::U) where U <: GrB_Index
     fn_name = "GrB_Vector_setElement_FP64"
     return GrB_Info(
         ccall(
@@ -345,8 +347,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -363,11 +365,8 @@ julia> GrB_Vector_extractElement(V, 1)
 GrB_NO_VALUE::GrB_Info = 1
 ```
 """
-function GrB_Vector_extractElement(v::GrB_Vector, i::U) where U <: GrB_Index
-    res, v_type = GxB_Vector_type(v)
-    res != GrB_SUCCESS && return res
-    suffix, T = get_suffix_and_type(v_type)
-    fn_name = "GrB_Vector_extractElement_" * suffix
+function GrB_Vector_extractElement(v::GrB_Vector{T}, i::U) where {T <: valid_types, U <: GrB_Index}
+    fn_name = "GrB_Vector_extractElement_" * suffix(T)
 
     element = Ref(T(0))
     result = GrB_Info(
@@ -394,8 +393,8 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> V = GrB_Vector()
-GrB_Vector
+julia> V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
@@ -409,16 +408,13 @@ julia> GrB_Vector_extractTuples(V)
 ([0, 2, 3], [2.1, 3.2, 4.4])
 ```
 """
-function GrB_Vector_extractTuples(v::GrB_Vector)
-    res, v_type = GxB_Vector_type(v)
-    res != GrB_SUCCESS && return res
-    suffix, T = get_suffix_and_type(v_type)
+function GrB_Vector_extractTuples(v::GrB_Vector{T}) where T <: valid_types
     nvals = GrB_Vector_nvals(v)
     I = Vector{typeof(nvals)}(undef, nvals)
     X = Vector{T}(undef, nvals)
     n = Ref(UInt64(nvals))
 
-    fn_name = "GrB_Vector_extractTuples_" * suffix
+    fn_name = "GrB_Vector_extractTuples_" * suffix(T)
     result = GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, fn_name),
