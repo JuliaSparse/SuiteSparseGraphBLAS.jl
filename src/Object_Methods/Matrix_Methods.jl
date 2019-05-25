@@ -20,7 +20,7 @@ GrB_SUCCESS::GrB_Info = 0
 function GrB_Matrix_new(A::GrB_Matrix{T}, type::GrB_Type, nrows::U, ncols::U) where {U <: GrB_Index, T <: valid_types}
     A_ptr = pointer_from_objref(A)
     if jl_type(type) != T
-        error("Given domain and matrix type do not match")
+        error("Domain and matrix type do not match")
     end
     return GrB_Info(
         ccall(
