@@ -2,14 +2,11 @@ import Base.show
 import Base.==
 export GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Vector, GrB_Matrix, GrB_Descriptor
 
-mutable struct GrB_Type
+mutable struct GrB_Type{T}
     p::Ptr{Cvoid}
 end
-GrB_Type() = GrB_Type(Ptr{Cvoid}(0)) 
-Base.show(io::IO, ::GrB_Type) = print("GrB_Type")
-function ==(t1::GrB_Type, t2::GrB_Type)
-    t1.p == t2.p
-end
+GrB_Type{T}() where T = GrB_Type{T}(Ptr{Cvoid}(0)) 
+Base.show(io::IO, ::GrB_Type{T}) where T = print("GrB_Type{" * string(T) * "}")
 
 mutable struct GrB_UnaryOp
     p::Ptr{Cvoid}

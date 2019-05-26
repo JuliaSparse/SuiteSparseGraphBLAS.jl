@@ -17,11 +17,9 @@ julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 ```
 """
-function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type, n::U) where {U <: GrB_Index, T <: valid_types}
+function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type{T}, n::U) where {U <: GrB_Index, T <: valid_types}
     v_ptr = pointer_from_objref(v)
-    if jl_type(type) != T
-        error("Domain and vector type do not match")
-    end
+    
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, "GrB_Vector_new"),

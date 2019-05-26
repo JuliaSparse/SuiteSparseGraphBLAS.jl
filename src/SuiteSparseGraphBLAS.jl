@@ -7,20 +7,21 @@ if !isfile(depsjl_path)
     error("SuiteSparseGraphBLAS not installed properly, run Pkg.build(\"SuiteSparseGraphBLAS\"), restart Julia and try again")
 end
 
-include(depsjl_path)
-include("Structures.jl")
+const types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
+                "INT64", "UINT64", "FP32", "FP64"]
 
-types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
-         "INT64", "UINT64", "FP32", "FP64"]
-
-GrB_Index = Union{Int64, UInt64}
-valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
-valid_int_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64}
+const GrB_Index = Union{Int64, UInt64}
+const valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
+const valid_int_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64}
 
 unary_operators = ["IDENTITY", "AINV", "MINV"]
 
 binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX",
                     "PLUS", "MINUS", "TIMES", "DIV"]
+
+include(depsjl_path)
+include("Structures.jl")
+include("Utils.jl")
 
 const GrB_LNOT = GrB_UnaryOp()
 const GrB_LOR = GrB_BinaryOp(); const GrB_LAND = GrB_BinaryOp(); const GrB_LXOR = GrB_BinaryOp()
@@ -39,9 +40,10 @@ function __init__()
     end
 
     #load global types
-    for t in types
-        x = GrB_Type(load_global("GrB_"*t))
-        @eval const $(Symbol(:GrB_, t)) = $x
+    for t in [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64]
+        type_suffix = suffix(t)
+        x = GrB_Type{t}(load_global("GrB_"*type_suffix))
+        @eval const $(Symbol(:GrB_, type_suffix)) = $x
     end
 
     #load global unary operators
@@ -69,7 +71,6 @@ end
 
 include("Enums.jl")
 include("Context_Methods.jl")
-include("Utils.jl")
 include("Object_Methods/Matrix_Methods.jl")
 include("Object_Methods/Vector_Methods.jl")
 include("Object_Methods/Descriptor_Methods.jl")
