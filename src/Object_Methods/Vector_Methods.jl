@@ -222,6 +222,11 @@ Store elements from tuples into a vector.
 
 # Examples
 ```jldoctest
+julia> using SuiteSparseGraphBLAS
+
+julia> GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
 julia> V = GrB_Vector{Float64}()
 GrB_Vector{Float64}
 
@@ -358,9 +363,6 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractElement(V, 2)
 3.2
-
-julia> GrB_Vector_extractElement(V, 1)
-GrB_NO_VALUE::GrB_Info = 1
 ```
 """
 function GrB_Vector_extractElement(v::GrB_Vector{T}, i::U) where {T <: valid_types, U <: GrB_Index}
