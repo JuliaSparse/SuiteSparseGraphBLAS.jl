@@ -94,10 +94,11 @@ GrB_Vector_nvals, GrB_Vector_setElement, GrB_Vector_extractElement, GrB_Vector_e
 GrB_Descriptor_new, GrB_Descriptor_set,
 
 # Algebra Methods
-GrB_UnaryOp_new, GrB_BinaryOp_new,
+GrB_UnaryOp_new, GrB_BinaryOp_new, GrB_Monoid_new, GrB_Semiring_new,
 
 # Print functions
-@GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint
+@GxB_UnaryOp_fprint, @GxB_BinaryOp_fprint, @GxB_Monoid_fprint, @GxB_Semiring_fprint,
+@GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint, @GxB_fprint
 
 # Export global variables
 

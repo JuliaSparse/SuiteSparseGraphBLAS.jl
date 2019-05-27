@@ -63,15 +63,20 @@ function GrB_BinaryOp_new(
     binaryop_fn_C = @cfunction($binaryop_fn, Cvoid, (Ptr{T}, Ref{U}, Ref{V}))
 
     return GrB_Info(
-        ccall(
-                dlsym(graphblas_lib, "GrB_BinaryOp_new"),
-                Cint,
-                (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                op_ptr, binaryop_fn_C, ztype.p, xtype.p, ytype.p
+            ccall(
+                    dlsym(graphblas_lib, "GrB_BinaryOp_new"),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+                    op_ptr, binaryop_fn_C, ztype.p, xtype.p, ytype.p
+                )
             )
-        )
 end
 
+"""
+    GrB_UnaryOp_new(op, fn, ztype, xtype, ytype)
+
+Initializes a new GraphBLAS unary operator with a specified user-defined function and its types.
+"""
 function GrB_UnaryOp_new(
     op::GrB_UnaryOp,
     fn::Function,
@@ -88,11 +93,76 @@ function GrB_UnaryOp_new(
     unaryop_fn_C = @cfunction($unaryop_fn, Cvoid, (Ptr{T}, Ref{U}))
 
     return GrB_Info(
-        ccall(
-                dlsym(graphblas_lib, "GrB_UnaryOp_new"),
-                Cint,
-                (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                op_ptr, unaryop_fn_C, ztype.p, xtype.p
+            ccall(
+                    dlsym(graphblas_lib, "GrB_UnaryOp_new"),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+                    op_ptr, unaryop_fn_C, ztype.p, xtype.p
+                )
             )
-        )
+end
+
+"""
+    GrB_Monoid_new(monoid, binary_op, identity)
+
+Creates a new monoid with specified binary operator and identity value.
+"""
+function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::T) where T <: valid_int_types
+    monoid_ptr = pointer_from_objref(monoid)
+    fn_name = "GrB_Monoid_new_" * suffix(T)
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, fn_name),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t),
+                    monoid_ptr, binary_op.p, identity
+                )
+            )
+end
+
+function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::Float32)
+    monoid_ptr = pointer_from_objref(monoid)
+    fn_name = "GrB_Monoid_new_FP32"
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, fn_name),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Cfloat),
+                    monoid_ptr, binary_op.p, identity
+                )
+            )
+end
+
+function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::Float64)
+    monoid_ptr = pointer_from_objref(monoid)
+    fn_name = "GrB_Monoid_new_FP64"
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, fn_name),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Cdouble),
+                    monoid_ptr, binary_op.p, identity
+                )
+            )
+end
+
+"""
+    GrB_Semiring_new(semiring, monoid, binary_op)
+
+Creates a new semiring with specified monoid and binary operator.
+"""
+function GrB_Semiring_new(semiring::GrB_Semiring, monoid::GrB_Monoid, binary_op::GrB_BinaryOp)
+    semiring_ptr = pointer_from_objref(semiring)
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, "GrB_Semiring_new"),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+                    semiring_ptr, monoid.p, binary_op.p
+                )
+            )
 end
