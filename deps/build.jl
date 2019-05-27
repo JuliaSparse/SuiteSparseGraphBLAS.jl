@@ -6,7 +6,6 @@ const path = joinpath(@__DIR__, "usr/lib64")
 products = [
     LibraryProduct(path, "libgraphblas", :libgraphblas),
 ]
-
 bin_prefix = "https://raw.githubusercontent.com/abhinavmehndiratta/GB_bin/master"
 
 download_info = Dict(
@@ -16,10 +15,16 @@ download_info = Dict(
 	Linux(:aarch64, libc=:glibc, compiler_abi=CompilerABI(:gcc8)) => ("$bin_prefix/GraphBLAS.v2.3.2.aarch64-linux-gnu-gcc8.tar.gz", "13f5d707b547ee74173f324cafc27620c3fea377b5bf80e176c7869aa022ae3c"),
 )
 
-unsatisfied = any(!satisfied(p; verbose=verbose) for p in products)
-dl_info = choose_download(download_info, platform_key_abi())
-if dl_info === nothing && unsatisfied
-    error("Your platform (\"$(Sys.MACHINE)\", parsed as \"$(triplet(platform_key_abi()))\") is not supported by this package!")
+if any(!satisfied(p; verbose=verbose) for p in products)
+    try
+        url, tarball_hash = choose_download(download_info)
+        install(url, tarball_hash; prefix=prefix, force=true, verbose=true)
+    catch e
+        if typeof(e) <: ArgumentError
+            error("Your platform $(Sys.MACHINE) is not supported by this package!")
+        else
+            rethrow(e)
+        end
+    end
+    write_deps_file(joinpath(@__DIR__, "deps.jl"), products)
 end
-
-write_deps_file(joinpath(@__DIR__, "deps.jl"), products, verbose=verbose)
