@@ -73,6 +73,7 @@ include("Enums.jl")
 include("Context_Methods.jl")
 include("Object_Methods/Matrix_Methods.jl")
 include("Object_Methods/Vector_Methods.jl")
+include("Object_Methods/Algebra_Methods.jl")
 include("Object_Methods/Descriptor_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 
@@ -91,6 +92,9 @@ GrB_Vector_nvals, GrB_Vector_setElement, GrB_Vector_extractElement, GrB_Vector_e
 
 # Descriptor Methods
 GrB_Descriptor_new, GrB_Descriptor_set,
+
+# Algebra Methods
+GrB_UnaryOp_new, GrB_BinaryOp_new,
 
 # Print functions
 @GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint
