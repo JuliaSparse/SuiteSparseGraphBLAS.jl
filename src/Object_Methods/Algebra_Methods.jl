@@ -1,7 +1,7 @@
 """
     GrB_BinaryOp_new(op, fn, ztype, xtype, ytype)
 
-Initializes a new GraphBLAS binary operator with a specified user-defined function and its types.
+Initialize a new GraphBLAS binary operator with a specified user-defined function and its types.
 
 # Examples
 ```jldoctest
@@ -75,7 +75,7 @@ end
 """
     GrB_UnaryOp_new(op, fn, ztype, xtype, ytype)
 
-Initializes a new GraphBLAS unary operator with a specified user-defined function and its types.
+Initialize a new GraphBLAS unary operator with a specified user-defined function and its types.
 """
 function GrB_UnaryOp_new(
     op::GrB_UnaryOp,
@@ -105,7 +105,7 @@ end
 """
     GrB_Monoid_new(monoid, binary_op, identity)
 
-Creates a new monoid with specified binary operator and identity value.
+Create a new monoid with specified binary operator and identity value.
 """
 function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::T) where T <: valid_int_types
     monoid_ptr = pointer_from_objref(monoid)
@@ -152,7 +152,7 @@ end
 """
     GrB_Semiring_new(semiring, monoid, binary_op)
 
-Creates a new semiring with specified monoid and binary operator.
+Create a new semiring with specified monoid and binary operator.
 """
 function GrB_Semiring_new(semiring::GrB_Semiring, monoid::GrB_Monoid, binary_op::GrB_BinaryOp)
     semiring_ptr = pointer_from_objref(semiring)
