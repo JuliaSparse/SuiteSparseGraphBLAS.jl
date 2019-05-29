@@ -1,4 +1,3 @@
-
 function GrB_mxm(              # C<Mask> = accum (C, A*B)
     C::GrB_Matrix,             # input/output matrix for results
     Mask::GrB_Matrix,          # optional mask for C, unused if NULL
