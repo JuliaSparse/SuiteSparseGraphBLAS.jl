@@ -139,6 +139,7 @@ include("Object_Methods/Algebra_Methods.jl")
 include("Object_Methods/Descriptor_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 include("Operations/Multiplication.jl")
+include("Operations/Element_wise_multiplication.jl")
 
 export
 # Context Methods
@@ -164,7 +165,14 @@ GrB_UnaryOp_new, GrB_BinaryOp_new, GrB_Monoid_new, GrB_Semiring_new,
 @GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint, @GxB_fprint,
 
 # GraphBLAS Operations
-GrB_mxm, GrB_vxm, GrB_mxv
+
+# Multiplication
+GrB_mxm, GrB_vxm, GrB_mxv,
+
+# Element wise multiplication
+GrB_eWiseMult_Vector_Semiring, GrB_eWiseMult_Vector_Monoid, GrB_eWiseMult_Vector_BinaryOp,
+GrB_eWiseMult_Matrix_Semiring, GrB_eWiseMult_Matrix_Monoid, GrB_eWiseMult_Matrix_BinaryOp,
+GrB_eWiseMult
 
 # Export global variables
 

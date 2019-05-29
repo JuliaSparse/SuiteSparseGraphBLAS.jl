@@ -23,6 +23,15 @@ function suffix(T::DataType)
     return "FP64"
 end
 
+function get_struct_name(A::GrB_Struct)
+    s = ""
+    for i in string(typeof(A))[5:end]
+        i == '{' && break
+        s *= i
+    end
+    return s
+end
+
 function _GrB_Index(x::T) where T <: GrB_Index
     x > typemax(Int64) && return x
     return Int64(x)

@@ -5,11 +5,7 @@ function GxB_fprint(A::GrB_Struct, name::String, pr::GxB_Print_Level)
         ccall(:fclose, Cint, (Ptr{Cvoid},), FILE)
         foreach(println, eachline(path))
     end
-    s = ""
-    for i in string(typeof(A))[5:end]
-        i == '{' && break
-        s *= i
-    end
+    s = get_struct_name(A)
     fn_name  = "GxB_" * s * "_fprint"
     mktemp(f)
 end
