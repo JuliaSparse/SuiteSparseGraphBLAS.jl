@@ -10,7 +10,7 @@ function GxB_fprint(A::GrB_Struct, name::String, pr::GxB_Print_Level)
         i == '{' && break
         s *= i
     end
-    fn_name::String  = "GxB_" * s * "_fprint"
+    fn_name  = "GxB_" * s * "_fprint"
     mktemp(f)
 end
 
