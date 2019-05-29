@@ -14,10 +14,43 @@ const GrB_Index = Union{Int64, UInt64}
 const valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
 const valid_int_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64}
 
-unary_operators = ["IDENTITY", "AINV", "MINV"]
+const GrB_NULL = C_NULL
 
-binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX",
+built_in_unary_operators = ["IDENTITY", "AINV", "MINV"]
+
+built_in_binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX",
                     "PLUS", "MINUS", "TIMES", "DIV"]
+
+built_in_monoids = ["MIN", "MAX", "PLUS", "TIMES"]
+
+built_in_semirings = [  "MIN_FIRST", "MAX_FIRST", "PLUS_FIRST", "TIMES_FIRST", "MIN_SECOND",
+                        "MAX_SECOND", "PLUS_SECOND", "TIMES_SECOND", "MIN_MIN", "MAX_MIN",
+                        "PLUS_MIN", "TIMES_MIN", "MIN_MAX", "MAX_MAX", "PLUS_MAX", "TIMES_MAX",
+                        "MIN_PLUS", "MAX_PLUS", "PLUS_PLUS", "TIMES_PLUS", "MIN_MINUS",
+                        "MAX_MINUS", "PLUS_MINUS", "TIMES_MINUS", "MIN_TIMES", "MAX_TIMES",
+                        "PLUS_TIMES", "TIMES_TIMES", "MIN_DIV", "MAX_DIV", "PLUS_DIV",
+                        "TIMES_DIV", "MIN_ISEQ", "MAX_ISEQ", "PLUS_ISEQ", "TIMES_ISEQ", "MIN_ISNE",
+                        "MAX_ISNE", "PLUS_ISNE", "TIMES_ISNE", "MIN_ISGT", "MAX_ISGT", "PLUS_ISGT",
+                        "TIMES_ISGT", "MIN_ISLT", "MAX_ISLT", "PLUS_ISLT", "TIMES_ISLT", "MIN_ISGE",
+                        "MAX_ISGE", "PLUS_ISGE", "TIMES_ISGE", "MIN_ISLE", "MAX_ISLE", "PLUS_ISLE",
+                        "TIMES_ISLE", "MIN_LOR", "MAX_LOR", "PLUS_LOR", "TIMES_LOR", "MIN_LAND", "MAX_LAND",
+                        "PLUS_LAND", "TIMES_LAND", "MIN_LXOR", "MAX_LXOR", "PLUS_LXOR", "TIMES_LXOR",
+                        "LOR_EQ", "LAND_EQ", "LXOR_EQ", "EQ_EQ", "LOR_NE", "LAND_NE", "LXOR_NE", "EQ_NE",
+                        "LOR_GT", "LAND_GT", "LXOR_GT", "EQ_GT", "LOR_LT", "LAND_LT", "LXOR_LT", "EQ_LT",
+                        "LOR_GE", "LAND_GE", "LXOR_GE", "EQ_GE", "LOR_LE", "LAND_LE", "LXOR_LE", "EQ_LE"
+                    ]
+
+built_in_boolean_semirings = [  "LOR_FIRST", "LAND_FIRST", "LXOR_FIRST", "EQ_FIRST",
+                                "LOR_SECOND", "LAND_SECOND", "LXOR_SECOND", "EQ_SECOND",
+                                "LOR_LOR", "LAND_LOR", "LXOR_LOR", "EQ_LOR",
+                                "LOR_LAND", "LAND_LAND", "LXOR_LAND", "EQ_LAND",
+                                "LOR_LXOR", "LAND_LXOR", "LXOR_LXOR", "EQ_LXOR",
+                                "LOR_EQ", "LAND_EQ", "LXOR_EQ", "EQ_EQ",
+                                "LOR_GT", "LAND_GT", "LXOR_GT", "EQ_GT",
+                                "LOR_LT", "LAND_LT", "LXOR_LT", "EQ_LT",
+                                "LOR_GE", "LAND_GE", "LXOR_GE", "EQ_GE",
+                                "LOR_LE", "LAND_LE", "LXOR_LE", "EQ_LE"
+                            ]
 
 include(depsjl_path)
 include("Structures.jl")
@@ -25,6 +58,9 @@ include("Utils.jl")
 
 const GrB_LNOT = GrB_UnaryOp()
 const GrB_LOR = GrB_BinaryOp(); const GrB_LAND = GrB_BinaryOp(); const GrB_LXOR = GrB_BinaryOp()
+const GxB_LOR_BOOL_MONOID = GrB_Monoid(); const GxB_LAND_BOOL_MONOID = GrB_Monoid()
+const GxB_LXOR_BOOL_MONOID = GrB_Monoid(); const GxB_EQ_BOOL_MONOID = GrB_Monoid()
+
 graphblas_lib = C_NULL
 
 function __init__()
@@ -49,7 +85,7 @@ function __init__()
     #load global unary operators
     GrB_LNOT.p = load_global("GrB_LNOT")
 
-    for op in unary_operators
+    for op in built_in_unary_operators
         for t in types
             varname = "GrB_" * op * "_" * t
             @eval const $(Symbol(varname)) = $(GrB_UnaryOp(load_global(varname)))
@@ -61,11 +97,37 @@ function __init__()
     GrB_LAND.p = load_global("GrB_LAND")
     GrB_LXOR.p = load_global("GrB_LXOR")
 
-    for op in binary_operators
+    for op in built_in_binary_operators
         for t in types
             varname = "GrB_" * op * "_" * t
             @eval const $(Symbol(varname)) = $(GrB_BinaryOp(load_global(varname)))
         end
+    end
+
+    #load global monoids
+    GxB_LOR_BOOL_MONOID.p = load_global("GxB_LOR_BOOL_MONOID")
+    GxB_LAND_BOOL_MONOID.p = load_global("GxB_LAND_BOOL_MONOID")
+    GxB_LXOR_BOOL_MONOID.p = load_global("GxB_LXOR_BOOL_MONOID")
+    GxB_EQ_BOOL_MONOID.p = load_global("GxB_EQ_BOOL_MONOID")
+
+    for m in built_in_monoids
+        for t in types[2:end]
+            varname = "GxB_" * m * "_" * t * "_MONOID"
+            @eval const $(Symbol(varname)) = $(GrB_Monoid(load_global(varname)))
+        end
+    end
+
+    #load global semirings
+    for s in built_in_semirings
+        for t in types[2:end]
+            varname = "GxB_" * s * "_" * t
+            @eval const $(Symbol(varname)) = $(GrB_Semiring(load_global(varname)))
+        end
+    end
+
+    for bool_s in built_in_boolean_semirings
+        varname = "GxB_" * bool_s * "_" * "BOOL"
+        @eval const $(Symbol(varname)) = $(GrB_Semiring(load_global(varname)))
     end
 end
 
@@ -109,7 +171,7 @@ end
 
 # Unary Operators
 export GrB_LNOT
-for op in unary_operators
+for op in built_in_unary_operators
     for t in types
         varname = "GrB_" * op * "_" * t
         @eval export $(Symbol(varname))
@@ -118,11 +180,33 @@ end
 
 # Binary Operators
 export GrB_LOR, GrB_LAND, GrB_LXOR
-for op in binary_operators
+for op in built_in_binary_operators
     for t in types
         varname = "GrB_" * op * "_" * t
         @eval export $(Symbol(varname))
     end
+end
+
+# Monoids
+export GxB_LOR_BOOL_MONOID, GxB_LAND_BOOL_MONOID, GxB_LXOR_BOOL_MONOID, GxB_EQ_BOOL_MONOID
+for m in built_in_monoids
+    for t in types[2:end]
+        varname = "GxB_" * m * "_" * t * "_MONOID"
+        @eval export $(Symbol(varname))
+    end
+end
+
+# Semirings
+for s in built_in_semirings
+    for t in types[2:end]
+        varname = "GxB_" * s * "_" * t
+        @eval export $(Symbol(varname))
+    end
+end
+
+for bool_s in built_in_boolean_semirings
+    varname = "GxB_" * bool_s * "_" * "BOOL"
+    @eval export $(Symbol(varname))
 end
 
 # Enums
@@ -150,4 +234,8 @@ export GrB_Desc_Value
 for s in instances(GrB_Desc_Value)
     @eval export $(Symbol(s))
 end
+
+# NULL
+export GrB_NULL
+
 end #end of module
