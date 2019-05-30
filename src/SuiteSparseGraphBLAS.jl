@@ -140,6 +140,7 @@ include("Object_Methods/Descriptor_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 include("Operations/Multiplication.jl")
 include("Operations/Element_wise_multiplication.jl")
+include("Operations/Extract.jl")
 
 export
 # Context Methods
@@ -172,7 +173,10 @@ GrB_mxm, GrB_vxm, GrB_mxv,
 # Element wise multiplication
 GrB_eWiseMult_Vector_Semiring, GrB_eWiseMult_Vector_Monoid, GrB_eWiseMult_Vector_BinaryOp,
 GrB_eWiseMult_Matrix_Semiring, GrB_eWiseMult_Matrix_Monoid, GrB_eWiseMult_Matrix_BinaryOp,
-GrB_eWiseMult
+GrB_eWiseMult,
+
+# Extract
+GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract
 
 # Export global variables
 
