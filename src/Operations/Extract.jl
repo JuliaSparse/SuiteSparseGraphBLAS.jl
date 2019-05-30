@@ -53,24 +53,20 @@ julia> GrB_Vector_extractTuples(W)[2]
 """
 function GrB_Vector_extract(            # w<mask> = accum (w, u(I))
         w::GrB_Vector,                  # input/output vector for results
-        mask,                           # optional mask for w, unused if NULL
-        accum,                          # optional accum for z=accum(w,t)
+        mask::T,                        # optional mask for w, unused if NULL
+        accum::U,                       # optional accum for z=accum(w,t)
         u::GrB_Vector,                  # first input:  vector u
-        I::Vector{T},                   # row indices
-        ni::T,                          # number of row indices
-        desc                            # descriptor for w and mask
-) where T <: GrB_Index
-
-    mask_ptr = mask == GrB_NULL ? C_NULL : mask.p
-    accum_ptr = accum == GrB_NULL ? C_NULL : accum.p
-    desc_ptr = desc == GrB_NULL ? C_NULL : desc.p
+        I::Vector{X},                   # row indices
+        ni::X,                          # number of row indices
+        desc::V                         # descriptor for w and mask
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index}
 
     return GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, "GrB_Vector_extract"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cintmax_t}, Cintmax_t, Ptr{Cvoid}),
-                        w.p, mask_ptr, accum_ptr, u.p, pointer(I), ni, desc_ptr
+                        w.p, mask.p, accum.p, u.p, pointer(I), ni, desc.p
                     )
                 )
 end
@@ -135,26 +131,22 @@ julia> GrB_Matrix_extractTuples(OUT)[3]
 """
 function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
         C::GrB_Matrix,                  # input/output matrix for results
-        Mask,                           # optional mask for C, unused if NULL
-        accum,                          # optional accum for Z=accum(C,T)
+        Mask::T,                        # optional mask for C, unused if NULL
+        accum::U,                       # optional accum for Z=accum(C,T)
         A::GrB_Matrix,                  # first input:  matrix A
-        I::Vector{T},                   # row indices
-        ni::T,                          # number of row indices
-        J::Vector{T},                   # column indices
-        nj::T,                          # number of column indices
-        desc                            # descriptor for C, Mask, and A
-) where T <: GrB_Index
-
-    Mask_ptr = Mask == GrB_NULL ? C_NULL : Mask.p
-    accum_ptr = accum == GrB_NULL ? C_NULL : accum.p
-    desc_ptr = desc == GrB_NULL ? C_NULL : desc.p
+        I::Vector{X},                   # row indices
+        ni::X,                          # number of row indices
+        J::Vector{X},                   # column indices
+        nj::X,                          # number of column indices
+        desc::V                         # descriptor for C, Mask, and A
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index}
 
     return GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, "GrB_Matrix_extract"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cintmax_t}, Cintmax_t, Ptr{Cintmax_t}, Cintmax_t, Ptr{Cvoid}),
-                        C.p, Mask_ptr, accum_ptr, A.p, pointer(I), ni, pointer(J), nj, desc_ptr
+                        C.p, Mask.p, accum.p, A.p, pointer(I), ni, pointer(J), nj, desc.p
                     )
                 )
 end
@@ -228,25 +220,21 @@ julia> GrB_Vector_extractTuples(out)[2]
 """
 function GrB_Col_extract(               # w<mask> = accum (w, A(I,j))
         w::GrB_Vector,                  # input/output matrix for results
-        mask,                           # optional mask for w, unused if NULL
-        accum,                          # optional accum for z=accum(w,t)
+        mask::T,                        # optional mask for w, unused if NULL
+        accum::U,                       # optional accum for z=accum(w,t)
         A::GrB_Matrix,                  # first input:  matrix A
-        I::Vector{T},                   # row indices
-        ni::T,                          # number of row indices
-        j::T,                           # column index
-        desc                            # descriptor for w, mask, and A
-) where T <: GrB_Index
-
-    mask_ptr = mask == GrB_NULL ? C_NULL : mask.p
-    accum_ptr = accum == GrB_NULL ? C_NULL : accum.p
-    desc_ptr = desc == GrB_NULL ? C_NULL : desc.p
+        I::Vector{X},                   # row indices
+        ni::X,                          # number of row indices
+        j::X,                           # column index
+        desc::V                         # descriptor for w, mask, and A
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index}
 
     return GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, "GrB_Col_extract"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cintmax_t}, Cintmax_t, Cintmax_t, Ptr{Cvoid}),
-                        w.p, mask_ptr, accum_ptr, A.p, pointer(I), ni, j, desc_ptr
+                        w.p, mask.p, accum.p, A.p, pointer(I), ni, j, desc.p
                     )
                 )
 end

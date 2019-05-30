@@ -14,8 +14,6 @@ const GrB_Index = Union{Int64, UInt64}
 const valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
 const valid_int_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64}
 
-const GrB_NULL = C_NULL
-
 built_in_unary_operators = ["IDENTITY", "AINV", "MINV"]
 
 built_in_binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX",
@@ -56,6 +54,12 @@ include(depsjl_path)
 include("Structures.jl")
 include("Utils.jl")
 
+valid_matrix_mask_types = Union{GrB_Matrix, GrB_NULL_Type}
+valid_vector_mask_types = Union{GrB_Vector, GrB_NULL_Type}
+valid_accum_types = Union{GrB_BinaryOp, GrB_NULL_Type}
+valid_desc_types = Union{GrB_Descriptor, GrB_NULL_Type}
+
+const GrB_NULL = GrB_NULL_Type(C_NULL)
 const GrB_LNOT = GrB_UnaryOp()
 const GrB_LOR = GrB_BinaryOp(); const GrB_LAND = GrB_BinaryOp(); const GrB_LXOR = GrB_BinaryOp()
 const GxB_LOR_BOOL_MONOID = GrB_Monoid(); const GxB_LAND_BOOL_MONOID = GrB_Monoid()

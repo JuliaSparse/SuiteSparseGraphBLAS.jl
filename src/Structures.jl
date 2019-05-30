@@ -52,3 +52,8 @@ mutable struct GrB_Descriptor <: GrB_Struct
 end
 GrB_Descriptor() = GrB_Descriptor(Ptr{Cvoid}(0))
 Base.show(io::IO, ::GrB_Descriptor) = print("GrB_Descriptor")
+
+struct GrB_NULL_Type
+    p::Ptr{Cvoid} 
+end
+Base.show(io::IO, ::GrB_NULL_Type) = print("NULL")
