@@ -59,10 +59,10 @@ function GrB_Vector_reduce(     # c = accum (c, reduce_to_scalar (u))
     return scalar[]
 end
 
-function GrB_Matrix_reduce(     # c = accum (c, reduce_to_scalar (u))
+function GrB_Matrix_reduce(     # c = accum (c, reduce_to_scalar (A))
     accum::U,                   # optional accum for c=accum(c,t)
     monoid::GrB_Monoid,         # monoid to do the reduction
-    A::GrB_Matrix{T},           # vector to reduce
+    A::GrB_Matrix{T},           # matrix to reduce
     desc::V                     # descriptor (currently unused)
 ) where {T <: valid_types, U <: valid_accum_types, V <: valid_desc_types}
 
