@@ -147,6 +147,7 @@ include("Operations/Element_wise_multiplication.jl")
 include("Operations/Element_wise_addition.jl")
 include("Operations/Extract.jl")
 include("Operations/Apply.jl")
+include("Operations/Reduce.jl")
 
 export
 # Context Methods
@@ -191,6 +192,10 @@ GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract,
 
 # Apply
 GrB_apply, GrB_Vector_apply, GrB_Matrix_apply
+
+# Reduce
+GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, GrB_Matrix_reduce,
+GrB_Vector_reduce
 
 # Export global variables
 
