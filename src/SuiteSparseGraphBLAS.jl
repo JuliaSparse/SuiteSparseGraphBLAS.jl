@@ -144,6 +144,7 @@ include("Object_Methods/Descriptor_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
 include("Operations/Multiplication.jl")
 include("Operations/Element_wise_multiplication.jl")
+include("Operations/Element_wise_addition.jl")
 include("Operations/Extract.jl")
 
 export
@@ -178,6 +179,11 @@ GrB_mxm, GrB_vxm, GrB_mxv,
 GrB_eWiseMult_Vector_Semiring, GrB_eWiseMult_Vector_Monoid, GrB_eWiseMult_Vector_BinaryOp,
 GrB_eWiseMult_Matrix_Semiring, GrB_eWiseMult_Matrix_Monoid, GrB_eWiseMult_Matrix_BinaryOp,
 GrB_eWiseMult,
+
+# Element wise addition
+GrB_eWiseAdd_Vector_Semiring, GrB_eWiseAdd_Vector_Monoid, GrB_eWiseAdd_Vector_BinaryOp,
+GrB_eWiseAdd_Matrix_Semiring, GrB_eWiseAdd_Matrix_Monoid, GrB_eWiseAdd_Matrix_BinaryOp,
+GrB_eWiseAdd,
 
 # Extract
 GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract
