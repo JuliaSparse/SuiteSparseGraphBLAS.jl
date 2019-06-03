@@ -1,4 +1,23 @@
 """
+    GrB_extract(arg1, Mask, accum, arg4, ...)
+
+Generic matrix/vector extraction.
+"""
+function GrB_extract(arg1, Mask, accum, arg4, args...)
+    T = typeof(arg1)
+    U = typeof(arg4)
+    if T <: GrB_Vector
+        if U <: GrB_Vector
+            return GrB_Vector_extract(arg1, Mask, accum, arg4, args...)
+        elseif U <: GrB_Matrix
+            return GrB_Col_extract(arg1, Mask, accum, arg4, args...)
+        end
+    elseif T <: GrB_Matrix
+        return GrB_Matrix_extract(arg1, Mask, accum, arg4, args...)
+    end
+end
+
+"""
     GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
 
 Extract a sub-vector from a larger vector as specified by a set of indices.
