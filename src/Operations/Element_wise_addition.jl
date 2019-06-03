@@ -89,7 +89,7 @@ function GrB_eWiseAdd_Matrix_Semiring(          # C<Mask> = accum (C, A+B)
 
     return GrB_Info(
                 ccall(
-                        dlsym(graphblas_lib, fn_name),
+                        dlsym(graphblas_lib, "GrB_eWiseAdd_Matrix_Semiring"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
                         C.p, Mask.p, accum.p, semiring.p, A.p, B.p, desc.p
@@ -109,7 +109,7 @@ function GrB_eWiseAdd_Matrix_Monoid(            # C<Mask> = accum (C, A+B)
 
     return GrB_Info(
                 ccall(
-                        dlsym(graphblas_lib, fn_name),
+                        dlsym(graphblas_lib, "GrB_eWiseAdd_Matrix_Monoid"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
                         C.p, Mask.p, accum.p, monoid.p, A.p, B.p, desc.p
@@ -129,7 +129,7 @@ function GrB_eWiseAdd_Matrix_BinaryOp(          # C<Mask> = accum (C, A+B)
 
     return GrB_Info(
                 ccall(
-                        dlsym(graphblas_lib, fn_name),
+                        dlsym(graphblas_lib, "GrB_eWiseAdd_Matrix_BinaryOp"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
                         C.p, Mask.p, accum.p, mult.p, A.p, B.p, desc.p
