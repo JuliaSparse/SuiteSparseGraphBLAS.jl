@@ -4,7 +4,7 @@
 Compute a new matrix that is the transpose of the source matrix.
 
 # Examples
-
+```jldoctest
 julia> using SuiteSparseGraphBLAS
 
 julia> GrB_init(GrB_NONBLOCKING)
@@ -35,6 +35,7 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Matrix_extractTuples(M_TRAN)
 ([1, 2], [0, 0], [10, 20])
+```
 """
 function GrB_transpose(                 # C<Mask> = accum (C, A')
         C::GrB_Matrix,                  # input/output matrix for results
