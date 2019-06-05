@@ -64,4 +64,3 @@ mutable struct GrB_ALL_Type
 end
 Base.pointer(x::GrB_ALL_Type) = x.p
 Base.show(io::IO, ::GrB_ALL_Type) = print("GrB_ALL")
-
