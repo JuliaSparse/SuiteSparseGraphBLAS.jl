@@ -12,7 +12,7 @@ function GrB_assign(arg1::T, Mask, accum, arg4::U, arg5::V, args...) where {T, U
         end
     elseif T <: GrB_Matrix
         if U <: GrB_Vector
-            if V <: Union{Vector{X} where X <: GrB_Index, GrB_ALL_Type}
+            if V <: Union{Vector{<: GrB_Index}, GrB_ALL_Type}
                 return GrB_Col_assign(arg1, Mask, accum, arg4, arg5, args...)
             elseif V <: GrB_Index
                 return GrB_Row_assign(arg1, Mask, accum, arg4, arg5, args...)
