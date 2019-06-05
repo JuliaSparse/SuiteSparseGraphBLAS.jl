@@ -151,6 +151,7 @@ include("Operations/Element_wise_multiplication.jl")
 include("Operations/Element_wise_addition.jl")
 include("Operations/Extract.jl")
 include("Operations/Apply.jl")
+include("Operations/Assign.jl")
 include("Operations/Reduce.jl")
 include("Operations/Transpose.jl")
 
@@ -197,6 +198,9 @@ GrB_extract, GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract,
 
 # Apply
 GrB_apply, GrB_Vector_apply, GrB_Matrix_apply,
+
+# Assign
+GrB_assign, GrB_Vector_assign, GrB_Matrix_assign, GrB_Col_assign, GrB_Row_assign,
 
 # Reduce
 GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, GrB_Matrix_reduce,
