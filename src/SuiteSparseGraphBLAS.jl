@@ -60,6 +60,8 @@ valid_accum_types = Union{GrB_BinaryOp, GrB_NULL_Type}
 valid_desc_types = Union{GrB_Descriptor, GrB_NULL_Type}
 
 const GrB_NULL = GrB_NULL_Type(C_NULL)
+const GrB_ALL = GrB_ALL_Type(C_NULL)
+
 const GrB_LNOT = GrB_UnaryOp()
 const GrB_LOR = GrB_BinaryOp(); const GrB_LAND = GrB_BinaryOp(); const GrB_LXOR = GrB_BinaryOp()
 const GxB_LOR_BOOL_MONOID = GrB_Monoid(); const GxB_LAND_BOOL_MONOID = GrB_Monoid()
@@ -78,6 +80,8 @@ function __init__()
         x = dlsym(graphblas_lib, str)
         return unsafe_load(cglobal(x, Ptr{Cvoid}))
     end
+
+    GrB_ALL.p = load_global("GrB_ALL")
 
     #load global types
     for t in [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64]
@@ -274,7 +278,10 @@ for s in instances(GrB_Desc_Value)
     @eval export $(Symbol(s))
 end
 
-# NULL
+# GrB_NULL
 export GrB_NULL
+
+# GrB_ALL
+export GrB_ALL
 
 end #end of module

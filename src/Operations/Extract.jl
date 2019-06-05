@@ -75,10 +75,10 @@ function GrB_Vector_extract(            # w<mask> = accum (w, u(I))
         mask::T,                        # optional mask for w, unused if NULL
         accum::U,                       # optional accum for z=accum(w,t)
         u::GrB_Vector,                  # first input:  vector u
-        I::Vector{X},                   # row indices
+        I::Y,                           # row indices
         ni::X,                          # number of row indices
         desc::V                         # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: Union{Vector{X}, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -153,12 +153,12 @@ function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
         Mask::T,                        # optional mask for C, unused if NULL
         accum::U,                       # optional accum for Z=accum(C,T)
         A::GrB_Matrix,                  # first input:  matrix A
-        I::Vector{X},                   # row indices
+        I::Y,                           # row indices
         ni::X,                          # number of row indices
-        J::Vector{X},                   # column indices
+        J::Y,                           # column indices
         nj::X,                          # number of column indices
         desc::V                         # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: Union{Vector{X}, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -242,11 +242,11 @@ function GrB_Col_extract(               # w<mask> = accum (w, A(I,j))
         mask::T,                        # optional mask for w, unused if NULL
         accum::U,                       # optional accum for z=accum(w,t)
         A::GrB_Matrix,                  # first input:  matrix A
-        I::Vector{X},                   # row indices
+        I::Y,                           # row indices
         ni::X,                          # number of row indices
         j::X,                           # column index
         desc::V                         # descriptor for w, mask, and A
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: Union{Vector{X}, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
