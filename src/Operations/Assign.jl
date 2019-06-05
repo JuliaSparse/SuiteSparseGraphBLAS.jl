@@ -1,4 +1,31 @@
 """
+    GrB_assign(arg1, Mask, accum, arg4, arg5, ...)
+
+Generic method for submatrix/subvector assignment.
+"""
+function GrB_assign(arg1::T, Mask, accum, arg4::U, arg5::V, args...) where {T, U, V}
+    if T <: GrB_Vector
+        if U <: GrB_Vector
+            return GrB_Vector_assign(arg1, Mask, accum, arg4, arg5, args...)
+        elseif U <: valid_types
+            return GrB_Vector_assign(arg1, Mask, accum, arg4, arg5, args...)
+        end
+    elseif T <: GrB_Matrix
+        if U <: GrB_Vector
+            if V <: Union{Vector{GrB_Index}, GrB_ALL_Type}
+                return GrB_Col_assign(arg1, Mask, accum, arg4, arg5, args...)
+            elseif V <: GrB_Index
+                return GrB_Row_assign(arg1, Mask, accum, arg4, arg5, args...)
+            end
+        elseif U <: GrB_Matrix
+            return GrB_Matrix_assign(arg1, Mask, accum, arg4, arg5, args...)
+        elseif U <: valid_types
+            return GrB_Matrix_assign(arg1, Mask, accum, arg4, arg5, args...)
+        end
+    end
+end
+
+"""
     GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
 
 # Examples

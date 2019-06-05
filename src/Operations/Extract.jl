@@ -3,9 +3,7 @@
 
 Generic matrix/vector extraction.
 """
-function GrB_extract(arg1, Mask, accum, arg4, args...)
-    T = typeof(arg1)
-    U = typeof(arg4)
+function GrB_extract(arg1::T, Mask, accum, arg4::U, args...) where {T, U}
     if T <: GrB_Vector
         if U <: GrB_Vector
             return GrB_Vector_extract(arg1, Mask, accum, arg4, args...)
