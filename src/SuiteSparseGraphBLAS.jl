@@ -146,6 +146,7 @@ include("Object_Methods/Vector_Methods.jl")
 include("Object_Methods/Algebra_Methods.jl")
 include("Object_Methods/Descriptor_Methods.jl")
 include("Object_Methods/Print_Objects.jl")
+include("Object_Methods/Free_Objects.jl")
 include("Operations/Multiplication.jl")
 include("Operations/Element_wise_multiplication.jl")
 include("Operations/Element_wise_addition.jl")
@@ -173,6 +174,10 @@ GrB_Descriptor_new, GrB_Descriptor_set,
 
 # Algebra Methods
 GrB_UnaryOp_new, GrB_BinaryOp_new, GrB_Monoid_new, GrB_Semiring_new,
+
+# Free Methods
+GrB_free, GrB_UnaryOp_free, GrB_BinaryOp_free, GrB_Monoid_free, GrB_Semiring_free,
+GrB_Vector_free, GrB_Matrix_free, GrB_Descriptor_free,
 
 # Print functions
 @GxB_UnaryOp_fprint, @GxB_BinaryOp_fprint, @GxB_Monoid_fprint, @GxB_Semiring_fprint,
