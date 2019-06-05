@@ -1,7 +1,28 @@
 """
+    GrB_reduce(arg1, arg2, arg3, arg4, ...)
+
+Generic method for matrix/vector reduction to a vector or scalar.
+"""
+function GrB_reduce(arg1::T, arg2, arg3::U, arg4::V, args...) where {T, U, V}
+    if T <: GrB_Vector
+        if V <: GrB_Monoid
+            return GrB_Matrix_reduce_Monoid(arg1, arg2, arg3, arg4, args...)
+        elseif V <: GrB_BinaryOp
+            return GrB_Matrix_reduce_BinaryOp(arg1, arg2, arg3, arg4, args...)
+        end
+    elseif T <: valid_accum_types
+        if U <: GrB_Vector
+            return GrB_Vector_reduce(arg1, arg2, arg3, arg4)
+        elseif U <: GrB_Matrix
+            return GrB_Matrix_reduce(arg1, arg2, arg3, arg4)
+        end
+    end
+end
+
+"""
     GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
 
-Reduce the entries in a matrix to a vector. By default these methods compute a column vector w 
+Reduce the entries in a matrix to a vector. By default these methods compute a column vector w
 such that w(i) = sum(A(i,:)), where "sum" is a commutative and associative monoid with an identity value.
 A can be transposed, which reduces down the columns instead of the rows.
 
@@ -34,12 +55,12 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
+GraphBLAS vector: w
 nrows: 4 ncols: 1 max # entries: 2
 format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
 hyper_ratio 0.0625
 GraphBLAS type:  int64_t size: 8
-number of entries: 2 
+number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 30
     row 2: int64 70
@@ -68,8 +89,8 @@ end
 """
     GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)
 
-Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that 
-w(i) = sum(A(i,:)), where "sum" is a commutative and associative binary operator. A can be transposed, 
+Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that
+w(i) = sum(A(i,:)), where "sum" is a commutative and associative binary operator. A can be transposed,
 which reduces down the columns instead of the rows.
 
 # Examples
@@ -101,12 +122,12 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
+GraphBLAS vector: w
 nrows: 4 ncols: 1 max # entries: 2
 format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
 hyper_ratio 0.0625
 GraphBLAS type:  int64_t size: 8
-number of entries: 2 
+number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 200
     row 2: int64 1200

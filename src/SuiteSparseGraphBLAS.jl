@@ -203,7 +203,7 @@ GrB_apply, GrB_Vector_apply, GrB_Matrix_apply,
 GrB_assign, GrB_Vector_assign, GrB_Matrix_assign, GrB_Col_assign, GrB_Row_assign,
 
 # Reduce
-GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, GrB_Matrix_reduce,
+GrB_reduce, GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, GrB_Matrix_reduce,
 GrB_Vector_reduce,
 
 # Transpose
