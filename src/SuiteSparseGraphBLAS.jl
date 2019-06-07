@@ -66,6 +66,8 @@ const GrB_LNOT = GrB_UnaryOp()
 const GrB_LOR = GrB_BinaryOp(); const GrB_LAND = GrB_BinaryOp(); const GrB_LXOR = GrB_BinaryOp()
 const GxB_LOR_BOOL_MONOID = GrB_Monoid(); const GxB_LAND_BOOL_MONOID = GrB_Monoid()
 const GxB_LXOR_BOOL_MONOID = GrB_Monoid(); const GxB_EQ_BOOL_MONOID = GrB_Monoid()
+const GxB_TRIL = GxB_SelectOp(); const GxB_TRIU = GxB_SelectOp(); const GxB_DIAG = GxB_SelectOp();
+const GxB_OFFDIAG = GxB_SelectOp(); GxB_NONZERO = GxB_SelectOp()
 
 graphblas_lib = C_NULL
 
@@ -137,6 +139,13 @@ function __init__()
         varname = "GxB_" * bool_s * "_" * "BOOL"
         @eval const $(Symbol(varname)) = $(GrB_Semiring(load_global(varname)))
     end
+
+    #load global select operators
+    GxB_TRIL.p = load_global("GxB_TRIL")
+    GxB_TRIU.p = load_global("GxB_TRIU")
+    GxB_DIAG.p = load_global("GxB_DIAG")
+    GxB_OFFDIAG.p = load_global("GxB_OFFDIAG")
+    GxB_NONZERO.p = load_global("GxB_NONZERO")
 end
 
 include("Enums.jl")
@@ -155,6 +164,7 @@ include("Operations/Apply.jl")
 include("Operations/Assign.jl")
 include("Operations/Reduce.jl")
 include("Operations/Transpose.jl")
+include("Operations/Select.jl")
 
 export
 # Context Methods
@@ -212,7 +222,10 @@ GrB_reduce, GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, GrB_Matrix_red
 GrB_Vector_reduce,
 
 # Transpose
-GrB_transpose
+GrB_transpose,
+
+# Select
+GxB_Vector_select, GxB_Matrix_select, GxB_select
 
 # Export global variables
 
@@ -260,6 +273,9 @@ for bool_s in built_in_boolean_semirings
     varname = "GxB_" * bool_s * "_" * "BOOL"
     @eval export $(Symbol(varname))
 end
+
+# Select Operators
+export GxB_TRIL, GxB_TRIU, GxB_OFFDIAG, GxB_DIAG, GxB_NONZERO
 
 # Enums
 export GrB_Info

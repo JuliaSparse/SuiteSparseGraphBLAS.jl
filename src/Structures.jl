@@ -9,7 +9,7 @@ abstract type GrB_Struct end
 mutable struct GrB_Type{T} <: GrB_Struct
     p::Ptr{Cvoid}
 end
-GrB_Type{T}() where T = GrB_Type{T}(C_NULL) 
+GrB_Type{T}() where T = GrB_Type{T}(C_NULL)
 Base.show(io::IO, ::GrB_Type{T}) where T = print("GrB_Type{" * string(T) * "}")
 
 mutable struct GrB_UnaryOp <: GrB_Struct
@@ -54,13 +54,19 @@ end
 GrB_Descriptor() = GrB_Descriptor(C_NULL)
 Base.show(io::IO, ::GrB_Descriptor) = print("GrB_Descriptor")
 
+mutable struct GxB_SelectOp
+    p::Ptr{Cvoid}
+end
+GxB_SelectOp() = GxB_SelectOp(C_NULL)
+Base.show(io::IO, ::GxB_SelectOp) = print("GxB_SelectOp")
+
 struct GrB_NULL_Type
-    p::Ptr{Cvoid} 
+    p::Ptr{Cvoid}
 end
 Base.show(io::IO, ::GrB_NULL_Type) = print("GrB_NULL")
 
 mutable struct GrB_ALL_Type
-    p::Ptr{Cvoid} 
+    p::Ptr{Cvoid}
 end
 Base.pointer(x::GrB_ALL_Type) = x.p
 Base.show(io::IO, ::GrB_ALL_Type) = print("GrB_ALL")
