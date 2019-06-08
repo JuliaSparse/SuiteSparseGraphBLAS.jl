@@ -103,7 +103,7 @@ function __init__()
     end
 
     #load global binary operators
-    GrB_LOR.p = load_global("GrB_LNOT")
+    GrB_LOR.p = load_global("GrB_LOR")
     GrB_LAND.p = load_global("GrB_LAND")
     GrB_LXOR.p = load_global("GrB_LXOR")
 
@@ -308,5 +308,8 @@ export GrB_NULL
 
 # GrB_ALL
 export GrB_ALL
+
+# GrB_Index
+export GrB_Index
 
 end #end of module
