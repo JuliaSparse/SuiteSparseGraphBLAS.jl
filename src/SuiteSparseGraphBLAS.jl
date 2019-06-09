@@ -183,7 +183,7 @@ GrB_Vector_nvals, GrB_Vector_setElement, GrB_Vector_extractElement, GrB_Vector_e
 GrB_Descriptor_new, GrB_Descriptor_set,
 
 # Algebra Methods
-GrB_UnaryOp_new, GrB_BinaryOp_new, GrB_Monoid_new, GrB_Semiring_new,
+GrB_UnaryOp_new, GrB_BinaryOp_new, GrB_Monoid_new, GrB_Semiring_new, GxB_SelectOp_new,
 
 # Free Methods
 GrB_free, GrB_UnaryOp_free, GrB_BinaryOp_free, GrB_Monoid_free, GrB_Semiring_free,

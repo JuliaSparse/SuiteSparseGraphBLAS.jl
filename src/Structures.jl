@@ -2,7 +2,7 @@ import Base.show
 import Base.==
 import Base.pointer
 export GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Monoid, GrB_Semiring,
-       GrB_Vector, GrB_Matrix, GrB_Descriptor
+       GrB_Vector, GrB_Matrix, GrB_Descriptor, GxB_SelectOp
 
 abstract type GrB_Struct end
 
