@@ -76,7 +76,7 @@ function GrB_Vector_extract(            # w<mask> = accum (w, u(I))
         I::Y,                           # row indices
         ni::X,                          # number of row indices
         desc::V                         # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: Union{Vector{X}, GrB_ALL_Type}}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -156,7 +156,7 @@ function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
         J::Y,                           # column indices
         nj::X,                          # number of column indices
         desc::V                         # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: Union{Vector{X}, GrB_ALL_Type}}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -244,7 +244,7 @@ function GrB_Col_extract(               # w<mask> = accum (w, A(I,j))
         ni::X,                          # number of row indices
         j::X,                           # column index
         desc::V                         # descriptor for w, mask, and A
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: Union{Vector{X}, GrB_ALL_Type}}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
 
     return GrB_Info(
                 ccall(

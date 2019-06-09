@@ -58,6 +58,7 @@ valid_matrix_mask_types = Union{GrB_Matrix, GrB_NULL_Type}
 valid_vector_mask_types = Union{GrB_Vector, GrB_NULL_Type}
 valid_accum_types = Union{GrB_BinaryOp, GrB_NULL_Type}
 valid_desc_types = Union{GrB_Descriptor, GrB_NULL_Type}
+valid_indices_types = Union{Vector{<:GrB_Index}, GrB_ALL_Type}
 
 const GrB_NULL = GrB_NULL_Type(C_NULL)
 const GrB_ALL = GrB_ALL_Type(C_NULL)
