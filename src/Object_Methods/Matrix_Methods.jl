@@ -33,7 +33,7 @@ end
 """
     GrB_Matrix_build(C, I, J, X, nvals, dup)
 
-Store elements from tuples into a vector.
+Store elements from tuples into a matrix.
 
 # Examples
 ```jldoctest
@@ -382,7 +382,7 @@ end
 """
     GrB_Matrix_extractElement(A, row_index, col_index)
 
-Return element of a vector at a given index (A[row_index][col_index]) if successful.
+Return element of a matrix at a given index (A[row_index][col_index]) if successful.
 Else return value of type GrB Info.
 
 # Examples
