@@ -166,6 +166,11 @@ include("Operations/Assign.jl")
 include("Operations/Reduce.jl")
 include("Operations/Transpose.jl")
 include("Operations/Select.jl")
+include("Interface/Interface.jl")
+
+using .Interface
+
+export findnz, nnz
 
 export
 # Context Methods
