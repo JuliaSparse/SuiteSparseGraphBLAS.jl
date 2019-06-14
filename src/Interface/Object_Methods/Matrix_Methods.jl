@@ -17,22 +17,22 @@ julia> A[1, 1]
 0x0000000b
 ```
 """
-function GrB_Matrix( 
-        I::Vector{U}, 
-        J::Vector{U}, 
+function GrB_Matrix(
+        I::Vector{U},
+        J::Vector{U},
         X::Vector{T};
-        nrows::U = maximum(I), 
+        nrows::U = maximum(I),
         ncols::U = maximum(J),
         nvals::U = length(I),
         dup::GrB_BinaryOp = default_dup(T)) where {T <: valid_types, U <: GrB_Index}
-    
+
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
-    res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
+    res = GrB_Matrix_new(A, GrB_T, nrows+1, ncols+1)
     if res != GrB_SUCCESS
         error(res)
     end
-    res = GrB_Matrix_build(A, I.-1, J.-1, X, nvals, dup)
+    res = GrB_Matrix_build(A, I, J, X, nvals, dup)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -58,11 +58,10 @@ julia> nnz(A)
 0
 ```
 """
-function GrB_Matrix(T, nrows::GrB_Index, ncols::GrB_Index)
+function GrB_Matrix(T::DataType, nrows::GrB_Index, ncols::GrB_Index)
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
-
-    res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
+    res = GrB_Matrix_new(A, GrB_T, nrows+1, ncols+1)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -72,7 +71,7 @@ end
 """
     findnz(A)
 
-Return a tuple (I, J, X) where I and J are the row and column indices of the stored values in GraphBLAS matrix A, 
+Return a tuple (I, J, X) where I and J are the row and column indices of the stored values in GraphBLAS matrix A,
 and X is a vector of the values.
 
 # Examples
@@ -95,7 +94,7 @@ function findnz(A::GrB_Matrix)
         error(res)
     end
     I, J, X = res
-    return I.+1, J.+1, X
+    return I, J, X
 end
 
 """
@@ -159,28 +158,28 @@ function size(A::GrB_Matrix)
     if typeof(ncols) == GrB_Info
         error(ncols)
     end
-    return (nrows, ncols)
+    return (nrows-1, ncols-1)
 end
 
 function size(A::GrB_Matrix, dim::Int64)
     if dim <= 0
         return error("dimension out of range")
     end
-    
+
     if dim == 1
         nrows = GrB_Matrix_nrows(A)
         if typeof(nrows) == GrB_Info
             error(nrows)
         end
-        return nrows
+        return nrows-1
     elseif dim == 2
         ncols = GrB_Matrix_ncols(A)
         if typeof(ncols) == GrB_Info
             error(ncols)
         end
-        return ncols
+        return ncols-1
     end
-    
+
     return 1
 end
 
@@ -204,11 +203,11 @@ julia> A[1, 1]
 ```
 """
 function getindex(A::GrB_Matrix, row_index::GrB_Index, col_index::GrB_Index)
-    res = GrB_Matrix_extractElement(A, row_index-1, col_index-1)
+    res = GrB_Matrix_extractElement(A, row_index, col_index)
     if typeof(res) == GrB_Info
         error(res)
     end
-    return res  
+    return res
 end
 
 """
@@ -237,7 +236,7 @@ julia> A[1, 1]
 ```
 """
 function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where {T <: valid_types}
-    res = GrB_Matrix_setElement(A, X, I-1, J-1)
+    res = GrB_Matrix_setElement(A, X, I, J)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -297,25 +296,10 @@ julia> findnz(B)
 ```
 """
 function copy(A::GrB_Matrix{T}) where T <: valid_types
-    nrows = GrB_Matrix_nrows(A)
-    if typeof(nrows) == GrB_Info
-        error(nrows)
-    end
-    ncols = GrB_Matrix_ncols(A)
-    if typeof(ncols) == GrB_Info
-        error(ncols)
-    end
-    GrB_T = get_GrB_Type(T)
-    
     C = GrB_Matrix{T}()
-    res = GrB_Matrix_new(C, GrB_T, nrows, ncols)
-    if res != GrB_SUCCESS
-        error(res)
-    end
     res = GrB_Matrix_dup(C, A)
     if res != GrB_SUCCESS
         error(res)
     end
-
     return C
 end
