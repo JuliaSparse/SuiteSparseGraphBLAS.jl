@@ -1,7 +1,7 @@
 """
     GrB_Matrix(I, J, X,[ nrows, ncols, nvals, dup])
 
-Create a GraphBLAS matrix A of dimensions nrows x ncols such that A[I[k], J[k]] = X[k].
+Create a GraphBLAS matrix of dimensions nrows x ncols such that A[I[k], J[k]] = X[k].
 dup is a GraphBLAS binary operator used to combine duplicates, it defaults to `FIRST`.
 If nrows and ncols are not specified, they are set to maximum(I) and maximum(J) respectively.
 nvals is set to length(I) is not specified.
@@ -245,7 +245,7 @@ end
 """
     empty!(A)
 
-Remove all stored entries from A.
+Remove all stored entries from GraphBLAS matrix A.
 
 # Examples
 ```jldoctest
