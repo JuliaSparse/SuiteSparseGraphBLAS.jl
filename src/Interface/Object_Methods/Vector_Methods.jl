@@ -35,11 +35,11 @@ function GrB_Vector(
 
     V = GrB_Vector{T}()
     GrB_T = get_GrB_Type(T)
-    res = GrB_Vector_new(V, GrB_T, n+1)
+    res = GrB_Vector_new(V, GrB_T, n)
     if res != GrB_SUCCESS
         error(res)
     end
-    res = GrB_Vector_build(V, I, X, nvals, dup)
+    res = GrB_Vector_build(V, I.-1, X, nvals, dup)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -71,7 +71,7 @@ julia> nnz(A)
 function GrB_Vector(T::DataType, n::GrB_Index)
     V = GrB_Vector{T}()
     GrB_T = get_GrB_Type(T)
-    res = GrB_Vector_new(V, GrB_T, n+1)
+    res = GrB_Vector_new(V, GrB_T, n)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -105,7 +105,7 @@ function size(V::GrB_Vector)
     if typeof(n) == GrB_Info
         error(n)
     end
-    return (n-1, )
+    return (n, )
 end
 
 function size(V::GrB_Vector, dim::Int64)
@@ -118,7 +118,7 @@ function size(V::GrB_Vector, dim::Int64)
         if typeof(n) == GrB_Info
             error(n)
         end
-        return n-1
+        return n
     end
 
     return 1
@@ -176,7 +176,7 @@ function findnz(V::GrB_Vector)
         error(res)
     end
     I, X = res
-    return I, X
+    return I.+1, X
 end
 
 """
@@ -208,7 +208,7 @@ julia> findnz(A)
 ```
 """
 function setindex!(V::GrB_Vector{T}, x::T, i::GrB_Index) where {T <: valid_types}
-    res = GrB_Vector_setElement(V, x, i)
+    res = GrB_Vector_setElement(V, x, i-1)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -234,7 +234,7 @@ julia> A[2]
 ```
 """
 function getindex(V::GrB_Vector, i::GrB_Index)
-    res = GrB_Vector_extractElement(V, i)
+    res = GrB_Vector_extractElement(V, i-1)
     if typeof(res) == GrB_Info
         error(res)
     end

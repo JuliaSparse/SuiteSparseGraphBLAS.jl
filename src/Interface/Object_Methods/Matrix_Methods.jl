@@ -28,11 +28,11 @@ function GrB_Matrix(
 
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
-    res = GrB_Matrix_new(A, GrB_T, nrows+1, ncols+1)
+    res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
     if res != GrB_SUCCESS
         error(res)
     end
-    res = GrB_Matrix_build(A, I, J, X, nvals, dup)
+    res = GrB_Matrix_build(A, I.-1, J.-1, X, nvals, dup)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -61,7 +61,7 @@ julia> nnz(A)
 function GrB_Matrix(T::DataType, nrows::GrB_Index, ncols::GrB_Index)
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
-    res = GrB_Matrix_new(A, GrB_T, nrows+1, ncols+1)
+    res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -94,7 +94,7 @@ function findnz(A::GrB_Matrix)
         error(res)
     end
     I, J, X = res
-    return I, J, X
+    return I.+1, J.+1, X
 end
 
 """
@@ -158,7 +158,7 @@ function size(A::GrB_Matrix)
     if typeof(ncols) == GrB_Info
         error(ncols)
     end
-    return (nrows-1, ncols-1)
+    return (nrows, ncols)
 end
 
 function size(A::GrB_Matrix, dim::Int64)
@@ -171,13 +171,13 @@ function size(A::GrB_Matrix, dim::Int64)
         if typeof(nrows) == GrB_Info
             error(nrows)
         end
-        return nrows-1
+        return nrows
     elseif dim == 2
         ncols = GrB_Matrix_ncols(A)
         if typeof(ncols) == GrB_Info
             error(ncols)
         end
-        return ncols-1
+        return ncols
     end
 
     return 1
@@ -203,7 +203,7 @@ julia> A[1, 1]
 ```
 """
 function getindex(A::GrB_Matrix, row_index::GrB_Index, col_index::GrB_Index)
-    res = GrB_Matrix_extractElement(A, row_index, col_index)
+    res = GrB_Matrix_extractElement(A, row_index-1, col_index-1)
     if typeof(res) == GrB_Info
         error(res)
     end
@@ -236,7 +236,7 @@ julia> A[1, 1]
 ```
 """
 function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where {T <: valid_types}
-    res = GrB_Matrix_setElement(A, X, I, J)
+    res = GrB_Matrix_setElement(A, X, I-1, J-1)
     if res != GrB_SUCCESS
         error(res)
     end
