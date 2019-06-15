@@ -32,7 +32,7 @@ end
 """
     setindex!(desc, val, field)
 
-Set the value for a field for an existing descriptor
+Set the value for a field of an existing descriptor
 
 # Examples
 ```jldoctest
