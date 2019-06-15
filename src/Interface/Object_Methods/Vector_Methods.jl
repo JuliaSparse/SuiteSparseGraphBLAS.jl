@@ -49,7 +49,7 @@ end
 """
     GrB_Vector(T, n)
 
-
+Create an empty GraphBLAS vector of type T and size n.
 
 # Examples
 ```jldoctest
@@ -275,7 +275,7 @@ end
 """
     copy(V)
 
-Create a new vector with the same domain, size, and contents as another vector.
+Create a new vector with the same domain, size, and contents as GraphBLAS vector V.
 
 # Examples
 ```jldoctest

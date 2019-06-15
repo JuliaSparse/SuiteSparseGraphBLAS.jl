@@ -42,7 +42,7 @@ end
 """
     GrB_Matrix(T, nrows, ncols)
 
-Create an empty GraphBLAS matrix A of type T and dimensions nrows x ncols.
+Create an empty GraphBLAS matrix of type T and dimensions nrows x ncols.
 
 # Examples
 ```jldoctest
@@ -276,7 +276,7 @@ end
 """
     copy(A)
 
-Create a new GraphBLAS matrix with the same domain, dimensions, and contents as another matrix.
+Create a new GraphBLAS matrix with the same domain, dimensions, and contents as GraphBLAS matrix A.
 
 # Examples
 ```jldoctest
