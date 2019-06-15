@@ -410,6 +410,9 @@ julia> GrB_Vector_extractTuples(V)
 """
 function GrB_Vector_extractTuples(v::GrB_Vector{T}) where T <: valid_types
     nvals = GrB_Vector_nvals(v)
+    if typeof(nvals) == GrB_Info
+        return nvals
+    end
     I = Vector{typeof(nvals)}(undef, nvals)
     X = Vector{T}(undef, nvals)
     n = Ref(UInt64(nvals))

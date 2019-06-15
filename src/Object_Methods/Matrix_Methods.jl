@@ -452,6 +452,9 @@ julia> GrB_Matrix_extractTuples(MAT)
 """
 function GrB_Matrix_extractTuples(A::GrB_Matrix{T}) where T <: valid_types
     nvals = GrB_Matrix_nvals(A)
+    if typeof(nvals) == GrB_Info
+        return nvals
+    end
     U = typeof(nvals)
     row_indices = Vector{U}(undef, nvals)
     col_indices = Vector{U}(undef, nvals)
