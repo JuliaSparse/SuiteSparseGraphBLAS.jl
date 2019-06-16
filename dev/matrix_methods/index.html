@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Basic matrix functions · SuiteSparseGraphBLAS</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>SuiteSparseGraphBLAS</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href>Basic matrix functions</a><ul class="internal"><li><a class="toctext" href="#Basic-matrix-functions-1">Basic matrix functions</a></li></ul></li><li><a class="toctext" href="../vector_methods/">Basic vector functions</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Basic matrix functions</a></li></ul><a class="edit-page" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/master/docs/src/matrix_methods.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Basic matrix functions</span><a class="fa fa-bars" href="#"></a></div></header><h2><a class="nav-anchor" id="Basic-matrix-functions-1" href="#Basic-matrix-functions-1">Basic matrix functions</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_build-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},Array{U,1},Array{U,1},Array{T,1},U,GrB_BinaryOp}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}" href="#SuiteSparseGraphBLAS.GrB_Matrix_build-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},Array{U,1},Array{U,1},Array{T,1},U,GrB_BinaryOp}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}"><code>SuiteSparseGraphBLAS.GrB_Matrix_build</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_build(C, I, J, X, nvals, dup)</code></pre><p>Store elements from tuples into a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; @GxB_Matrix_fprint(MAT, GxB_COMPLETE)
+
+GraphBLAS matrix: MAT
+nrows: 4 ncols: 4 max # entries: 5
+format: standard CSR vlen: 4 nvec_nonempty: 3 nvec: 4 plen: 4 vdim: 4
+hyper_ratio 0.0625
+GraphBLAS type:  int8_t size: 1
+number of entries: 5
+row: 1 : 1 entries [0:0]
+    column 1: int8 2
+row: 2 : 3 entries [1:3]
+    column 1: int8 4
+    column 2: int8 3
+    column 3: int8 5
+row: 3 : 1 entries [4:4]
+    column 3: int8 6
+
+</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L33-L75">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_clear-Tuple{GrB_Matrix}" href="#SuiteSparseGraphBLAS.GrB_Matrix_clear-Tuple{GrB_Matrix}"><code>SuiteSparseGraphBLAS.GrB_Matrix_clear</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_clear(A)</code></pre><p>Remove all elements from a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_nvals(MAT)
+5
+
+julia&gt; GrB_Matrix_clear(MAT)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_nvals(MAT)
+0</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L268-L300">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_dup-Union{Tuple{T}, Tuple{GrB_Matrix{T},GrB_Matrix{T}}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}" href="#SuiteSparseGraphBLAS.GrB_Matrix_dup-Union{Tuple{T}, Tuple{GrB_Matrix{T},GrB_Matrix{T}}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}"><code>SuiteSparseGraphBLAS.GrB_Matrix_dup</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_dup(C, A)</code></pre><p>Create a new matrix with the same domain, dimensions, and contents as another matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; B = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_dup(B, MAT)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; @GxB_Matrix_fprint(B, GxB_SHORT)
+
+GraphBLAS matrix: B
+nrows: 4 ncols: 4 max # entries: 5
+format: standard CSR vlen: 4 nvec_nonempty: 3 nvec: 4 plen: 4 vdim: 4
+hyper_ratio 0.0625
+GraphBLAS type:  int8_t size: 1
+number of entries: 5
+row: 1 : 1 entries [0:0]
+    column 1: int8 2
+row: 2 : 3 entries [1:3]
+    column 1: int8 4
+    column 2: int8 3
+    column 3: int8 5
+row: 3 : 1 entries [4:4]
+    column 3: int8 6
+</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L207-L254">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_extractElement-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},U,U}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}" href="#SuiteSparseGraphBLAS.GrB_Matrix_extractElement-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},U,U}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}"><code>SuiteSparseGraphBLAS.GrB_Matrix_extractElement</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_extractElement(A, row_index, col_index)</code></pre><p>Return element of a matrix at a given index (A[row<em>index][col</em>index]) if successful. Else return value of type GrB Info.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_extractElement(MAT, 1, 1)
+2</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L382-L409">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_extractTuples-Union{Tuple{GrB_Matrix{T}}, Tuple{T}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}" href="#SuiteSparseGraphBLAS.GrB_Matrix_extractTuples-Union{Tuple{GrB_Matrix{T}}, Tuple{T}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}"><code>SuiteSparseGraphBLAS.GrB_Matrix_extractTuples</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_extractTuples(A)</code></pre><p>Return tuples stored in a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_extractTuples(MAT)
+([1, 2, 2, 2, 3], [1, 1, 2, 3, 3], Int8[2, 4, 3, 5, 6])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L426-L452">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_ncols-Tuple{GrB_Matrix}" href="#SuiteSparseGraphBLAS.GrB_Matrix_ncols-Tuple{GrB_Matrix}"><code>SuiteSparseGraphBLAS.GrB_Matrix_ncols</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_ncols(A)</code></pre><p>Return the number of columns in a matrix if successful. Else return value of type GrB Info.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_ncols(MAT)
+4</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L128-L150">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_new-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},GrB_Type{T},U,U}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}" href="#SuiteSparseGraphBLAS.GrB_Matrix_new-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},GrB_Type{T},U,U}} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}"><code>SuiteSparseGraphBLAS.GrB_Matrix_new</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_new(A, type, nrows, ncols)</code></pre><p>Create a new matrix with specified domain and dimensions.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L1-L19">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_nrows-Tuple{GrB_Matrix}" href="#SuiteSparseGraphBLAS.GrB_Matrix_nrows-Tuple{GrB_Matrix}"><code>SuiteSparseGraphBLAS.GrB_Matrix_nrows</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_nrows(A)</code></pre><p>Return the number of rows in a matrix if successful. Else return value of type GrB Info.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_nrows(MAT)
+4</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L91-L113">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_nvals-Tuple{GrB_Matrix}" href="#SuiteSparseGraphBLAS.GrB_Matrix_nvals-Tuple{GrB_Matrix}"><code>SuiteSparseGraphBLAS.GrB_Matrix_nvals</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_nvals(A)</code></pre><p>Return the number of stored elements in a matrix if successful. Else return value of type GrB Info.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_nvals(MAT)
+5</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L165-L192">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Matrix_setElement-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},T,U,U}} where T&lt;:Union{Bool, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}" href="#SuiteSparseGraphBLAS.GrB_Matrix_setElement-Union{Tuple{T}, Tuple{U}, Tuple{GrB_Matrix{T},T,U,U}} where T&lt;:Union{Bool, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Int64, UInt64}"><code>SuiteSparseGraphBLAS.GrB_Matrix_setElement</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_setElement(C, X, I, J)</code></pre><p>Set one element of a matrix to a given value, C[I][J] = X.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; MAT = GrB_Matrix{Int8}()
+GrB_Matrix{Int8}
+
+julia&gt; GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
+
+
+julia&gt; GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_extractElement(MAT, 1, 1)
+2
+
+julia&gt; GrB_Matrix_setElement(MAT, Int8(7), 1, 1)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_extractElement(MAT, 1, 1)
+7</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/8c857898e17b00c31c5c51726ca8724d15bbbb09/src/Object_Methods/Matrix_Methods.jl#L312-L345">source</a></section><footer><hr/><a class="next" href="../vector_methods/"><span class="direction">Next</span><span class="title">Basic vector functions</span></a></footer></article></body></html>
