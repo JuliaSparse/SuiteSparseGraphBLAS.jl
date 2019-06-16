@@ -6,6 +6,7 @@ makedocs(
     sitename    = "SuiteSparseGraphBLAS",
     doctest     = false,
     pages       = Any[
+		"Introduction"						=> "index.md",
         "Basic matrix functions"            => "matrix_methods.md",
         "Basic vector functions"            => "vector_methods.md"
     ]
