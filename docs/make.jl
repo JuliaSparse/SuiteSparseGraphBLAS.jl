@@ -3,7 +3,7 @@ using Documenter, SuiteSparseGraphBLAS
 makedocs(
     modules     = [SuiteSparseGraphBLAS],
     format      = Documenter.HTML(),
-    sitename    = "GraphBLAS.jl",
+    sitename    = "SuiteSparseGraphBLAS",
     doctest     = false,
     pages       = Any[
         "Basic matrix functions"            => "matrix_methods.md",
@@ -12,6 +12,8 @@ makedocs(
 )
 
 deploydocs(
-    julia = "nightly",
-    repo = "github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl.git"
+    target = "build",
+    deps   = nothing,
+    make   = nothing,
+    repo   = "github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl.git"
 )
