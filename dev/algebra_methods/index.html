@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Operators &amp; algebraic structures · SuiteSparseGraphBLAS</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>SuiteSparseGraphBLAS</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Introduction</a></li><li><a class="toctext" href="../matrix_and_vector_methods/">Basic matrix &amp; vector methods</a></li><li class="current"><a class="toctext" href>Operators &amp; algebraic structures</a><ul class="internal"><li><a class="toctext" href="#Algebra-methods-1">Algebra methods</a></li></ul></li><li><a class="toctext" href="../desc_methods/">Descriptors</a></li><li><a class="toctext" href="../free_methods/">Freeing objects</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Operators &amp; algebraic structures</a></li></ul><a class="edit-page" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/master/docs/src/algebra_methods.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Operators &amp; algebraic structures</span><a class="fa fa-bars" href="#"></a></div></header><h2><a class="nav-anchor" id="Algebra-methods-1" href="#Algebra-methods-1">Algebra methods</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_BinaryOp_new-Union{Tuple{V}, Tuple{U}, Tuple{T}, Tuple{GrB_BinaryOp,Function,GrB_Type{T},GrB_Type{U},GrB_Type{V}}} where V&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}" href="#SuiteSparseGraphBLAS.GrB_BinaryOp_new-Union{Tuple{V}, Tuple{U}, Tuple{T}, Tuple{GrB_BinaryOp,Function,GrB_Type{T},GrB_Type{U},GrB_Type{V}}} where V&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where U&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}"><code>SuiteSparseGraphBLAS.GrB_BinaryOp_new</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_BinaryOp_new(op, fn, ztype, xtype, ytype)</code></pre><p>Initialize a new GraphBLAS binary operator with a specified user-defined function and its types.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; V = GrB_Vector{Float64}()
+GrB_Vector{Float64}
+
+julia&gt; GrB_Vector_new(V, GrB_FP64, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [0, 0, 3, 3]; X = [2.1, 3.2, 4.5, 5.0]; n = 4;  # two values at position 0 and 3
+
+julia&gt; dup = GrB_BinaryOp()  # dup is a binary operator which is applied when duplicate values for the same location are present in the vector
+GrB_BinaryOp
+
+julia&gt; function ADD(b, c)
+           return b+c
+       end
+ADD (generic function with 1 method)
+
+julia&gt; GrB_BinaryOp_new(dup, ADD, GrB_FP64, GrB_FP64, GrB_FP64)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Vector_build(V, I, X, n, dup)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; @GxB_Vector_fprint(V, GxB_SHORT) # the value stored at position 0 and 3 will be the sum of the duplicate values
+
+GraphBLAS vector: V
+nrows: 4 ncols: 1 max # entries: 2
+format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
+hyper_ratio 0.0625
+GraphBLAS type:  double size: 8
+number of entries: 2
+column: 0 : 2 entries [0:1]
+    row 0: double 5.3
+    row 3: double 9.5
+</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd0f3c3bae826173174bcb99f9113de5b8efa212/src/Object_Methods/Algebra_Methods.jl#L1-L48">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Monoid_new-Union{Tuple{T}, Tuple{GrB_Monoid,GrB_BinaryOp,T}} where T&lt;:Union{Bool, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}" href="#SuiteSparseGraphBLAS.GrB_Monoid_new-Union{Tuple{T}, Tuple{GrB_Monoid,GrB_BinaryOp,T}} where T&lt;:Union{Bool, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}"><code>SuiteSparseGraphBLAS.GrB_Monoid_new</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Monoid_new(monoid, binary_op, identity)</code></pre><p>Create a new monoid with specified binary operator and identity value.</p></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd0f3c3bae826173174bcb99f9113de5b8efa212/src/Object_Methods/Algebra_Methods.jl#L157-L161">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_Semiring_new-Tuple{GrB_Semiring,GrB_Monoid,GrB_BinaryOp}" href="#SuiteSparseGraphBLAS.GrB_Semiring_new-Tuple{GrB_Semiring,GrB_Monoid,GrB_BinaryOp}"><code>SuiteSparseGraphBLAS.GrB_Semiring_new</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_Semiring_new(semiring, monoid, binary_op)</code></pre><p>Create a new semiring with specified monoid and binary operator.</p></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd0f3c3bae826173174bcb99f9113de5b8efa212/src/Object_Methods/Algebra_Methods.jl#L204-L208">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="SuiteSparseGraphBLAS.GrB_UnaryOp_new-Union{Tuple{U}, Tuple{T}, Tuple{GrB_UnaryOp,Function,GrB_Type{T},GrB_Type{U}}} where U&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}" href="#SuiteSparseGraphBLAS.GrB_UnaryOp_new-Union{Tuple{U}, Tuple{T}, Tuple{GrB_UnaryOp,Function,GrB_Type{T},GrB_Type{U}}} where U&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8} where T&lt;:Union{Bool, Float32, Float64, Int16, Int32, Int64, Int8, UInt16, UInt32, UInt64, UInt8}"><code>SuiteSparseGraphBLAS.GrB_UnaryOp_new</code></a> — <span class="docstring-category">Method</span>.</div><div><div><pre><code class="language-julia">GrB_UnaryOp_new(op, fn, ztype, xtype)</code></pre><p>Initialize a new GraphBLAS unary operator with a specified user-defined function and its types.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; u = GrB_Vector{Int64}()
+GrB_Vector{Int64}
+
+julia&gt; GrB_Vector_new(u, GrB_INT64, 3)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [0, 2]; X = [10, 20]; n = 2;
+
+julia&gt; GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; w = GrB_Vector{Int64}()
+GrB_Vector{Int64}
+
+julia&gt; GrB_Vector_new(w, GrB_INT64, 3)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; function NEG(a)
+           return -a
+       end
+NEG (generic function with 1 method)
+
+julia&gt; negative = GrB_UnaryOp()
+GrB_UnaryOp
+
+julia&gt; GrB_UnaryOp_new(negative, NEG, GrB_INT64, GrB_INT64)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_apply(w, GrB_NULL, GrB_NULL, negative, u, GrB_NULL)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; @GxB_fprint(w, GxB_COMPLETE)
+
+GraphBLAS vector: w 
+nrows: 3 ncols: 1 max # entries: 2
+format: standard CSC vlen: 3 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
+hyper_ratio 0.0625
+GraphBLAS type:  int64_t size: 8
+number of entries: 2 
+column: 0 : 2 entries [0:1]
+    row 0: int64 -10
+    row 2: int64 -20
+</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd0f3c3bae826173174bcb99f9113de5b8efa212/src/Object_Methods/Algebra_Methods.jl#L75-L131">source</a></section><footer><hr/><a class="previous" href="../matrix_and_vector_methods/"><span class="direction">Previous</span><span class="title">Basic matrix &amp; vector methods</span></a><a class="next" href="../desc_methods/"><span class="direction">Next</span><span class="title">Descriptors</span></a></footer></article></body></html>
