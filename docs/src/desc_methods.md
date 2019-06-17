@@ -1,9 +1,9 @@
-## Basic vector functions
+## Descriptor methods
 
 ```@autodocs
 Modules = [SuiteSparseGraphBLAS]
 Pages   = [
-    "Object_Methods/Vector_Methods.jl",
+    "Object_Methods/Descriptor_Methods.jl",
 ]
 Private = false
 ```
