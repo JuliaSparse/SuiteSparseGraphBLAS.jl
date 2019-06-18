@@ -28,6 +28,9 @@ end
 """
     GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
 
+Assign values from one GraphBLAS vector to a subset of a vector as specified by a set of 
+indices. The size of the input vector is the same size as the index array provided.
+
 # Examples
 ```jldoctest
 julia> using SuiteSparseGraphBLAS
@@ -81,6 +84,9 @@ end
 
 """
     GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)
+
+Assign values from one GraphBLAS matrix to a subset of a matrix as specified by a set of 
+indices.  The dimensions of the input matrix are the same size as the row and column index arrays provided.
 
 # Examples
 ```jldoctest
@@ -137,6 +143,10 @@ end
 
 """
     GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)
+
+Assign the contents a vector to a subset of elements in one column of a matrix.
+Note that since the output cannot be transposed, a different variant of assign is provided 
+to assign to a row of matrix.
 
 # Examples
 ```jldoctest
@@ -198,6 +208,10 @@ end
 """
     GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)
 
+Assign the contents a vector to a subset of elements in one row of a matrix.
+Note that since the output cannot be transposed, a different variant of assign is provided 
+to assign to a column of a matrix.
+
 # Examples
 ```jldoctest
 julia> using SuiteSparseGraphBLAS
@@ -257,6 +271,9 @@ end
 
 """
     GrB_Vector_assign(w, mask, accum, x, I, ni, desc)
+
+Assign the same value to a specified subset of vector elements.
+With the use of `GrB_ALL`, the entire destination vector can be filled with the constant.
 
 # Examples
 ```jldoctest
@@ -342,6 +359,9 @@ end
 
 """
     GrB_Matrix_assign(C, Mask, accum, x, I, ni, J, nj, desc)
+
+Assign the same value to a specified subset of matrix elements.
+With the use of `GrB_ALL`, the entire destination matrix can be filled with the constant.
 
 # Examples
 ```jldoctest
