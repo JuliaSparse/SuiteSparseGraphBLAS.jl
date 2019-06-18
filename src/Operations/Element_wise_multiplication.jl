@@ -349,7 +349,6 @@ julia> GrB_Matrix_extractTuples(C)
 ([0, 2], [2, 0], [36, 47])
 ```
 """
-
 function GrB_eWiseMult_Matrix_Monoid(           # C<Mask> = accum (C, A.*B)
     C::GrB_Matrix,                              # input/output matrix for results
     Mask::T,                                    # optional mask for C, unused if NULL
