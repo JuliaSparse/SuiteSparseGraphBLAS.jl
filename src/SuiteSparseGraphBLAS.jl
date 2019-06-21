@@ -12,7 +12,7 @@ const types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
 
 const GrB_Index = Union{Int64, UInt64}
 const valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64}
-const valid_int_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64}
+const valid_int_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64}
 
 built_in_unary_operators = ["IDENTITY", "AINV", "MINV"]
 

@@ -24,7 +24,7 @@ function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type{T}, n::U) where {U <: G
         ccall(
                 dlsym(graphblas_lib, "GrB_Vector_new"),
                 Cint,
-                (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t),
+                (Ptr{Cvoid}, Ptr{Cvoid}, Cuintmax_t),
                 v_ptr, type.p, n
             )
         )
@@ -262,7 +262,7 @@ function GrB_Vector_build(w::GrB_Vector{T}, I::Vector{U}, X::Vector{T}, nvals::U
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Ptr{U}, Ptr{T}, Cintmax_t, Ptr{Cvoid}),
+                (Ptr{Cvoid}, Ptr{U}, Ptr{T}, Cuintmax_t, Ptr{Cvoid}),
                 w.p, I_ptr, X_ptr, nvals, dup.p
             )
         )
@@ -307,7 +307,19 @@ function GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::U) where {U <: GrB_Ind
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Cintmax_t, Cintmax_t),
+                (Ptr{Cvoid}, Cintmax_t, Cuintmax_t),
+                w.p, x, i
+            )
+        )
+end
+
+function GrB_Vector_setElement(w::GrB_Vector{UInt64}, x::UInt64, i::U) where U <: GrB_Index
+    fn_name = "GrB_Vector_setElement_UINT64"
+    return GrB_Info(
+        ccall(
+                dlsym(graphblas_lib, fn_name),
+                Cint,
+                (Ptr{Cvoid}, Cuintmax_t, Cuintmax_t),
                 w.p, x, i
             )
         )
@@ -319,7 +331,7 @@ function GrB_Vector_setElement(w::GrB_Vector{Float32}, x::Float32, i::U) where U
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Cfloat, Cintmax_t),
+                (Ptr{Cvoid}, Cfloat, Cuintmax_t),
                 w.p, x, i
             )
         )
@@ -331,7 +343,7 @@ function GrB_Vector_setElement(w::GrB_Vector{Float64}, x::Float64, i::U) where U
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Cdouble, Cintmax_t),
+                (Ptr{Cvoid}, Cdouble, Cuintmax_t),
                 w.p, x, i
             )
         )

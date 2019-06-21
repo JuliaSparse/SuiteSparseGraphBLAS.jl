@@ -82,7 +82,7 @@ function GrB_Vector_extract(            # w<mask> = accum (w, u(I))
                 ccall(
                         dlsym(graphblas_lib, "GrB_Vector_extract"),
                         Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cintmax_t}, Cintmax_t, Ptr{Cvoid}),
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Y}, Cuintmax_t, Ptr{Cvoid}),
                         w.p, mask.p, accum.p, u.p, pointer(I), ni, desc.p
                     )
                 )
@@ -162,7 +162,7 @@ function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
                 ccall(
                         dlsym(graphblas_lib, "GrB_Matrix_extract"),
                         Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cintmax_t}, Cintmax_t, Ptr{Cintmax_t}, Cintmax_t, Ptr{Cvoid}),
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Y}, Cuintmax_t, Ptr{Y}, Cuintmax_t, Ptr{Cvoid}),
                         C.p, Mask.p, accum.p, A.p, pointer(I), ni, pointer(J), nj, desc.p
                     )
                 )
@@ -250,7 +250,7 @@ function GrB_Col_extract(               # w<mask> = accum (w, A(I,j))
                 ccall(
                         dlsym(graphblas_lib, "GrB_Col_extract"),
                         Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cintmax_t}, Cintmax_t, Cintmax_t, Ptr{Cvoid}),
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Y}, Cuintmax_t, Cuintmax_t, Ptr{Cvoid}),
                         w.p, mask.p, accum.p, A.p, pointer(I), ni, j, desc.p
                     )
                 )

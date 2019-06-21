@@ -24,7 +24,7 @@ function GrB_Matrix_new(A::GrB_Matrix{T}, type::GrB_Type{T}, nrows::U, ncols::U)
         ccall(
                 dlsym(graphblas_lib, "GrB_Matrix_new"),
                 Cint,
-                (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
+                (Ptr{Cvoid}, Ptr{Cvoid}, Cuintmax_t, Cuintmax_t),
                 A_ptr, type.p, nrows, ncols
             )
         )
@@ -82,7 +82,7 @@ function GrB_Matrix_build(C::GrB_Matrix{T}, I::Vector{U}, J::Vector{U}, X::Vecto
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Ptr{U}, Ptr{U}, Ptr{T}, Cintmax_t, Ptr{Cvoid}),
+                (Ptr{Cvoid}, Ptr{U}, Ptr{U}, Ptr{T}, Cuintmax_t, Ptr{Cvoid}),
                 C.p, I_ptr, J_ptr, X_ptr, nvals, dup.p
             )
         )
@@ -349,7 +349,19 @@ function GrB_Matrix_setElement(C::GrB_Matrix{T}, X::T, I::U, J::U) where {U <: G
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Cintmax_t, Cintmax_t, Cintmax_t),
+                (Ptr{Cvoid}, Cintmax_t, Cuintmax_t, Cuintmax_t),
+                C.p, X, I, J
+            )
+        )
+end
+
+function GrB_Matrix_setElement(C::GrB_Matrix{UInt64}, X::UInt64, I::U, J::U) where U <: GrB_Index
+    fn_name = "GrB_Matrix_setElement_UINT64"
+    return GrB_Info(
+        ccall(
+                dlsym(graphblas_lib, fn_name),
+                Cint,
+                (Ptr{Cvoid}, Cuintmax_t, Cuintmax_t, Cuintmax_t),
                 C.p, X, I, J
             )
         )
@@ -361,7 +373,7 @@ function GrB_Matrix_setElement(C::GrB_Matrix{Float32}, X::Float32, I::U, J::U) w
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Cfloat, Cintmax_t, Cintmax_t),
+                (Ptr{Cvoid}, Cfloat, Cuintmax_t, Cuintmax_t),
                 C.p, X, I, J
             )
         )
@@ -373,7 +385,7 @@ function GrB_Matrix_setElement(C::GrB_Matrix{Float64}, X::Float64, I::U, J::U) w
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Cdouble, Cintmax_t, Cintmax_t),
+                (Ptr{Cvoid}, Cdouble, Cuintmax_t, Cuintmax_t),
                 C.p, X, I, J
             )
         )
@@ -415,7 +427,7 @@ function GrB_Matrix_extractElement(A::GrB_Matrix{T}, row_index::U, col_index::U)
                 ccall(
                         dlsym(graphblas_lib, fn_name),
                         Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t, Cintmax_t),
+                        (Ptr{Cvoid}, Ptr{Cvoid}, Cuintmax_t, Cuintmax_t),
                         element, A.p, row_index, col_index
                     )
                 )
