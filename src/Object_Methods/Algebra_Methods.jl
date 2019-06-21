@@ -173,6 +173,20 @@ function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::T
             )
 end
 
+function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::UInt64)
+    monoid_ptr = pointer_from_objref(monoid)
+    fn_name = "GrB_Monoid_new_UINT64"
+    
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, fn_name),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Cuintmax_t),
+                    monoid_ptr, binary_op.p, identity
+                )
+            )
+end
+
 function GrB_Monoid_new(monoid::GrB_Monoid, binary_op::GrB_BinaryOp, identity::Float32)
     monoid_ptr = pointer_from_objref(monoid)
     fn_name = "GrB_Monoid_new_FP32"
