@@ -303,3 +303,45 @@ function copy(A::GrB_Matrix{T}) where T <: valid_types
     end
     return C
 end
+
+"""
+    LowerTriangular(A)
+
+Return lower triangle of a GraphBLAS matrix.
+"""
+function LowerTriangular(A::GrB_Matrix{T}) where T <: valid_types 
+    nrows, ncols = size(A)
+    if nrows != ncols
+        error("Matrix is not square")
+    end
+    L = GrB_Matrix(T, nrows, ncols)
+    GxB_select(L, GrB_NULL, GrB_NULL, GxB_TRIL, A, 0, GrB_NULL)
+    return L
+end
+
+"""
+    UpperTriangular(A)
+
+Return upper triangle of a GraphBLAS matrix.
+"""
+function UpperTriangular(A::GrB_Matrix{T}) where T <: valid_types 
+    nrows, ncols = size(A)
+    if nrows != ncols
+        error("Matrix is not square")
+    end
+    U = GrB_Matrix(T, nrows, ncols)
+    GxB_select(U, GrB_NULL, GrB_NULL, GxB_TRIU, A, 0, GrB_NULL)
+    return U
+end
+
+"""
+    Diagonal(A)
+
+Return diagonal of a GraphBLAS matrix.
+"""
+function Diagonal(A::GrB_Matrix{T}) where T <: valid_types 
+    nrows, ncols = size(A)
+    D = GrB_Matrix(T, nrows, ncols)
+    GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, 0, GrB_NULL)
+    return D
+end

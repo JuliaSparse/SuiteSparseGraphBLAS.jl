@@ -12,6 +12,6 @@ import SuiteSparseGraphBLAS:
 include("./Object_Methods/Matrix_Methods.jl")
 include("./Object_Methods/Vector_Methods.jl")
 include("./Object_Methods/Descriptor_Methods.jl")
-export findnz, nnz
+export findnz, nnz, LowerTriangular, UpperTriangular, Diagonal
 
 end # end of module

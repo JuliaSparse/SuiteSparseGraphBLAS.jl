@@ -170,7 +170,7 @@ include("Interface/Interface.jl")
 
 using .Interface
 
-export findnz, nnz
+export findnz, nnz, LowerTriangular, UpperTriangular, Diagonal
 
 export
 # Context Methods
