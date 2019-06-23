@@ -8,9 +8,9 @@ function GrB_apply(                 # w<mask> = accum (w, op(u))
     Mask::T,                        # optional mask for w, unused if NULL
     accum::U,                       # optional accum for z=accum(w,t)
     op::GrB_UnaryOp,                # operator to apply to the entries
-    A::X,                           # first input:  vector u
+    A::Y,                           # first input:  vector u
     desc::V                         # descriptor for w and mask
-) where {X <: Union{GrB_Vector, GrB_Matrix}, T <: Union{GrB_Vector, GrB_Matrix, GrB_NULL_Type}, U <: valid_accum_types, V <: valid_desc_types}
+) where {X <: Union{GrB_Vector, GrB_Matrix}, Y <: Union{GrB_Vector, GrB_Matrix}, T <: Union{GrB_Vector, GrB_Matrix, GrB_NULL_Type}, U <: valid_accum_types, V <: valid_desc_types}
 
     fn_name = "GrB_" * get_struct_name(C) * "_apply"
 

@@ -10,9 +10,10 @@ are not computed. This is primary difference with `GrB_eWiseAdd`. The input matr
 via the descriptor. For a semiring, the mult operator is the semiring's multiply operator; this differs from the 
 eWiseAdd methods which use the semiring's add operator instead.
 """
-function GrB_eWiseMult(C::T, mask::V, accum::W, op::U, A::T, B::T,
-    desc::X) where {T <: Union{GrB_Vector, GrB_Matrix}, U <: Union{GrB_BinaryOp, GrB_Monoid, GrB_Semiring}, 
-                    V <: Union{GrB_Vector, GrB_Matrix, GrB_NULL_Type}, W <: valid_accum_types, X <: valid_desc_types}
+function GrB_eWiseMult(C::Z, mask::V, accum::W, op::U, A::T, B::Y,
+    desc::X) where {T <: Union{GrB_Vector, GrB_Matrix}, Y <: Union{GrB_Vector, GrB_Matrix}, Z <: Union{GrB_Vector, GrB_Matrix},
+                    U <: Union{GrB_BinaryOp, GrB_Monoid, GrB_Semiring}, V <: Union{GrB_Vector, GrB_Matrix, GrB_NULL_Type},
+                    W <: valid_accum_types, X <: valid_desc_types}
 
     T_name = get_struct_name(A)
     U_name = get_struct_name(op)
