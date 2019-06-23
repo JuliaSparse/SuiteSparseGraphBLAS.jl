@@ -69,6 +69,66 @@ function GrB_Matrix(T::DataType, nrows::GrB_Index, ncols::GrB_Index)
 end
 
 """
+    ==(A, B)
+
+Check if two GraphBLAS matrices are equal.
+
+# Examples
+```jldoctest
+julia> using SuiteSparseGraphBLAS
+
+julia> GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia> A = GrB_Matrix([1, 2, 3], [2, 4, 5], [1, 1, 1])
+GrB_Matrix{Int64}
+
+julia> B = GrB_Matrix([1, 2, 3], [2, 4, 5], [1, 1, 1])
+GrB_Matrix{Int64}
+
+julia> A == B
+true
+
+julia> B = GrB_Matrix([1, 2, 3], [2, 4, 5], [1, 1, 2])
+GrB_Matrix{Int64}
+
+julia> A == B
+false
+
+julia> B = GrB_Matrix([1, 2, 3], [2, 4, 3], [1, 1, 1])
+GrB_Matrix{Int64}
+
+julia> A == B
+false
+```
+"""
+function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
+    T != U && return false
+
+    Asize = size(A)
+    Anvals = nnz(A)
+
+    Asize == size(B) || return false
+    Anvals == nnz(B) || return false
+
+    C = GrB_Matrix(Bool, Asize...)
+    op = equal_op(T)
+
+    GrB_eWiseMult(C, GrB_NULL, GrB_NULL, op, A, B, GrB_NULL)
+
+    if nnz(C) != Anvals
+        GrB_free(C)
+        return false
+    end
+
+    result = GrB_reduce(GrB_NULL, GxB_LAND_BOOL_MONOID, C, GrB_NULL)
+
+    GrB_free(C)
+
+    return result
+end
+
+"""
     findnz(A)
 
 Return a tuple (I, J, X) where I and J are the row and column indices of the stored values in GraphBLAS matrix A,

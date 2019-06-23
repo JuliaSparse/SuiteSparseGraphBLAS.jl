@@ -79,6 +79,54 @@ function GrB_Vector(T::DataType, n::GrB_Index)
 end
 
 """
+    ==(A, B)
+
+Check if two GraphBLAS vectors are equal.
+
+# Examples
+```jldoctest
+julia> using SuiteSparseGraphBLAS
+
+julia> GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia> A = GrB_Vector([1, 3, 4], [1, 1, 1])
+GrB_Vector{Int64}
+
+julia> B = GrB_Vector([1, 3, 4], [1, 1, 1])
+GrB_Vector{Int64}
+
+julia> A == B
+true
+```
+"""
+function ==(A::GrB_Vector{T}, B::GrB_Vector{U}) where {T, U}
+    T != U && return false
+
+    Asize = size(A)
+    Anvals = nnz(A)
+
+    Asize == size(B) || return false
+    Anvals == nnz(B) || return false
+
+    C = GrB_Vector(Bool, Asize[1])
+    op = equal_op(T)
+
+    GrB_eWiseMult(C, GrB_NULL, GrB_NULL, op, A, B, GrB_NULL)
+
+    if nnz(C) != Anvals
+        GrB_free(C)
+        return false
+    end
+
+    result = GrB_reduce(GrB_NULL, GxB_LAND_BOOL_MONOID, C, GrB_NULL)
+
+    GrB_free(C)
+
+    return result
+end
+
+"""
     size(V,[ dim])
 
 Return the size of a vector.

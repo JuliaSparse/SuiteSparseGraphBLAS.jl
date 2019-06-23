@@ -73,13 +73,47 @@ function default_dup(T::DataType)
     return GrB_FIRST_FP64
 end
 
-function get_struct_name(A::GrB_Struct)
-    s = ""
-    for i in string(typeof(A))[5:end]
-        i == '{' && break
-        s *= i
+function equal_op(T::DataType)
+    if T == Bool
+        return GrB_EQ_BOOL
+    elseif T == Int8
+        return GrB_EQ_INT8
+    elseif T == UInt8
+        return GrB_EQ_UINT8
+    elseif T == Int16
+        return GrB_EQ_INT16
+    elseif T == UInt16
+        return GrB_EQ_UINT16
+    elseif T == Int32
+        return GrB_EQ_INT32
+    elseif T == UInt32
+        return GrB_EQ_UINT32
+    elseif T == Int64
+        return GrB_EQ_INT64
+    elseif T == UInt64
+        return GrB_EQ_UINT64
+    elseif  T == Float32
+        return GrB_EQ_FP32
     end
-    return s
+    return GrB_EQ_FP64
+end
+
+function get_struct_name(object::GrB_Struct)
+    T = typeof(object)
+    if T <: GrB_UnaryOp
+        return "UnaryOp"
+    elseif T <: GrB_BinaryOp
+        return "BinaryOp"
+    elseif T <: GrB_Monoid
+        return "Monoid"
+    elseif T <: GrB_Semiring
+        return "Semiring"
+    elseif T <: GrB_Vector
+        return "Vector"
+    elseif T <: GrB_Matrix
+        return "Matrix"
+    end
+    return "Descriptor"
 end
 
 function _GrB_Index(x::T) where T <: GrB_Index
