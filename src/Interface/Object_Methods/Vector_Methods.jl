@@ -112,7 +112,12 @@ function ==(A::GrB_Vector{T}, B::GrB_Vector{U}) where {T, U}
     C = GrB_Vector(Bool, Asize[1])
     op = equal_op(T)
 
-    GrB_eWiseMult(C, GrB_NULL, GrB_NULL, op, A, B, GrB_NULL)
+    res = GrB_eWiseMult(C, GrB_NULL, GrB_NULL, op, A, B, GrB_NULL)
+    
+    if res != GrB_SUCCESS
+        GrB_free(C)
+        error(res)
+    end
 
     if nnz(C) != Anvals
         GrB_free(C)
@@ -122,6 +127,10 @@ function ==(A::GrB_Vector{T}, B::GrB_Vector{U}) where {T, U}
     result = GrB_reduce(GrB_NULL, GxB_LAND_BOOL_MONOID, C, GrB_NULL)
 
     GrB_free(C)
+
+    if typeof(result) == GrB_Info
+        error(result)
+    end
 
     return result
 end
