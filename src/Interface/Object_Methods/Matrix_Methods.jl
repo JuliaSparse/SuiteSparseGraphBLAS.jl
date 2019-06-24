@@ -114,7 +114,12 @@ function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
     C = GrB_Matrix(Bool, Asize...)
     op = equal_op(T)
 
-    GrB_eWiseMult(C, GrB_NULL, GrB_NULL, op, A, B, GrB_NULL)
+    res = GrB_eWiseMult(C, GrB_NULL, GrB_NULL, op, A, B, GrB_NULL)
+
+    if res != GrB_SUCCESS
+        GrB_free(C)
+        error(res)
+    end
 
     if nnz(C) != Anvals
         GrB_free(C)
@@ -124,6 +129,10 @@ function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
     result = GrB_reduce(GrB_NULL, GxB_LAND_BOOL_MONOID, C, GrB_NULL)
 
     GrB_free(C)
+
+    if typeof(result) == GrB_Info
+        error(result)
+    end
 
     return result
 end
@@ -365,6 +374,34 @@ function copy(A::GrB_Matrix{T}) where T <: valid_types
 end
 
 """
+    adjoint(A)
+
+Compute transpose of a GraphBLAS matrix.
+
+# Examples
+```jldoctest
+julia> using SuiteSparseGraphBLAS
+
+julia> GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia> M = GrB_Matrix([1, 1], [2, 3], [1, 1])
+GrB_Matrix{Int64}
+
+julia> findnz(M')
+([2, 3], [1, 1], [1, 1])
+```
+"""
+function adjoint(A::GrB_Matrix{T}) where T <: valid_types
+    C = GrB_Matrix(T, size(A, 2), size(A, 1))
+    res = GrB_transpose(C, GrB_NULL, GrB_NULL, A, GrB_NULL)
+    if res != GrB_SUCCESS
+        error(res)
+    end
+    return C
+end
+
+"""
     LowerTriangular(A)
 
 Return lower triangle of a GraphBLAS matrix.
@@ -375,7 +412,10 @@ function LowerTriangular(A::GrB_Matrix{T}) where T <: valid_types
         error("Matrix is not square")
     end
     L = GrB_Matrix(T, nrows, ncols)
-    GxB_select(L, GrB_NULL, GrB_NULL, GxB_TRIL, A, 0, GrB_NULL)
+    res = GxB_select(L, GrB_NULL, GrB_NULL, GxB_TRIL, A, 0, GrB_NULL)
+    if res != GrB_SUCCESS
+        error(res)
+    end
     return L
 end
 
@@ -390,7 +430,10 @@ function UpperTriangular(A::GrB_Matrix{T}) where T <: valid_types
         error("Matrix is not square")
     end
     U = GrB_Matrix(T, nrows, ncols)
-    GxB_select(U, GrB_NULL, GrB_NULL, GxB_TRIU, A, 0, GrB_NULL)
+    res = GxB_select(U, GrB_NULL, GrB_NULL, GxB_TRIU, A, 0, GrB_NULL)
+    if res != GrB_SUCCESS
+        error(res)
+    end
     return U
 end
 
@@ -402,6 +445,9 @@ Return diagonal of a GraphBLAS matrix.
 function Diagonal(A::GrB_Matrix{T}) where T <: valid_types 
     nrows, ncols = size(A)
     D = GrB_Matrix(T, nrows, ncols)
-    GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, 0, GrB_NULL)
+    res = GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, 0, GrB_NULL)
+    if res != GrB_SUCCESS
+        error(res)
+    end
     return D
 end
