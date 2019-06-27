@@ -185,7 +185,7 @@ function GrB_Vector_reduce(                 # c = reduce_to_scalar(u)
                         dlsym(graphblas_lib, fn_name),
                         Cint,
                         (Ptr{T}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        scalar, GrB_NULL.p, monoid.p, u.p, desc.p
+                        scalar, C_NULL, monoid.p, u.p, desc.p
                     )
                 )
 
@@ -236,7 +236,7 @@ function GrB_Matrix_reduce(                 # c = reduce_to_scalar(A)
                         dlsym(graphblas_lib, fn_name),
                         Cint,
                         (Ptr{T}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        scalar, GrB_NULL.p, monoid.p, A.p, desc.p
+                        scalar, C_NULL, monoid.p, A.p, desc.p
                     )
                 )
 
