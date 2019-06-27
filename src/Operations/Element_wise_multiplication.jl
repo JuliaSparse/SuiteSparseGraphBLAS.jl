@@ -5,30 +5,17 @@ Generic method for element-wise matrix and vector operations: using set intersec
 
 `GrB_eWiseMult` computes `C<Mask> = accum (C, A .* B)`, where pairs of elements in two matrices (or vectors) are
 pairwise "multiplied" with C(i, j) = mult (A(i, j), B(i, j)). The "multiplication" operator can be any binary operator.
-The pattern of the result T = A .* B is the set intersection (not union) of A and B. Entries outside of the intersection 
-are not computed. This is primary difference with `GrB_eWiseAdd`. The input matrices A and/or B may be transposed first, 
-via the descriptor. For a semiring, the mult operator is the semiring's multiply operator; this differs from the 
+The pattern of the result T = A .* B is the set intersection (not union) of A and B. Entries outside of the intersection
+are not computed. This is primary difference with `GrB_eWiseAdd`. The input matrices A and/or B may be transposed first,
+via the descriptor. For a semiring, the mult operator is the semiring's multiply operator; this differs from the
 eWiseAdd methods which use the semiring's add operator instead.
 """
-function GrB_eWiseMult(C::Z, mask::V, accum::W, op::U, A::T, B::Y,
-    desc::X) where {T <: Union{GrB_Vector, GrB_Matrix}, Y <: Union{GrB_Vector, GrB_Matrix}, Z <: Union{GrB_Vector, GrB_Matrix},
-                    U <: Union{GrB_BinaryOp, GrB_Monoid, GrB_Semiring}, V <: Union{GrB_Vector, GrB_Matrix, GrB_NULL_Type},
-                    W <: valid_accum_types, X <: valid_desc_types}
-
-    T_name = get_struct_name(A)
-    U_name = get_struct_name(op)
-
-    fn_name = "GrB_eWiseMult_" * T_name * "_" * U_name
-
-    return GrB_Info(
-                ccall(
-                        dlsym(graphblas_lib, fn_name),
-                        Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        C.p, mask.p, accum.p, op.p, A.p, B.p, desc.p
-                    )
-                )
-end
+GrB_eWiseMult(C, mask, accum, op::GrB_BinaryOp, A::GrB_Vector, B, desc) = GrB_eWiseMult_Vector_BinaryOp(C, mask, accum, op, A, B, desc)
+GrB_eWiseMult(C, mask, accum, op::GrB_Monoid, A::GrB_Vector, B, desc) = GrB_eWiseMult_Vector_Monoid(C, mask, accum, op, A, B, desc)
+GrB_eWiseMult(C, mask, accum, op::GrB_Semiring, A::GrB_Vector, B, desc) = GrB_eWiseMult_Vector_Semiring(C, mask, accum, op, A, B, desc)
+GrB_eWiseMult(C, mask, accum, op::GrB_BinaryOp, A::GrB_Matrix, B, desc) = GrB_eWiseMult_Matrix_BinaryOp(C, mask, accum, op, A, B, desc)
+GrB_eWiseMult(C, mask, accum, op::GrB_Monoid, A::GrB_Matrix, B, desc) = GrB_eWiseMult_Matrix_Monoid(C, mask, accum, op, A, B, desc)
+GrB_eWiseMult(C, mask, accum, op::GrB_Semiring, A::GrB_Matrix, B, desc) = GrB_eWiseMult_Matrix_Semiring(C, mask, accum, op, A, B, desc)
 
 """
     GrB_eWiseMult_Vector_Semiring(w, mask, accum, semiring, u, v, desc)

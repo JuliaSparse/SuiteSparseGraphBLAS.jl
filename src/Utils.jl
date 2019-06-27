@@ -98,24 +98,6 @@ function equal_op(T::DataType)
     return GrB_EQ_FP64
 end
 
-function get_struct_name(object::GrB_Struct)
-    T = typeof(object)
-    if T <: GrB_UnaryOp
-        return "UnaryOp"
-    elseif T <: GrB_BinaryOp
-        return "BinaryOp"
-    elseif T <: GrB_Monoid
-        return "Monoid"
-    elseif T <: GrB_Semiring
-        return "Semiring"
-    elseif T <: GrB_Vector
-        return "Vector"
-    elseif T <: GrB_Matrix
-        return "Matrix"
-    end
-    return "Descriptor"
-end
-
 function _GrB_Index(x::T) where T <: GrB_Index
     x > typemax(Int64) && return x
     return Int64(x)

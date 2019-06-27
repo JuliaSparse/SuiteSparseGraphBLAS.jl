@@ -187,7 +187,7 @@ function GrB_mxv(               # w<Mask> = accum (w, A*u)
     A::GrB_Matrix,              # first input:  matrix A
     u::GrB_Vector,              # second input: vector u
     desc::V                     # descriptor for w, mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(

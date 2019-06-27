@@ -1,10 +1,5 @@
-function GxB_select(C::T, Mask, accum, op, A::T, k, desc) where T
-    if T <: GrB_Matrix
-        return GxB_Matrix_select(C, Mask, accum, op, A, k, desc)
-    elseif T <: GrB_Vector
-        return GxB_Vectorselect(C, Mask, accum, op, A, k, desc)
-    end
-end
+GxB_select(C::GrB_Matrix, Mask, accum, op, A, k, desc) = GxB_Matrix_select(C, Mask, accum, op, A, k, desc)
+GxB_select(C::GrB_Vector, Mask, accum, op, A, k, desc) = GxB_Vectorselect(C, Mask, accum, op, A, k, desc)
 
 function GxB_Vector_select(             # w<mask> = accum (w, op(u,k))
         w::GrB_Vector,                  # input/output vector for results

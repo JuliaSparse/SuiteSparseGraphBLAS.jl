@@ -3,21 +3,10 @@
 
 Generic method for matrix/vector reduction to a vector or scalar.
 """
-function GrB_reduce(arg1::T, arg2, arg3::U, arg4::V, args...) where {T, U, V}
-    if T <: GrB_Vector
-        if V <: GrB_Monoid
-            return GrB_Matrix_reduce_Monoid(arg1, arg2, arg3, arg4, args...)
-        elseif V <: GrB_BinaryOp
-            return GrB_Matrix_reduce_BinaryOp(arg1, arg2, arg3, arg4, args...)
-        end
-    elseif T <: valid_accum_types
-        if U <: GrB_Vector
-            return GrB_Vector_reduce(arg1, arg2, arg3, arg4)
-        elseif U <: GrB_Matrix
-            return GrB_Matrix_reduce(arg1, arg2, arg3, arg4)
-        end
-    end
-end
+GrB_reduce(w, mask, accum, monoid::GrB_Monoid, A, desc) = GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
+GrB_reduce(w, mask, accum, op::GrB_BinaryOp, A, desc) = GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)
+GrB_reduce(monoid, u::GrB_Vector, desc) = GrB_Vector_reduce(monoid, u, desc)
+GrB_reduce(monoid, A::GrB_Matrix, desc) = GrB_Matrix_reduce(monoid, A, desc)
 
 """
     GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
@@ -154,7 +143,7 @@ function GrB_Matrix_reduce_BinaryOp(        # w<mask> = accum (w,reduce(A))
 end
 
 """
-    GrB_Vector_reduce(accum, monoid, u, desc)
+    GrB_Vector_reduce(monoid, u, desc)
 
 Reduce entries in a vector to a scalar. All entries in the vector are "summed"
 using the reduce monoid, which must be associative (otherwise the results are undefined).
@@ -178,12 +167,11 @@ julia> I = [0, 2, 4]; X = [10, 20, 30]; n = 3;
 julia> GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_reduce(GrB_NULL, GxB_MAX_INT64_MONOID, u, GrB_NULL)
+julia> GrB_Vector_reduce(GxB_MAX_INT64_MONOID, u, GrB_NULL)
 30
 ```
 """
-function GrB_Vector_reduce(                 # c = accum (c, reduce_to_scalar (u))
-    accum::U,                               # optional accum for c=accum(c,t)
+function GrB_Vector_reduce(                 # c = reduce_to_scalar(u)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     u::GrB_Vector{T},                       # vector to reduce
     desc::V                                 # descriptor (currently unused)
@@ -206,7 +194,7 @@ function GrB_Vector_reduce(                 # c = accum (c, reduce_to_scalar (u)
 end
 
 """
-    GrB_Matrix_reduce(accum, monoid, A, desc)
+    GrB_Matrix_reduce(monoid, A, desc)
 
 Reduce entries in a matrix to a scalar. All entries in the matrix are "summed"
 using the reduce monoid, which must be associative (otherwise the results are undefined).
@@ -230,16 +218,15 @@ julia> I = [0, 0, 2, 2]; J = [1, 2, 0, 2]; X = [10, 20, 30, 40]; n = 4;
 julia> GrB_Matrix_build(A, I, J, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Matrix_reduce(GrB_NULL, GxB_MIN_INT64_MONOID, A, GrB_NULL)
+julia> GrB_Matrix_reduce(GxB_MIN_INT64_MONOID, A, GrB_NULL)
 10
 ```
 """
-function GrB_Matrix_reduce(                 # c = accum (c, reduce_to_scalar (A))
-    accum::U,                               # optional accum for c=accum(c,t)
+function GrB_Matrix_reduce(                 # c = reduce_to_scalar(A)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     A::GrB_Matrix{T},                       # matrix to reduce
     desc::V                                 # descriptor (currently unused)
-) where {T <: valid_types, U <: valid_accum_types, V <: valid_desc_types}
+) where {T <: valid_types, V <: valid_desc_types}
 
     scalar = Ref(T(0))
     fn_name = "GrB_Matrix_reduce_" * suffix(T)

@@ -3,27 +3,12 @@
 
 Generic method for submatrix/subvector assignment.
 """
-function GrB_assign(arg1::T, Mask, accum, arg4::U, arg5::V, args...) where {T, U, V}
-    if T <: GrB_Vector
-        if U <: GrB_Vector
-            return GrB_Vector_assign(arg1, Mask, accum, arg4, arg5, args...)
-        elseif U <: valid_types
-            return GrB_Vector_assign(arg1, Mask, accum, arg4, arg5, args...)
-        end
-    elseif T <: GrB_Matrix
-        if U <: GrB_Vector
-            if V <: Union{Vector{<: GrB_Index}, GrB_ALL_Type}
-                return GrB_Col_assign(arg1, Mask, accum, arg4, arg5, args...)
-            elseif V <: GrB_Index
-                return GrB_Row_assign(arg1, Mask, accum, arg4, arg5, args...)
-            end
-        elseif U <: GrB_Matrix
-            return GrB_Matrix_assign(arg1, Mask, accum, arg4, arg5, args...)
-        elseif U <: valid_types
-            return GrB_Matrix_assign(arg1, Mask, accum, arg4, arg5, args...)
-        end
-    end
-end
+GrB_assign(w::GrB_Vector, mask, accum, u::GrB_Vector, I, ni, desc ) = GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
+GrB_assign(w::GrB_Vector, mask, accum, x, I, ni, desc) = GrB_Vector_assign(w, mask, accum, x, I, ni, desc )
+GrB_assign(C::GrB_Matrix, Mask, accum, A::GrB_Matrix, I, ni, J, nj, desc) = GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)
+GrB_assign(C::GrB_Matrix, Mask, accum, u::GrB_Vector, I, ni, j, desc) = GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)
+GrB_assign(C::GrB_Matrix, Mask, accum, u::GrB_Vector, i::GrB_Index, J, nj, desc) = GrB_Row_assign(C, Mask, accum, u, i, J, nj, desc)
+GrB_assign(C::GrB_Matrix, Mask, accum, x, I, ni, J, nj, desc) = GrB_Matrix_assign(C, Mask, accum, x, I, ni, J, nj, desc)
 
 """
     GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
@@ -86,7 +71,7 @@ end
     GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)
 
 Assign values from one GraphBLAS matrix to a subset of a matrix as specified by a set of 
-indices.  The dimensions of the input matrix are the same size as the row and column index arrays provided.
+indices. The dimensions of the input matrix are the same size as the row and column index arrays provided.
 
 # Examples
 ```jldoctest
@@ -126,10 +111,10 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),A)
         A::GrB_Matrix,              # first input:  matrix A
         I::Y,                       # row indices
         ni::X,                      # number of row indices
-        J::Y,                       # column indices
+        J::Z,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types, Z <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -144,7 +129,7 @@ end
 """
     GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)
 
-Assign the contents a vector to a subset of elements in one column of a matrix.
+Assign the contents of a vector to a subset of elements in one column of a matrix.
 Note that since the output cannot be transposed, a different variant of assign is provided 
 to assign to a row of matrix.
 
@@ -189,11 +174,11 @@ function GrB_Col_assign(            # C<mask>(I,j) = accum (C(I,j),u)
         mask::T,                    # optional mask for C(:,j), unused if NULL
         accum::U,                   # optional accum for z=accum(C(I,j),t)
         u::GrB_Vector,              # input vector
-        I::S,                       # row indices
+        I::Y,                       # row indices
         ni::X,                      # number of row indices
         j::X,                       # column index
         desc::V                     # descriptor for C(:,j) and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -208,7 +193,7 @@ end
 """
     GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)
 
-Assign the contents a vector to a subset of elements in one row of a matrix.
+Assign the contents of a vector to a subset of elements in one row of a matrix.
 Note that since the output cannot be transposed, a different variant of assign is provided 
 to assign to a column of a matrix.
 
@@ -254,10 +239,10 @@ function GrB_Row_assign(            # C<mask'>(i,J) = accum (C(i,J),u')
         accum::U,                   # optional accum for z=accum(C(i,J),t)
         u::GrB_Vector,              # input vector
         i::X,                       # row index
-        J::S,                       # column indices
+        J::Y,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C(i,:) and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -296,14 +281,14 @@ julia> GrB_Vector_extractTuples(w)
 ```
 """
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
-        w::GrB_Vector{Y},           # input/output vector for results
+        w::GrB_Vector,              # input/output vector for results
         mask::T,                    # optional mask for w, unused if NULL
         accum::U,                   # optional accum for Z=accum(w(I),x)
-        x::Z,                       # scalar to assign to w(I)
+        x::Y,                       # scalar to assign to w(I)
         I::S,                       # row indices
         ni::X,                      # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_int_types, Z <: valid_types, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_int_types, S <: valid_indices_types}
 
     fn_name = "GrB_Vector_assign_" * suffix(Z)
 
@@ -318,14 +303,14 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
 end
 
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
-        w::GrB_Vector{UInt64},      # input/output vector for results
+        w::GrB_Vector,            # input/output vector for results
         mask::T,                    # optional mask for w, unused if NULL
         accum::U,                   # optional accum for Z=accum(w(I),x)
-        x::Y,                       # scalar to assign to w(I)
+        x::UInt64,                  # scalar to assign to w(I)
         I::S,                       # row indices
         ni::X,                      # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_types, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types}
 
     fn_name = "GrB_Vector_assign_UINT64"
 
@@ -340,14 +325,14 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
 end
 
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
-        w::GrB_Vector{Float64},     # input/output vector for results
+        w::GrB_Vector,              # input/output vector for results
         mask::T,                    # optional mask for w, unused if NULL
         accum::U,                   # optional accum for Z=accum(w(I),x)
-        x::Y,                       # scalar to assign to w(I)
+        x::Float64,                 # scalar to assign to w(I)
         I::S,                       # row indices
         ni::X,                      # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_types, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -360,14 +345,14 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
 end
 
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
-        w::GrB_Vector{Float32},     # input/output vector for results
+        w::GrB_Vector,              # input/output vector for results
         mask::T,                    # optional mask for w, unused if NULL
         accum::U,                   # optional accum for Z=accum(w(I),x)
-        x::Y,                       # scalar to assign to w(I)
+        x::Float32,                 # scalar to assign to w(I)
         I::S,                       # row indices
         ni::X,                      # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_types, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -406,16 +391,16 @@ julia> GrB_Matrix_extractTuples(A)
 ```
 """
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
-        C::GrB_Matrix{Y},           # input/output matrix for results
+        C::GrB_Matrix,              # input/output matrix for results
         Mask::T,                    # optional mask for C, unused if NULL
         accum::U,                   # optional accum for Z=accum(C(I,J),x)
-        x::Z,                       # scalar to assign to C(I,J)
+        x::Y,                       # scalar to assign to C(I,J)
         I::S,                       # row indices
         ni::X,                      # number of row indices
-        J::S,                       # column indices
+        J::R,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_int_types, Z <: valid_types, S <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_int_types, R <: valid_indices_types, S <: valid_indices_types}
 
     fn_name = "GrB_Matrix_assign_" * suffix(Z)
 
@@ -430,16 +415,16 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
 end
 
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
-        C::GrB_Matrix{UInt64},      # input/output matrix for results
+        C::GrB_Matrix,              # input/output matrix for results
         Mask::T,                    # optional mask for C, unused if NULL
         accum::U,                   # optional accum for Z=accum(C(I,J),x)
-        x::Y,                       # scalar to assign to C(I,J)
+        x::UInt64,                  # scalar to assign to C(I,J)
         I::S,                       # row indices
         ni::X,                      # number of row indices
-        J::S,                       # column indices
+        J::R,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_types, S <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, R <: valid_indices_types, S <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -452,16 +437,16 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
 end
 
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
-        C::GrB_Matrix{Float64},     # input/output matrix for results
+        C::GrB_Matrix,              # input/output matrix for results
         Mask::T,                    # optional mask for C, unused if NULL
         accum::U,                   # optional accum for Z=accum(C(I,J),x)
-        x::Y,                       # scalar to assign to C(I,J)
+        x::Float64,                 # scalar to assign to C(I,J)
         I::S,                       # row indices
         ni::X,                      # number of row indices
-        J::S,                       # column indices
+        J::R,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_types, S <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, R <: valid_indices_types, S <: valid_indices_types}
 
     return GrB_Info(
                 ccall(
@@ -474,16 +459,16 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
 end
 
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
-        C::GrB_Matrix{Float32},     # input/output matrix for results
+        C::GrB_Matrix,              # input/output matrix for results
         Mask::T,                    # optional mask for C, unused if NULL
         accum::U,                   # optional accum for Z=accum(C(I,J),x)
-        x::Y,                       # scalar to assign to C(I,J)
+        x::Float32,                 # scalar to assign to C(I,J)
         I::S,                       # row indices
         ni::X,                      # number of row indices
-        J::S,                       # column indices
+        J::R,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_types, S <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, R <: valid_indices_types, S <: valid_indices_types}
 
     return GrB_Info(
                 ccall(

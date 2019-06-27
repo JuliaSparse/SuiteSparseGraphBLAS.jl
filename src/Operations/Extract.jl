@@ -3,17 +3,9 @@
 
 Generic matrix/vector extraction.
 """
-function GrB_extract(arg1::T, Mask, accum, arg4::U, args...) where {T, U}
-    if T <: GrB_Vector
-        if U <: GrB_Vector
-            return GrB_Vector_extract(arg1, Mask, accum, arg4, args...)
-        elseif U <: GrB_Matrix
-            return GrB_Col_extract(arg1, Mask, accum, arg4, args...)
-        end
-    elseif T <: GrB_Matrix
-        return GrB_Matrix_extract(arg1, Mask, accum, arg4, args...)
-    end
-end
+GrB_extract(w::GrB_Vector, mask, accum, u::GrB_Vector, I, ni, desc) = GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
+GrB_extract(C::GrB_Matrix, Mask, accum, A::GrB_Matrix, I, ni, J, nj, desc) = GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)
+GrB_extract(w::GrB_Vector, mask, accum, A::GrB_Matrix, I, ni, j, desc) = GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)
 
 """
     GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
@@ -153,10 +145,10 @@ function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
         A::GrB_Matrix,                  # first input:  matrix A
         I::Y,                           # row indices
         ni::X,                          # number of row indices
-        J::Y,                           # column indices
+        J::Z,                           # column indices
         nj::X,                          # number of column indices
         desc::V                         # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types, Z <: valid_indices_types}
 
     return GrB_Info(
                 ccall(

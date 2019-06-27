@@ -3,26 +3,8 @@
 
 Generic matrix/vector apply.
 """
-function GrB_apply(                 # w<mask> = accum (w, op(u))
-    C::X,                           # input/output vector for results
-    Mask::T,                        # optional mask for w, unused if NULL
-    accum::U,                       # optional accum for z=accum(w,t)
-    op::GrB_UnaryOp,                # operator to apply to the entries
-    A::Y,                           # first input:  vector u
-    desc::V                         # descriptor for w and mask
-) where {X <: Union{GrB_Vector, GrB_Matrix}, Y <: Union{GrB_Vector, GrB_Matrix}, T <: Union{GrB_Vector, GrB_Matrix, GrB_NULL_Type}, U <: valid_accum_types, V <: valid_desc_types}
-
-    fn_name = "GrB_" * get_struct_name(C) * "_apply"
-
-    return GrB_Info(
-                ccall(
-                        dlsym(graphblas_lib, fn_name),
-                        Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        C.p, Mask.p, accum.p, op.p, A.p, desc.p
-                    )
-                )
-end
+GrB_apply(C::GrB_Vector, Mask, accum, op, A, desc) = GrB_Vector_apply(C, Mask, accum, op, A, desc)
+GrB_apply(C::GrB_Matrix, Mask, accum, op, A, desc) = GrB_Matrix_apply(C, Mask, accum, op, A, desc)
 
 """
     GrB_Vector_apply(w, mask, accum, op, u, desc)
