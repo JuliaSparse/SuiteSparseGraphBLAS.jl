@@ -175,7 +175,7 @@ function GrB_Vector_reduce(                 # c = reduce_to_scalar(u)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     u::GrB_Vector{T},                       # vector to reduce
     desc::V                                 # descriptor (currently unused)
-) where {T <: valid_types, U <: valid_accum_types, V <: valid_desc_types}
+) where {T <: valid_types, V <: valid_desc_types}
 
     scalar = Ref(T(0))
     fn_name = "GrB_Vector_reduce_" * suffix(T)
@@ -185,7 +185,7 @@ function GrB_Vector_reduce(                 # c = reduce_to_scalar(u)
                         dlsym(graphblas_lib, fn_name),
                         Cint,
                         (Ptr{T}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        scalar, accum.p, monoid.p, u.p, desc.p
+                        scalar, GrB_NULL.p, monoid.p, u.p, desc.p
                     )
                 )
 
@@ -236,7 +236,7 @@ function GrB_Matrix_reduce(                 # c = reduce_to_scalar(A)
                         dlsym(graphblas_lib, fn_name),
                         Cint,
                         (Ptr{T}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        scalar, accum.p, monoid.p, A.p, desc.p
+                        scalar, GrB_NULL.p, monoid.p, A.p, desc.p
                     )
                 )
 
