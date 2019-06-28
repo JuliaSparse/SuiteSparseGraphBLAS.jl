@@ -126,7 +126,7 @@ function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
         return false
     end
 
-    result = GrB_reduce(GrB_NULL, GxB_LAND_BOOL_MONOID, C, GrB_NULL)
+    result = GrB_reduce(GxB_LAND_BOOL_MONOID, C, GrB_NULL)
 
     GrB_free(C)
 
