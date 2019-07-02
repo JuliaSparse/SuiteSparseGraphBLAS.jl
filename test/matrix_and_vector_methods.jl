@@ -13,6 +13,7 @@ types = [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32
         @test R == X
         @test nnz(A) == 5
         B = copy(A)
+        @test A == B
         @test size(B) == (5, 5)
         P, Q, R = findnz(B)
         @test P == I
@@ -43,6 +44,7 @@ end
         @test Q == X
         @test nnz(V) == 3
         W = copy(V)
+        @test V == W
         @test size(W) == (5, )
         P, Q = findnz(W)
         @test P == I

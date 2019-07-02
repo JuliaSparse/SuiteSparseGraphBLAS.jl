@@ -1,3 +1,7 @@
+import GraphBLASInterface:
+        GrB_Vector_new, GrB_Vector_build, GrB_Vector_dup, GrB_Vector_clear, GrB_Vector_size,
+        GrB_Vector_nvals, GrB_Vector_setElement, GrB_Vector_extractElement, GrB_Vector_extractTuples
+
 """
     GrB_Vector_new(v, type, n)
 
@@ -17,7 +21,7 @@ julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 ```
 """
-function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type{T}, n::U) where {U <: GrB_Index, T <: valid_types}
+function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type{T}, n::U) where {T, U <: GrB_Index}
     v_ptr = pointer_from_objref(v)
     
     return GrB_Info(
@@ -74,7 +78,7 @@ column: 0 : 3 entries [0:2]
 
 ```
 """
-function GrB_Vector_dup(w::GrB_Vector{T}, u::GrB_Vector{T}) where T <: valid_types
+function GrB_Vector_dup(w::GrB_Vector{T}, u::GrB_Vector{T}) where T
     w_ptr = pointer_from_objref(w)
 
     return GrB_Info(
@@ -253,7 +257,7 @@ column: 0 : 3 entries [0:2]
 
 ```
 """
-function GrB_Vector_build(w::GrB_Vector{T}, I::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
+function GrB_Vector_build(w::GrB_Vector{T}, I::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where {T, U <: GrB_Index}
     I_ptr = pointer(I)
     X_ptr = pointer(X)
     fn_name = "GrB_Vector_build_" * suffix(T)
@@ -301,7 +305,7 @@ julia> GrB_Vector_extractElement(V, 2)
 7
 ```
 """
-function GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::U) where {U <: GrB_Index, T <: valid_int_types}
+function GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::U) where {T, U <: GrB_Index}
     fn_name = "GrB_Vector_setElement_" * suffix(T)
     return GrB_Info(
         ccall(
@@ -377,7 +381,7 @@ julia> GrB_Vector_extractElement(V, 2)
 3.2
 ```
 """
-function GrB_Vector_extractElement(v::GrB_Vector{T}, i::U) where {T <: valid_types, U <: GrB_Index}
+function GrB_Vector_extractElement(v::GrB_Vector{T}, i::U) where {T, U <: GrB_Index}
     fn_name = "GrB_Vector_extractElement_" * suffix(T)
 
     element = Ref(T(0))
@@ -420,7 +424,7 @@ julia> GrB_Vector_extractTuples(V)
 ([0, 2, 3], [2.1, 3.2, 4.4])
 ```
 """
-function GrB_Vector_extractTuples(v::GrB_Vector{T}) where T <: valid_types
+function GrB_Vector_extractTuples(v::GrB_Vector{T}) where T
     nvals = GrB_Vector_nvals(v)
     if typeof(nvals) == GrB_Info
         return nvals

@@ -1,3 +1,6 @@
+import GraphBLASInterface:
+        GrB_mxm, GrB_vxm, GrB_mxv
+
 """
     GrB_mxm(C, Mask, accum, semiring, A, B, desc)
 

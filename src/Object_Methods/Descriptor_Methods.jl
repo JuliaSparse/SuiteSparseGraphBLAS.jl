@@ -1,3 +1,6 @@
+import GraphBLASInterface:
+        GrB_Descriptor_new, GrB_Descriptor_set
+
 """
     GrB_Descriptor_new(desc)
 

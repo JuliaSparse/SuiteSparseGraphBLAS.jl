@@ -1,15 +1,6 @@
-"""
-    GrB_free(object)
-
-Generic method to free a GraphBLAS object.
-"""
-GrB_free(object::GrB_UnaryOp) = GrB_UnaryOp_free(object)
-GrB_free(object::GrB_BinaryOp) = GrB_BinaryOp_free(object)
-GrB_free(object::GrB_Monoid) = GrB_Monoid_free(object)
-GrB_free(object::GrB_Semiring) = GrB_Semiring_free(object)
-GrB_free(object::GrB_Vector) = GrB_Vector_free(object)
-GrB_free(object::GrB_Matrix) = GrB_Matrix_free(object)
-GrB_free(object::GrB_Descriptor) = GrB_Descriptor_free(object)
+import GraphBLASInterface:
+        GrB_UnaryOp_free, GrB_BinaryOp_free, GrB_Monoid_free, GrB_Semiring_free,
+        GrB_Vector_free, GrB_Matrix_free, GrB_Descriptor_free
 
 """
     GrB_UnaryOp_free(unaryop)

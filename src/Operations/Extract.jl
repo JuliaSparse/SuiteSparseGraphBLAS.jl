@@ -1,11 +1,5 @@
-"""
-    GrB_extract(arg1, Mask, accum, arg4, ...)
-
-Generic matrix/vector extraction.
-"""
-GrB_extract(w::GrB_Vector, mask, accum, u::GrB_Vector, I, ni, desc) = GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
-GrB_extract(C::GrB_Matrix, Mask, accum, A::GrB_Matrix, I, ni, J, nj, desc) = GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)
-GrB_extract(w::GrB_Vector, mask, accum, A::GrB_Matrix, I, ni, j, desc) = GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)
+import GraphBLASInterface:
+        GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract
 
 """
     GrB_Vector_extract(w, mask, accum, u, I, ni, desc)

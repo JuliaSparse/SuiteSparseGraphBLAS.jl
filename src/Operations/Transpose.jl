@@ -1,3 +1,5 @@
+import GraphBLASInterface.GrB_transpose
+
 """
     GrB_transpose(C, Mask, accum, A, desc)
 

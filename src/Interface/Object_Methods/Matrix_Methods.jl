@@ -24,7 +24,7 @@ function GrB_Matrix(
         nrows::U = maximum(I),
         ncols::U = maximum(J),
         nvals::U = length(I),
-        dup::GrB_BinaryOp = default_dup(T)) where {T <: valid_types, U <: GrB_Index}
+        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: GrB_Index}
 
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
@@ -58,7 +58,7 @@ julia> nnz(A)
 0
 ```
 """
-function GrB_Matrix(T::DataType, nrows::GrB_Index, ncols::GrB_Index)
+function GrB_Matrix(T, nrows::GrB_Index, ncols::GrB_Index)
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
     res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
@@ -304,7 +304,7 @@ julia> A[1, 1]
 5
 ```
 """
-function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where {T <: valid_types}
+function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where T
     res = GrB_Matrix_setElement(A, X, I-1, J-1)
     if res != GrB_SUCCESS
         error(res)
@@ -364,7 +364,7 @@ julia> findnz(B)
 ([1, 2, 3], [1, 2, 3], [1, 1, 1])
 ```
 """
-function copy(A::GrB_Matrix{T}) where T <: valid_types
+function copy(A::GrB_Matrix{T}) where T
     C = GrB_Matrix{T}()
     res = GrB_Matrix_dup(C, A)
     if res != GrB_SUCCESS
@@ -392,7 +392,7 @@ julia> findnz(M')
 ([2, 3], [1, 1], [1, 1])
 ```
 """
-function adjoint(A::GrB_Matrix{T}) where T <: valid_types
+function adjoint(A::GrB_Matrix{T}) where T
     C = GrB_Matrix(T, size(A, 2), size(A, 1))
     res = GrB_transpose(C, GrB_NULL, GrB_NULL, A, GrB_NULL)
     if res != GrB_SUCCESS
@@ -406,7 +406,7 @@ end
 
 Return lower triangle of a GraphBLAS matrix.
 """
-function LowerTriangular(A::GrB_Matrix{T}) where T <: valid_types 
+function LowerTriangular(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     if nrows != ncols
         error("Matrix is not square")
@@ -424,7 +424,7 @@ end
 
 Return upper triangle of a GraphBLAS matrix.
 """
-function UpperTriangular(A::GrB_Matrix{T}) where T <: valid_types 
+function UpperTriangular(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     if nrows != ncols
         error("Matrix is not square")
@@ -442,7 +442,7 @@ end
 
 Return diagonal of a GraphBLAS matrix.
 """
-function Diagonal(A::GrB_Matrix{T}) where T <: valid_types 
+function Diagonal(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     D = GrB_Matrix(T, nrows, ncols)
     res = GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, 0, GrB_NULL)

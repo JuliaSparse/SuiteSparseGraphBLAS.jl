@@ -1,10 +1,5 @@
-"""
-    GrB_apply(C, Mask, accum, op, A, desc)
-
-Generic matrix/vector apply.
-"""
-GrB_apply(C::GrB_Vector, Mask, accum, op, A, desc) = GrB_Vector_apply(C, Mask, accum, op, A, desc)
-GrB_apply(C::GrB_Matrix, Mask, accum, op, A, desc) = GrB_Matrix_apply(C, Mask, accum, op, A, desc)
+import GraphBLASInterface:
+        GrB_Vector_apply, GrB_Matrix_apply
 
 """
     GrB_Vector_apply(w, mask, accum, op, u, desc)

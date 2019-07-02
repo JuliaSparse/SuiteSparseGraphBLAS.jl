@@ -31,7 +31,7 @@ function GrB_Vector(
         X::Vector{T};
         n::U = maximum(I),
         nvals::U = length(I),
-        dup::GrB_BinaryOp = default_dup(T)) where {T <: valid_types, U <: GrB_Index}
+        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: GrB_Index}
 
     V = GrB_Vector{T}()
     GrB_T = get_GrB_Type(T)
@@ -68,7 +68,7 @@ julia> nnz(A)
 0
 ```
 """
-function GrB_Vector(T::DataType, n::GrB_Index)
+function GrB_Vector(T, n::GrB_Index)
     V = GrB_Vector{T}()
     GrB_T = get_GrB_Type(T)
     res = GrB_Vector_new(V, GrB_T, n)
@@ -264,7 +264,7 @@ julia> findnz(A)
 ([1, 2, 4, 5], [10.0, 3.0, 14.0, 1.2])
 ```
 """
-function setindex!(V::GrB_Vector{T}, x::T, i::GrB_Index) where {T <: valid_types}
+function setindex!(V::GrB_Vector{T}, x::T, i::GrB_Index) where T
     res = GrB_Vector_setElement(V, x, i-1)
     if res != GrB_SUCCESS
         error(res)
@@ -351,7 +351,7 @@ julia> findnz(B)
 ([1, 2, 4], [10.0, 12.0, 14.0])
 ```
 """
-function copy(V::GrB_Vector{T}) where T <: valid_types
+function copy(V::GrB_Vector{T}) where T 
     W = GrB_Vector{T}()
     res = GrB_Vector_dup(W, V)
     if res != GrB_SUCCESS

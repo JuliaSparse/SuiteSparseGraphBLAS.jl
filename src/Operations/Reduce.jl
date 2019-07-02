@@ -1,12 +1,6 @@
-"""
-    GrB_reduce(arg1, arg2, arg3, arg4, ...)
-
-Generic method for matrix/vector reduction to a vector or scalar.
-"""
-GrB_reduce(w, mask, accum, monoid::GrB_Monoid, A, desc) = GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
-GrB_reduce(w, mask, accum, op::GrB_BinaryOp, A, desc) = GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)
-GrB_reduce(monoid, u::GrB_Vector, desc) = GrB_Vector_reduce(monoid, u, desc)
-GrB_reduce(monoid, A::GrB_Matrix, desc) = GrB_Matrix_reduce(monoid, A, desc)
+import GraphBLASInterface:
+        GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, 
+        GrB_Matrix_reduce, GrB_Vector_reduce
 
 """
     GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
@@ -175,7 +169,7 @@ function GrB_Vector_reduce(                 # c = reduce_to_scalar(u)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     u::GrB_Vector{T},                       # vector to reduce
     desc::V                                 # descriptor (currently unused)
-) where {T <: valid_types, V <: valid_desc_types}
+) where {T, V <: valid_desc_types}
 
     scalar = Ref(T(0))
     fn_name = "GrB_Vector_reduce_" * suffix(T)
@@ -226,7 +220,7 @@ function GrB_Matrix_reduce(                 # c = reduce_to_scalar(A)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     A::GrB_Matrix{T},                       # matrix to reduce
     desc::V                                 # descriptor (currently unused)
-) where {T <: valid_types, V <: valid_desc_types}
+) where {T, V <: valid_desc_types}
 
     scalar = Ref(T(0))
     fn_name = "GrB_Matrix_reduce_" * suffix(T)

@@ -1,3 +1,8 @@
+import GraphBLASInterface:
+        GrB_Matrix_new, GrB_Matrix_build, GrB_Matrix_dup, GrB_Matrix_clear,
+        GrB_Matrix_nrows, GrB_Matrix_ncols, GrB_Matrix_nvals, GrB_Matrix_setElement,
+        GrB_Matrix_extractElement, GrB_Matrix_extractTuples
+
 """
     GrB_Matrix_new(A, type, nrows, ncols)
 
@@ -17,7 +22,7 @@ julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 ```
 """
-function GrB_Matrix_new(A::GrB_Matrix{T}, type::GrB_Type{T}, nrows::U, ncols::U) where {U <: GrB_Index, T <: valid_types}
+function GrB_Matrix_new(A::GrB_Matrix{T}, type::GrB_Type{T}, nrows::U, ncols::U) where {T, U <: GrB_Index}
     A_ptr = pointer_from_objref(A)
     
     return GrB_Info(
@@ -73,7 +78,7 @@ row: 3 : 1 entries [4:4]
 
 ```
 """
-function GrB_Matrix_build(C::GrB_Matrix{T}, I::Vector{U}, J::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where{U <: GrB_Index, T <: valid_types}
+function GrB_Matrix_build(C::GrB_Matrix{T}, I::Vector{U}, J::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where {T, U <: GrB_Index}
     I_ptr = pointer(I)
     J_ptr = pointer(J)
     X_ptr = pointer(X)
@@ -252,7 +257,7 @@ row: 3 : 1 entries [4:4]
 
 ```
 """
-function GrB_Matrix_dup(C::GrB_Matrix{T}, A::GrB_Matrix{T}) where T <: valid_types
+function GrB_Matrix_dup(C::GrB_Matrix{T}, A::GrB_Matrix{T}) where T
     C_ptr = pointer_from_objref(C)
 
     return GrB_Info(
@@ -343,7 +348,7 @@ julia> GrB_Matrix_extractElement(MAT, 1, 1)
 7
 ```
 """
-function GrB_Matrix_setElement(C::GrB_Matrix{T}, X::T, I::U, J::U) where {U <: GrB_Index, T <: valid_int_types}
+function GrB_Matrix_setElement(C::GrB_Matrix{T}, X::T, I::U, J::U) where {T, U <: GrB_Index}
     fn_name = "GrB_Matrix_setElement_" * suffix(T)
     return GrB_Info(
         ccall(
@@ -419,7 +424,7 @@ julia> GrB_Matrix_extractElement(MAT, 1, 1)
 2
 ```
 """
-function GrB_Matrix_extractElement(A::GrB_Matrix{T}, row_index::U, col_index::U) where {U <: GrB_Index, T <: valid_types}
+function GrB_Matrix_extractElement(A::GrB_Matrix{T}, row_index::U, col_index::U) where {T, U <: GrB_Index}
     fn_name = "GrB_Matrix_extractElement_" * suffix(T)
 
     element = Ref(T(0))
@@ -462,7 +467,7 @@ julia> GrB_Matrix_extractTuples(MAT)
 ([1, 2, 2, 2, 3], [1, 1, 2, 3, 3], Int8[2, 4, 3, 5, 6])
 ```
 """
-function GrB_Matrix_extractTuples(A::GrB_Matrix{T}) where T <: valid_types
+function GrB_Matrix_extractTuples(A::GrB_Matrix{T}) where T
     nvals = GrB_Matrix_nvals(A)
     if typeof(nvals) == GrB_Info
         return nvals
