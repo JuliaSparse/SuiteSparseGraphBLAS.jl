@@ -3,28 +3,17 @@
 
 Create a GraphBLAS matrix of dimensions nrows x ncols such that A[I[k], J[k]] = X[k].
 dup is a GraphBLAS binary operator used to combine duplicates, it defaults to `FIRST`.
-If nrows and ncols are not specified, they are set to maximum(I) and maximum(J) respectively.
-nvals is set to length(I) is not specified.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> A = GrB_Matrix([1, 1, 2, 3], [1, 1, 2, 3], UInt32[1, 10, 1, 1], dup = GrB_PLUS_UINT32)
-GrB_Matrix{UInt32}
-
-julia> A[1, 1]
-0x0000000b
-```
+If nrows and ncols are not specified, they are set to maximum(I)+1 and maximum(J)+1 (because of 0-based indexing)
+respectively. nvals is set to length(I) is not specified.
 """
 function GrB_Matrix(
         I::Vector{U},
         J::Vector{U},
         X::Vector{T};
-        nrows::U = maximum(I),
-        ncols::U = maximum(J),
+        nrows::U = maximum(I)+1,
+        ncols::U = maximum(J)+1,
         nvals::U = length(I),
-        dup::GrB_BinaryOp = default_dup(T)) where {T <: valid_types, U <: GrB_Index}
+        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: GrB_Index}
 
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
@@ -32,7 +21,7 @@ function GrB_Matrix(
     if res != GrB_SUCCESS
         error(res)
     end
-    res = GrB_Matrix_build(A, I.-1, J.-1, X, nvals, dup)
+    res = GrB_Matrix_build(A, I, J, X, nvals, dup)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -58,7 +47,7 @@ julia> nnz(A)
 0
 ```
 """
-function GrB_Matrix(T::DataType, nrows::GrB_Index, ncols::GrB_Index)
+function GrB_Matrix(T, nrows::GrB_Index, ncols::GrB_Index)
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
     res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
@@ -163,7 +152,7 @@ function findnz(A::GrB_Matrix)
         error(res)
     end
     I, J, X = res
-    return I.+1, J.+1, X
+    return I, J, X
 end
 
 """
@@ -205,7 +194,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
+julia> A = GrB_Matrix([0, 1, 2], [0, 1, 2], [1, 1, 1])
 GrB_Matrix{Int64}
 
 julia> size(A)
@@ -272,7 +261,7 @@ julia> A[1, 1]
 ```
 """
 function getindex(A::GrB_Matrix, row_index::GrB_Index, col_index::GrB_Index)
-    res = GrB_Matrix_extractElement(A, row_index-1, col_index-1)
+    res = GrB_Matrix_extractElement(A, row_index, col_index)
     if typeof(res) == GrB_Info
         error(res)
     end
@@ -304,8 +293,8 @@ julia> A[1, 1]
 5
 ```
 """
-function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where {T <: valid_types}
-    res = GrB_Matrix_setElement(A, X, I-1, J-1)
+function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where T
+    res = GrB_Matrix_setElement(A, X, I, J)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -364,7 +353,7 @@ julia> findnz(B)
 ([1, 2, 3], [1, 2, 3], [1, 1, 1])
 ```
 """
-function copy(A::GrB_Matrix{T}) where T <: valid_types
+function copy(A::GrB_Matrix{T}) where T
     C = GrB_Matrix{T}()
     res = GrB_Matrix_dup(C, A)
     if res != GrB_SUCCESS
@@ -392,7 +381,7 @@ julia> findnz(M')
 ([2, 3], [1, 1], [1, 1])
 ```
 """
-function adjoint(A::GrB_Matrix{T}) where T <: valid_types
+function adjoint(A::GrB_Matrix{T}) where T
     C = GrB_Matrix(T, size(A, 2), size(A, 1))
     res = GrB_transpose(C, GrB_NULL, GrB_NULL, A, GrB_NULL)
     if res != GrB_SUCCESS
@@ -406,7 +395,7 @@ end
 
 Return lower triangle of a GraphBLAS matrix.
 """
-function LowerTriangular(A::GrB_Matrix{T}) where T <: valid_types 
+function LowerTriangular(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     if nrows != ncols
         error("Matrix is not square")
@@ -424,7 +413,7 @@ end
 
 Return upper triangle of a GraphBLAS matrix.
 """
-function UpperTriangular(A::GrB_Matrix{T}) where T <: valid_types 
+function UpperTriangular(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     if nrows != ncols
         error("Matrix is not square")
@@ -442,7 +431,7 @@ end
 
 Return diagonal of a GraphBLAS matrix.
 """
-function Diagonal(A::GrB_Matrix{T}) where T <: valid_types 
+function Diagonal(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     D = GrB_Matrix(T, nrows, ncols)
     res = GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, 0, GrB_NULL)

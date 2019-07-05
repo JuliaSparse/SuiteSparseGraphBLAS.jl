@@ -10,7 +10,7 @@ function GxB_fprint(
         ccall(:fclose, Cint, (Ptr{Cvoid},), FILE)
         foreach(println, eachline(path))
     end
-    
+
     s = "Descriptor"
     if T <: GrB_UnaryOp
         s = "UnaryOp"
