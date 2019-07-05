@@ -46,54 +46,7 @@ number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 -10
     row 2: int64 -20
-</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Object_Methods/Algebra_Methods.jl#L4-L61">source</a><div><div><pre><code class="language-none">GrB_UnaryOp_new(op, fn, ztype, xtype)</code></pre><p>Initialize a GraphBLAS unary operator with a specified user-defined function and its types. The function should take a single value(x) &amp; return an output(z), f(x) = z.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
-
-julia&gt; GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; u = GrB_Vector{Int64}()
-GrB_Vector{Int64}
-
-julia&gt; GrB_Vector_new(u, GrB_INT64, 3)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; I = [0, 2]; X = [10, 20]; n = 2;
-
-julia&gt; GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; w = GrB_Vector{Int64}()
-GrB_Vector{Int64}
-
-julia&gt; GrB_Vector_new(w, GrB_INT64, 3)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; function NEG(a)
-           return -a
-       end
-NEG (generic function with 1 method)
-
-julia&gt; negative = GrB_UnaryOp()
-GrB_UnaryOp
-
-julia&gt; GrB_UnaryOp_new(negative, NEG, GrB_INT64, GrB_INT64)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; GrB_apply(w, GrB_NULL, GrB_NULL, negative, u, GrB_NULL)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; @GxB_fprint(w, GxB_COMPLETE)
-
-GraphBLAS vector: w 
-nrows: 3 ncols: 1 max # entries: 2
-format: standard CSC vlen: 3 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: int64 -10
-    row 2: int64 -20
-</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_BinaryOp_new" href="#GraphBLASInterface.GrB_BinaryOp_new"><code>GraphBLASInterface.GrB_BinaryOp_new</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_BinaryOp_new(op, fn, ztype, xtype, ytype)</code></pre><p>Initialize a GraphBLAS binary operator with a specified user-defined function and its types. The function should take 2 values(x, y) &amp; return an output(z), f(x, y) = z.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd22ab0fddcde8d919d326b0859feb3ec337ad82/src/Object_Methods/Algebra_Methods.jl#L4-L61">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_BinaryOp_new" href="#GraphBLASInterface.GrB_BinaryOp_new"><code>GraphBLASInterface.GrB_BinaryOp_new</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_BinaryOp_new(op, fn, ztype, xtype, ytype)</code></pre><p>Initialize a GraphBLAS binary operator with a specified user-defined function and its types. The function should take 2 values(x, y) &amp; return an output(z), f(x, y) = z.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -131,45 +84,7 @@ number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: double 5.3
     row 3: double 9.5
-</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Object_Methods/Algebra_Methods.jl#L87-L135">source</a><div><div><pre><code class="language-none">GrB_BinaryOp_new(op, fn, ztype, xtype, ytype)</code></pre><p>Initialize a GraphBLAS binary operator with a specified user-defined function and its types. The function should take 2 values(x, y) &amp; return an output(z), f(x, y) = z.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
-
-julia&gt; GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; V = GrB_Vector{Float64}()
-GrB_Vector{Float64}
-
-julia&gt; GrB_Vector_new(V, GrB_FP64, 4)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; I = [0, 0, 3, 3]; X = [2.1, 3.2, 4.5, 5.0]; n = 4;  # two values at position 0 and 3
-
-julia&gt; dup = GrB_BinaryOp()  # dup is a binary operator which is applied when duplicate values for the same location are present in the vector
-GrB_BinaryOp
-
-julia&gt; function ADD(b, c)
-           return b+c
-       end
-ADD (generic function with 1 method)
-
-julia&gt; GrB_BinaryOp_new(dup, ADD, GrB_FP64, GrB_FP64, GrB_FP64)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; GrB_Vector_build(V, I, X, n, dup)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; @GxB_Vector_fprint(V, GxB_SHORT) # the value stored at position 0 and 3 will be the sum of the duplicate values
-
-GraphBLAS vector: V
-nrows: 4 ncols: 1 max # entries: 2
-format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  double size: 8
-number of entries: 2
-column: 0 : 2 entries [0:1]
-    row 0: double 5.3
-    row 3: double 9.5
-</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Monoid_new" href="#GraphBLASInterface.GrB_Monoid_new"><code>GraphBLASInterface.GrB_Monoid_new</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Monoid_new(monoid, binary_op, identity)</code></pre><p>Initialize a GraphBLAS monoid with specified binary operator and identity value.</p></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Object_Methods/Algebra_Methods.jl#L162-L166">source</a><div><div><pre><code class="language-none">GrB_Monoid_new(monoid, binary_op, identity)</code></pre><p>Initialize a GraphBLAS monoid with specified binary operator and identity value.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Semiring_new" href="#GraphBLASInterface.GrB_Semiring_new"><code>GraphBLASInterface.GrB_Semiring_new</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Semiring_new(semiring, monoid, binary_op)</code></pre><p>Initialize a GraphBLAS semiring with specified monoid and binary operator.</p></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Object_Methods/Algebra_Methods.jl#L223-L227">source</a><div><div><pre><code class="language-none">GrB_Semiring_new(semiring, monoid, binary_op)</code></pre><p>Initialize a GraphBLAS semiring with specified monoid and binary operator.</p></div></div></section><h2><a class="nav-anchor" id="Built-in-algebraic-objects-1" href="#Built-in-algebraic-objects-1">Built-in algebraic objects</a></h2><h4><a class="nav-anchor" id="Unary-operators,-z-f(x)-1" href="#Unary-operators,-z-f(x)-1">Unary operators, z = f(x)</a></h4><pre><code class="language-none">z and x have the same type. The suffix in the name is the type of x and z.
+</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd22ab0fddcde8d919d326b0859feb3ec337ad82/src/Object_Methods/Algebra_Methods.jl#L87-L135">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Monoid_new" href="#GraphBLASInterface.GrB_Monoid_new"><code>GraphBLASInterface.GrB_Monoid_new</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Monoid_new(monoid, binary_op, identity)</code></pre><p>Initialize a GraphBLAS monoid with specified binary operator and identity value.</p></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd22ab0fddcde8d919d326b0859feb3ec337ad82/src/Object_Methods/Algebra_Methods.jl#L162-L166">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Semiring_new" href="#GraphBLASInterface.GrB_Semiring_new"><code>GraphBLASInterface.GrB_Semiring_new</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Semiring_new(semiring, monoid, binary_op)</code></pre><p>Initialize a GraphBLAS semiring with specified monoid and binary operator.</p></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/cd22ab0fddcde8d919d326b0859feb3ec337ad82/src/Object_Methods/Algebra_Methods.jl#L223-L227">source</a></section><h2><a class="nav-anchor" id="Built-in-algebraic-objects-1" href="#Built-in-algebraic-objects-1">Built-in algebraic objects</a></h2><h4><a class="nav-anchor" id="Unary-operators,-z-f(x)-1" href="#Unary-operators,-z-f(x)-1">Unary operators, z = f(x)</a></h4><pre><code class="language-none">z and x have the same type. The suffix in the name is the type of x and z.
 
 z = x                z = -x            z = 1/x
 identity             additive          multiplicative
