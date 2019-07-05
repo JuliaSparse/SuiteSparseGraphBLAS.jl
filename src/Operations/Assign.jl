@@ -86,14 +86,14 @@ function GrB_Row_assign(            # C<mask'>(i,J) = accum (C(i,J),u')
 end
 
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
-        w::GrB_Vector,              # input/output vector for results
+        w::GrB_Vector{Z},           # input/output vector for results
         mask::T,                    # optional mask for w, unused if NULL
         accum::U,                   # optional accum for Z=accum(w(I),x)
         x,                          # scalar to assign to w(I)
         I::S,                       # row indices
         ni::X,                      # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, S <: valid_indices_types, Z}
 
     fn_name = "GrB_Vector_assign_" * suffix(Z)
 
@@ -170,7 +170,7 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
 end
 
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
-        C::GrB_Matrix,              # input/output matrix for results
+        C::GrB_Matrix{Z},           # input/output matrix for results
         Mask::T,                    # optional mask for C, unused if NULL
         accum::U,                   # optional accum for Z=accum(C(I,J),x)
         x,                          # scalar to assign to C(I,J)
@@ -179,7 +179,7 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
         J::R,                       # column indices
         nj::X,                      # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, R <: valid_indices_types, S <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, R <: valid_indices_types, S <: valid_indices_types, Z}
 
     fn_name = "GrB_Matrix_assign_" * suffix(Z)
 
