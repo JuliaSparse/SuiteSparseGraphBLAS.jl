@@ -36,7 +36,7 @@ julia&gt; GrB_mxm(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, A, B, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 1], [0, 1], [50, 300])</code></pre></div></div><div><div><pre><code class="language-none">GrB_mxm(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Multiplies a matrix with another matrix on a semiring. The result is a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1], [0, 1], [50, 300])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Multiplication.jl#L4-L50">source</a><div><div><pre><code class="language-none">GrB_mxm(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Multiplies a matrix with another matrix on a semiring. The result is a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -73,7 +73,7 @@ julia&gt; GrB_mxm(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, A, B, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 1], [0, 1], [50, 300])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Multiplication.jl#L4-L50">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_vxm" href="#GraphBLASInterface.GrB_vxm"><code>GraphBLASInterface.GrB_vxm</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_vxm(w, mask, accum, semiring, u, A, desc)</code></pre><p>Multiplies a (row)vector with a matrix on an semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1], [0, 1], [50, 300])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_vxm" href="#GraphBLASInterface.GrB_vxm"><code>GraphBLASInterface.GrB_vxm</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_vxm(w, mask, accum, semiring, u, A, desc)</code></pre><p>Multiplies a (row)vector with a matrix on an semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -110,7 +110,7 @@ julia&gt; GrB_vxm(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, u, A, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1], [50, 120])</code></pre></div></div><div><div><pre><code class="language-none">GrB_vxm(w, mask, accum, semiring, u, A, desc)</code></pre><p>Multiplies a (row)vector with a matrix on an semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1], [50, 120])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Multiplication.jl#L71-L117">source</a><div><div><pre><code class="language-none">GrB_vxm(w, mask, accum, semiring, u, A, desc)</code></pre><p>Multiplies a (row)vector with a matrix on an semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -147,7 +147,7 @@ julia&gt; GrB_vxm(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, u, A, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1], [50, 120])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Multiplication.jl#L71-L117">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_mxv" href="#GraphBLASInterface.GrB_mxv"><code>GraphBLASInterface.GrB_mxv</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_mxv(w, mask, accum, semiring, A, u, desc)</code></pre><p>Multiplies a matrix by a vector on a semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1], [50, 120])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_mxv" href="#GraphBLASInterface.GrB_mxv"><code>GraphBLASInterface.GrB_mxv</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_mxv(w, mask, accum, semiring, A, u, desc)</code></pre><p>Multiplies a matrix by a vector on a semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -184,7 +184,7 @@ julia&gt; GrB_mxv(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, A, u, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1], [170, 180])</code></pre></div></div><div><div><pre><code class="language-none">GrB_mxv(w, mask, accum, semiring, A, u, desc)</code></pre><p>Multiplies a matrix by a vector on a semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1], [170, 180])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Multiplication.jl#L138-L184">source</a><div><div><pre><code class="language-none">GrB_mxv(w, mask, accum, semiring, A, u, desc)</code></pre><p>Multiplies a matrix by a vector on a semiring. The result is a vector.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -221,7 +221,7 @@ julia&gt; GrB_mxv(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, A, u, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1], [170, 180])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Multiplication.jl#L138-L184">source</a></section><h2><a class="nav-anchor" id="Element-wise-multiplication-1" href="#Element-wise-multiplication-1">Element-wise multiplication</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult" href="#GraphBLASInterface.GrB_eWiseMult"><code>GraphBLASInterface.GrB_eWiseMult</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult(C, mask, accum, op, A, B, desc)</code></pre><p>Generic method for element-wise matrix and vector operations: using set intersection.</p><p><code>GrB_eWiseMult</code> computes <code>C&lt;Mask&gt; = accum (C, A .* B)</code>, where pairs of elements in two matrices (or vectors) are pairwise &quot;multiplied&quot; with C(i, j) = mult (A(i, j), B(i, j)). The &quot;multiplication&quot; operator can be any binary operator. The pattern of the result T = A .* B is the set intersection (not union) of A and B. Entries outside of the intersection are not computed. This is primary difference with <code>GrB_eWiseAdd</code>. The input matrices A and/or B may be transposed first, via the descriptor. For a semiring, the mult operator is the semiring&#39;s multiply operator; this differs from the eWiseAdd methods which use the semiring&#39;s add operator instead.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Vector_Semiring" href="#GraphBLASInterface.GrB_eWiseMult_Vector_Semiring"><code>GraphBLASInterface.GrB_eWiseMult_Vector_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using semiring. Semiring&#39;s multiply operator is used. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1], [170, 180])</code></pre></div></div></section><h2><a class="nav-anchor" id="Element-wise-multiplication-1" href="#Element-wise-multiplication-1">Element-wise multiplication</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult" href="#GraphBLASInterface.GrB_eWiseMult"><code>GraphBLASInterface.GrB_eWiseMult</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult(C, mask, accum, op, A, B, desc)</code></pre><p>Generic method for element-wise matrix and vector operations: using set intersection.</p><p><code>GrB_eWiseMult</code> computes <code>C&lt;Mask&gt; = accum (C, A .* B)</code>, where pairs of elements in two matrices (or vectors) are pairwise &quot;multiplied&quot; with C(i, j) = mult (A(i, j), B(i, j)). The &quot;multiplication&quot; operator can be any binary operator. The pattern of the result T = A .* B is the set intersection (not union) of A and B. Entries outside of the intersection are not computed. This is primary difference with <code>GrB_eWiseAdd</code>. The input matrices A and/or B may be transposed first, via the descriptor. For a semiring, the mult operator is the semiring&#39;s multiply operator; this differs from the eWiseAdd methods which use the semiring&#39;s add operator instead.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Vector_Semiring" href="#GraphBLASInterface.GrB_eWiseMult_Vector_Semiring"><code>GraphBLASInterface.GrB_eWiseMult_Vector_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using semiring. Semiring&#39;s multiply operator is used. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -258,7 +258,7 @@ julia&gt; GrB_eWiseMult_Vector_Semiring(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_FP
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 4], [11.0, 9.9])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseMult_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using semiring. Semiring&#39;s multiply operator is used. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 4], [11.0, 9.9])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L5-L52">source</a><div><div><pre><code class="language-none">GrB_eWiseMult_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using semiring. Semiring&#39;s multiply operator is used. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -295,7 +295,7 @@ julia&gt; GrB_eWiseMult_Vector_Semiring(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_FP
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 4], [11.0, 9.9])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L5-L52">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Vector_Monoid" href="#GraphBLASInterface.GrB_eWiseMult_Vector_Monoid"><code>GraphBLASInterface.GrB_eWiseMult_Vector_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using monoid. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 4], [11.0, 9.9])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Vector_Monoid" href="#GraphBLASInterface.GrB_eWiseMult_Vector_Monoid"><code>GraphBLASInterface.GrB_eWiseMult_Vector_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using monoid. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -332,7 +332,7 @@ julia&gt; GrB_eWiseMult_Vector_Monoid(w, GrB_NULL, GrB_NULL, GxB_MAX_FP64_MONOID
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 4], [10.0, 3.3])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseMult_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using monoid. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 4], [10.0, 3.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L73-L120">source</a><div><div><pre><code class="language-none">GrB_eWiseMult_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using monoid. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -369,7 +369,7 @@ julia&gt; GrB_eWiseMult_Vector_Monoid(w, GrB_NULL, GrB_NULL, GxB_MAX_FP64_MONOID
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 4], [10.0, 3.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L73-L120">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Vector_BinaryOp" href="#GraphBLASInterface.GrB_eWiseMult_Vector_BinaryOp"><code>GraphBLASInterface.GrB_eWiseMult_Vector_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Vector_BinaryOp(w, mask, accum, mult, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using binary operator. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 4], [10.0, 3.3])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Vector_BinaryOp" href="#GraphBLASInterface.GrB_eWiseMult_Vector_BinaryOp"><code>GraphBLASInterface.GrB_eWiseMult_Vector_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Vector_BinaryOp(w, mask, accum, mult, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using binary operator. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -406,7 +406,7 @@ julia&gt; GrB_eWiseMult_Vector_BinaryOp(w, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, u
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 4], [11.0, 99.0])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseMult_Vector_BinaryOp(w, mask, accum, mult, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using binary operator. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 4], [11.0, 99.0])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L141-L188">source</a><div><div><pre><code class="language-none">GrB_eWiseMult_Vector_BinaryOp(w, mask, accum, mult, u, v, desc)</code></pre><p>Compute element-wise vector multiplication using binary operator. <code>w&lt;mask&gt; = accum (w, u .* v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -443,7 +443,7 @@ julia&gt; GrB_eWiseMult_Vector_BinaryOp(w, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, u
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 4], [11.0, 99.0])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L141-L188">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Matrix_Semiring" href="#GraphBLASInterface.GrB_eWiseMult_Matrix_Semiring"><code>GraphBLASInterface.GrB_eWiseMult_Matrix_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using semiring. Semiring&#39;s multiply operator is used. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 4], [11.0, 99.0])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Matrix_Semiring" href="#GraphBLASInterface.GrB_eWiseMult_Matrix_Semiring"><code>GraphBLASInterface.GrB_eWiseMult_Matrix_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using semiring. Semiring&#39;s multiply operator is used. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -480,7 +480,7 @@ julia&gt; GrB_eWiseMult_Matrix_Semiring(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_IN
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [320, 510])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseMult_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using semiring. Semiring&#39;s multiply operator is used. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 2], [2, 0], [320, 510])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L209-L256">source</a><div><div><pre><code class="language-none">GrB_eWiseMult_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using semiring. Semiring&#39;s multiply operator is used. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -517,7 +517,7 @@ julia&gt; GrB_eWiseMult_Matrix_Semiring(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_IN
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [320, 510])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L209-L256">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Matrix_Monoid" href="#GraphBLASInterface.GrB_eWiseMult_Matrix_Monoid"><code>GraphBLASInterface.GrB_eWiseMult_Matrix_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using monoid. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 2], [2, 0], [320, 510])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Matrix_Monoid" href="#GraphBLASInterface.GrB_eWiseMult_Matrix_Monoid"><code>GraphBLASInterface.GrB_eWiseMult_Matrix_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using monoid. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -554,7 +554,7 @@ julia&gt; GrB_eWiseMult_Matrix_Monoid(C, GrB_NULL, GrB_NULL, GxB_PLUS_INT64_MONO
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [36, 47])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseMult_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using monoid. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 2], [2, 0], [36, 47])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L277-L324">source</a><div><div><pre><code class="language-none">GrB_eWiseMult_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using monoid. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -591,7 +591,7 @@ julia&gt; GrB_eWiseMult_Matrix_Monoid(C, GrB_NULL, GrB_NULL, GxB_PLUS_INT64_MONO
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [36, 47])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L277-L324">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Matrix_BinaryOp" href="#GraphBLASInterface.GrB_eWiseMult_Matrix_BinaryOp"><code>GraphBLASInterface.GrB_eWiseMult_Matrix_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Matrix_BinaryOp(C, Mask, accum, mult, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using binary operator. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 2], [2, 0], [36, 47])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseMult_Matrix_BinaryOp" href="#GraphBLASInterface.GrB_eWiseMult_Matrix_BinaryOp"><code>GraphBLASInterface.GrB_eWiseMult_Matrix_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseMult_Matrix_BinaryOp(C, Mask, accum, mult, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using binary operator. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -628,7 +628,7 @@ julia&gt; GrB_eWiseMult_Matrix_BinaryOp(C, GrB_NULL, GrB_NULL, GrB_PLUS_INT64, A
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [36, 47])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseMult_Matrix_BinaryOp(C, Mask, accum, mult, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using binary operator. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 2], [2, 0], [36, 47])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L345-L392">source</a><div><div><pre><code class="language-none">GrB_eWiseMult_Matrix_BinaryOp(C, Mask, accum, mult, A, B, desc)</code></pre><p>Compute element-wise matrix multiplication using binary operator. <code>C&lt;Mask&gt; = accum (C, A .* B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -665,7 +665,7 @@ julia&gt; GrB_eWiseMult_Matrix_BinaryOp(C, GrB_NULL, GrB_NULL, GrB_PLUS_INT64, A
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [36, 47])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_multiplication.jl#L345-L392">source</a></section><h2><a class="nav-anchor" id="Element-wise-addition-1" href="#Element-wise-addition-1">Element-wise addition</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd" href="#GraphBLASInterface.GrB_eWiseAdd"><code>GraphBLASInterface.GrB_eWiseAdd</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd(C, mask, accum, op, A, B, desc)</code></pre><p>Generic method for element-wise matrix and vector operations: using set union.</p><p><code>GrB_eWiseAdd</code> computes <code>C&lt;Mask&gt; = accum (C, A + B)</code>, where pairs of elements in two matrices (or two vectors) are pairwise &quot;added&quot;. The &quot;add&quot; operator can be any binary operator. With the plus operator, this is the same matrix addition in conventional linear algebra. The pattern of the result T = A + B is the set union of A and B. Entries outside of the union are not computed. That is, if both A(i, j) and B(i, j) are present in the pattern of A and B, then T(i, j) = A(i, j) &quot;+&quot; B(i, j). If only A(i, j) is present then T(i, j) = A (i, j) and the &quot;+&quot; operator is not used. Likewise, if only B(i, j) is in the pattern of B but A(i, j) is not in the pattern of A, then T(i, j) = B(i, j). For a semiring, the mult operator is the semiring&#39;s add operator.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Vector_Semiring" href="#GraphBLASInterface.GrB_eWiseAdd_Vector_Semiring"><code>GraphBLASInterface.GrB_eWiseAdd_Vector_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector addition using semiring. Semiring&#39;s add operator is used. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 2], [2, 0], [36, 47])</code></pre></div></div></section><h2><a class="nav-anchor" id="Element-wise-addition-1" href="#Element-wise-addition-1">Element-wise addition</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd" href="#GraphBLASInterface.GrB_eWiseAdd"><code>GraphBLASInterface.GrB_eWiseAdd</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd(C, mask, accum, op, A, B, desc)</code></pre><p>Generic method for element-wise matrix and vector operations: using set union.</p><p><code>GrB_eWiseAdd</code> computes <code>C&lt;Mask&gt; = accum (C, A + B)</code>, where pairs of elements in two matrices (or two vectors) are pairwise &quot;added&quot;. The &quot;add&quot; operator can be any binary operator. With the plus operator, this is the same matrix addition in conventional linear algebra. The pattern of the result T = A + B is the set union of A and B. Entries outside of the union are not computed. That is, if both A(i, j) and B(i, j) are present in the pattern of A and B, then T(i, j) = A(i, j) &quot;+&quot; B(i, j). If only A(i, j) is present then T(i, j) = A (i, j) and the &quot;+&quot; operator is not used. Likewise, if only B(i, j) is in the pattern of B but A(i, j) is not in the pattern of A, then T(i, j) = B(i, j). For a semiring, the mult operator is the semiring&#39;s add operator.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Vector_Semiring" href="#GraphBLASInterface.GrB_eWiseAdd_Vector_Semiring"><code>GraphBLASInterface.GrB_eWiseAdd_Vector_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector addition using semiring. Semiring&#39;s add operator is used. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -702,7 +702,7 @@ julia&gt; GrB_eWiseAdd_Vector_Semiring(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_FP6
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseAdd_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector addition using semiring. Semiring&#39;s add operator is used. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L5-L52">source</a><div><div><pre><code class="language-none">GrB_eWiseAdd_Vector_Semiring(w, mask, accum, semiring, u, v, desc)</code></pre><p>Compute element-wise vector addition using semiring. Semiring&#39;s add operator is used. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -739,7 +739,7 @@ julia&gt; GrB_eWiseAdd_Vector_Semiring(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_FP6
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L5-L52">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Vector_Monoid" href="#GraphBLASInterface.GrB_eWiseAdd_Vector_Monoid"><code>GraphBLASInterface.GrB_eWiseAdd_Vector_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector addition using monoid. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Vector_Monoid" href="#GraphBLASInterface.GrB_eWiseAdd_Vector_Monoid"><code>GraphBLASInterface.GrB_eWiseAdd_Vector_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector addition using monoid. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -776,7 +776,7 @@ julia&gt; GrB_eWiseAdd_Vector_Monoid(w, GrB_NULL, GrB_NULL, GxB_MAX_FP64_MONOID,
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1, 2, 4], [10.0, 2.2, 20.0, 3.3])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseAdd_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector addition using monoid. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1, 2, 4], [10.0, 2.2, 20.0, 3.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L74-L121">source</a><div><div><pre><code class="language-none">GrB_eWiseAdd_Vector_Monoid(w, mask, accum, monoid, u, v, desc)</code></pre><p>Compute element-wise vector addition using monoid. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -813,7 +813,7 @@ julia&gt; GrB_eWiseAdd_Vector_Monoid(w, GrB_NULL, GrB_NULL, GxB_MAX_FP64_MONOID,
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1, 2, 4], [10.0, 2.2, 20.0, 3.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L74-L121">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Vector_BinaryOp" href="#GraphBLASInterface.GrB_eWiseAdd_Vector_BinaryOp"><code>GraphBLASInterface.GrB_eWiseAdd_Vector_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Vector_BinaryOp(w, mask, accum, add, u, v, desc)</code></pre><p>Compute element-wise vector addition using binary operator. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1, 2, 4], [10.0, 2.2, 20.0, 3.3])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Vector_BinaryOp" href="#GraphBLASInterface.GrB_eWiseAdd_Vector_BinaryOp"><code>GraphBLASInterface.GrB_eWiseAdd_Vector_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Vector_BinaryOp(w, mask, accum, add, u, v, desc)</code></pre><p>Compute element-wise vector addition using binary operator. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -850,7 +850,7 @@ julia&gt; GrB_eWiseAdd_Vector_BinaryOp(w, GrB_NULL, GrB_NULL, GrB_PLUS_FP64, u, 
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseAdd_Vector_BinaryOp(w, mask, accum, add, u, v, desc)</code></pre><p>Compute element-wise vector addition using binary operator. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L142-L189">source</a><div><div><pre><code class="language-none">GrB_eWiseAdd_Vector_BinaryOp(w, mask, accum, add, u, v, desc)</code></pre><p>Compute element-wise vector addition using binary operator. <code>w&lt;mask&gt; = accum (w, u + v)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -887,7 +887,7 @@ julia&gt; GrB_eWiseAdd_Vector_BinaryOp(w, GrB_NULL, GrB_NULL, GrB_PLUS_FP64, u, 
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L142-L189">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Matrix_Semiring" href="#GraphBLASInterface.GrB_eWiseAdd_Matrix_Semiring"><code>GraphBLASInterface.GrB_eWiseAdd_Matrix_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix addition using semiring. Semiring&#39;s add operator is used. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 1, 2, 4], [11.1, 2.2, 20.0, 6.3])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Matrix_Semiring" href="#GraphBLASInterface.GrB_eWiseAdd_Matrix_Semiring"><code>GraphBLASInterface.GrB_eWiseAdd_Matrix_Semiring</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix addition using semiring. Semiring&#39;s add operator is used. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -924,7 +924,7 @@ julia&gt; GrB_eWiseAdd_Matrix_Semiring(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseAdd_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix addition using semiring. Semiring&#39;s add operator is used. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L210-L257">source</a><div><div><pre><code class="language-none">GrB_eWiseAdd_Matrix_Semiring(C, Mask, accum, semiring, A, B, desc)</code></pre><p>Compute element-wise matrix addition using semiring. Semiring&#39;s add operator is used. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -961,7 +961,7 @@ julia&gt; GrB_eWiseAdd_Matrix_Semiring(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L210-L257">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Matrix_Monoid" href="#GraphBLASInterface.GrB_eWiseAdd_Matrix_Monoid"><code>GraphBLASInterface.GrB_eWiseAdd_Matrix_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix addition using monoid. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Matrix_Monoid" href="#GraphBLASInterface.GrB_eWiseAdd_Matrix_Monoid"><code>GraphBLASInterface.GrB_eWiseAdd_Matrix_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix addition using monoid. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1007,7 +1007,7 @@ julia&gt; GrB_eWiseAdd_Matrix_Monoid(C, mask, GrB_NULL, GxB_PLUS_INT64_MONOID, A
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0], [1, 2], [10, 36])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseAdd_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix addition using monoid. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0], [1, 2], [10, 36])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L278-L334">source</a><div><div><pre><code class="language-none">GrB_eWiseAdd_Matrix_Monoid(C, Mask, accum, monoid, A, B, desc)</code></pre><p>Compute element-wise matrix addition using monoid. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1053,7 +1053,7 @@ julia&gt; GrB_eWiseAdd_Matrix_Monoid(C, mask, GrB_NULL, GxB_PLUS_INT64_MONOID, A
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0], [1, 2], [10, 36])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L278-L334">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Matrix_BinaryOp" href="#GraphBLASInterface.GrB_eWiseAdd_Matrix_BinaryOp"><code>GraphBLASInterface.GrB_eWiseAdd_Matrix_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Matrix_BinaryOp(C, Mask, accum, add, A, B, desc)</code></pre><p>Compute element-wise matrix addition using binary operator. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0], [1, 2], [10, 36])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_eWiseAdd_Matrix_BinaryOp" href="#GraphBLASInterface.GrB_eWiseAdd_Matrix_BinaryOp"><code>GraphBLASInterface.GrB_eWiseAdd_Matrix_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_eWiseAdd_Matrix_BinaryOp(C, Mask, accum, add, A, B, desc)</code></pre><p>Compute element-wise matrix addition using binary operator. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1090,7 +1090,7 @@ julia&gt; GrB_eWiseAdd_Matrix_BinaryOp(C, GrB_NULL, GrB_NULL, GrB_PLUS_INT64, A,
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div><div><div><pre><code class="language-none">GrB_eWiseAdd_Matrix_BinaryOp(C, Mask, accum, add, A, B, desc)</code></pre><p>Compute element-wise matrix addition using binary operator. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L355-L402">source</a><div><div><pre><code class="language-none">GrB_eWiseAdd_Matrix_BinaryOp(C, Mask, accum, add, A, B, desc)</code></pre><p>Compute element-wise matrix addition using binary operator. <code>C&lt;Mask&gt; = accum (C, A + B)</code></p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1127,7 +1127,7 @@ julia&gt; GrB_eWiseAdd_Matrix_BinaryOp(C, GrB_NULL, GrB_NULL, GrB_PLUS_INT64, A,
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Element_wise_addition.jl#L355-L402">source</a></section><h2><a class="nav-anchor" id="Extract-1" href="#Extract-1">Extract</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_extract" href="#GraphBLASInterface.GrB_extract"><code>GraphBLASInterface.GrB_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_extract(arg1, Mask, accum, arg4, ...)</code></pre><p>Generic matrix/vector extraction.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_extract" href="#GraphBLASInterface.GrB_Vector_extract"><code>GraphBLASInterface.GrB_Vector_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_extract(w, mask, accum, u, I, ni, desc)</code></pre><p>Extract a sub-vector from a larger vector as specified by a set of indices. The result is a vector whose size is equal to the number of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [10, 36, 15, 47, 40])</code></pre></div></div></section><h2><a class="nav-anchor" id="Extract-1" href="#Extract-1">Extract</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_extract" href="#GraphBLASInterface.GrB_extract"><code>GraphBLASInterface.GrB_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_extract(arg1, Mask, accum, arg4, ...)</code></pre><p>Generic matrix/vector extraction.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_extract" href="#GraphBLASInterface.GrB_Vector_extract"><code>GraphBLASInterface.GrB_Vector_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_extract(w, mask, accum, u, I, ni, desc)</code></pre><p>Extract a sub-vector from a larger vector as specified by a set of indices. The result is a vector whose size is equal to the number of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1169,7 +1169,7 @@ GrB_SUCCESS::GrB_Info = 0
 julia&gt; GrB_Vector_extractTuples(W)[2]
 2-element Array{Int64,1}:
  15
- 84</code></pre></div></div><div><div><pre><code class="language-none">GrB_Vector_extract(w, mask, accum, u, I, ni, desc)</code></pre><p>Extract a sub-vector from a larger vector as specified by a set of indices. The result is a vector whose size is equal to the number of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+ 84</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Extract.jl#L4-L56">source</a><div><div><pre><code class="language-none">GrB_Vector_extract(w, mask, accum, u, I, ni, desc)</code></pre><p>Extract a sub-vector from a larger vector as specified by a set of indices. The result is a vector whose size is equal to the number of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1211,7 +1211,7 @@ GrB_SUCCESS::GrB_Info = 0
 julia&gt; GrB_Vector_extractTuples(W)[2]
 2-element Array{Int64,1}:
  15
- 84</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Extract.jl#L4-L56">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_extract" href="#GraphBLASInterface.GrB_Matrix_extract"><code>GraphBLASInterface.GrB_Matrix_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Extract a sub-matrix from a larger matrix as specified by a set of row indices and a set of column indices. The result is a matrix whose size is equal to size of the sets of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+ 84</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_extract" href="#GraphBLASInterface.GrB_Matrix_extract"><code>GraphBLASInterface.GrB_Matrix_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Extract a sub-matrix from a larger matrix as specified by a set of row indices and a set of column indices. The result is a matrix whose size is equal to size of the sets of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1258,7 +1258,7 @@ GrB_SUCCESS::GrB_Info = 0
 julia&gt; GrB_Matrix_extractTuples(OUT)[3]
 2-element Array{Int8,1}:
  2
- 6</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Extract a sub-matrix from a larger matrix as specified by a set of row indices and a set of column indices. The result is a matrix whose size is equal to size of the sets of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+ 6</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Extract.jl#L77-L134">source</a><div><div><pre><code class="language-none">GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Extract a sub-matrix from a larger matrix as specified by a set of row indices and a set of column indices. The result is a matrix whose size is equal to size of the sets of indices.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1305,7 +1305,7 @@ GrB_SUCCESS::GrB_Info = 0
 julia&gt; GrB_Matrix_extractTuples(OUT)[3]
 2-element Array{Int8,1}:
  2
- 6</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Extract.jl#L77-L134">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Col_extract" href="#GraphBLASInterface.GrB_Col_extract"><code>GraphBLASInterface.GrB_Col_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)</code></pre><p>Extract from one column of a matrix into a vector. With the transpose descriptor for the source matrix, elements of an arbitrary row of the matrix can be extracted with this function as well.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+ 6</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Col_extract" href="#GraphBLASInterface.GrB_Col_extract"><code>GraphBLASInterface.GrB_Col_extract</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)</code></pre><p>Extract from one column of a matrix into a vector. With the transpose descriptor for the source matrix, elements of an arbitrary row of the matrix can be extracted with this function as well.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1361,7 +1361,7 @@ julia&gt; GrB_Vector_extractTuples(out)[2]
 3-element Array{Int8,1}:
  43
  34
- 57</code></pre></div></div><div><div><pre><code class="language-none">GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)</code></pre><p>Extract from one column of a matrix into a vector. With the transpose descriptor for the source matrix, elements of an arbitrary row of the matrix can be extracted with this function as well.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+ 57</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Extract.jl#L157-L223">source</a><div><div><pre><code class="language-none">GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)</code></pre><p>Extract from one column of a matrix into a vector. With the transpose descriptor for the source matrix, elements of an arbitrary row of the matrix can be extracted with this function as well.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1417,48 +1417,7 @@ julia&gt; GrB_Vector_extractTuples(out)[2]
 3-element Array{Int8,1}:
  43
  34
- 57</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Extract.jl#L157-L223">source</a></section><h2><a class="nav-anchor" id="Assign-1" href="#Assign-1">Assign</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_assign" href="#GraphBLASInterface.GrB_assign"><code>GraphBLASInterface.GrB_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_assign(arg1, Mask, accum, arg4, arg5, ...)</code></pre><p>Generic method for submatrix/subvector assignment.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_assign" href="#GraphBLASInterface.GrB_Vector_assign"><code>GraphBLASInterface.GrB_Vector_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_assign(w, mask, accum, u, I, ni, desc)</code></pre><p>Assign values from one GraphBLAS vector to a subset of a vector as specified by a set of indices. The size of the input vector is the same size as the index array provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
-
-julia&gt; GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; w = GrB_Vector{Int64}()
-GrB_Vector{Int64}
-
-julia&gt; GrB_Vector_new(w, GrB_INT64, 5)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; u = GrB_Vector{Int64}()
-GrB_Vector{Int64}
-
-julia&gt; GrB_Vector_new(u, GrB_INT64, 2)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; I = [0, 1]; X = [10, 20]; n = 2;
-
-julia&gt; GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; GrB_Vector_assign(w, GrB_NULL, GrB_NULL, u, [2, 4], 2, GrB_NULL)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; GrB_Vector_extractTuples(w)
-([2, 4], [10, 20])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Vector_assign(w, mask, accum, x, I, ni, desc)</code></pre><p>Assign the same value to a specified subset of vector elements. With the use of <code>GrB_ALL</code>, the entire destination vector can be filled with the constant.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
-
-julia&gt; GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; w = GrB_Vector{Float64}()
-GrB_Vector{Float64}
-
-julia&gt; GrB_Vector_new(w, GrB_FP64, 4)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; GrB_Vector_assign(w, GrB_NULL, GrB_NULL, 2.3, [0, 3], 2, GrB_NULL)
-GrB_SUCCESS::GrB_Info = 0
-
-julia&gt; GrB_Vector_extractTuples(w)
-([0, 3], [2.3, 2.3])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Vector_assign(w, mask, accum, u, I, ni, desc)</code></pre><p>Assign values from one GraphBLAS vector to a subset of a vector as specified by a set of indices. The size of the input vector is the same size as the index array provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+ 57</code></pre></div></div></section><h2><a class="nav-anchor" id="Assign-1" href="#Assign-1">Assign</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_assign" href="#GraphBLASInterface.GrB_assign"><code>GraphBLASInterface.GrB_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_assign(arg1, Mask, accum, arg4, arg5, ...)</code></pre><p>Generic method for submatrix/subvector assignment.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_assign" href="#GraphBLASInterface.GrB_Vector_assign"><code>GraphBLASInterface.GrB_Vector_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_assign(w, mask, accum, u, I, ni, desc)</code></pre><p>Assign values from one GraphBLAS vector to a subset of a vector as specified by a set of indices. The size of the input vector is the same size as the index array provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1499,48 +1458,48 @@ julia&gt; GrB_Vector_assign(w, GrB_NULL, GrB_NULL, 2.3, [0, 3], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_extractTuples(w)
-([0, 3], [2.3, 2.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L248-L273">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_assign" href="#GraphBLASInterface.GrB_Matrix_assign"><code>GraphBLASInterface.GrB_Matrix_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Assign values from one GraphBLAS matrix to a subset of a matrix as specified by a set of indices. The dimensions of the input matrix are the same size as the row and column index arrays provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 3], [2.3, 2.3])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L248-L273">source</a><div><div><pre><code class="language-none">GrB_Vector_assign(w, mask, accum, u, I, ni, desc)</code></pre><p>Assign values from one GraphBLAS vector to a subset of a vector as specified by a set of indices. The size of the input vector is the same size as the index array provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; A = GrB_Matrix{Int64}()
-GrB_Matrix{Int64}
+julia&gt; w = GrB_Vector{Int64}()
+GrB_Vector{Int64}
 
-julia&gt; GrB_Matrix_new(A, GrB_INT64, 4, 4)
+julia&gt; GrB_Vector_new(w, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; I = [0, 0, 2, 2]; J = [1, 2, 0, 2]; X = [10, 20, 30, 40]; n = 4;
+julia&gt; u = GrB_Vector{Int64}()
+GrB_Vector{Int64}
 
-julia&gt; GrB_Matrix_build(A, I, J, X, n, GrB_FIRST_INT64)
+julia&gt; GrB_Vector_new(u, GrB_INT64, 2)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; C = GrB_Matrix{Int64}()
-GrB_Matrix{Int64}
+julia&gt; I = [0, 1]; X = [10, 20]; n = 2;
 
-julia&gt; GrB_Matrix_new(C, GrB_INT64, 4, 4)
+julia&gt; GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; GrB_Matrix_assign(C, GrB_NULL, GrB_NULL, A, GrB_ALL, 4, GrB_ALL, 4, GrB_NULL)
+julia&gt; GrB_Vector_assign(w, GrB_NULL, GrB_NULL, u, [2, 4], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; GrB_Matrix_extractTuples(C)
-([0, 0, 2, 2], [1, 2, 0, 2], [10, 20, 30, 40])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_assign(C, Mask, accum, x, I, ni, J, nj, desc)</code></pre><p>Assign the same value to a specified subset of matrix elements. With the use of <code>GrB_ALL</code>, the entire destination matrix can be filled with the constant.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+julia&gt; GrB_Vector_extractTuples(w)
+([2, 4], [10, 20])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Vector_assign(w, mask, accum, x, I, ni, desc)</code></pre><p>Assign the same value to a specified subset of vector elements. With the use of <code>GrB_ALL</code>, the entire destination vector can be filled with the constant.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; A = GrB_Matrix{Bool}()
-GrB_Matrix{Bool}
+julia&gt; w = GrB_Vector{Float64}()
+GrB_Vector{Float64}
 
-julia&gt; GrB_Matrix_new(A, GrB_BOOL, 4, 4)
+julia&gt; GrB_Vector_new(w, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; GrB_Matrix_assign(A, GrB_NULL, GrB_NULL, true, [0, 1], 2, [0, 1], 2, GrB_NULL)
+julia&gt; GrB_Vector_assign(w, GrB_NULL, GrB_NULL, 2.3, [0, 3], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia&gt; GrB_Matrix_extractTuples(A)
-([0, 0, 1, 1], [0, 1, 0, 1], Bool[true, true, true, true])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Assign values from one GraphBLAS matrix to a subset of a matrix as specified by a set of indices. The dimensions of the input matrix are the same size as the row and column index arrays provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+julia&gt; GrB_Vector_extractTuples(w)
+([0, 3], [2.3, 2.3])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_assign" href="#GraphBLASInterface.GrB_Matrix_assign"><code>GraphBLASInterface.GrB_Matrix_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Assign values from one GraphBLAS matrix to a subset of a matrix as specified by a set of indices. The dimensions of the input matrix are the same size as the row and column index arrays provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1581,7 +1540,48 @@ julia&gt; GrB_Matrix_assign(A, GrB_NULL, GrB_NULL, true, [0, 1], 2, [0, 1], 2, G
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(A)
-([0, 0, 1, 1], [0, 1, 0, 1], Bool[true, true, true, true])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L358-L383">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Col_assign" href="#GraphBLASInterface.GrB_Col_assign"><code>GraphBLASInterface.GrB_Col_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one column of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a row of matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 1, 1], [0, 1, 0, 1], Bool[true, true, true, true])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L358-L383">source</a><div><div><pre><code class="language-none">GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)</code></pre><p>Assign values from one GraphBLAS matrix to a subset of a matrix as specified by a set of indices. The dimensions of the input matrix are the same size as the row and column index arrays provided.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; A = GrB_Matrix{Int64}()
+GrB_Matrix{Int64}
+
+julia&gt; GrB_Matrix_new(A, GrB_INT64, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; I = [0, 0, 2, 2]; J = [1, 2, 0, 2]; X = [10, 20, 30, 40]; n = 4;
+
+julia&gt; GrB_Matrix_build(A, I, J, X, n, GrB_FIRST_INT64)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; C = GrB_Matrix{Int64}()
+GrB_Matrix{Int64}
+
+julia&gt; GrB_Matrix_new(C, GrB_INT64, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_assign(C, GrB_NULL, GrB_NULL, A, GrB_ALL, 4, GrB_ALL, 4, GrB_NULL)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_extractTuples(C)
+([0, 0, 2, 2], [1, 2, 0, 2], [10, 20, 30, 40])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_assign(C, Mask, accum, x, I, ni, J, nj, desc)</code></pre><p>Assign the same value to a specified subset of matrix elements. With the use of <code>GrB_ALL</code>, the entire destination matrix can be filled with the constant.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+
+julia&gt; GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; A = GrB_Matrix{Bool}()
+GrB_Matrix{Bool}
+
+julia&gt; GrB_Matrix_new(A, GrB_BOOL, 4, 4)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_assign(A, GrB_NULL, GrB_NULL, true, [0, 1], 2, [0, 1], 2, GrB_NULL)
+GrB_SUCCESS::GrB_Info = 0
+
+julia&gt; GrB_Matrix_extractTuples(A)
+([0, 0, 1, 1], [0, 1, 0, 1], Bool[true, true, true, true])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Col_assign" href="#GraphBLASInterface.GrB_Col_assign"><code>GraphBLASInterface.GrB_Col_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one column of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a row of matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1612,7 +1612,7 @@ julia&gt; GrB_Col_assign(A, GrB_NULL, GrB_NULL, u, [1, 2], 2, 0, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(A)
-([0, 0, 1, 2, 2], [1, 2, 0, 0, 2], [10, 20, 5, 6, 40])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one column of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a row of matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 1, 2, 2], [1, 2, 0, 0, 2], [10, 20, 5, 6, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L120-L162">source</a><div><div><pre><code class="language-none">GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one column of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a row of matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1643,7 +1643,7 @@ julia&gt; GrB_Col_assign(A, GrB_NULL, GrB_NULL, u, [1, 2], 2, 0, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(A)
-([0, 0, 1, 2, 2], [1, 2, 0, 0, 2], [10, 20, 5, 6, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L120-L162">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Row_assign" href="#GraphBLASInterface.GrB_Row_assign"><code>GraphBLASInterface.GrB_Row_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one row of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a column of a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 1, 2, 2], [1, 2, 0, 0, 2], [10, 20, 5, 6, 40])</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Row_assign" href="#GraphBLASInterface.GrB_Row_assign"><code>GraphBLASInterface.GrB_Row_assign</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one row of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a column of a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1674,7 +1674,7 @@ julia&gt; GrB_Row_assign(A, GrB_NULL, GrB_NULL, u, 0, [1, 3], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(A)
-([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [5, 20, 6, 30, 40])</code></pre></div></div><div><div><pre><code class="language-none">GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one row of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a column of a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [5, 20, 6, 30, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L184-L226">source</a><div><div><pre><code class="language-none">GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)</code></pre><p>Assign the contents of a vector to a subset of elements in one row of a matrix. Note that since the output cannot be transposed, a different variant of assign is provided to assign to a column of a matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1705,7 +1705,7 @@ julia&gt; GrB_Row_assign(A, GrB_NULL, GrB_NULL, u, 0, [1, 3], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(A)
-([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [5, 20, 6, 30, 40])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Assign.jl#L184-L226">source</a></section><h2><a class="nav-anchor" id="Apply-1" href="#Apply-1">Apply</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_apply" href="#GraphBLASInterface.GrB_apply"><code>GraphBLASInterface.GrB_apply</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_apply(C, Mask, accum, op, A, desc)</code></pre><p>Generic matrix/vector apply.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_apply" href="#GraphBLASInterface.GrB_Vector_apply"><code>GraphBLASInterface.GrB_Vector_apply</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_apply(w, mask, accum, op, u, desc)</code></pre><p>Compute the transformation of the values of the elements of a vector using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([0, 0, 0, 2, 2], [1, 2, 3, 0, 2], [5, 20, 6, 30, 40])</code></pre></div></div></section><h2><a class="nav-anchor" id="Apply-1" href="#Apply-1">Apply</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_apply" href="#GraphBLASInterface.GrB_apply"><code>GraphBLASInterface.GrB_apply</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_apply(C, Mask, accum, op, A, desc)</code></pre><p>Generic matrix/vector apply.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_apply" href="#GraphBLASInterface.GrB_Vector_apply"><code>GraphBLASInterface.GrB_Vector_apply</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_apply(w, mask, accum, op, u, desc)</code></pre><p>Compute the transformation of the values of the elements of a vector using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1740,7 +1740,7 @@ GraphBLAS type:  int64_t size: 8
 number of entries: 2 
 column: 0 : 2 entries [0:1]
     row 0: int64 -10
-    row 2: int64 -20</code></pre></div></div><div><div><pre><code class="language-none">GrB_Vector_apply(w, mask, accum, op, u, desc)</code></pre><p>Compute the transformation of the values of the elements of a vector using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    row 2: int64 -20</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Apply.jl#L4-L48">source</a><div><div><pre><code class="language-none">GrB_Vector_apply(w, mask, accum, op, u, desc)</code></pre><p>Compute the transformation of the values of the elements of a vector using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1775,7 +1775,7 @@ GraphBLAS type:  int64_t size: 8
 number of entries: 2 
 column: 0 : 2 entries [0:1]
     row 0: int64 -10
-    row 2: int64 -20</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Apply.jl#L4-L48">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_apply" href="#GraphBLASInterface.GrB_Matrix_apply"><code>GraphBLASInterface.GrB_Matrix_apply</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_apply(C, Mask, accum, op, A, desc)</code></pre><p>Compute the transformation of the values of the elements of a matrix using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    row 2: int64 -20</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_apply" href="#GraphBLASInterface.GrB_Matrix_apply"><code>GraphBLASInterface.GrB_Matrix_apply</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_apply(C, Mask, accum, op, A, desc)</code></pre><p>Compute the transformation of the values of the elements of a matrix using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1812,7 +1812,7 @@ row: 0 : 2 entries [0:1]
     column 0: int64 -10
     column 1: int64 -20
 row: 1 : 1 entries [2:2]
-    column 1: int64 -30</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_apply(C, Mask, accum, op, A, desc)</code></pre><p>Compute the transformation of the values of the elements of a matrix using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    column 1: int64 -30</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Apply.jl#L68-L114">source</a><div><div><pre><code class="language-none">GrB_Matrix_apply(C, Mask, accum, op, A, desc)</code></pre><p>Compute the transformation of the values of the elements of a matrix using a unary function.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1849,7 +1849,7 @@ row: 0 : 2 entries [0:1]
     column 0: int64 -10
     column 1: int64 -20
 row: 1 : 1 entries [2:2]
-    column 1: int64 -30</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Apply.jl#L68-L114">source</a></section><h2><a class="nav-anchor" id="Reduce-1" href="#Reduce-1">Reduce</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_reduce" href="#GraphBLASInterface.GrB_reduce"><code>GraphBLASInterface.GrB_reduce</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_reduce(arg1, arg2, arg3, arg4, ...)</code></pre><p>Generic method for matrix/vector reduction to a vector or scalar.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_reduce_Monoid" href="#GraphBLASInterface.GrB_Matrix_reduce_Monoid"><code>GraphBLASInterface.GrB_Matrix_reduce_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative monoid with an identity value. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    column 1: int64 -30</code></pre></div></div></section><h2><a class="nav-anchor" id="Reduce-1" href="#Reduce-1">Reduce</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_reduce" href="#GraphBLASInterface.GrB_reduce"><code>GraphBLASInterface.GrB_reduce</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_reduce(arg1, arg2, arg3, arg4, ...)</code></pre><p>Generic method for matrix/vector reduction to a vector or scalar.</p></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_reduce_Monoid" href="#GraphBLASInterface.GrB_Matrix_reduce_Monoid"><code>GraphBLASInterface.GrB_Matrix_reduce_Monoid</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative monoid with an identity value. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1884,7 +1884,7 @@ GraphBLAS type:  int64_t size: 8
 number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 30
-    row 2: int64 70</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative monoid with an identity value. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    row 2: int64 70</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L5-L51">source</a><div><div><pre><code class="language-none">GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative monoid with an identity value. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1919,7 +1919,7 @@ GraphBLAS type:  int64_t size: 8
 number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 30
-    row 2: int64 70</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L5-L51">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_reduce_BinaryOp" href="#GraphBLASInterface.GrB_Matrix_reduce_BinaryOp"><code>GraphBLASInterface.GrB_Matrix_reduce_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative binary operator. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    row 2: int64 70</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_reduce_BinaryOp" href="#GraphBLASInterface.GrB_Matrix_reduce_BinaryOp"><code>GraphBLASInterface.GrB_Matrix_reduce_BinaryOp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative binary operator. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1954,7 +1954,7 @@ GraphBLAS type:  int64_t size: 8
 number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 200
-    row 2: int64 1200</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative binary operator. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    row 2: int64 1200</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L71-L117">source</a><div><div><pre><code class="language-none">GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)</code></pre><p>Reduce the entries in a matrix to a vector. By default these methods compute a column vector w such that w(i) = sum(A(i,:)), where &quot;sum&quot; is a commutative and associative binary operator. A can be transposed, which reduces down the columns instead of the rows.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -1989,7 +1989,7 @@ GraphBLAS type:  int64_t size: 8
 number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 200
-    row 2: int64 1200</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L71-L117">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_reduce" href="#GraphBLASInterface.GrB_Vector_reduce"><code>GraphBLASInterface.GrB_Vector_reduce</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_reduce(monoid, u, desc)</code></pre><p>Reduce entries in a vector to a scalar. All entries in the vector are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the vector has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+    row 2: int64 1200</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Vector_reduce" href="#GraphBLASInterface.GrB_Vector_reduce"><code>GraphBLASInterface.GrB_Vector_reduce</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Vector_reduce(monoid, u, desc)</code></pre><p>Reduce entries in a vector to a scalar. All entries in the vector are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the vector has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -2006,7 +2006,7 @@ julia&gt; GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_reduce(GxB_MAX_INT64_MONOID, u, GrB_NULL)
-30</code></pre></div></div><div><div><pre><code class="language-none">GrB_Vector_reduce(monoid, u, desc)</code></pre><p>Reduce entries in a vector to a scalar. All entries in the vector are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the vector has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+30</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L137-L165">source</a><div><div><pre><code class="language-none">GrB_Vector_reduce(monoid, u, desc)</code></pre><p>Reduce entries in a vector to a scalar. All entries in the vector are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the vector has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -2023,7 +2023,7 @@ julia&gt; GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Vector_reduce(GxB_MAX_INT64_MONOID, u, GrB_NULL)
-30</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L137-L165">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_reduce" href="#GraphBLASInterface.GrB_Matrix_reduce"><code>GraphBLASInterface.GrB_Matrix_reduce</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_reduce(monoid, A, desc)</code></pre><p>Reduce entries in a matrix to a scalar. All entries in the matrix are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the matrix has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+30</code></pre></div></div></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_Matrix_reduce" href="#GraphBLASInterface.GrB_Matrix_reduce"><code>GraphBLASInterface.GrB_Matrix_reduce</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_Matrix_reduce(monoid, A, desc)</code></pre><p>Reduce entries in a matrix to a scalar. All entries in the matrix are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the matrix has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -2040,7 +2040,7 @@ julia&gt; GrB_Matrix_build(A, I, J, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_reduce(GxB_MIN_INT64_MONOID, A, GrB_NULL)
-10</code></pre></div></div><div><div><pre><code class="language-none">GrB_Matrix_reduce(monoid, A, desc)</code></pre><p>Reduce entries in a matrix to a scalar. All entries in the matrix are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the matrix has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+10</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L188-L216">source</a><div><div><pre><code class="language-none">GrB_Matrix_reduce(monoid, A, desc)</code></pre><p>Reduce entries in a matrix to a scalar. All entries in the matrix are &quot;summed&quot; using the reduce monoid, which must be associative (otherwise the results are undefined). If the matrix has no entries, the result is the identity value of the monoid.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -2057,7 +2057,7 @@ julia&gt; GrB_Matrix_build(A, I, J, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_reduce(GxB_MIN_INT64_MONOID, A, GrB_NULL)
-10</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Reduce.jl#L188-L216">source</a></section><h2><a class="nav-anchor" id="Transpose-1" href="#Transpose-1">Transpose</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_transpose" href="#GraphBLASInterface.GrB_transpose"><code>GraphBLASInterface.GrB_transpose</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_transpose(C, Mask, accum, A, desc)</code></pre><p>Compute a new matrix that is the transpose of the source matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+10</code></pre></div></div></section><h2><a class="nav-anchor" id="Transpose-1" href="#Transpose-1">Transpose</a></h2><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="GraphBLASInterface.GrB_transpose" href="#GraphBLASInterface.GrB_transpose"><code>GraphBLASInterface.GrB_transpose</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">GrB_transpose(C, Mask, accum, A, desc)</code></pre><p>Compute a new matrix that is the transpose of the source matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -2086,7 +2086,7 @@ julia&gt; GrB_transpose(M_TRAN, GrB_NULL, GrB_NULL, M, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(M_TRAN)
-([1, 2], [0, 0], [10, 20])</code></pre></div></div><div><div><pre><code class="language-none">GrB_transpose(C, Mask, accum, A, desc)</code></pre><p>Compute a new matrix that is the transpose of the source matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
+([1, 2], [0, 0], [10, 20])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Transpose.jl#L3-L41">source</a><div><div><pre><code class="language-none">GrB_transpose(C, Mask, accum, A, desc)</code></pre><p>Compute a new matrix that is the transpose of the source matrix.</p><p><strong>Examples</strong></p><pre><code class="language-julia-repl">julia&gt; using GraphBLASInterface, SuiteSparseGraphBLAS
 
 julia&gt; GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
@@ -2115,4 +2115,4 @@ julia&gt; GrB_transpose(M_TRAN, GrB_NULL, GrB_NULL, M, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia&gt; GrB_Matrix_extractTuples(M_TRAN)
-([1, 2], [0, 0], [10, 20])</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/abhinavmehndiratta/SuiteSparseGraphBLAS.jl/blob/bcc205b8650b5d31b11f1ff4aba0f305dbf8eca3/src/Operations/Transpose.jl#L3-L41">source</a></section><footer><hr/><a class="previous" href="../seq_ter/"><span class="direction">Previous</span><span class="title">Sequence termination</span></a></footer></article></body></html>
+([1, 2], [0, 0], [10, 20])</code></pre></div></div></section><footer><hr/><a class="previous" href="../seq_ter/"><span class="direction">Previous</span><span class="title">Sequence termination</span></a></footer></article></body></html>
