@@ -2,6 +2,11 @@ import GraphBLASInterface:
         GrB_UnaryOp_free, GrB_BinaryOp_free, GrB_Monoid_free, GrB_Semiring_free,
         GrB_Vector_free, GrB_Matrix_free, GrB_Descriptor_free
 
+"""
+    GrB_UnaryOp_free(unaryop)
+
+Free unary operator.
+"""
 function GrB_UnaryOp_free(unaryop::GrB_UnaryOp)
     unaryop_ptr = pointer_from_objref(unaryop)
 
@@ -15,6 +20,11 @@ function GrB_UnaryOp_free(unaryop::GrB_UnaryOp)
         )
 end
 
+"""
+    GrB_BinaryOp_free(binaryop)
+
+Free binary operator.
+"""
 function GrB_BinaryOp_free(binaryop::GrB_BinaryOp)
     binaryop_ptr = pointer_from_objref(binaryop)
 
@@ -28,6 +38,11 @@ function GrB_BinaryOp_free(binaryop::GrB_BinaryOp)
         )
 end
 
+"""
+    GrB_Monoid_free(monoid)
+
+Free monoid.
+"""
 function GrB_Monoid_free(monoid::GrB_Monoid)
     monoid_ptr = pointer_from_objref(monoid)
 
@@ -41,6 +56,11 @@ function GrB_Monoid_free(monoid::GrB_Monoid)
         )
 end
 
+"""
+    GrB_Semiring_free(semiring)
+
+Free semiring.
+"""
 function GrB_Semiring_free(semiring::GrB_Semiring)
     semiring_ptr = pointer_from_objref(semiring)
 
@@ -54,6 +74,11 @@ function GrB_Semiring_free(semiring::GrB_Semiring)
         )
 end
 
+"""
+    GrB_Vector_free(v)
+
+Free vector.
+"""
 function GrB_Vector_free(v::GrB_Vector)
     v_ptr = pointer_from_objref(v)
 
@@ -67,6 +92,11 @@ function GrB_Vector_free(v::GrB_Vector)
         )
 end
 
+"""
+    GrB_Matrix_free(A)
+
+Free matrix.
+"""
 function GrB_Matrix_free(A::GrB_Matrix)
     A_ptr = pointer_from_objref(A)
 
@@ -80,6 +110,11 @@ function GrB_Matrix_free(A::GrB_Matrix)
         )
 end
 
+"""
+    GrB_Descriptor_free(desc)
+
+Free descriptor.
+"""
 function GrB_Descriptor_free(desc::GrB_Descriptor)
     desc_ptr = pointer_from_objref(desc)
 

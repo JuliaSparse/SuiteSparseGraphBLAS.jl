@@ -11,8 +11,6 @@ end
 const types = ["BOOL", "INT8", "UINT8", "INT16", "UINT16", "INT32", "UINT32",
                 "INT64", "UINT64", "FP32", "FP64"]
 
-const GrB_Index = Union{Int64, UInt64}
-
 built_in_unary_operators = ["IDENTITY", "AINV", "MINV"]
 
 built_in_binary_operators = ["EQ", "NE", "GT", "LT", "GE", "LE", "FIRST", "SECOND", "MIN", "MAX",
