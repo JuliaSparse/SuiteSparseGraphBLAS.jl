@@ -3,33 +3,13 @@
 
 Create a GraphBLAS vector of size n such that A[I[k]] = X[k].
 dup is a GraphBLAS binary operator used to combine duplicates, it defaults to `FIRST`.
-If n is not specified, it is set to maximum(I).
+If n is not specified, it is set to maximum(I)+1 (because of 0-based indexing).
 nvals is set to length(I) is not specified.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
-GrB_Vector{Float64}
-
-julia> A[2]
-12.0
-
-julia> findnz(A)
-([1, 2, 4], [10.0, 12.0, 14.0])
-
-julia> nnz(A)
-3
-```
 """
 function GrB_Vector(
         I::Vector{U},
         X::Vector{T};
-        n::U = maximum(I),
+        n::U = maximum(I)+1,
         nvals::U = length(I),
         dup::GrB_BinaryOp = default_dup(T)) where {T, U <: GrB_Index}
 
@@ -39,7 +19,7 @@ function GrB_Vector(
     if res != GrB_SUCCESS
         error(res)
     end
-    res = GrB_Vector_build(V, I.-1, X, nvals, dup)
+    res = GrB_Vector_build(V, I, X, nvals, dup)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -193,7 +173,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
+julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
 GrB_Vector{Float64}
 
 julia> nnz(A)
@@ -220,7 +200,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
+julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
 GrB_Vector{Float64}
 
 julia> findnz(A)
@@ -233,7 +213,7 @@ function findnz(V::GrB_Vector)
         error(res)
     end
     I, X = res
-    return I.+1, X
+    return I, X
 end
 
 """
@@ -248,7 +228,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
+julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 6)
 GrB_Vector{Float64}
 
 julia> A[2]
@@ -265,7 +245,7 @@ julia> findnz(A)
 ```
 """
 function setindex!(V::GrB_Vector{T}, x::T, i::GrB_Index) where T
-    res = GrB_Vector_setElement(V, x, i-1)
+    res = GrB_Vector_setElement(V, x, i)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -283,7 +263,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
+julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
 GrB_Vector{Float64}
 
 julia> A[2]
@@ -291,7 +271,7 @@ julia> A[2]
 ```
 """
 function getindex(V::GrB_Vector, i::GrB_Index)
-    res = GrB_Vector_extractElement(V, i-1)
+    res = GrB_Vector_extractElement(V, i)
     if typeof(res) == GrB_Info
         error(res)
     end
@@ -310,7 +290,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
+julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
 GrB_Vector{Float64}
 
 julia> nnz(A)
@@ -341,7 +321,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 5)
+julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
 GrB_Vector{Float64}
 
 julia> B = copy(A)
