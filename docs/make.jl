@@ -1,7 +1,7 @@
 using Documenter, GraphBLASInterface, SuiteSparseGraphBLAS
 
 makedocs(
-    modules     = [GraphBLASInterface, SuiteSparseGraphBLAS],
+    modules     = [SuiteSparseGraphBLAS],
     format      = Documenter.HTML(),
     sitename    = "SuiteSparseGraphBLAS",
     doctest     = false,
