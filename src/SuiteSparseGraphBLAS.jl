@@ -150,6 +150,7 @@ end
 
 include("Enums.jl")
 include("Context_Methods.jl")
+include("Sequence_Termination.jl")
 include("Object_Methods/Matrix_Methods.jl")
 include("Object_Methods/Vector_Methods.jl")
 include("Object_Methods/Algebra_Methods.jl")
