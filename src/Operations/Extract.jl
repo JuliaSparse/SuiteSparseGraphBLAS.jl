@@ -1,5 +1,12 @@
 import GraphBLASInterface:
-        GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract
+        GrB_extract, GrB_Vector_extract, GrB_Matrix_extract, GrB_Col_extract
+
+"""
+    GrB_extract(arg1, Mask, accum, arg4, ...)
+
+Generic matrix/vector extraction.
+"""
+function GrB_extract end
 
 """
     GrB_Vector_extract(w, mask, accum, u, I, ni, desc)

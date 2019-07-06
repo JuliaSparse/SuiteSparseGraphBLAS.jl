@@ -1,5 +1,12 @@
 import GraphBLASInterface:
-        GrB_Vector_apply, GrB_Matrix_apply
+        GrB_apply, GrB_Vector_apply, GrB_Matrix_apply
+
+"""
+    GrB_apply(C, Mask, accum, op, A, desc)
+
+Generic matrix/vector apply.
+"""
+function GrB_apply end
 
 """
     GrB_Vector_apply(w, mask, accum, op, u, desc)

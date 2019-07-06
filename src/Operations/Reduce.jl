@@ -1,6 +1,13 @@
 import GraphBLASInterface:
-        GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, 
+        GrB_reduce, GrB_Matrix_reduce_Monoid, GrB_Matrix_reduce_BinaryOp, 
         GrB_Matrix_reduce, GrB_Vector_reduce
+
+"""
+    GrB_reduce(arg1, arg2, arg3, arg4, ...)
+
+Generic method for matrix/vector reduction to a vector or scalar.
+"""
+function GrB_reduce end
 
 """
     GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)

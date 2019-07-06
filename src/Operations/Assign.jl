@@ -1,5 +1,12 @@
 import GraphBLASInterface:
-        GrB_Vector_assign, GrB_Matrix_assign, GrB_Col_assign, GrB_Row_assign
+        GrB_assign, GrB_Vector_assign, GrB_Matrix_assign, GrB_Col_assign, GrB_Row_assign
+
+"""
+    GrB_assign(arg1, Mask, accum, arg4, arg5, ...)
+
+Generic method for submatrix/subvector assignment.
+"""
+function GrB_assign end
 
 """
     GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
