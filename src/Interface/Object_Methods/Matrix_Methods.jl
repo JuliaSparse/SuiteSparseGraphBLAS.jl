@@ -448,6 +448,12 @@ Remove all zero entries from GraphBLAS matrix.
 """
 function dropzeros!(A::GrB_Matrix)
     outp_replace_desc = GrB_Descriptor(Dict(GrB_OUTP => GrB_REPLACE))
-    GrB_assign(A, A, GrB_NULL, A, GrB_ALL, 0, GrB_ALL, 0, outp_replace_desc)
-    GrB_free(outp_replace_desc)
+    res = GrB_assign(A, A, GrB_NULL, A, GrB_ALL, 0, GrB_ALL, 0, outp_replace_desc)
+    if res != GrB_SUCCESS
+        error(res)
+    end
+    res = GrB_free(outp_replace_desc)
+    if res != GrB_SUCCESS
+        error(res)
+    end
 end
