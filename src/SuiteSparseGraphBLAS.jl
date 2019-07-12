@@ -1897,7 +1897,7 @@ include("Operations/Select.jl")
 # Higher-level interface
 include("Interface/Interface.jl")
 using .Interface
-export findnz, nnz, LowerTriangular, UpperTriangular, Diagonal
+export findnz, nnz, LowerTriangular, UpperTriangular, Diagonal, dropzeros!
 
 # Extensions to the spec
 export

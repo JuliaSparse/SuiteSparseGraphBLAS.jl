@@ -339,3 +339,14 @@ function copy(V::GrB_Vector{T}) where T
     end
     return W
 end
+
+"""
+    dropzeros!(v)
+
+Remove all zero entries from GraphBLAS vector.
+"""
+function dropzeros!(v::GrB_Vector)
+    outp_replace_desc = GrB_Descriptor(Dict(GrB_OUTP => GrB_REPLACE))
+    GrB_assign(v, v, GrB_NULL, v, GrB_ALL, 0, outp_replace_desc)
+    GrB_free(outp_replace_desc)
+end
