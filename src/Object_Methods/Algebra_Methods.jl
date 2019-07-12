@@ -238,12 +238,12 @@ function GrB_Semiring_new(semiring::GrB_Semiring, monoid::GrB_Monoid, binary_op:
             )
 end
 
-function GxB_SelectOp_new(op::GxB_SelectOp, GxB_select_function::Function, xtype::GrB_Type{T}, ktype::GrB_Type{U}) where {T, U}
+function GxB_SelectOp_new(op::GxB_SelectOp, GxB_select_function::Function, xtype::GrB_Type{T}, thunk_type::GrB_Type{U}) where {T, U}
 
     GxB_select_function_C = @cfunction(
                                     $GxB_select_function, 
-                                    Bool, 
-                                    (Cintmax_t, Cintmax_t, Cintmax_t, Cintmax_t, Ref{T}, Ref{U})
+                                    Bool,
+                                    (Cuintmax_t, Cuintmax_t, Cuintmax_t, Cuintmax_t, Ref{T}, Ref{U})
                                 )
     
     return GrB_Info(
