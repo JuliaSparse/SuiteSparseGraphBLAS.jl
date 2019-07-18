@@ -35,7 +35,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(u, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I1 = [0, 2, 4]; X1 = [10, 20, 3]; n1 = 3;
+julia> I1 = ZeroBasedIndex[0, 2, 4]; X1 = [10, 20, 3]; n1 = 3;
 
 julia> GrB_Vector_build(u, I1, X1, n1, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -46,7 +46,7 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(v, GrB_FP64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I2 = [0, 1, 4]; X2 = [1.1, 2.2, 3.3]; n2 = 3;
+julia> I2 = ZeroBasedIndex[0, 1, 4]; X2 = [1.1, 2.2, 3.3]; n2 = 3;
 
 julia> GrB_Vector_build(v, I2, X2, n2, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
@@ -60,8 +60,17 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_eWiseMult_Vector_Semiring(w, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_FP64, u, v, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extractTuples(w)
-([0, 4], [11.0, 9.9])
+julia> @GxB_fprint(w, GxB_COMPLETE)
+
+GraphBLAS vector: w 
+nrows: 5 ncols: 1 max # entries: 2
+format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
+hyper_ratio 0.0625
+GraphBLAS type:  double size: 8
+number of entries: 2 
+column: 0 : 2 entries [0:1]
+    row 0: double 11
+    row 4: double 9.9
 ```
 """
 function GrB_eWiseMult_Vector_Semiring(         # w<Mask> = accum (w, u.*v)
@@ -103,7 +112,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(u, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I1 = [0, 2, 4]; X1 = [10, 20, 3]; n1 = 3;
+julia> I1 = ZeroBasedIndex[0, 2, 4]; X1 = [10, 20, 3]; n1 = 3;
 
 julia> GrB_Vector_build(u, I1, X1, n1, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -114,7 +123,7 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(v, GrB_FP64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I2 = [0, 1, 4]; X2 = [1.1, 2.2, 3.3]; n2 = 3;
+julia> I2 = ZeroBasedIndex[0, 1, 4]; X2 = [1.1, 2.2, 3.3]; n2 = 3;
 
 julia> GrB_Vector_build(v, I2, X2, n2, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
@@ -128,8 +137,17 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_eWiseMult_Vector_Monoid(w, GrB_NULL, GrB_NULL, GxB_MAX_FP64_MONOID, u, v, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extractTuples(w)
-([0, 4], [10.0, 3.3])
+julia> @GxB_fprint(w, GxB_COMPLETE)
+
+GraphBLAS vector: w 
+nrows: 5 ncols: 1 max # entries: 2
+format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
+hyper_ratio 0.0625
+GraphBLAS type:  double size: 8
+number of entries: 2 
+column: 0 : 2 entries [0:1]
+    row 0: double 10
+    row 4: double 3.3
 ```
 """
 function GrB_eWiseMult_Vector_Monoid(           # w<Mask> = accum (w, u.*v)
@@ -171,7 +189,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(u, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I1 = [0, 2, 4]; X1 = [10, 20, 30]; n1 = 3;
+julia> I1 = ZeroBasedIndex[0, 2, 4]; X1 = [10, 20, 30]; n1 = 3;
 
 julia> GrB_Vector_build(u, I1, X1, n1, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -182,7 +200,7 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(v, GrB_FP64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I2 = [0, 1, 4]; X2 = [1.1, 2.2, 3.3]; n2 = 3;
+julia> I2 = ZeroBasedIndex[0, 1, 4]; X2 = [1.1, 2.2, 3.3]; n2 = 3;
 
 julia> GrB_Vector_build(v, I2, X2, n2, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
@@ -196,8 +214,17 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_eWiseMult_Vector_BinaryOp(w, GrB_NULL, GrB_NULL, GrB_TIMES_FP64, u, v, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extractTuples(w)
-([0, 4], [11.0, 99.0])
+julia> @GxB_fprint(w, GxB_COMPLETE)
+
+GraphBLAS vector: w 
+nrows: 5 ncols: 1 max # entries: 2
+format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
+hyper_ratio 0.0625
+GraphBLAS type:  double size: 8
+number of entries: 2 
+column: 0 : 2 entries [0:1]
+    row 0: double 11
+    row 4: double 99
 ```
 """
 function GrB_eWiseMult_Vector_BinaryOp(         # w<Mask> = accum (w, u.*v)
@@ -239,7 +266,7 @@ GrB_Matrix{Int64}
 julia> GrB_Matrix_new(A, GrB_INT64, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I1 = [0, 0, 2, 2]; J1 = [1, 2, 0, 2]; X1 = [10, 20, 30, 40]; n1 = 4;
+julia> I1 = ZeroBasedIndex[0, 0, 2, 2]; J1 = ZeroBasedIndex[1, 2, 0, 2]; X1 = [10, 20, 30, 40]; n1 = 4;
 
 julia> GrB_Matrix_build(A, I1, J1, X1, n1, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -250,7 +277,7 @@ GrB_Matrix{Int64}
 julia> GrB_Matrix_new(B, GrB_INT64, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I2 = [0, 0, 2]; J2 = [3, 2, 0]; X2 = [15, 16, 17]; n2 = 3;
+julia> I2 = ZeroBasedIndex[0, 0, 2]; J2 = ZeroBasedIndex[3, 2, 0]; X2 = [15, 16, 17]; n2 = 3;
 
 julia> GrB_Matrix_build(B, I2, J2, X2, n2, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -264,8 +291,18 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_eWiseMult_Matrix_Semiring(C, GrB_NULL, GrB_NULL, GxB_PLUS_TIMES_INT64, A, B, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [320, 510])
+julia> @GxB_fprint(C, GxB_COMPLETE)
+
+GraphBLAS matrix: C 
+nrows: 4 ncols: 4 max # entries: 2
+format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
+hyper_ratio 0.0625
+GraphBLAS type:  int64_t size: 8
+number of entries: 2 
+row: 0 : 1 entries [0:0]
+    column 2: int64 320
+row: 2 : 1 entries [1:1]
+    column 0: int64 510
 ```
 """
 function GrB_eWiseMult_Matrix_Semiring(         # C<Mask> = accum (C, A.*B)
@@ -307,7 +344,7 @@ GrB_Matrix{Int64}
 julia> GrB_Matrix_new(A, GrB_INT64, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I1 = [0, 0, 2, 2]; J1 = [1, 2, 0, 2]; X1 = [10, 20, 30, 40]; n1 = 4;
+julia> I1 = ZeroBasedIndex[0, 0, 2, 2]; J1 = ZeroBasedIndex[1, 2, 0, 2]; X1 = [10, 20, 30, 40]; n1 = 4;
 
 julia> GrB_Matrix_build(A, I1, J1, X1, n1, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -318,7 +355,7 @@ GrB_Matrix{Int64}
 julia> GrB_Matrix_new(B, GrB_INT64, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I2 = [0, 0, 2]; J2 = [3, 2, 0]; X2 = [15, 16, 17]; n2 = 3;
+julia> I2 = ZeroBasedIndex[0, 0, 2]; J2 = ZeroBasedIndex[3, 2, 0]; X2 = [15, 16, 17]; n2 = 3;
 
 julia> GrB_Matrix_build(B, I2, J2, X2, n2, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -332,8 +369,18 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_eWiseMult_Matrix_Monoid(C, GrB_NULL, GrB_NULL, GxB_PLUS_INT64_MONOID, A, B, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [36, 47])
+julia> @GxB_fprint(C, GxB_COMPLETE)
+
+GraphBLAS matrix: C 
+nrows: 4 ncols: 4 max # entries: 2
+format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
+hyper_ratio 0.0625
+GraphBLAS type:  int64_t size: 8
+number of entries: 2 
+row: 0 : 1 entries [0:0]
+    column 2: int64 36
+row: 2 : 1 entries [1:1]
+    column 0: int64 47
 ```
 """
 function GrB_eWiseMult_Matrix_Monoid(           # C<Mask> = accum (C, A.*B)
@@ -375,7 +422,7 @@ GrB_Matrix{Int64}
 julia> GrB_Matrix_new(A, GrB_INT64, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I1 = [0, 0, 2, 2]; J1 = [1, 2, 0, 2]; X1 = [10, 20, 30, 40]; n1 = 4;
+julia> I1 = ZeroBasedIndex[0, 0, 2, 2]; J1 = ZeroBasedIndex[1, 2, 0, 2]; X1 = [10, 20, 30, 40]; n1 = 4;
 
 julia> GrB_Matrix_build(A, I1, J1, X1, n1, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -386,7 +433,7 @@ GrB_Matrix{Int64}
 julia> GrB_Matrix_new(B, GrB_INT64, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I2 = [0, 0, 2]; J2 = [3, 2, 0]; X2 = [15, 16, 17]; n2 = 3;
+julia> I2 = ZeroBasedIndex[0, 0, 2]; J2 = ZeroBasedIndex[3, 2, 0]; X2 = [15, 16, 17]; n2 = 3;
 
 julia> GrB_Matrix_build(B, I2, J2, X2, n2, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -400,8 +447,18 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_eWiseMult_Matrix_BinaryOp(C, GrB_NULL, GrB_NULL, GrB_PLUS_INT64, A, B, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Matrix_extractTuples(C)
-([0, 2], [2, 0], [36, 47])
+julia> @GxB_fprint(C, GxB_COMPLETE)
+
+GraphBLAS matrix: C 
+nrows: 4 ncols: 4 max # entries: 2
+format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
+hyper_ratio 0.0625
+GraphBLAS type:  int64_t size: 8
+number of entries: 2 
+row: 0 : 1 entries [0:0]
+    column 2: int64 36
+row: 2 : 1 entries [1:1]
+    column 0: int64 47
 ```
 """
 function GrB_eWiseMult_Matrix_BinaryOp(         # C<Mask> = accum (C, A.*B)

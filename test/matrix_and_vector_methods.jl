@@ -1,7 +1,7 @@
 types = [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32, Float64]
 
 @testset "Matrix methods" begin
-    I = J = collect(0:4)
+    I = J = ZeroBasedIndex[0, 1, 2, 3, 4]
     for t in types
         X = rand(t, 5)
         A = GrB_Matrix(I, J, X)
@@ -33,7 +33,7 @@ types = [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32, Int64, UInt64, Float32
 end
 
 @testset "Vector Methods" begin
-    I = [0, 3, 4]
+    I = ZeroBasedIndex[0, 3, 4]
     for t in types
         X = rand(t, 3)
         V = GrB_Vector(I, X)

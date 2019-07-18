@@ -20,7 +20,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(u, GrB_INT64, 3)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [0, 2]; X = [10, 20]; n = 2;
+julia> I = ZeroBasedIndex[0, 2]; X = [10, 20]; n = 2;
 
 julia> GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -56,7 +56,6 @@ number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: int64 -10
     row 2: int64 -20
-
 ```
 """
 function GrB_UnaryOp_new(
@@ -103,7 +102,7 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [0, 0, 3, 3]; X = [2.1, 3.2, 4.5, 5.0]; n = 4;  # two values at position 0 and 3
+julia> I = ZeroBasedIndex[0, 0, 3, 3]; X = [2.1, 3.2, 4.5, 5.0]; n = 4;  # two values at position 0 and 3
 
 julia> dup = GrB_BinaryOp()  # dup is a binary operator which is applied when duplicate values for the same location are present in the vector
 GrB_BinaryOp
@@ -119,7 +118,7 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_Vector_build(V, I, X, n, dup)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Vector_fprint(V, GxB_SHORT) # the value stored at position 0 and 3 will be the sum of the duplicate values
+julia> @GxB_Vector_fprint(V, GxB_COMPLETE) # the value stored at position 0 and 3 will be the sum of the duplicate values
 
 GraphBLAS vector: V
 nrows: 4 ncols: 1 max # entries: 2
@@ -130,7 +129,6 @@ number of entries: 2
 column: 0 : 2 entries [0:1]
     row 0: double 5.3
     row 3: double 9.5
-
 ```
 """
 function GrB_BinaryOp_new(

@@ -3,20 +3,24 @@
 
 Create a GraphBLAS matrix of dimensions nrows x ncols such that A[I[k], J[k]] = X[k].
 dup is a GraphBLAS binary operator used to combine duplicates, it defaults to `FIRST`.
-If nrows and ncols are not specified, they are set to maximum(I)+1 and maximum(J)+1 (because of 0-based indexing)
-respectively. nvals is set to length(I) is not specified.
+If nrows and ncols are not specified, they are set to maximum(I) and maximum(J) (for one based indices).
+respectively. nvals is set to min(length(I), length(J)) if not specified.
 """
 function GrB_Matrix(
         I::Vector{U},
         J::Vector{U},
         X::Vector{T};
-        nrows::U = maximum(I)+1,
-        ncols::U = maximum(J)+1,
-        nvals::U = length(I),
-        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: GrB_Index}
+        nrows::Union{Int64, UInt64} = maximum(I).x,
+        ncols::Union{Int64, UInt64} = maximum(J).x,
+        nvals::Union{Int64, UInt64} = min(length(I), length(J)),
+        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: Abstract_GrB_Index}
 
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
+    if U <: ZeroBasedIndex
+        nrows += 1
+        ncols += 1
+    end 
     res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
     if res != GrB_SUCCESS
         error(res)
@@ -32,22 +36,8 @@ end
     GrB_Matrix(T, nrows, ncols)
 
 Create an empty GraphBLAS matrix of type T and dimensions nrows x ncols.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix(Float64, 4, 4)
-GrB_Matrix{Float64}
-
-julia> nnz(A)
-0
-```
 """
-function GrB_Matrix(T, nrows::GrB_Index, ncols::GrB_Index)
+function GrB_Matrix(T, nrows::Union{Int64, UInt64}, ncols::Union{Int64, UInt64})
     A = GrB_Matrix{T}()
     GrB_T = get_GrB_Type(T)
     res = GrB_Matrix_new(A, GrB_T, nrows, ncols)
@@ -61,35 +51,6 @@ end
     ==(A, B)
 
 Check if two GraphBLAS matrices are equal.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [2, 4, 5], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> B = GrB_Matrix([1, 2, 3], [2, 4, 5], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> A == B
-true
-
-julia> B = GrB_Matrix([1, 2, 3], [2, 4, 5], [1, 1, 2])
-GrB_Matrix{Int64}
-
-julia> A == B
-false
-
-julia> B = GrB_Matrix([1, 2, 3], [2, 4, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> A == B
-false
-```
 """
 function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
     T != U && return false
@@ -127,27 +88,13 @@ function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
 end
 
 """
-    findnz(A)
+    findnz(A, [index_type])
 
 Return a tuple (I, J, X) where I and J are the row and column indices of the stored values in GraphBLAS matrix A,
-and X is a vector of the values.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> findnz(A)
-([1, 2, 3], [1, 2, 3], [1, 1, 1])
-```
+and X is a vector of the values. Indices are zero based by default if not specified.
 """
-function findnz(A::GrB_Matrix)
-    res = GrB_Matrix_extractTuples(A)
+function findnz(A::GrB_Matrix, index_type::Type{<:Abstract_GrB_Index} = ZeroBasedIndex)
+    res = GrB_Matrix_extractTuples(A, index_type)
     if typeof(res) == GrB_Info
         error(res)
     end
@@ -159,20 +106,6 @@ end
     nnz(A)
 
 Return the number of stored (filled) elements in a GraphBLAS matrix.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> nnz(A)
-3
-```
 """
 function nnz(A::GrB_Matrix)
     nvals = GrB_Matrix_nvals(A)
@@ -186,26 +119,6 @@ end
     size(A,[ dim])
 
 Return number of rows or/and columns in a GraphBLAS matrix.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([0, 1, 2], [0, 1, 2], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> size(A)
-(3, 3)
-
-julia> size(A, 1)
-3
-
-julia> size(A, 2)
-3
-```
 """
 function size(A::GrB_Matrix)
     nrows = GrB_Matrix_nrows(A)
@@ -245,22 +158,8 @@ end
     getindex(A, row_index, col_index)
 
 Return A[row_index, col_index] where A is a GraphBLAS matrix.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> A[1, 1]
-1
-```
 """
-function getindex(A::GrB_Matrix, row_index::GrB_Index, col_index::GrB_Index)
+function getindex(A::GrB_Matrix, row_index::Abstract_GrB_Index, col_index::Abstract_GrB_Index)
     res = GrB_Matrix_extractElement(A, row_index, col_index)
     if typeof(res) == GrB_Info
         error(res)
@@ -272,28 +171,8 @@ end
     setindex!(A, X, I, J)
 
 Set A[I, J] = X where A is a GraphBLAS matrix.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> A[1, 1]
-1
-
-julia> A[1, 1] = 5
-5
-
-julia> A[1, 1]
-5
-```
 """
-function setindex!(A::GrB_Matrix{T}, X::T, I::GrB_Index, J::GrB_Index) where T
+function setindex!(A::GrB_Matrix{T}, X::T, I::Abstract_GrB_Index, J::Abstract_GrB_Index) where T
     res = GrB_Matrix_setElement(A, X, I, J)
     if res != GrB_SUCCESS
         error(res)
@@ -304,25 +183,6 @@ end
     empty!(A)
 
 Remove all stored entries from GraphBLAS matrix A.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> nnz(A)
-3
-
-julia> empty!(A)
-
-julia> nnz(A)
-0
-```
 """
 function empty!(A::GrB_Matrix)
     res = GrB_Matrix_clear(A)
@@ -335,23 +195,6 @@ end
     copy(A)
 
 Create a new GraphBLAS matrix with the same domain, dimensions, and contents as GraphBLAS matrix A.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Matrix([1, 2, 3], [1, 2, 3], [1, 1, 1])
-GrB_Matrix{Int64}
-
-julia> B = copy(A)
-GrB_Matrix{Int64}
-
-julia> findnz(B)
-([1, 2, 3], [1, 2, 3], [1, 1, 1])
-```
 """
 function copy(A::GrB_Matrix{T}) where T
     C = GrB_Matrix{T}()
@@ -366,20 +209,6 @@ end
     adjoint(A)
 
 Compute transpose of a GraphBLAS matrix.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> M = GrB_Matrix([1, 1], [2, 3], [1, 1])
-GrB_Matrix{Int64}
-
-julia> findnz(M')
-([2, 3], [1, 1], [1, 1])
-```
 """
 function adjoint(A::GrB_Matrix{T}) where T
     C = GrB_Matrix(T, size(A, 2), size(A, 1))

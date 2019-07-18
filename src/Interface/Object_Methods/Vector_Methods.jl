@@ -3,18 +3,21 @@
 
 Create a GraphBLAS vector of size n such that A[I[k]] = X[k].
 dup is a GraphBLAS binary operator used to combine duplicates, it defaults to `FIRST`.
-If n is not specified, it is set to maximum(I)+1 (because of 0-based indexing).
-nvals is set to length(I) is not specified.
+If n is not specified, it is set to maximum(I) (for one based indices).
+nvals is set to length(I) if not specified.
 """
 function GrB_Vector(
         I::Vector{U},
         X::Vector{T};
-        n::U = maximum(I)+1,
-        nvals::U = length(I),
-        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: GrB_Index}
+        n::Union{Int64, UInt64} = maximum(I).x,
+        nvals::Union{Int64, UInt64} = length(I),
+        dup::GrB_BinaryOp = default_dup(T)) where {T, U <: Abstract_GrB_Index}
 
     V = GrB_Vector{T}()
     GrB_T = get_GrB_Type(T)
+    if U <: ZeroBasedIndex
+        n += 1
+    end
     res = GrB_Vector_new(V, GrB_T, n)
     if res != GrB_SUCCESS
         error(res)
@@ -30,25 +33,8 @@ end
     GrB_Vector(T, n)
 
 Create an empty GraphBLAS vector of type T and size n.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector(Int64, 5)
-GrB_Vector{Int64}
-
-julia> size(A)
-(5,)
-
-julia> nnz(A)
-0
-```
 """
-function GrB_Vector(T, n::GrB_Index)
+function GrB_Vector(T, n::Union{Int64, UInt64})
     V = GrB_Vector{T}()
     GrB_T = get_GrB_Type(T)
     res = GrB_Vector_new(V, GrB_T, n)
@@ -62,23 +48,6 @@ end
     ==(A, B)
 
 Check if two GraphBLAS vectors are equal.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 3, 4], [1, 1, 1])
-GrB_Vector{Int64}
-
-julia> B = GrB_Vector([1, 3, 4], [1, 1, 1])
-GrB_Vector{Int64}
-
-julia> A == B
-true
-```
 """
 function ==(A::GrB_Vector{T}, B::GrB_Vector{U}) where {T, U}
     T != U && return false
@@ -119,23 +88,6 @@ end
     size(V,[ dim])
 
 Return the size of a vector.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector(Int64, 5)
-GrB_Vector{Int64}
-
-julia> size(A)
-(5,)
-
-julia> size(A, 1)
-5
-```
 """
 function size(V::GrB_Vector)
     n = GrB_Vector_size(V)
@@ -165,20 +117,6 @@ end
     nnz(V)
 
 Return the number of stored (filled) elements in a GraphBLAS vector.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
-GrB_Vector{Float64}
-
-julia> nnz(A)
-3
-```
 """
 function nnz(V::GrB_Vector)
     nvals = GrB_Vector_nvals(V)
@@ -189,26 +127,13 @@ function nnz(V::GrB_Vector)
 end
 
 """
-    findnz(V)
+    findnz(V, [index_type])
 
 Return a tuple (I, X) where I is the indices of the stored values in GraphBLAS vector V and X is a vector of the values.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
-GrB_Vector{Float64}
-
-julia> findnz(A)
-([1, 2, 4], [10.0, 12.0, 14.0])
-```
+Indices are zero based by default if not specified.
 """
-function findnz(V::GrB_Vector)
-    res = GrB_Vector_extractTuples(V)
+function findnz(V::GrB_Vector, index_type::Type{<:Abstract_GrB_Index} = ZeroBasedIndex)
+    res = GrB_Vector_extractTuples(V, index_type)
     if typeof(res) == GrB_Info
         error(res)
     end
@@ -220,31 +145,8 @@ end
     setindex!(V, x, i)
 
 Set V[i] = x where V is a GraphBLAS vector.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14], n = 6)
-GrB_Vector{Float64}
-
-julia> A[2]
-12.0
-
-julia> A[2] = 3.0
-3.0
-
-julia> A[5] = 1.2
-1.2
-
-julia> findnz(A)
-([1, 2, 4, 5], [10.0, 3.0, 14.0, 1.2])
-```
 """
-function setindex!(V::GrB_Vector{T}, x::T, i::GrB_Index) where T
+function setindex!(V::GrB_Vector{T}, x::T, i::Abstract_GrB_Index) where T
     res = GrB_Vector_setElement(V, x, i)
     if res != GrB_SUCCESS
         error(res)
@@ -255,22 +157,8 @@ end
     getindex(V, i)
 
 Return V[i] where V is a GraphBLAS vector.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
-GrB_Vector{Float64}
-
-julia> A[2]
-12.0
-```
 """
-function getindex(V::GrB_Vector, i::GrB_Index)
+function getindex(V::GrB_Vector, i::Abstract_GrB_Index)
     res = GrB_Vector_extractElement(V, i)
     if typeof(res) == GrB_Info
         error(res)
@@ -282,25 +170,6 @@ end
     empty!(V)
 
 Remove all stored entries from GraphBLAS vector V.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
-GrB_Vector{Float64}
-
-julia> nnz(A)
-3
-
-julia> empty!(A)
-
-julia> nnz(A)
-0
-```
 """
 function empty!(V::GrB_Vector)
     res = GrB_Vector_clear(V)
@@ -313,23 +182,6 @@ end
     copy(V)
 
 Create a new vector with the same domain, size, and contents as GraphBLAS vector V.
-
-# Examples
-```jldoctest
-julia> using SuiteSparseGraphBLAS
-
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> A = GrB_Vector([1, 2, 4], Float64[10, 12, 14])
-GrB_Vector{Float64}
-
-julia> B = copy(A)
-GrB_Vector{Float64}
-
-julia> findnz(B)
-([1, 2, 4], [10.0, 12.0, 14.0])
-```
 """
 function copy(V::GrB_Vector{T}) where T 
     W = GrB_Vector{T}()

@@ -21,9 +21,9 @@ julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 ```
 """
-function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type{T}, n::U) where {T, U <: GrB_Index}
+function GrB_Vector_new(v::GrB_Vector{T}, type::GrB_Type{T}, n::Union{Int64, UInt64}) where T
     v_ptr = pointer_from_objref(v)
-    
+
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, "GrB_Vector_new"),
@@ -52,7 +52,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [1, 2, 4]; X = [2, 32, 4]; n = 3;
+julia> I = ZeroBasedIndex[1, 2, 4]; X = [2, 32, 4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -63,7 +63,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_dup(B, V)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Vector_fprint(B, GxB_SHORT)
+julia> @GxB_Vector_fprint(B, GxB_COMPLETE)
 
 GraphBLAS vector: B
 nrows: 5 ncols: 1 max # entries: 3
@@ -108,19 +108,19 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [1, 2, 4]; X = [2, 32, 4]; n = 3;
+julia> I = ZeroBasedIndex[1, 2, 4]; X = [2, 32, 4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(V)
-([1, 2, 4], [2, 32, 4])
+(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000001), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000004)], [2, 32, 4])
 
 julia> GrB_Vector_clear(V)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(V)
-(Int64[], Int64[])
+(ZeroBasedIndex[], Int64[])
 ```
 """
 function GrB_Vector_clear(v::GrB_Vector)
@@ -153,13 +153,13 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
+julia> I = ZeroBasedIndex[0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_size(V)
-4
+0x0000000000000004
 ```
 """
 function GrB_Vector_size(v::GrB_Vector)
@@ -173,7 +173,7 @@ function GrB_Vector_size(v::GrB_Vector)
                     )
                 )
     result != GrB_SUCCESS && return result
-    return _GrB_Index(n[])
+    return n[]
 end
 
 """
@@ -201,7 +201,7 @@ julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_nvals(V)
-3
+0x0000000000000003
 ```
 """
 function GrB_Vector_nvals(v::GrB_Vector)
@@ -215,7 +215,7 @@ function GrB_Vector_nvals(v::GrB_Vector)
                     )
                 )
     result != GrB_SUCCESS && return result
-    return _GrB_Index(nvals[])
+    return nvals[]
 end
 
 """
@@ -236,12 +236,12 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
+julia> I = ZeroBasedIndex[0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Vector_fprint(V, GxB_SHORT)
+julia> @GxB_Vector_fprint(V, GxB_COMPLETE)
 
 GraphBLAS vector: V
 nrows: 4 ncols: 1 max # entries: 3
@@ -255,7 +255,7 @@ column: 0 : 3 entries [0:2]
     row 3: double 4.4
 ```
 """
-function GrB_Vector_build(w::GrB_Vector{T}, I::Vector{U}, X::Vector{T}, nvals::U, dup::GrB_BinaryOp) where {T, U <: GrB_Index}
+function GrB_Vector_build(w::GrB_Vector{T}, I::ZeroBasedIndices, X::Vector{T}, nvals::Union{Int64, UInt64}, dup::GrB_BinaryOp) where T
     I_ptr = pointer(I)
     X_ptr = pointer(X)
     fn_name = "GrB_Vector_build_" * suffix(T)
@@ -264,11 +264,19 @@ function GrB_Vector_build(w::GrB_Vector{T}, I::Vector{U}, X::Vector{T}, nvals::U
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
-                (Ptr{Cvoid}, Ptr{U}, Ptr{T}, Cuintmax_t, Ptr{Cvoid}),
+                (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{T}, Cuintmax_t, Ptr{Cvoid}),
                 w.p, I_ptr, X_ptr, nvals, dup.p
             )
         )
 end
+
+GrB_Vector_build(
+    w::GrB_Vector{T},
+    I::OneBasedIndices,
+    X::Vector{T},
+    nvals::Union{Int64, UInt64},
+    dup::GrB_BinaryOp
+    ) where T = GrB_Vector_build(w, ZeroBasedIndices(I), X, nvals, dup)
 
 """
     GrB_Vector_setElement(w, x, i)
@@ -288,68 +296,70 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [1, 2, 4]; X = [2, 32, 4]; n = 3;
+julia> I = ZeroBasedIndex[1, 2, 4]; X = [2, 32, 4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extractElement(V, 2)
+julia> GrB_Vector_extractElement(V, ZeroBasedIndex(2))
 32
 
-julia> GrB_Vector_setElement(V, 7, 2)
+julia> GrB_Vector_setElement(V, 7, ZeroBasedIndex(2))
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extractElement(V, 2)
+julia> GrB_Vector_extractElement(V, ZeroBasedIndex(2))
 7
 ```
 """
-function GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::U) where {T, U <: GrB_Index}
+function GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::ZeroBasedIndex) where T
     fn_name = "GrB_Vector_setElement_" * suffix(T)
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
                 (Ptr{Cvoid}, Cintmax_t, Cuintmax_t),
-                w.p, x, i
+                w.p, x, i.x
             )
         )
 end
 
-function GrB_Vector_setElement(w::GrB_Vector{UInt64}, x::UInt64, i::U) where U <: GrB_Index
+function GrB_Vector_setElement(w::GrB_Vector{UInt64}, x::UInt64, i::ZeroBasedIndex)
     fn_name = "GrB_Vector_setElement_UINT64"
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
                 (Ptr{Cvoid}, Cuintmax_t, Cuintmax_t),
-                w.p, x, i
+                w.p, x, i.x
             )
         )
 end
 
-function GrB_Vector_setElement(w::GrB_Vector{Float32}, x::Float32, i::U) where U <: GrB_Index
+function GrB_Vector_setElement(w::GrB_Vector{Float32}, x::Float32, i::ZeroBasedIndex)
     fn_name = "GrB_Vector_setElement_FP32"
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
                 (Ptr{Cvoid}, Cfloat, Cuintmax_t),
-                w.p, x, i
+                w.p, x, i.x
             )
         )
 end
 
-function GrB_Vector_setElement(w::GrB_Vector{Float64}, x::Float64, i::U) where U <: GrB_Index
+function GrB_Vector_setElement(w::GrB_Vector{Float64}, x::Float64, i::ZeroBasedIndex)
     fn_name = "GrB_Vector_setElement_FP64"
     return GrB_Info(
         ccall(
                 dlsym(graphblas_lib, fn_name),
                 Cint,
                 (Ptr{Cvoid}, Cdouble, Cuintmax_t),
-                w.p, x, i
+                w.p, x, i.x
             )
         )
 end
+
+GrB_Vector_setElement(w::GrB_Vector{T}, x::T, i::OneBasedIndex) where T = GrB_Vector_setElement(w, x, ZeroBasedIndex(i))
 
 """
     GrB_Vector_extractElement(v, i)
@@ -370,16 +380,16 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
+julia> I = ZeroBasedIndex[0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extractElement(V, 2)
+julia> GrB_Vector_extractElement(V, ZeroBasedIndex(2))
 3.2
 ```
 """
-function GrB_Vector_extractElement(v::GrB_Vector{T}, i::U) where {T, U <: GrB_Index}
+function GrB_Vector_extractElement(v::GrB_Vector{T}, i::ZeroBasedIndex) where T
     fn_name = "GrB_Vector_extractElement_" * suffix(T)
 
     element = Ref(T(0))
@@ -388,18 +398,21 @@ function GrB_Vector_extractElement(v::GrB_Vector{T}, i::U) where {T, U <: GrB_In
                         dlsym(graphblas_lib, fn_name),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Cintmax_t),
-                        element, v.p, i
+                        element, v.p, i.x
                     )
                 )
     result != GrB_SUCCESS && return result
     return element[]
 end
 
+GrB_Vector_extractElement(v::GrB_Vector, i::OneBasedIndex) = GrB_Vector_extractElement(v, ZeroBasedIndex(i))
+
 """
-    GrB_Vector_extractTuples(v)
+    GrB_Vector_extractTuples(v, [index_type])
 
 Return tuples stored in a vector if successful.
 Else return `GrB_Info` error code.
+Returns zero based indices by default.
 
 # Examples
 ```jldoctest
@@ -414,21 +427,21 @@ GrB_Vector{Float64}
 julia> GrB_Vector_new(V, GrB_FP64, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
+julia> I = ZeroBasedIndex[0, 2, 3]; X = [2.1, 3.2, 4.4]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(V)
-([0, 2, 3], [2.1, 3.2, 4.4])
+(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000000), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000003)], [2.1, 3.2, 4.4])
 ```
 """
-function GrB_Vector_extractTuples(v::GrB_Vector{T}) where T
+function GrB_Vector_extractTuples(v::GrB_Vector{T}, index_type::Type{<:Abstract_GrB_Index} = ZeroBasedIndex) where T
     nvals = GrB_Vector_nvals(v)
     if typeof(nvals) == GrB_Info
         return nvals
     end
-    I = Vector{typeof(nvals)}(undef, nvals)
+    I = ZeroBasedIndices(undef, nvals)
     X = Vector{T}(undef, nvals)
     n = Ref(UInt64(nvals))
 
@@ -442,5 +455,8 @@ function GrB_Vector_extractTuples(v::GrB_Vector{T}) where T
                     )
                 )
     result != GrB_SUCCESS && return result
+    if index_type == OneBasedIndex
+        return OneBasedIndices(I), X
+    end
     return I, X
 end

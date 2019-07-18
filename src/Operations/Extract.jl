@@ -27,7 +27,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(V, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [1, 2, 4]; X = [15, 32, 84]; n = 3;
+julia> I = ZeroBasedIndex[1, 2, 4]; X = [15, 32, 84]; n = 3;
 
 julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
@@ -52,7 +52,7 @@ GrB_Vector{Int64}
 julia> GrB_Vector_new(W, GrB_INT64, 2)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_extract(W, GrB_NULL, GrB_NULL, V, [1, 4], 2, GrB_NULL)
+julia> GrB_Vector_extract(W, GrB_NULL, GrB_NULL, V, ZeroBasedIndex[1, 4], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(W)[2]
@@ -67,9 +67,9 @@ function GrB_Vector_extract(            # w<mask> = accum (w, u(I))
         accum::U,                       # optional accum for z=accum(w,t)
         u::GrB_Vector,                  # first input:  vector u
         I::Y,                           # row indices
-        ni::X,                          # number of row indices
+        ni::Union{Int64, UInt64},       # number of row indices
         desc::V                         # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -80,6 +80,16 @@ function GrB_Vector_extract(            # w<mask> = accum (w, u(I))
                     )
                 )
 end
+
+GrB_Vector_extract(
+    w::GrB_Vector,
+    mask::T,
+    accum::U,
+    u::GrB_Vector,
+    I::OneBasedIndices,
+    ni::Union{Int64, UInt64},
+    desc::V
+    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Vector_extract(w, mask, accum, u, ZeroBasedIndices(I), ni, desc)
 
 """
     GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)
@@ -100,20 +110,19 @@ GrB_Matrix{Int8}
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
-
+julia> I = ZeroBasedIndex[1, 2, 2, 2, 3]; J = ZeroBasedIndex[1, 2, 1, 3, 3]; X = Int8[2, 3, 4, 5, 6]; n = 5;
 
 julia> GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_Matrix_fprint(MAT, GxB_COMPLETE)
 
-GraphBLAS matrix: MAT 
+GraphBLAS matrix: MAT
 nrows: 4 ncols: 4 max # entries: 5
 format: standard CSR vlen: 4 nvec_nonempty: 3 nvec: 4 plen: 4 vdim: 4
 hyper_ratio 0.0625
 GraphBLAS type:  int8_t size: 1
-number of entries: 5 
+number of entries: 5
 row: 1 : 1 entries [0:0]
     column 1: int8 2
 row: 2 : 3 entries [1:3]
@@ -130,7 +139,7 @@ GrB_Matrix{Int8}
 julia> GrB_Matrix_new(OUT, GrB_INT8, 2, 2)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Matrix_extract(OUT, GrB_NULL, GrB_NULL, MAT, [1, 3], 2, [1, 3], 2, GrB_NULL)
+julia> GrB_Matrix_extract(OUT, GrB_NULL, GrB_NULL, MAT, ZeroBasedIndex[1, 3], 2, ZeroBasedIndex[1, 3], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Matrix_extractTuples(OUT)[3]
@@ -145,11 +154,11 @@ function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
         accum::U,                       # optional accum for Z=accum(C,T)
         A::GrB_Matrix,                  # first input:  matrix A
         I::Y,                           # row indices
-        ni::X,                          # number of row indices
+        ni::Union{Int64, UInt64},       # number of row indices
         J::Z,                           # column indices
-        nj::X,                          # number of column indices
+        nj::Union{Int64, UInt64},       # number of column indices
         desc::V                         # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types, Z <: valid_indices_types}
+) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -160,6 +169,18 @@ function GrB_Matrix_extract(            # C<Mask> = accum (C, A(I,J))
                     )
                 )
 end
+
+GrB_Matrix_extract(
+    C::GrB_Matrix,
+    Mask::T,
+    accum::U,
+    A::GrB_Matrix,
+    I::OneBasedIndices,
+    ni::Union{Int64, UInt64},
+    J::OneBasedIndices,
+    nj::Union{Int64, UInt64},
+    desc::V
+    ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_extract(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
 
 """
     GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)
@@ -180,19 +201,19 @@ GrB_Matrix{Int8}
 julia> GrB_Matrix_new(MAT, GrB_INT8, 4, 4)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> I = [1, 2, 2, 2, 3]; J = [1, 2, 1, 3, 3]; X = Int8[23, 34, 43, 57, 61]; n = 5;
+julia> I = ZeroBasedIndex[1, 2, 2, 2, 3]; J = ZeroBasedIndex[1, 2, 1, 3, 3]; X = Int8[23, 34, 43, 57, 61]; n = 5;
 
 julia> GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_Matrix_fprint(MAT, GxB_COMPLETE)
 
-GraphBLAS matrix: MAT 
+GraphBLAS matrix: MAT
 nrows: 4 ncols: 4 max # entries: 5
 format: standard CSR vlen: 4 nvec_nonempty: 3 nvec: 4 plen: 4 vdim: 4
 hyper_ratio 0.0625
 GraphBLAS type:  int8_t size: 1
-number of entries: 5 
+number of entries: 5
 row: 1 : 1 entries [0:0]
     column 1: int8 23
 row: 2 : 3 entries [1:3]
@@ -218,7 +239,7 @@ GrB_Vector{Int8}
 julia> GrB_Vector_new(out, GrB_INT8, 3)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Col_extract(out, GrB_NULL, GrB_NULL, MAT, [1, 2, 3], 3, 2, desc) # extract elements of row 2
+julia> GrB_Col_extract(out, GrB_NULL, GrB_NULL, MAT, ZeroBasedIndex[1, 2, 3], 3, ZeroBasedIndex(2), desc) # extract elements of row 2
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(out)[2]
@@ -234,17 +255,28 @@ function GrB_Col_extract(               # w<mask> = accum (w, A(I,j))
         accum::U,                       # optional accum for z=accum(w,t)
         A::GrB_Matrix,                  # first input:  matrix A
         I::Y,                           # row indices
-        ni::X,                          # number of row indices
+        ni::Union{Int64, UInt64},       # number of row indices
         j::X,                           # column index
         desc::V                         # descriptor for w, mask, and A
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: GrB_Index, Y <: valid_indices_types}
+) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: ZeroBasedIndex, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
                         dlsym(graphblas_lib, "GrB_Col_extract"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Y}, Cuintmax_t, Cuintmax_t, Ptr{Cvoid}),
-                        w.p, mask.p, accum.p, A.p, pointer(I), ni, j, desc.p
+                        w.p, mask.p, accum.p, A.p, pointer(I), ni, j.x, desc.p
                     )
                 )
 end
+
+GrB_Col_extract(
+    w::GrB_Vector, 
+    mask::T, 
+    accum::U, 
+    A::GrB_Matrix, 
+    I::OneBasedIndices, 
+    ni::Union{Int64, UInt64}, 
+    j::OneBasedIndex, 
+    desc::V
+    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Col_extract(w, mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndex(j), desc)

@@ -11,10 +11,13 @@ Generic method to free a GraphBLAS object.
 ```jldoctest
 julia> using GraphBLASInterface, SuiteSparseGraphBLAS
 
+julia> GrB_init(GrB_NONBLOCKING)
+GrB_SUCCESS::GrB_Info = 0
+
 julia> w = GrB_Vector{Int64}()
 GrB_Vector{Int64}
 
-julia> I = [0, 2, 4]; X = [10, 20, 30]; n = 3;
+julia> I = ZeroBasedIndex[0, 2, 4]; X = [10, 20, 30]; n = 3;
 
 julia> GrB_Vector_new(w, GrB_INT64, 5)
 GrB_SUCCESS::GrB_Info = 0

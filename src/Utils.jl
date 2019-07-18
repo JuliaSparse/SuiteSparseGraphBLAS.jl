@@ -22,8 +22,3 @@ function suffix(T::DataType)
     end
     return "FP64"
 end
-
-function _GrB_Index(x::T) where T <: GrB_Index
-    x > typemax(Int64) && return x
-    return Int64(x)
-end
