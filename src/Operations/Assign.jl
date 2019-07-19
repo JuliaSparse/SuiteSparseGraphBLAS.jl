@@ -154,9 +154,20 @@ GrB_Matrix_assign(
     Mask::T,
     accum::U,
     A::GrB_Matrix,
-    I::OneBasedIndices,
+    I::Union{OneBasedIndices, GrB_ALL_Type},
     ni::Union{Int64, UInt64},
     J::OneBasedIndices,
+    nj::Union{Int64, UInt64},
+    desc::V) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
+
+GrB_Matrix_assign(
+    C::GrB_Matrix,
+    Mask::T,
+    accum::U,
+    A::GrB_Matrix,
+    I::OneBasedIndices,
+    ni::Union{Int64, UInt64},
+    J::Union{OneBasedIndices, GrB_ALL_Type},
     nj::Union{Int64, UInt64},
     desc::V) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
 
@@ -246,11 +257,11 @@ GrB_Col_assign(
     mask::T,
     accum::U,
     u::GrB_Vector,
-    I::OneBasedIndices,
+    I::Union{OneBasedIndices, GrB_ALL_Type},
     ni::Union{Int64, UInt64},
     j::OneBasedIndex,
     desc::V
-    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Col_assign(C, Mask, accum, u, ZeroBasedIndices(I), ni, ZeroBasedIndex(j), desc)
+    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Col_assign(C, mask, accum, u, ZeroBasedIndices(I), ni, ZeroBasedIndex(j), desc)
 
 """
     GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)
@@ -338,7 +349,7 @@ GrB_Row_assign(
     accum::U,
     u::GrB_Vector,
     i::OneBasedIndex,
-    J::OneBasedIndices,
+    J::Union{OneBasedIndices, GrB_ALL_Type},
     nj::Union{Int64, UInt64},
     desc::V
     ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Row_assign(C, mask, accum, u, ZeroBasedIndex(i), ZeroBasedIndices(J), nj, desc)
@@ -599,9 +610,21 @@ GrB_Matrix_assign(
     Mask::T,
     accum::U,
     x,
-    I::OneBasedIndices,
+    I::Union{OneBasedIndices, GrB_ALL_Type},
     ni::Union{Int64, UInt64},
     J::OneBasedIndices,
+    nj::Union{Int64, UInt64},
+    desc::V
+    ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, x, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
+
+GrB_Matrix_assign(
+    C::GrB_Matrix,
+    Mask::T,
+    accum::U,
+    x,
+    I::OneBasedIndices,
+    ni::Union{Int64, UInt64},
+    J::Union{OneBasedIndices, GrB_ALL_Type},
     nj::Union{Int64, UInt64},
     desc::V
     ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, x, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)

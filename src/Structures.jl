@@ -92,3 +92,4 @@ mutable struct GrB_ALL_Type <: Abstract_GrB_ALL
 end
 pointer(x::GrB_ALL_Type) = x.p
 show(io::IO, ::GrB_ALL_Type) = print("GrB_ALL")
+Vector{ZeroBasedIndex}(::GrB_ALL_Type) = GrB_ALL
