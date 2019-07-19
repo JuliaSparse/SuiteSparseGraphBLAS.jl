@@ -161,7 +161,7 @@ GrB_Matrix_assign(
     desc::V) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
 
 """
-    GrB_Col_assign(C, Mask, accum, u, I, ni, j, desc)
+    GrB_Col_assign(C, mask, accum, u, I, ni, j, desc)
 
 Assign the contents of a vector to a subset of elements in one column of a matrix.
 Note that since the output cannot be transposed, a different variant of assign is provided
