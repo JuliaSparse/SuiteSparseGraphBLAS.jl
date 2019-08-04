@@ -239,17 +239,71 @@ end
 function GxB_SelectOp_new(op::GxB_SelectOp, GxB_select_function::Function, xtype::GrB_Type{T}, thunk_type::GrB_Type{U}) where {T, U}
 
     GxB_select_function_C = @cfunction(
-                                    $GxB_select_function, 
+                                    $GxB_select_function,
                                     Bool,
                                     (Cuintmax_t, Cuintmax_t, Cuintmax_t, Cuintmax_t, Ref{T}, Ref{U})
                                 )
-    
+
     return GrB_Info(
             ccall(
                     dlsym(graphblas_lib, "GxB_SelectOp_new"),
                     Cint,
                     (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                    op.p, GxB_select_function_C, xtype.p
+                    pointer_from_objref(op), GxB_select_function_C, xtype.p
+                )
+            )
+end
+
+function GxB_SelectOp_new(op::GxB_SelectOp, GxB_select_function::Function, xtype::GrB_NULL_Type, thunk_type::GrB_NULL_Type)
+
+    GxB_select_function_C = @cfunction(
+                                    $GxB_select_function,
+                                    Bool,
+                                    (Cuintmax_t, Cuintmax_t, Cuintmax_t, Cuintmax_t, Ptr{Cvoid}, Ptr{Cvoid})
+                                )
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, "GxB_SelectOp_new"),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+                    pointer_from_objref(op), GxB_select_function_C, xtype.p
+                )
+            )
+end
+
+function GxB_SelectOp_new(op::GxB_SelectOp, GxB_select_function::Function, xtype::GrB_NULL_Type, thunk_type::GrB_Type{U}) where U
+
+    GxB_select_function_C = @cfunction(
+                                    $GxB_select_function,
+                                    Bool,
+                                    (Cuintmax_t, Cuintmax_t, Cuintmax_t, Cuintmax_t, Ptr{Cvoid}, Ref{U})
+                                )
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, "GxB_SelectOp_new"),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+                    pointer_from_objref(op), GxB_select_function_C, xtype.p
+                )
+            )
+end
+
+function GxB_SelectOp_new(op::GxB_SelectOp, GxB_select_function::Function, xtype::GrB_Type{T}, thunk_type::GrB_NULL_Type) where T
+
+    GxB_select_function_C = @cfunction(
+                                    $GxB_select_function,
+                                    Bool,
+                                    (Cuintmax_t, Cuintmax_t, Cuintmax_t, Cuintmax_t, Ref{T}, Ptr{Cvoid})
+                                )
+
+    return GrB_Info(
+            ccall(
+                    dlsym(graphblas_lib, "GxB_SelectOp_new"),
+                    Cint,
+                    (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
+                    pointer_from_objref(op), GxB_select_function_C, xtype.p
                 )
             )
 end

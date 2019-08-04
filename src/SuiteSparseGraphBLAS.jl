@@ -68,7 +68,7 @@ export
 @GxB_UnaryOp_fprint, @GxB_BinaryOp_fprint, @GxB_Monoid_fprint, @GxB_Semiring_fprint,
 @GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint, @GxB_fprint,
 # Select Operations
-GxB_Vector_select, GxB_Matrix_select, GxB_select,
+GxB_SelectOp_new, GxB_Vector_select, GxB_Matrix_select, GxB_select,
 # Print-level enum
 GxB_Print_Level
 for s in instances(GxB_Print_Level)
