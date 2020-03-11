@@ -88,7 +88,7 @@ function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
 end
 
 """
-    findnz(A, [ index_type])
+    findnz(A,[ index_type])
 
 Return a tuple (I, J, X) where I and J are the row and column indices of the stored values in GraphBLAS matrix A,
 and X is a vector of the values. Indices are zero based by default if not specified.
