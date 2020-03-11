@@ -1,7 +1,7 @@
 """
-    GrB_Descriptor(d::Dict{GrB_Desc_Field, GrB_Desc_Value})
+    GrB_Descriptor(::Pair{GrB_Desc_Field, GrB_Desc_Value}...)
 
-Create a new GraphBLAS descriptor from a dictionary of descriptor field and value pairs.
+Create a new GraphBLAS descriptor.
 
 # Examples
 ```jldoctest
@@ -10,11 +10,11 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> desc = GrB_Descriptor(Dict(GrB_INP0 => GrB_TRAN, GrB_OUTP => GrB_REPLACE))
+julia> desc = GrB_Descriptor(GrB_INP0 => GrB_TRAN, GrB_OUTP => GrB_REPLACE)
 GrB_Descriptor
 ```
 """
-function GrB_Descriptor(d::Dict{GrB_Desc_Field, GrB_Desc_Value})
+function GrB_Descriptor(d::Pair{GrB_Desc_Field, GrB_Desc_Value}...)
     desc = GrB_Descriptor()
     res = GrB_Descriptor_new(desc)
     if res != GrB_SUCCESS

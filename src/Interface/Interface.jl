@@ -8,10 +8,10 @@ import Base:
 import SuiteSparseGraphBLAS:
         GrB_Matrix, GrB_Vector, GrB_Descriptor
 
-include("Utils.jl")
-include("./Object_Methods/Matrix_Methods.jl")
-include("./Object_Methods/Vector_Methods.jl")
-include("./Object_Methods/Descriptor_Methods.jl")
+include("utils.jl")
+include("./object_methods/matrix.jl")
+include("./object_methods/vector.jl")
+include("./object_methods/descriptor.jl")
 export findnz, nnz, LowerTriangular, UpperTriangular, Diagonal, dropzeros!
 
 end # end of module

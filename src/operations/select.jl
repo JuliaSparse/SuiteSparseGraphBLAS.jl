@@ -9,7 +9,7 @@ function GxB_Vector_select(             # w<mask> = accum (w, op(u,k))
         u::GrB_Vector,                  # first input:  vector u
         thunk,                          # optional input for the select operator
         desc::V                         # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(
@@ -29,7 +29,7 @@ function GxB_Matrix_select(             # C<Mask> = accum (C, op(A,k)) or op(A',
         A::GrB_Matrix,                  # first input:  matrix A
         thunk,                          # optional input for the select operator
         desc::V                         # descriptor for C, mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(

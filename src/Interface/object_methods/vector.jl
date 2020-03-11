@@ -9,7 +9,7 @@ nvals is set to length(I) if not specified.
 function GrB_Vector(
         I::Vector{U},
         X::Vector{T};
-        n::Union{Int64, UInt64} = maximum(I).x,
+        n::Union{Int64, UInt64} = maximum(I)[],
         nvals::Union{Int64, UInt64} = length(I),
         dup::GrB_BinaryOp = default_dup(T)) where {T, U <: Abstract_GrB_Index}
 
@@ -127,7 +127,7 @@ function nnz(V::GrB_Vector)
 end
 
 """
-    findnz(V, [index_type])
+    findnz(V,[ index_type])
 
 Return a tuple (I, X) where I is the indices of the stored values in GraphBLAS vector V and X is a vector of the values.
 Indices are zero based by default if not specified.

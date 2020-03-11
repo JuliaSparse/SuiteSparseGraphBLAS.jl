@@ -1,8 +1,9 @@
 import Base:
-        show, ==, pointer, convert, isless, Vector
+        show, ==, pointer, convert, isless, Vector, getindex
 
-export ZeroBasedIndex, OneBasedIndex, GrB_Type, GrB_UnaryOp, GrB_BinaryOp, 
-       GrB_Monoid, GrB_Semiring, GrB_Vector, GrB_Matrix, GrB_Descriptor, GxB_SelectOp
+export ZeroBasedIndex, OneBasedIndex, ZeroBasedIndices, OneBasedIndices,
+       GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Monoid, GrB_Semiring,
+       GrB_Vector, GrB_Matrix, GrB_Descriptor, GxB_SelectOp
 
 const valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, 
                           UInt32, Int64, UInt64, Float32, Float64}
@@ -11,20 +12,31 @@ struct ZeroBasedIndex <: Abstract_GrB_Index
     x::UInt64
 end
 
+getindex(a::ZeroBasedIndex) = a.x
+show(io::IO, ::MIME"text/plain", a::ZeroBasedIndex) = print(io, "ZeroBasedIndex(", a.x, ")")
+show(io::IO, a::ZeroBasedIndex) = print(io, a.x)
+convert(T::Type{ZeroBasedIndex}, x::Union{Int64, UInt64}) = T(x)
+isless(a::ZeroBasedIndex, b::ZeroBasedIndex) = a.x < b.x
+const ZeroBasedIndices = Vector{ZeroBasedIndex}
+Vector(arr::ZeroBasedIndices) = map(i -> i.x, arr)
+ZeroBasedIndices(arr::Vector{T}) where T <: Integer = ZeroBasedIndex.(arr)
+
 struct OneBasedIndex <: Abstract_GrB_Index
     x::UInt64
 end
 
+getindex(a::OneBasedIndex) = a.x
+show(io::IO, ::MIME"text/plain", a::OneBasedIndex) = print(io, "OneBasedIndex(", a.x, ")")
+show(io::IO, a::OneBasedIndex) = print(io, a.x)
+convert(T::Type{OneBasedIndex}, x::Union{Int64, UInt64}) = T(x)
+isless(a::OneBasedIndex, b::OneBasedIndex) = a.x < b.x
+const OneBasedIndices = Vector{OneBasedIndex}
+Vector(arr::OneBasedIndices) = map(i -> i.x, arr)
+OneBasedIndices(arr::Vector{T}) where T <: Integer = OneBasedIndex.(arr)
+
 ZeroBasedIndex(a::OneBasedIndex) = ZeroBasedIndex(a.x-1)
 OneBasedIndex(a::ZeroBasedIndex) = OneBasedIndex(a.x+1)
 
-isless(a::ZeroBasedIndex, b::ZeroBasedIndex) = a.x < b.x
-isless(a::OneBasedIndex, b::OneBasedIndex) = a.x < b.x
-
-const ZeroBasedIndices = Vector{ZeroBasedIndex}
-const OneBasedIndices = Vector{OneBasedIndex}
-
-convert(T::Type{<:Union{ZeroBasedIndex, OneBasedIndex}}, x::Union{Int64, UInt64}) = T(x)
 Vector{ZeroBasedIndex}(arr::OneBasedIndices) = ZeroBasedIndex.(arr)
 Vector{OneBasedIndex}(arr::ZeroBasedIndices) = OneBasedIndex.(arr)
 
@@ -92,4 +104,3 @@ mutable struct GrB_ALL_Type <: Abstract_GrB_ALL
 end
 pointer(x::GrB_ALL_Type) = x.p
 show(io::IO, ::GrB_ALL_Type) = print("GrB_ALL")
-Vector{ZeroBasedIndex}(::GrB_ALL_Type) = GrB_ALL

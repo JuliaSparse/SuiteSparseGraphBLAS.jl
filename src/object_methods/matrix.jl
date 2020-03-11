@@ -459,7 +459,7 @@ GrB_Matrix_extractElement(
     ) = GrB_Matrix_extractElement(A, ZeroBasedIndex(row_index), ZeroBasedIndex(col_index))
 
 """
-    GrB_Matrix_extractTuples(A, [index_type])
+    GrB_Matrix_extractTuples(A,[ index_type])
 
 Return tuples stored in a matrix if successful.
 Else return `GrB_Info` error code.
@@ -484,7 +484,7 @@ julia> GrB_Matrix_build(MAT, I, J, X, n, GrB_FIRST_INT8)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Matrix_extractTuples(MAT)
-(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000001), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000003)], ZeroBasedIndex[ZeroBasedIndex(0x0000000000000001), ZeroBasedIndex(0x0000000000000001), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000003), ZeroBasedIndex(0x0000000000000003)], Int8[2, 4, 3, 5, 6])
+(ZeroBasedIndex[1, 2, 2, 2, 3], ZeroBasedIndex[1, 1, 2, 3, 3], Int8[2, 4, 3, 5, 6])
 ```
 """
 function GrB_Matrix_extractTuples(A::GrB_Matrix{T}, index_type::Type{<:Abstract_GrB_Index} = ZeroBasedIndex) where T

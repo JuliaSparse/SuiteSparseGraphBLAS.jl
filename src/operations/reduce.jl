@@ -63,7 +63,7 @@ function GrB_Matrix_reduce_Monoid(          # w<mask> = accum (w,reduce(A))
     monoid::GrB_Monoid,                     # reduce operator for t=reduce(A)
     A::GrB_Matrix,                          # first input:  matrix A
     desc::V                                 # descriptor for w, mask, and A
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(
@@ -129,7 +129,7 @@ function GrB_Matrix_reduce_BinaryOp(        # w<mask> = accum (w,reduce(A))
     op::GrB_BinaryOp,                       # reduce operator for t=reduce(A)
     A::GrB_Matrix,                          # first input:  matrix A
     desc::V                                 # descriptor for w, mask, and A
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(
@@ -174,7 +174,7 @@ function GrB_Vector_reduce(                 # c = reduce_to_scalar(u)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     u::GrB_Vector{T},                       # vector to reduce
     desc::V                                 # descriptor (currently unused)
-) where {T, V <: valid_desc_types}
+    ) where {T, V <: valid_desc_types}
 
     scalar = Ref(T(0))
     fn_name = "GrB_Vector_reduce_" * suffix(T)
@@ -225,7 +225,7 @@ function GrB_Matrix_reduce(                 # c = reduce_to_scalar(A)
     monoid::GrB_Monoid,                     # monoid to do the reduction
     A::GrB_Matrix{T},                       # matrix to reduce
     desc::V                                 # descriptor (currently unused)
-) where {T, V <: valid_desc_types}
+    ) where {T, V <: valid_desc_types}
 
     scalar = Ref(T(0))
     fn_name = "GrB_Matrix_reduce_" * suffix(T)

@@ -60,7 +60,7 @@ function GrB_Vector_apply(          # w<mask> = accum (w, op(u))
     op::GrB_UnaryOp,                # operator to apply to the entries
     u::GrB_Vector,                  # first input:  vector u
     desc::V                         # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+    ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(
@@ -126,7 +126,7 @@ function GrB_Matrix_apply(          # C<Mask> = accum (C, op(A)) or op(A')
     op::GrB_UnaryOp,                # operator to apply to the entries
     A::GrB_Matrix,                  # first input:  matrix A
     desc::V                         # descriptor for C, mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+    ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(
