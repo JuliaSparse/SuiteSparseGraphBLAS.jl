@@ -38,11 +38,11 @@ julia> I = ZeroBasedIndex[0, 1]; X = [10, 20]; n = 2;
 julia> GrB_Vector_build(u, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> GrB_Vector_assign(w, GrB_NULL, GrB_NULL, u, [2, 4], 2, GrB_NULL)
+julia> GrB_Vector_assign(w, GrB_NULL, GrB_NULL, u, ZeroBasedIndex[2, 4], 2, GrB_NULL)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(w)
-(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000004)], [10, 20])
+(ZeroBasedIndex[2, 4], [10, 20])
 ```
 """
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),u)
@@ -53,7 +53,7 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),u)
         I::Y,                       # row indices
         ni::Union{Int64, UInt64},   # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -137,7 +137,7 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),A)
         J::Z,                       # column indices
         nj::Union{Int64, UInt64},   # number of column indices
         desc::V                     # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -158,7 +158,8 @@ GrB_Matrix_assign(
     ni::Union{Int64, UInt64},
     J::OneBasedIndices,
     nj::Union{Int64, UInt64},
-    desc::V) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
+    desc::V
+    ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
 
 GrB_Matrix_assign(
     C::GrB_Matrix,
@@ -169,7 +170,8 @@ GrB_Matrix_assign(
     ni::Union{Int64, UInt64},
     J::Union{OneBasedIndices, GrB_ALL_Type},
     nj::Union{Int64, UInt64},
-    desc::V) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
+    desc::V
+    ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types} = GrB_Matrix_assign(C, Mask, accum, A, ZeroBasedIndices(I), ni, ZeroBasedIndices(J), nj, desc)
 
 """
     GrB_Col_assign(C, mask, accum, u, I, ni, j, desc)
@@ -240,7 +242,7 @@ function GrB_Col_assign(            # C<mask>(I,j) = accum (C(I,j),u)
         ni::Union{Int64, UInt64},   # number of row indices
         j::X,                       # column index
         desc::V                     # descriptor for C(:,j) and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: ZeroBasedIndex, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: ZeroBasedIndex, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -331,7 +333,7 @@ function GrB_Row_assign(            # C<mask'>(i,J) = accum (C(i,J),u')
         J::Y,                       # column indices
         nj::Union{Int64, UInt64},   # number of column indices
         desc::V                     # descriptor for C(i,:) and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: ZeroBasedIndex, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, X <: ZeroBasedIndex, Y <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -377,7 +379,7 @@ julia> GrB_Vector_assign(w, GrB_NULL, GrB_NULL, 2.3, ZeroBasedIndex[0, 3], 2, Gr
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(w)
-(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000000), ZeroBasedIndex(0x0000000000000003)], [2.3, 2.3])
+(ZeroBasedIndex[0, 3], [2.3, 2.3])
 ```
 """
 function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
@@ -388,7 +390,7 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
         I::S,                       # row indices
         ni::Union{Int64, UInt64},   # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z}
 
     fn_name = "GrB_Vector_assign_" * suffix(Z)
 
@@ -410,7 +412,7 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
         I::S,                       # row indices
         ni::Union{Int64, UInt64},   # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     fn_name = "GrB_Vector_assign_UINT64"
 
@@ -432,7 +434,7 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
         I::S,                       # row indices
         ni::Union{Int64, UInt64},   # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -452,7 +454,7 @@ function GrB_Vector_assign(         # w<mask>(I) = accum (w(I),x)
         I::S,                       # row indices
         ni::Union{Int64, UInt64},   # number of row indices
         desc::V                     # descriptor for w and mask
-) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -525,7 +527,7 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
         J::R,                       # column indices
         nj::Union{Int64, UInt64},   # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}, Z}
 
     fn_name = "GrB_Matrix_assign_" * suffix(Z)
 
@@ -549,7 +551,7 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
         J::R,                       # column indices
         nj::Union{Int64, UInt64},   # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -571,7 +573,7 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
         J::R,                       # column indices
         nj::Union{Int64, UInt64},   # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(
@@ -593,7 +595,7 @@ function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)
         J::R,                       # column indices
         nj::Union{Int64, UInt64},   # number of column indices
         desc::V                     # descriptor for C and Mask
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types, R <: Union{ZeroBasedIndices, GrB_ALL_Type}, S <: Union{ZeroBasedIndices, GrB_ALL_Type}}
 
     return GrB_Info(
                 ccall(

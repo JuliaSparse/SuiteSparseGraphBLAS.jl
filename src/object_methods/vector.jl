@@ -114,7 +114,7 @@ julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_INT64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(V)
-(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000001), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000004)], [2, 32, 4])
+(ZeroBasedIndex[1, 2, 4], [2, 32, 4])
 
 julia> GrB_Vector_clear(V)
 GrB_SUCCESS::GrB_Info = 0
@@ -408,7 +408,7 @@ end
 GrB_Vector_extractElement(v::GrB_Vector, i::OneBasedIndex) = GrB_Vector_extractElement(v, ZeroBasedIndex(i))
 
 """
-    GrB_Vector_extractTuples(v, [index_type])
+    GrB_Vector_extractTuples(v,[ index_type])
 
 Return tuples stored in a vector if successful.
 Else return `GrB_Info` error code.
@@ -433,7 +433,7 @@ julia> GrB_Vector_build(V, I, X, n, GrB_FIRST_FP64)
 GrB_SUCCESS::GrB_Info = 0
 
 julia> GrB_Vector_extractTuples(V)
-(ZeroBasedIndex[ZeroBasedIndex(0x0000000000000000), ZeroBasedIndex(0x0000000000000002), ZeroBasedIndex(0x0000000000000003)], [2.1, 3.2, 4.4])
+(ZeroBasedIndex[0, 2, 3], [2.1, 3.2, 4.4])
 ```
 """
 function GrB_Vector_extractTuples(v::GrB_Vector{T}, index_type::Type{<:Abstract_GrB_Index} = ZeroBasedIndex) where T

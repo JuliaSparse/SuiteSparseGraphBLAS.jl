@@ -10,8 +10,8 @@ function GrB_Matrix(
         I::Vector{U},
         J::Vector{U},
         X::Vector{T};
-        nrows::Union{Int64, UInt64} = maximum(I).x,
-        ncols::Union{Int64, UInt64} = maximum(J).x,
+        nrows::Union{Int64, UInt64} = maximum(I)[],
+        ncols::Union{Int64, UInt64} = maximum(J)[],
         nvals::Union{Int64, UInt64} = min(length(I), length(J)),
         dup::GrB_BinaryOp = default_dup(T)) where {T, U <: Abstract_GrB_Index}
 
@@ -88,7 +88,7 @@ function ==(A::GrB_Matrix{T}, B::GrB_Matrix{U}) where {T, U}
 end
 
 """
-    findnz(A, [index_type])
+    findnz(A, [ index_type])
 
 Return a tuple (I, J, X) where I and J are the row and column indices of the stored values in GraphBLAS matrix A,
 and X is a vector of the values. Indices are zero based by default if not specified.

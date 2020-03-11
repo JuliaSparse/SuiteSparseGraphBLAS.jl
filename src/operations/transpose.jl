@@ -64,7 +64,7 @@ function GrB_transpose(                 # C<Mask> = accum (C, A')
         accum::U,                       # optional accum for Z=accum(C,T)
         A::GrB_Matrix,                  # first input:  matrix A
         desc::V                         # descriptor for C, Mask, and A
-) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
     return GrB_Info(
                 ccall(
