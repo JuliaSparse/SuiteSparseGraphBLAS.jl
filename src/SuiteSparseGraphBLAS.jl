@@ -2,13 +2,8 @@ module SuiteSparseGraphBLAS
 
 import Libdl: dlopen_e, dlsym
 using GraphBLASInterface
+using SuiteSparseGraphBLAS_jll: libgraphblas
 
-const depsjl_path = joinpath(@__DIR__, "..", "deps", "deps.jl")
-if !isfile(depsjl_path)
-    error("SuiteSparseGraphBLAS not installed properly, run Pkg.build(\"SuiteSparseGraphBLAS\"), restart Julia and try again")
-end
-
-include(depsjl_path)
 include("structures.jl")
 include("global_variables.jl")
 include("utils.jl")
@@ -21,9 +16,6 @@ const valid_desc_types = Union{GrB_Descriptor, GrB_NULL_Type}
 graphblas_lib = C_NULL
 
 function __init__()
-    check_deps()
-
-    global libgraphblas
 
     global graphblas_lib = dlopen_e(libgraphblas)
 
