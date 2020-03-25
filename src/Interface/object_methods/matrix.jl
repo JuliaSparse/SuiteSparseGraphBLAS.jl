@@ -230,7 +230,7 @@ function LowerTriangular(A::GrB_Matrix{T}) where T
         error("Matrix is not square")
     end
     L = GrB_Matrix(T, nrows, ncols)
-    res = GxB_select(L, GrB_NULL, GrB_NULL, GxB_TRIL, A, 0, GrB_NULL)
+    res = GxB_select(L, GrB_NULL, GrB_NULL, GxB_TRIL, A, GrB_NULL, GrB_NULL)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -248,7 +248,7 @@ function UpperTriangular(A::GrB_Matrix{T}) where T
         error("Matrix is not square")
     end
     U = GrB_Matrix(T, nrows, ncols)
-    res = GxB_select(U, GrB_NULL, GrB_NULL, GxB_TRIU, A, 0, GrB_NULL)
+    res = GxB_select(U, GrB_NULL, GrB_NULL, GxB_TRIU, A, GrB_NULL, GrB_NULL)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -263,7 +263,7 @@ Return diagonal of a GraphBLAS matrix.
 function Diagonal(A::GrB_Matrix{T}) where T 
     nrows, ncols = size(A)
     D = GrB_Matrix(T, nrows, ncols)
-    res = GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, 0, GrB_NULL)
+    res = GxB_select(D, GrB_NULL, GrB_NULL, GxB_DIAG, A, GrB_NULL, GrB_NULL)
     if res != GrB_SUCCESS
         error(res)
     end
@@ -276,7 +276,7 @@ end
 Remove all zero entries from GraphBLAS matrix.
 """
 function dropzeros!(A::GrB_Matrix)
-    outp_replace_desc = GrB_Descriptor(Dict(GrB_OUTP => GrB_REPLACE))
+    outp_replace_desc = GrB_Descriptor(GrB_OUTP => GrB_REPLACE)
     res = GrB_assign(A, A, GrB_NULL, A, GrB_ALL, 0, GrB_ALL, 0, outp_replace_desc)
     if res != GrB_SUCCESS
         error(res)

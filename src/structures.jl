@@ -3,7 +3,7 @@ import Base:
 
 export ZeroBasedIndex, OneBasedIndex, ZeroBasedIndices, OneBasedIndices,
        GrB_Type, GrB_UnaryOp, GrB_BinaryOp, GrB_Monoid, GrB_Semiring,
-       GrB_Vector, GrB_Matrix, GrB_Descriptor, GxB_SelectOp
+       GrB_Vector, GrB_Matrix, GrB_Descriptor
 
 const valid_types = Union{Bool, Int8, UInt8, Int16, UInt16, Int32, 
                           UInt32, Int64, UInt64, Float32, Float64}
@@ -104,3 +104,4 @@ mutable struct GrB_ALL_Type <: Abstract_GrB_ALL
 end
 pointer(x::GrB_ALL_Type) = x.p
 show(io::IO, ::GrB_ALL_Type) = print("GrB_ALL")
+ZeroBasedIndices(::GrB_ALL_Type) = GrB_ALL

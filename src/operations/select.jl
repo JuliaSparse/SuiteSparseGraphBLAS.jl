@@ -7,7 +7,7 @@ function GxB_Vector_select(             # w<mask> = accum (w, op(u,k))
         accum::U,                       # optional accum for z=accum(w,t)
         op::GxB_SelectOp,               # operator to apply to the entries
         u::GrB_Vector,                  # first input:  vector u
-        thunk,                          # optional input for the select operator
+        thunk::GrB_NULL_Type,           # optional input for the select operator
         desc::V                         # descriptor for w and mask
         ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
@@ -16,7 +16,7 @@ function GxB_Vector_select(             # w<mask> = accum (w, op(u,k))
                         dlsym(graphblas_lib, "GxB_Vector_select"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        w.p, mask.p, accum.p, op.p, u.p, Ref(thunk), desc.p
+                        w.p, mask.p, accum.p, op.p, u.p, thunk.p, desc.p
                     )
                 )
 end
@@ -27,7 +27,7 @@ function GxB_Matrix_select(             # C<Mask> = accum (C, op(A,k)) or op(A',
         accum::U,                       # optional accum for Z=accum(C,T)
         op::GxB_SelectOp,               # operator to apply to the entries
         A::GrB_Matrix,                  # first input:  matrix A
-        thunk,                          # optional input for the select operator
+        thunk::GrB_NULL_Type,           # optional input for the select operator
         desc::V                         # descriptor for C, mask, and A
         ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
 
@@ -36,7 +36,7 @@ function GxB_Matrix_select(             # C<Mask> = accum (C, op(A,k)) or op(A',
                         dlsym(graphblas_lib, "GxB_Matrix_select"),
                         Cint,
                         (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        C.p, Mask.p, accum.p, op.p, A.p, Ref(thunk), desc.p
+                        C.p, Mask.p, accum.p, op.p, A.p, thunk.p, desc.p
                     )
                 )
 end

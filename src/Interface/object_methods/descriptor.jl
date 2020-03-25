@@ -41,7 +41,7 @@ julia> using SuiteSparseGraphBLAS
 julia> GrB_init(GrB_NONBLOCKING)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> desc = GrB_Descriptor(Dict(GrB_INP0 => GrB_TRAN))
+julia> desc = GrB_Descriptor(GrB_INP0 => GrB_TRAN)
 GrB_Descriptor
 
 julia> desc[GrB_MASK] = GrB_SCMP;

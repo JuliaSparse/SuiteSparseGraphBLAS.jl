@@ -198,7 +198,7 @@ end
 Remove all zero entries from GraphBLAS vector.
 """
 function dropzeros!(v::GrB_Vector)
-    outp_replace_desc = GrB_Descriptor(Dict(GrB_OUTP => GrB_REPLACE))
+    outp_replace_desc = GrB_Descriptor(GrB_OUTP => GrB_REPLACE)
     res = GrB_assign(v, v, GrB_NULL, v, GrB_ALL, 0, outp_replace_desc)
     if res != GrB_SUCCESS
         error(res)
