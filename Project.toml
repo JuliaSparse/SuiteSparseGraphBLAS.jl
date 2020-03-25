@@ -1,7 +1,7 @@
 name = "SuiteSparseGraphBLAS"
 uuid = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 authors = ["Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
-version = "0.3.3"
+version = "0.3.4"
 
 [deps]
 GraphBLASInterface = "5f047416-9681-11e9-0804-033d9936201f"
