@@ -62,15 +62,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 5 ncols: 1 max # entries: 2
-format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  double size: 8
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: double 11
-    row 4: double 9.9
+5x1 GraphBLAS double vector, sparse by col:
+w, 2 entries
+
+  (0,0)    11
+  (4,0)    9.9
 ```
 """
 function GrB_eWiseMult_Vector_Semiring(         # w<Mask> = accum (w, u.*v)
@@ -139,15 +135,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 5 ncols: 1 max # entries: 2
-format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  double size: 8
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: double 10
-    row 4: double 3.3
+5x1 GraphBLAS double vector, sparse by col:
+w, 2 entries
+
+  (0,0)    10
+  (4,0)    3.3
 ```
 """
 function GrB_eWiseMult_Vector_Monoid(           # w<Mask> = accum (w, u.*v)
@@ -216,15 +208,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 5 ncols: 1 max # entries: 2
-format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  double size: 8
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: double 11
-    row 4: double 99
+5x1 GraphBLAS double vector, sparse by col:
+w, 2 entries
+
+  (0,0)    11
+  (4,0)    99
 ```
 """
 function GrB_eWiseMult_Vector_BinaryOp(         # w<Mask> = accum (w, u.*v)
@@ -293,16 +281,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(C, GxB_COMPLETE)
 
-GraphBLAS matrix: C 
-nrows: 4 ncols: 4 max # entries: 2
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-row: 0 : 1 entries [0:0]
-    column 2: int64 320
-row: 2 : 1 entries [1:1]
-    column 0: int64 510
+  4x4 GraphBLAS int64_t matrix, sparse by row:
+  C, 2 entries
+
+    (0,2)   320
+    (2,0)   510
 ```
 """
 function GrB_eWiseMult_Matrix_Semiring(         # C<Mask> = accum (C, A.*B)
@@ -371,16 +354,12 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(C, GxB_COMPLETE)
 
-GraphBLAS matrix: C 
-nrows: 4 ncols: 4 max # entries: 2
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-row: 0 : 1 entries [0:0]
-    column 2: int64 36
-row: 2 : 1 entries [1:1]
-    column 0: int64 47
+4x4 GraphBLAS int64_t matrix, sparse by row:
+C, 2 entries
+
+    (0,2)   36
+    (2,0)   47
+
 ```
 """
 function GrB_eWiseMult_Matrix_Monoid(           # C<Mask> = accum (C, A.*B)
@@ -449,16 +428,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(C, GxB_COMPLETE)
 
-GraphBLAS matrix: C 
-nrows: 4 ncols: 4 max # entries: 2
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-row: 0 : 1 entries [0:0]
-    column 2: int64 36
-row: 2 : 1 entries [1:1]
-    column 0: int64 47
+4x4 GraphBLAS int64_t matrix, sparse by row:
+C, 2 entries
+
+    (0,2)   36
+    (2,0)   47
 ```
 """
 function GrB_eWiseMult_Matrix_BinaryOp(         # C<Mask> = accum (C, A.*B)

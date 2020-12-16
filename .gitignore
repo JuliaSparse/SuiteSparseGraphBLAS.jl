@@ -3,3 +3,4 @@ deps/deps.jl
 *.log
 docs/build/
 docs/site/
+.vscode

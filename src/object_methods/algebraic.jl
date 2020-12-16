@@ -47,15 +47,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 3 ncols: 1 max # entries: 2
-format: standard CSC vlen: 3 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: int64 -10
-    row 2: int64 -20
+3x1 GraphBLAS int64_t vector, sparse by col:
+w, 2 entries
+
+    (0,0)   -10
+    (2,0)   -20
 ```
 """
 function GrB_UnaryOp_new(
@@ -118,17 +114,13 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_Vector_build(V, I, X, n, dup)
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Vector_fprint(V, GxB_COMPLETE) # the value stored at position 0 and 3 will be the sum of the duplicate values
+julia> @GxB_fprint(V, GxB_COMPLETE)
 
-GraphBLAS vector: V
-nrows: 4 ncols: 1 max # entries: 2
-format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  double size: 8
-number of entries: 2
-column: 0 : 2 entries [0:1]
-    row 0: double 5.3
-    row 3: double 9.5
+4x1 GraphBLAS double vector, sparse by col:
+V, 2 entries
+
+    (0,0)    5.3
+    (3,0)    9.5
 ```
 """
 function GrB_BinaryOp_new(

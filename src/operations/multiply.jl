@@ -46,17 +46,12 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(C, GxB_COMPLETE)
 
-GraphBLAS matrix: C 
-nrows: 2 ncols: 2 max # entries: 2
-format: standard CSR vlen: 2 nvec_nonempty: 2 nvec: 2 plen: 2 vdim: 2
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-last method used for GrB_mxm, vxm, or mxv: heap
-number of entries: 2 
-row: 0 : 1 entries [0:0]
-    column 0: int64 50
-row: 1 : 1 entries [1:1]
-    column 1: int64 300
+2x2 GraphBLAS int64_t matrix, sparse by row:
+C, 2 entries
+
+  (0,0)   50
+  (1,1)   300
+
 ```
 """
 function GrB_mxm(              # C<Mask> = accum (C, A*B)
@@ -124,16 +119,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 2 ncols: 1 max # entries: 2
-format: standard CSC vlen: 2 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-last method used for GrB_mxm, vxm, or mxv: heap
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: int64 50
-    row 1: int64 120
+2x1 GraphBLAS int64_t vector, sparse by col:
+w, 2 entries
+
+  (0,0)   50
+  (1,0)   120
 ```
 """
 function GrB_vxm(              # w'<Mask> = accum (w, u'*A)
@@ -201,16 +191,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 2 ncols: 1 max # entries: 2
-format: standard CSC vlen: 2 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-last method used for GrB_mxm, vxm, or mxv: dot
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: int64 170
-    row 1: int64 180
+2x1 GraphBLAS int64_t vector, sparse by col:
+w, 2 entries
+
+    (0,0)   170
+    (1,0)   180
 ```
 """
 function GrB_mxv(               # w<Mask> = accum (w, A*u)

@@ -111,20 +111,15 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_wait()
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Matrix_fprint(C, GxB_COMPLETE)
+julia> @GxB_fprint(C, GxB_COMPLETE)
 
-GraphBLAS matrix: C
-nrows: 4 ncols: 4 max # entries: 4
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 4
-row: 0 : 2 entries [0:1]
-    column 1: int64 10
-    column 2: int64 20
-row: 2 : 2 entries [2:3]
-    column 0: int64 30
-    column 2: int64 40
+4x4 GraphBLAS int64_t matrix, sparse by row:
+C, 4 entries
+
+    (0,1)   10
+    (0,2)   20
+    (2,0)   30
+    (2,2)   40
 ```
 """
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),A)
@@ -215,22 +210,16 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_wait()
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Matrix_fprint(A, GxB_COMPLETE)
+julia> @GxB_fprint(A, GxB_COMPLETE)
 
-GraphBLAS matrix: A
-nrows: 4 ncols: 4 max # entries: 7
-format: standard CSR vlen: 4 nvec_nonempty: 3 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 5
-row: 0 : 2 entries [0:1]
-    column 1: int64 10
-    column 2: int64 20
-row: 1 : 1 entries [2:2]
-    column 0: int64 5
-row: 2 : 2 entries [3:4]
-    column 0: int64 6
-    column 2: int64 40
+4x4 GraphBLAS int64_t matrix, sparse by row:
+A, 5 entries
+
+    (0,1)   10
+    (0,2)   20
+    (1,0)   5
+    (2,0)   6
+    (2,2)   40
 ```
 """
 function GrB_Col_assign(            # C<mask>(I,j) = accum (C(I,j),u)
@@ -307,21 +296,16 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_wait()
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Matrix_fprint(A, GxB_COMPLETE)
+julia> @GxB_fprint(A, GxB_COMPLETE)
 
-GraphBLAS matrix: A
-nrows: 4 ncols: 4 max # entries: 7
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 5
-row: 0 : 3 entries [0:2]
-    column 1: int64 5
-    column 2: int64 20
-    column 3: int64 6
-row: 2 : 2 entries [3:4]
-    column 0: int64 30
-    column 2: int64 40
+4x4 GraphBLAS int64_t matrix, sparse by row:
+A, 5 entries
+
+    (0,1)   5
+    (0,2)   20
+    (0,3)   6
+    (2,0)   30
+    (2,2)   40
 ```
 """
 function GrB_Row_assign(            # C<mask'>(i,J) = accum (C(i,J),u')
@@ -501,20 +485,15 @@ GrB_SUCCESS::GrB_Info = 0
 julia> GrB_wait()
 GrB_SUCCESS::GrB_Info = 0
 
-julia> @GxB_Matrix_fprint(A, GxB_COMPLETE)
+julia> @GxB_fprint(A, GxB_COMPLETE)
 
-GraphBLAS matrix: A
-nrows: 4 ncols: 4 max # entries: 4
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  bool size: 1
-number of entries: 4
-row: 0 : 2 entries [0:1]
-    column 0: bool 1
-    column 1: bool 1
-row: 1 : 2 entries [2:3]
-    column 0: bool 1
-    column 1: bool 1
+4x4 GraphBLAS bool matrix, sparse by row:
+A, 4 entries
+
+    (0,0)   1
+    (0,1)   1
+    (1,0)   1
+    (1,1)   1
 ```
 """
 function GrB_Matrix_assign(         # C<Mask>(I,J) = accum (C(I,J),x)

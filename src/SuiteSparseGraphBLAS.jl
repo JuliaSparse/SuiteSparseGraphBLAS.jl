@@ -55,8 +55,7 @@ export findnz, nnz, LowerTriangular, UpperTriangular, Diagonal, dropzeros!
 # Extensions to the spec
 export
 # Print macros
-@GxB_UnaryOp_fprint, @GxB_BinaryOp_fprint, @GxB_Monoid_fprint, @GxB_Semiring_fprint,
-@GxB_Matrix_fprint, @GxB_Vector_fprint, @GxB_Descriptor_fprint, @GxB_fprint,
+@GxB_fprint,
 # Select Operations
 GxB_Vector_select, GxB_Matrix_select, GxB_select,
 # Print-level enum

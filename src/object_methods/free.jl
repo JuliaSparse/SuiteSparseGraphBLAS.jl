@@ -27,16 +27,12 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w
-nrows: 5 ncols: 1 max # entries: 3
-format: standard CSC vlen: 5 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 3
-column: 0 : 3 entries [0:2]
-    row 0: int64 10
-    row 2: int64 20
-    row 4: int64 30
+5x1 GraphBLAS int64_t vector, sparse by col:
+w, 3 entries
+
+    (0,0)   10
+    (2,0)   20
+    (4,0)   30
 
 
 julia> GrB_free(w)

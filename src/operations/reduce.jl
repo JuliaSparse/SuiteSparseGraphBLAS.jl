@@ -45,15 +45,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w
-nrows: 4 ncols: 1 max # entries: 2
-format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2
-column: 0 : 2 entries [0:1]
-    row 0: int64 30
-    row 2: int64 70
+4x1 GraphBLAS int64_t vector, sparse by col:
+w, 2 entries
+
+  (0,0)   30
+  (2,0)   70
 ```
 """
 function GrB_Matrix_reduce_Monoid(          # w<mask> = accum (w,reduce(A))
@@ -111,15 +107,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w
-nrows: 4 ncols: 1 max # entries: 2
-format: standard CSC vlen: 4 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2
-column: 0 : 2 entries [0:1]
-    row 0: int64 200
-    row 2: int64 1200
+4x1 GraphBLAS int64_t vector, sparse by col:
+w, 2 entries
+
+    (0,0)   200
+    (2,0)   1200
 ```
 """
 function GrB_Matrix_reduce_BinaryOp(        # w<mask> = accum (w,reduce(A))

@@ -42,15 +42,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(w, GxB_COMPLETE)
 
-GraphBLAS vector: w 
-nrows: 3 ncols: 1 max # entries: 2
-format: standard CSC vlen: 3 nvec_nonempty: 1 nvec: 1 plen: 1 vdim: 1
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-column: 0 : 2 entries [0:1]
-    row 0: int64 -10
-    row 2: int64 -20
+3x1 GraphBLAS int64_t vector, sparse by col:
+w, 2 entries
+
+    (0,0)   -10
+    (2,0)   -20
 ```
 """
 function GrB_Vector_apply(          # w<mask> = accum (w, op(u))
@@ -106,17 +102,12 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(B, GxB_COMPLETE)
 
-GraphBLAS matrix: B
-nrows: 2 ncols: 2 max # entries: 3
-format: standard CSR vlen: 2 nvec_nonempty: 2 nvec: 2 plen: 2 vdim: 2
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 3
-row: 0 : 2 entries [0:1]
-    column 0: int64 -10
-    column 1: int64 -20
-row: 1 : 1 entries [2:2]
-    column 1: int64 -30
+2x2 GraphBLAS int64_t matrix, sparse by row:
+B, 3 entries
+
+    (0,0)   -10
+    (0,1)   -20
+    (1,1)   -30
 ```
 """
 function GrB_Matrix_apply(          # C<Mask> = accum (C, op(A)) or op(A')

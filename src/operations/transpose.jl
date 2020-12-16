@@ -25,15 +25,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(M, GxB_COMPLETE)
 
-GraphBLAS matrix: M 
-nrows: 4 ncols: 4 max # entries: 2
-format: standard CSR vlen: 4 nvec_nonempty: 1 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-row: 0 : 2 entries [0:1]
-    column 1: int64 10
-    column 2: int64 20
+4x4 GraphBLAS int64_t matrix, sparse by row:
+M, 2 entries
+
+  (0,1)   10
+  (0,2)   20
 
 julia> M_TRAN = GrB_Matrix{Int64}()
 GrB_Matrix{Int64}
@@ -46,16 +42,11 @@ GrB_SUCCESS::GrB_Info = 0
 
 julia> @GxB_fprint(M_TRAN, GxB_COMPLETE)
 
-GraphBLAS matrix: M_TRAN 
-nrows: 4 ncols: 4 max # entries: 2
-format: standard CSR vlen: 4 nvec_nonempty: 2 nvec: 4 plen: 4 vdim: 4
-hyper_ratio 0.0625
-GraphBLAS type:  int64_t size: 8
-number of entries: 2 
-row: 1 : 1 entries [0:0]
-    column 0: int64 10
-row: 2 : 1 entries [1:1]
-    column 0: int64 20
+4x4 GraphBLAS int64_t matrix, sparse by row:
+M_TRAN, 2 entries
+
+  (1,0)   10
+  (2,0)   20
 ```
 """
 function GrB_transpose(                 # C<Mask> = accum (C, A')
