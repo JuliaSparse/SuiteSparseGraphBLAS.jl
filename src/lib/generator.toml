@@ -1,0 +1,12 @@
+[general]
+library_name = "libgraphblas"
+module_name = "LibGraphBLAS"
+#prologue_file_path = "./prologue.jl"
+output_file_path = "./LibGraphBLAS.jl"
+#epilogue_file_path = "./epilogue.jl"
+use_julia_native_enum_type = true
+[codegen]
+opaque_as_mutable_struct = true
+
+[codegen.macro]
+macro_mode = "basic"
