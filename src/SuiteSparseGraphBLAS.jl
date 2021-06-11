@@ -34,7 +34,7 @@ include("libarray.jl")
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
-
+include("random.jl")
 const GBVecOrMat = Union{GBVector, GBMatrix}
 const GBMatOrTranspose = Union{<:GBMatrix, Transpose{<:Any, <:GBMatrix}}
 const GBArray = Union{<:GBVector, GBMatOrTranspose}
@@ -65,7 +65,10 @@ include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
 
-include("with.jl") #EXPERIMENTAL
+#EXPERIMENTAL
+include("with.jl")
+include("import.jl")
+include("export.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export xtype, ytype, ztype
@@ -75,7 +78,7 @@ export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply! #operations
 
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!
-export nnz
+export nnz, sprand
 
 
 function __init__()
