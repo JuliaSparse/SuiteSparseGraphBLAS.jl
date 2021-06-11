@@ -28,9 +28,29 @@ function getoperator(op, t)
 
     if op isa AbstractOp
         return op[t]
-    elseif op isa OpUnion
+    elseif op isa GrBOp
         return op
     else
         error("Not a valid GrB op/semiring")
     end
+end
+
+isloaded(o::AbstractOp) = !isempty(o.pointers)
+
+function validtypes(o::AbstractOp)
+    isloaded(o) || _load(o)
+    return keys(o.pointers)
+end
+
+function Base.getindex(o::AbstractOp, t::DataType)
+    isloaded(o) || _load(o)
+    if Any ∈ keys(o.pointers)
+        getindex(o.pointers, Any)
+    else
+        getindex(o.pointers, t)
+    end
+end
+
+function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
+    print(io, o.name, ": ", validtypes(o))
 end
