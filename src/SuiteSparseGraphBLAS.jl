@@ -31,6 +31,12 @@ include("operators/semirings.jl")
 include("operators/selectops.jl")
 
 include("descriptors.jl")
+
+include("indexutils.jl")
+include("libarray.jl")
+include("vector.jl")
+include("matrix.jl")
+
 include("operations/operationutils.jl")
 const ptrtogbtype = Dict{Ptr, AbstractGBType}()
 
@@ -54,6 +60,7 @@ const MonoidBinaryOrRig = Union{
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors
 export xtype, ytype, ztype
+export GBVector
 function __init__()
     _createunaryops()
     _createbinaryops()

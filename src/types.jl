@@ -24,11 +24,11 @@ end
 """
     GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
 
-    One-dimensional GraphBLAS array with elements of type T. Internal representation is
-    specified as opaque, but may be a a dense array, bitmap array, or
-    compressed sparse vector.
+One-dimensional GraphBLAS array with elements of type T. Internal representation is
+specified as opaque, but may be either a dense array, bitmap array, or
+compressed sparse vector.
 
-    See also: ['GBMatrix'](@ref)
+See also: [`GBMatrix`](@ref).
 """
 mutable struct GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
     p::libgb.GrB_Vector
@@ -44,15 +44,16 @@ end
 """
     GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
 
-    TWo-dimensional GraphBLAS array with elements of type T. Internal representation is
-    specified as opaque, but in this implementation is stored as one of:
+TWo-dimensional GraphBLAS array with elements of type T. Internal representation is
+specified as opaque, but in this implementation is stored as one of the following in either
+row or column orientation:
 
     1. Dense
     2. Bitmap
     3. Sparse Compressed
     4. Hypersparse
 
-    See also [`spzeros`](@ref), [`spdiagm`](@ref) and [`sprand`](@ref).
+The storage type is automatically determined by the library.
 """
 mutable struct GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
     p::libgb.GrB_Matrix

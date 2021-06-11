@@ -13,6 +13,18 @@ function gxbprint(io::IO, x, name = "", level::libgb.GxB_Print_Level = libgb.GxB
             libgb.GxB_Semiring_fprint(x, name, level, cf)
         elseif x isa AbstractDescriptor
             libgb.GxB_Descriptor_fprint(x, name, level, cf)
+        elseif x isa GBVector
+            if level == libgb.GxB_SUMMARY
+                libgb.GxB_Vector_fprint(x, name, libgb.GxB_SHORT, cf)
+            else
+                libgb.GxB_Vector_fprint(x, name, level, cf)
+            end
+        elseif x isa GBMatrix
+            if level == libgb.GxB_SUMMARY
+                libgb.GxB_Matrix_fprint(x, name, libgb.GxB_SHORT, cf)
+            else
+                libgb.GxB_Vector_fprint(x, name, level, cf)
+            end
         end
         flush(f)
         seekstart(f)
