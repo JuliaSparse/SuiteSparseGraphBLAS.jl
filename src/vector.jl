@@ -82,6 +82,7 @@ end
 function Base.show(io::IO, ::MIME"text/plain", v::GBVector)
     gxbprint(io, v)
 end
+
 # Type dependent functions build, setindex, getindex, and findnz:
 for T ∈ valid_vec
     if T ∈ gxb_vec

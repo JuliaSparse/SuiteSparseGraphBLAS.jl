@@ -25,6 +25,8 @@ function gxbprint(io::IO, x, name = "", level::libgb.GxB_Print_Level = libgb.GxB
             else
                 libgb.GxB_Vector_fprint(x, name, level, cf)
             end
+        elseif x isa GBScalar
+            libgb.GxB_Scalar_fprint(x, name, libgb.GxB_SHORT, cf)
         end
         flush(f)
         seekstart(f)

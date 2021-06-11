@@ -32,12 +32,15 @@ include("operators/selectops.jl")
 
 include("descriptors.jl")
 
+include("operations/operationutils.jl")
+
 include("indexutils.jl")
 include("libarray.jl")
+include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
 
-include("operations/operationutils.jl")
+
 const ptrtogbtype = Dict{Ptr, AbstractGBType}()
 
 const GrBOp = Union{
@@ -60,7 +63,13 @@ const MonoidBinaryOrRig = Union{
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors
 export xtype, ytype, ztype
-export GBVector
+export GBScalar, GBVector, GBMatrix
+export clear!, extract, extract!, subassign!, assign!
+
+# Reexports. Not sure if this is a good idea.
+export diag, Diagonal
+export nnz
+
 function __init__()
     _createunaryops()
     _createbinaryops()

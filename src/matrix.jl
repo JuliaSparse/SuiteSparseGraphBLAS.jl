@@ -1,14 +1,30 @@
 # Constructors:
 ###############
-
 """
     GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX)
+
+Create a GBMatrix with the max size.
 """
 function GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX) where {T}
     GBMatrix{T}(libgb.GrB_Matrix_new(toGBType(T),nrows, ncols))
 end
 
 GBMatrix{T}(dims::Dims{2}) where {T} = GBMatrix{T}(dims...)
+
+"""
+    GBMatrix(I, J, X; dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J))
+
+Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The dup function defaults
+to `|` for booleans and `+` for nonbooleans.
+"""
+function GBMatrix(
+    I::Vector, J::Vector, X::Vector{T};
+    dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J)
+) where {T}
+    A = GBMatrix{T}(nrows, ncols)
+    build(A, I, J, X, dup)
+    return A
+end
 
 """
     GBMatrix(A::SparseMatrixCSC)
@@ -64,7 +80,6 @@ function LinearAlgebra.Diagonal(v::GBVector, k::Integer; desc = Descriptors.NULL
 end
 
 # Type dependent functions build, setindex, getindex, and findnz:
-#################################################################
 for T ∈ valid_vec
     if T ∈ GxB_vec
         prefix = :GxB
@@ -77,6 +92,7 @@ for T ∈ valid_vec
         function build(A::GBMatrix{$T}, I::Vector, J::Vector, X::Vector{$T};
                 dup = BinaryOps.PLUS
             )
+            dup = getoperator(dup, T)
             nnz(A) == 0 || error("Cannot build matrix with existing elements")
             length(X) == length(I) == length(J) ||
                 DimensionMismatch("I, J and X must have the same length")
@@ -86,7 +102,7 @@ for T ∈ valid_vec
                 Vector{libgb.GrB_Index}(J),
                 X,
                 length(X),
-                dup[$T],
+                dup
             )
         end
     end
@@ -111,6 +127,10 @@ for T ∈ valid_vec
             return libgb.$func(A)
         end
     end
+end
+
+function Base.show(io::IO, ::MIME"text/plain", A::GBMatrix)
+    gxbprint(io, A)
 end
 
 # Indexing functions
