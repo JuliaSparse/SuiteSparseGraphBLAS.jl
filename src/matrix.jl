@@ -22,7 +22,7 @@ function GBMatrix(
     dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J)
 ) where {T}
     A = GBMatrix{T}(nrows, ncols)
-    build(A, I, J, X, dup)
+    build(A, I, J, X; dup)
     return A
 end
 
@@ -81,7 +81,7 @@ end
 
 # Type dependent functions build, setindex, getindex, and findnz:
 for T ∈ valid_vec
-    if T ∈ GxB_vec
+    if T ∈ gxb_vec
         prefix = :GxB
     else
         prefix = :GrB
@@ -92,7 +92,7 @@ for T ∈ valid_vec
         function build(A::GBMatrix{$T}, I::Vector, J::Vector, X::Vector{$T};
                 dup = BinaryOps.PLUS
             )
-            dup = getoperator(dup, T)
+            dup = getoperator(dup, $T)
             nnz(A) == 0 || error("Cannot build matrix with existing elements")
             length(X) == length(I) == length(J) ||
                 DimensionMismatch("I, J and X must have the same length")

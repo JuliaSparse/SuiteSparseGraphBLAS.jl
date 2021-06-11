@@ -50,4 +50,4 @@ function Base.show(io::IO, ::MIME"text/plain", s::GBScalar)
     gxbprint(io, s)
 end
 
-SparseArrays.nnz(v::GBMatrix) = Int64(libgb.GrB_Scalar_nvals(v))
+SparseArrays.nnz(v::GBScalar) = Int64(libgb.GrB_Scalar_nvals(v))

@@ -1,4 +1,4 @@
-const VALIDUNION = Union{
+const valid_union = Union{
     Bool,
     Int8,
     UInt8,
@@ -38,7 +38,7 @@ end
 
 Base.unsafe_convert(::Type{libgb.GrB_Type}, s::AbstractGBType) = s.p
 
-GBType{T}(name::AbstractString) where {T<:VALIDUNION} = GBType{T}(load_global(name))
+GBType{T}(name::AbstractString) where {T<:valid_union} = GBType{T}(load_global(name))
 
 function Base.show(io::IO, ::MIME"text/plain", t::GBType{T}) where T
     print(io, "GBType(" * string(T) * "): ")

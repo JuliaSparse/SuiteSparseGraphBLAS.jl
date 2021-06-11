@@ -75,11 +75,17 @@ function Base.resize!(v::GBVector, n)
     return v
 end
 
-function LinearAlgebra.diag(A::GBMatrix, k::Integer = 0; desc = C_NULL)
-    return libgb.GxB_Vector_diag(A, k, desc)
+function LinearAlgebra.diag(A::GBMatrix{T}, k::Integer = 0; desc = C_NULL) where {T}
+    return GBVector{T}(libgb.GxB_Vector_diag(A, k, desc))
 end
 
 function Base.show(io::IO, ::MIME"text/plain", v::GBVector)
+    gxbprint(io, v)
+end
+
+#HELP: Not sure why I have to do this also... If I don't mul! breaks :/
+#   Tries to call show for sparsevector not the one above.
+function Base.show(io::IO, v::GBVector)
     gxbprint(io, v)
 end
 

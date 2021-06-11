@@ -659,6 +659,7 @@ function GrB_Vector_dup(w, u)
 end
 function GrB_Vector_dup(u)
     w = Ref{GrB_Vector}()
+    GrB_Vector_new(w, GxB_Vector_type(u), GrB_Vector_size(u))
     GrB_Vector_dup(w, u)
     return w[]
 end
@@ -804,7 +805,8 @@ function GrB_Matrix_dup(C, A)
 end
 function GrB_Matrix_dup(A)
     C = Ref{GrB_Matrix}()
-    GrB_Matrix_dup
+    GrB_Matrix_new(C, GxB_Matrix_type(A), GrB_Matrix_nrows(A), GrB_Matrix_ncols(A))
+    GrB_Matrix_dup(C, A)
     return C[]
 end
 
@@ -973,7 +975,7 @@ function GxB_Vector_diag(A, k, desc)
     else
         s = 0
     end
-    v = GxB_Vector_new(GrB_Matrix_type(A), s)
+    v = GrB_Vector_new(GxB_Matrix_type(A), s)
     GxB_Vector_diag(v, A, k, desc)
     return v
 end

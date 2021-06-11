@@ -1,8 +1,8 @@
 function getoperator(op, t)
     #Default Semiring should be LOR_LAND for boolean
-    if op == Semirings.PLUS_TIMES_SEMIRING
+    if op == Semirings.PLUS_TIMES
         if t == Bool
-            op = Semirings.LOR_LAND_SEMIRING
+            op = Semirings.LOR_LAND
         end
     end
     #Default BinaryOp should be LAND or LOR for boolean
