@@ -64,18 +64,20 @@ include("operations/apply.jl")
 include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
+
 include("with.jl") #EXPERIMENTAL
 export libgb
-export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors
+export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export xtype, ytype, ztype
 export GBScalar, GBVector, GBMatrix
-export clear!, extract, extract!, subassign!, assign!
+export clear!, extract, extract!, subassign!, assign! #array functions
+export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply! #operations
 
-# Reexports. Not sure if this is a good idea.
-export diag, Diagonal, mul!
+# Reexports.
+export diag, Diagonal, mul!, kron, kron!
 export nnz
 
-export mul
+
 function __init__()
     _createunaryops()
     _createbinaryops()
