@@ -31,5 +31,9 @@ using Random: randsubseq, default_rng, AbstractRNG
 #const GBArray = Union{<:GBVector, GBMatOrTranspose}
 
 include("abstracts.jl")
-include("utilities.jl")
+include("libutils.jl")
+include("lib/LibGraphBLAS.jl")
+using .libgb
+
+include("types.jl")
 end #end of module

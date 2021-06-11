@@ -1,6 +1,6 @@
 module libgb
 import ..libgraphblas
-using ..SSGrB: suffix, towrappertype
+using ..SuiteSparseGraphBLAS: suffix, towrappertype
 using MacroTools
 const GxB_FC32_t = ComplexF32
 
