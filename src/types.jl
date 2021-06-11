@@ -52,8 +52,7 @@ end
     3. Sparse Compressed
     4. Hypersparse
 
-    All representations may be by row or by column, and the choice is left to the library.
-    See also [`GBVector`](@ref).
+    See also [`spzeros`](@ref), [`spdiagm`](@ref) and [`sprand`](@ref).
 """
 mutable struct GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
     p::libgb.GrB_Matrix
