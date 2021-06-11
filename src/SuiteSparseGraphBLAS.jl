@@ -30,6 +30,7 @@ include("operators/monoids.jl")
 include("operators/semirings.jl")
 include("operators/selectops.jl")
 
+include("descriptors.jl")
 include("operations/operationutils.jl")
 const ptrtogbtype = Dict{Ptr, AbstractGBType}()
 
@@ -51,7 +52,7 @@ const MonoidBinaryOrRig = Union{
 }
 
 export libgb
-export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps
+export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors
 export xtype, ytype, ztype
 function __init__()
     _createunaryops()
@@ -60,7 +61,9 @@ function __init__()
     _createsemirings()
     _load_globaltypes()
     _loadselectops()
+    _loaddescriptors()
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
+    @eval(Descriptors, $:(const NULL = Descriptor()))
     atexit() do
         libgb.GrB_finalize()
     end

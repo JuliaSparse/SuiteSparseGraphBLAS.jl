@@ -8,6 +8,8 @@ module Types
     using ..libgb
 end
 
+"""
+"""
 mutable struct GBScalar{T}
     p::libgb.GxB_Scalar
     function GBScalar{T}(p::libgb.GxB_Scalar) where {T}
@@ -19,6 +21,15 @@ mutable struct GBScalar{T}
     end
 end
 
+"""
+    GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
+
+    One-dimensional GraphBLAS array with elements of type T. Internal representation is
+    specified as opaque, but may be a a dense array, bitmap array, or
+    compressed sparse vector.
+
+    See also: ['GBMatrix'](@ref)
+"""
 mutable struct GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
     p::libgb.GrB_Vector
     function GBVector{T}(p::libgb.GrB_Vector) where {T}
@@ -30,6 +41,20 @@ mutable struct GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
     end
 end
 
+"""
+    GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
+
+    TWo-dimensional GraphBLAS array with elements of type T. Internal representation is
+    specified as opaque, but in this implementation is stored as one of:
+
+    1. Dense
+    2. Bitmap
+    3. Sparse Compressed
+    4. Hypersparse
+
+    All representations may be by row or by column, and the choice is left to the library.
+    See also [`GBVector`](@ref).
+"""
 mutable struct GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
     p::libgb.GrB_Matrix
     function GBMatrix{T}(p::libgb.GrB_Matrix) where {T}

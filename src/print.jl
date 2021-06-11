@@ -11,6 +11,8 @@ function gxbprint(io::IO, x, name = "", level::libgb.GxB_Print_Level = libgb.GxB
             libgb.GxB_SelectOp_fprint(x, name, level, cf)
         elseif x isa libgb.GrB_Semiring
             libgb.GxB_Semiring_fprint(x, name, level, cf)
+        elseif x isa AbstractDescriptor
+            libgb.GxB_Descriptor_fprint(x, name, level, cf)
         end
         flush(f)
         seekstart(f)

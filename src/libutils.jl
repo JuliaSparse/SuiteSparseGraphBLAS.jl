@@ -91,48 +91,6 @@ function _print_unsigned_as_signed()
     eval(:(Base.show(io::IO, a::Unsigned) = print(io, Int(a))))
 end
 
-"Avoid repeating extremely common keyword arguments."
-macro kwargs(ex)
-    if @capture(
-        ex,
-        (f_(xs__; xs2__) = body_) |
-        (function f_(xs__; xs2__) body_ end) |
-        (f_(xs__) = body_) |
-        (function f_(xs__) body_ end)
-    )
-        xs2 === nothing ? xs2 = [] : xs2 = map(esc, xs2)
-        result = quote
-            function $(esc(f))(
-                $(map(esc, xs)...);
-                mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL, $(xs2...)
-            )
-            $(esc(body))
-            end
-        end
-    elseif @capture(
-        ex,
-        (f_(xs__; xs2__) where {T_} = body_) |
-        (function f_(xs__; xs2__) where {T_} body_ end) |
-        (f_(xs__) where {T_} = body_) |
-        (function f_(xs__) where {T_} body_ end)
-    )
-        xs2 === nothing ? xs2 = [] : xs2 = map(esc, xs2)
-        result = quote
-            function $(esc(f))(
-                $(map(esc, xs)...);
-                mask = C_NULL, accum = C_NULL, desc= Descriptors.NULL, $(xs2...)
-            ) where {$(esc(T))}
-            $(esc(body))
-            end
-        end
-    end
-    #This is not necessarily a good idea. It makes @which and stacktraces correct,
-    # but isn't well-tested or recommended.
-    result.args[2].args[2].args[1] = __source__
-    result.args[2].args[2].args[2] = __source__
-    return result
-end
-
 function splitconstant(str)
     return String.(split(str, "_"))
 end
