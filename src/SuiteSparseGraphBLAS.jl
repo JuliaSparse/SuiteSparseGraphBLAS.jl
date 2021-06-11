@@ -61,7 +61,10 @@ include("operations/transpose.jl")
 include("operations/mul.jl")
 include("operations/ewise.jl")
 include("operations/apply.jl")
-
+include("operations/select.jl")
+include("operations/reduce.jl")
+include("operations/kronecker.jl")
+include("with.jl") #EXPERIMENTAL
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors
 export xtype, ytype, ztype

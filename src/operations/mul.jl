@@ -47,6 +47,13 @@ function LinearAlgebra.mul!(
     libgb.GrB_mxv(w, mask, accum, op, A, u, desc)
 end
 
+
+"""
+    mul(A::GBArray, B::GBArray; op::Semiring = PLUS_TIMES, mask, accum, desc)
+
+Multiply two GBArrays `A` and `B`, at least one of which is a `GBMatrix`. `A` and `B` may
+be transposed either by passing in a transposed `GBMatrix` or using the descriptor.
+"""
 function mul(
     A::GBArray,
     B::GBArray;

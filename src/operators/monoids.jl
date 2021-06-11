@@ -46,7 +46,7 @@ function _createmonoids()
     end
 end
 
-function load(monoid::AbstractMonoid)
+function _load(monoid::AbstractMonoid)
     booleans = ["GxB_ANY", "GrB_LOR", "GrB_LAND", "GrB_LXOR", "GrB_LXNOR", "GxB_EQ"]
     integers = ["GrB_MIN", "GrB_MAX", "GrB_PLUS", "GrB_TIMES", "GxB_ANY"]
     unsignedintegers = [
