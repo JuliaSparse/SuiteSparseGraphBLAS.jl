@@ -24,19 +24,19 @@ end
 
 Create a GBVector from a dense vector `u`.
 """
-function GBVector(u::Vector) # TEMPORARY: NEEDS IMPORT/EXPORT
-    return GBVector(collect(1:length(u)), u) #Collect... Ouch.
-end
+#function GBVector(u::Vector) # TEMPORARY: NEEDS IMPORT/EXPORT
+#    return GBVector(collect(1:length(u)), u) #Collect... Ouch.
+#end
 
 """
     GBVector(u::SparseVector)
 
 Create a GBVector from a SparseArrays sparse vector `u`.
 """
-function GBVector(u::SparseVector) # TEMPORARY: NEEDS IMPORT/EXPORT
-    i, k = findnz(u)
-    return GBVector(i, k)
-end
+#function GBVector(u::SparseVector) # TEMPORARY: NEEDS IMPORT/EXPORT
+#    i, k = findnz(u)
+#    return GBVector(i, k)
+#end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 Base.unsafe_convert(::Type{libgb.GrB_Vector}, v::GBVector) = v.p

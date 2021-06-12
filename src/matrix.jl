@@ -31,10 +31,10 @@ end
 
 Create a GBMatrix from SparseArrays sparse matrix `A`.
 """
-function GBMatrix(A::SparseMatrixCSC) # TEMPORARY: NEEDS IMPORT/EXPORT
-    i, j, k = findnz(A)
-    return GBMatrix(i, j, k)
-end
+#function GBMatrix(A::SparseMatrixCSC) # TEMPORARY: NEEDS IMPORT/EXPORT
+#    i, j, k = findnz(A)
+#    return GBMatrix(i, j, k)
+#end
 
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
