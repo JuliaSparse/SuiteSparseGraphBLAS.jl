@@ -1,4 +1,5 @@
 module libgb
+using Base: Float64
 import ..libgraphblas
 using ..SuiteSparseGraphBLAS: suffix, towrappertype
 using MacroTools
@@ -30,7 +31,7 @@ end
 const valid_vec = [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32,
 Int64, UInt64, Float32, Float64, ComplexF32, ComplexF64]
 
-@enum GrB_Info::UInt32 begin
+@cenum GrB_Info::UInt32 begin
     GrB_SUCCESS = 0
     GrB_NO_VALUE = 1
     GrB_UNINITIALIZED_OBJECT = 2
@@ -47,7 +48,7 @@ Int64, UInt64, Float32, Float64, ComplexF32, ComplexF64]
     GrB_PANIC = 13
 end
 
-@enum GrB_Mode::UInt32 begin
+@cenum GrB_Mode::UInt32 begin
     GrB_NONBLOCKING = 0
     GrB_BLOCKING = 1
 end
@@ -73,7 +74,7 @@ function GrB_getVersion(version=Ref{Cuint}(0), subversion=Ref{Cuint}(0))
     return version[], subversion[]
 end
 
-@enum GrB_Desc_Field::UInt32 begin
+@cenum GrB_Desc_Field::UInt32 begin
     GrB_OUTP = 0
     GrB_MASK = 1
     GrB_INP0 = 2
@@ -86,7 +87,7 @@ end
     GxB_SORT = 35
 end
 
-@enum GrB_Desc_Value::UInt32 begin
+@cenum GrB_Desc_Value::UInt32 begin
     GxB_DEFAULT = 0
     GrB_REPLACE = 1
     GrB_COMP = 2
@@ -979,7 +980,7 @@ function GxB_Vector_diag(A, k, desc)
     GxB_Vector_diag(v, A, k, desc)
     return v
 end
-@enum GxB_Option_Field::UInt32 begin
+@cenum GxB_Option_Field::UInt32 begin
     GxB_HYPER_SWITCH = 0
     GxB_BITMAP_SWITCH = 34
     GxB_FORMAT = 1
@@ -1009,7 +1010,7 @@ end
     GxB_GLOBAL_GPU_CHUNK = 22
 end
 
-@enum GxB_Format_Value::Int32 begin
+@cenum GxB_Format_Value::Int32 begin
     GxB_BY_ROW = 0
     GxB_BY_COL = 1
     GxB_NO_FORMAT = -1
@@ -2082,7 +2083,7 @@ function GxB_Vector_resize(w, nrows_new)
     @wraperror ccall((:GxB_Vector_resize, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), w, nrows_new)
 end
 
-@enum GxB_Print_Level::UInt32 begin
+@cenum GxB_Print_Level::UInt32 begin
     GxB_SILENT = 0
     GxB_SUMMARY = 1
     GxB_SHORT = 2
@@ -2229,6 +2230,25 @@ end
 
 function GxB_cuda_free(p)
     ccall((:GxB_cuda_free, libgraphblas), Cvoid, (Ptr{Cvoid},), p)
+end
+
+function GxB_Global_Option_get(field)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        T = Float64
+    elseif field ∈ [GxB_FORMAT]
+        T = GxB_Format_Value
+    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
+        T = Cint
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Global_Option_get, libgraphblas), 
+        Cvoid,
+        (GxB_Option_Field, Ptr{Cvoid}),
+        field,
+        v
+    )
+    return v[]
 end
 
 # Skipping MacroDefinition: GB_PUBLIC extern

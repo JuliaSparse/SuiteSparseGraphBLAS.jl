@@ -60,11 +60,12 @@ function exportcscmatrix(
     unsafe_copyto!(pointer(values), Ptr{T}(Ax), length(values))
     unsafe_copyto!(pointer(col), Ptr{libgb.GrB_Index}(colptr), length(col))
     unsafe_copyto!(pointer(row), Ptr{libgb.GrB_Index}(rowidx), length(row))
-    return SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, values)
+    return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, values)
 end
 
-function SparseMatrixCSC(A::GBMatrix; desc::Descriptor = Descriptors.NULL)
-
+function SparseArrays.SparseMatrixCSC(A::GBMatrix; desc::Descriptor = Descriptors.NULL)
+    return exportcscmatrix(A; desc)
+end
 function exportdensevec(
     v::GBVector{T};
     desc::Descriptor = Descriptors.NULL
