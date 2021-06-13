@@ -1,3 +1,19 @@
+# TODO: Document additional trick functionality
+"""
+    gbtranspose!(C::GBMatrix, A::GBMatrix; kwargs...)::Nothing
+
+Eagerly evaluated matrix transpose, storing the output in `C`.
+
+# Arguments
+- `C::GBMatrix`: output matrix.
+- `A::GBMatrix`: input matrix.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+"""
 function gbtranspose!(
     C::GBMatrix, A::GBMatrix;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.C_NULL
@@ -5,6 +21,20 @@ function gbtranspose!(
     libgb.GrB_transpose(C, mask, accum, A, desc)
 end
 
+"""
+    gbtranspose(A::GBMatrix; kwargs...)::GBMatrix
+
+Eagerly evaluated matrix transpose which returns the transposed matrix.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `C::GBMatrix`: output matrix.
+"""
 function gbtranspose(A::GBMatrix;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.C_NULL
 )
@@ -46,3 +76,7 @@ function _handletranspose(
     end
     return A, desc, B
 end
+
+#This is ok per the GraphBLAS Slack channel. May wish to change its effect on Complex input.
+
+LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)

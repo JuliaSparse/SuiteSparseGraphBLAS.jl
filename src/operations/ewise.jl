@@ -1,3 +1,56 @@
+"""
+    emul!(C::GBArray, A::GBArray, B::GBArray; kwargs...)::Nothing
+
+Apply the binary operator `op` elementwise on the set intersection of `A` and `B`. Store or
+accumulate the result into C. When `op = BinaryOps.TIMES` this is equivalent to `A .* B`,
+however any binary operation may be substituted.
+
+As mentioned the pattern of the result is the set intersection of `A` and `B`. For a set
+union equivalent see [`eadd!`](@ref).
+
+# Arguments
+- `C::GBArray`: the output vector or matrix.
+- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `B::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+
+# Keywords
+- `op::MonoidBinaryOrRig = BinaryOps.TIMES`: the binary operation which is applied such that
+    `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+"""
+function emul! end
+
+"""
+    emul(A::GBArray, B::GBArray; kwargs...)::GBMatrix
+
+Apply the binary operator `op` elementwise on the set intersection of `A` and `B`. Store or
+accumulate the result into C. When `op = BinaryOps.TIMES` this is equivalent to `A .* B`,
+however any binary operation may be substituted.
+
+As mentioned the pattern of the result is the set intersection of `A` and `B`. For a set
+union equivalent see [`eadd`](@ref).
+
+# Arguments
+- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `B::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+
+# Keywords
+- `op::MonoidBinaryOrRig = BinaryOps.TIMES`: the binary operation which is applied such that
+    `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBArray`: Output `GBVector` or `GBMatrix` whose eltype is determined by the `eltype` of
+    `A` and `B` or the binary operation if a type specific operation is provided.
+"""
+function emul end
+
 function emul!(
     w::GBVector,
     u::GBVector,
@@ -78,6 +131,59 @@ function emul(
     C = GBMatrix{t}(size(A))
     return emul!(C, A, B; op, mask, accum, desc)
 end
+
+"""
+    emul!(C::GBArray, A::GBArray, B::GBArray; kwargs...)::Nothing
+
+Apply the binary operator `op` elementwise on the set union of `A` and `B`. Store or
+accumulate the result into C. When `op = BinaryOps.PLUS` this is equivalent to `A .+ B`,
+however any binary operation may be substituted.
+
+As mentioned the pattern of the result is the set union of `A` and `B`. For a set
+intersection equivalent see [`eadd!`](@ref).
+
+# Arguments
+- `C::GBArray`: the output vector or matrix.
+- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `B::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+
+# Keywords
+- `op::MonoidBinaryOrRig = BinaryOps.TIMES`: the binary operation which is applied such that
+    `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` or `B`.
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+"""
+function eadd! end
+
+"""
+    eadd(A::GBArray, B::GBArray; kwargs...)::GBMatrix
+
+Apply the binary operator `op` elementwise on the set union of `A` and `B`. Store or
+accumulate the result into C. When `op = BinaryOps.TIMES` this is equivalent to `A .* B`,
+however any binary operation may be substituted.
+
+As mentioned the pattern of the result is the set union of `A` and `B`. For a set
+intersection equivalent see [`emul`](@ref).
+
+# Arguments
+- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `B::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+
+# Keywords
+- `op::MonoidBinaryOrRig = BinaryOps.TIMES`: the binary operation which is applied such that
+    `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` or `B`.
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBArray`: Output `GBVector` or `GBMatrix` whose eltype is determined by the `eltype` of
+    `A` and `B` or the binary operation if a type specific operation is provided.
+"""
+function emul end
 
 function eadd!(
     w::GBVector,

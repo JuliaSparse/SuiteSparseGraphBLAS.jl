@@ -118,9 +118,12 @@ for T ∈ valid_vec
     end
 end
 
+# Want to try default show functions.
+#=
 function Base.show(io::IO, ::MIME"text/plain", A::GBMatrix)
     gxbprint(io, A)
 end
+=#
 
 # Indexing functions
 ####################
