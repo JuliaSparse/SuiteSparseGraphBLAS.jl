@@ -39,6 +39,11 @@ const opfunctions = [
 
 #This currently works exactly as: @with mask=<expr> <func>(x, 10, BinaryOps.PLUS)
 # and it correctly handles not replacing instances of <func>(...; mask = <var>).
+
+# So the todo list is:
+# 1. Handle variables in the @with <kw>=<var> segment.
+# 2. Handle Begin ... End blocks. This would involve essentially running the same existing
+# macro over each function.
 macro with(exp...)
     kargs = Symbol[]
     returnexp = []
