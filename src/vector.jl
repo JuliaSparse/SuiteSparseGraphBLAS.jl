@@ -1,4 +1,5 @@
 # Constructors:
+###############
 """
     GBVector{T}(n = libgb.GxB_INDEX_MAX)
 """
@@ -19,26 +20,8 @@ function GBVector(I::Vector, X::Vector{T}; dup = BinaryOps.PLUS) where {T}
     return x
 end
 
-"""
-    GBVector(u::Vector)
-
-Create a GBVector from a dense vector `u`.
-"""
-#function GBVector(u::Vector) # TEMPORARY: NEEDS IMPORT/EXPORT
-#    return GBVector(collect(1:length(u)), u) #Collect... Ouch.
-#end
-
-"""
-    GBVector(u::SparseVector)
-
-Create a GBVector from a SparseArrays sparse vector `u`.
-"""
-#function GBVector(u::SparseVector) # TEMPORARY: NEEDS IMPORT/EXPORT
-#    i, k = findnz(u)
-#    return GBVector(i, k)
-#end
-
 # Some Base and basic SparseArrays/LinearAlgebra functions:
+###########################################################
 Base.unsafe_convert(::Type{libgb.GrB_Vector}, v::GBVector) = v.p
 
 function Base.copy(v::GBVector{T}) where {T}
@@ -131,13 +114,8 @@ end
 
 
 
-# Indexing functions
-
-"""
-    _outlength(u, I)
-
-Determine the length of the output for an operation like extract or range-based indexing.
-"""
+# Indexing functions:
+#####################
 function _outlength(u, I)
     if I == ALL
         wlen = size(u)
@@ -147,6 +125,11 @@ function _outlength(u, I)
     return wlen
 end
 
+"""
+    extract!(w::GBVector, u::GBVector, I; kwargs...)::GBVector
+
+Extract a subvector from `u` into the output vector `w`. Equivalent to the matrix definition.
+"""
 function extract!(
     w::GBVector, u::GBVector, I;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
@@ -156,6 +139,11 @@ function extract!(
     return w
 end
 
+"""
+    extract(u::GBVector, I; kwargs...)::GBVector
+
+Extract a subvector from `u` and return it. Equivalent to the matrix definition.
+"""
 function extract(
     u::GBVector, I;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
@@ -179,6 +167,11 @@ function Base.getindex(
     return extract(u, i; mask, accum, desc)
 end
 
+"""
+    subassign(w::GBVector, u::GBVector, I; kwargs...)::GBVector
+
+Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
+"""
 function subassign!(
     w::GBVector, u, I;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
@@ -193,6 +186,11 @@ function subassign!(
     return nothing
 end
 
+"""
+    assign(w::GBVector, u::GBVector, I; kwargs...)::GBVector
+
+Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
+"""
 function assign!(
     w::GBVector, u, I;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL

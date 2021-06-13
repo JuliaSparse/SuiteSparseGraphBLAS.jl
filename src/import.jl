@@ -39,14 +39,14 @@ libgb.GxB_Matrix_import_CSC(
     jumbled,
     desc
 )
-# Construct the Julia GBMatrix object with the GrB_Matrix pointer.
-return GBMatrix{T}(A[])
-end
 
+"""
+    GBMatrix(S::SparseMatrixCSC)
+
+Create a GBMatrix from SparseArrays sparse matrix `S`.
+"""
 function GBMatrix(S::SparseMatrixCSC)
-    O = importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval)
-    finalize(S) # This doesn't work?
-    return O
+    return importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval)
 end
 
 function importcscvec(
@@ -78,6 +78,11 @@ function importcscvec(
     )
 end
 
+"""
+    GBVector(v::SparseVector)
+
+Create a GBVector from SparseArrays sparse vector `v`.
+"""
 function GBVector(v::SparseVector)
     return importcscvec(v.n, v.nzind, v.nzval)
 end
@@ -106,6 +111,11 @@ function importdensematrix(
     return GBMatrix{T}(C[])
 end
 
+"""
+    GBMatrix(M::Matrix)
+
+Create a GBMatrix from a Julia dense matrix.
+"""
 function GBMatrix(M::Matrix)
     return importdensematrix(size(M, 1), size(M, 2), M)
 end
@@ -133,6 +143,11 @@ function importdensevec(
     return GBVector{T}(w[])
 end
 
+"""
+    GBVector(v::SparseVector)
+
+Create a GBVector from a Julia dense vector.
+"""
 function GBVector(v::Vector)
     return importdensevec(size(v)..., v)
 end

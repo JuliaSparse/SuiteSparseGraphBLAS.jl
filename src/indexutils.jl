@@ -2,7 +2,8 @@
     idx(I)
 
 Handle different indexing types (ALL, scalar, range-based, and vector). Returns the
-proper format for GraphBLAS indexing.
+proper format for GraphBLAS indexing. Should *not* be used for functions that take a single
+scalar index like [`extractElement`].
 """
 function idx(I)
     if I == ALL
@@ -20,7 +21,7 @@ function idx(I)
     elseif I isa Vector
         return Vector{libgb.GrB_Index}(I), length(I) #Assume ni = length(I) otherwise
     elseif I isa Integer
-        return UInt64(I), 0
+        return UInt64[I], 1
     else
         throw(TypeError(idx, "Invalid index type",
             Union{UnitRange, StepRange, Vector, Integer}, typeof(I)))

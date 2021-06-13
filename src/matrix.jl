@@ -26,17 +26,6 @@ function GBMatrix(
     return A
 end
 
-"""
-    GBMatrix(A::SparseMatrixCSC)
-
-Create a GBMatrix from SparseArrays sparse matrix `A`.
-"""
-#function GBMatrix(A::SparseMatrixCSC) # TEMPORARY: NEEDS IMPORT/EXPORT
-#    i, j, k = findnz(A)
-#    return GBMatrix(i, j, k)
-#end
-
-
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 
@@ -137,7 +126,7 @@ end
 ####################
 """
     _outlength(A, I, J)
-
+    _outlength(u, I)
 Determine the size of the output for an operation like extract or range-based indexing.
 """
 function _outlength(A, I, J)
@@ -154,6 +143,30 @@ function _outlength(A, I, J)
     return Ilen, Jlen
 end
 
+"""
+    extract!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
+
+Extract a submatrix from `A` into `C`.
+
+# Arguments
+- `C::GBMatrix`: the submatrix extracted from `A`. It is a dimension mismatch if
+    `size(C) != (max(I), max(J))`.
+- `A::GBMatrix`: the array being indexed.
+- `I` and `J`: A colon, scalar, vector, or range indexing A.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
+    `size(M) == (max(I), max(J))`.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBMatrix`: the modified matrix `C`, now containing the submatrix `A[I, J]`.
+
+# Throws
+- `GrB_DIMENSION_MISMATCH`: If `size(C) != (max(I), max(J))` or `size(C) != size(mask)`.
+"""
 function extract!(
     C::GBMatrix, A::GBMatrix, I, J;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
@@ -164,11 +177,33 @@ function extract!(
     return C
 end
 
+"""
+    extract(A::GBMatrix, I, J; kwargs...)::GBMatrix
+
+Extract a submatrix from `A`.
+
+# Arguments
+- `A::GBMatrix`: the array being indexed.
+- `I` and `J`: A colon, scalar, vector, or range indexing A.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
+    `size(M) == (max(I), max(J))`.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`. `C` is, however, empty.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBMatrix`: the submatrix `A[I, J]`.
+
+# Throws
+- `GrB_DIMENSION_MISMATCH`: If `(max(I), max(J)) != size(mask)`.
+"""
 function extract(
     A::GBMatrix, I, J;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
 )
-    Ilen, Jlen = wlength(A, I, J)
+    Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
     return extract!(C, A, I, J; mask, accum, desc)
 end
@@ -199,6 +234,30 @@ function Base.getindex(
     return extract(A, i, j; mask, accum, desc)
 end
 
+"""
+    subassign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
+
+Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
+`size(mask) == size(A)`, whereas `size(mask) == size(C)` in `assign!`.
+
+# Arguments
+- `C::GBMatrix`: the matrix being subassigned to where `C[I,J] = A`.
+- `A::GBMatrix`: the matrix being assigned to a submatrix of `C`.
+- `I` and `J`: A colon, scalar, vector, or range indexing C.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
+    `size(M) == size(A)`.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBMatrix`: The input matrix A.
+
+# Throws
+- `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
+"""
 function subassign!(
     C::GBMatrix, A, I, J;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
@@ -219,8 +278,33 @@ function subassign!(
     else
         libgb.scalarmatsubassign[eltype(A)](C, mask, accum, A, I, ni, J, nj, desc)
     end
+    return A # Not sure this is correct, but it's what Base seems to do.
 end
 
+"""
+    assign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
+
+Assign a submatrix of `C` to `A`. Equivalent to [`subassign`](@ref) except that
+`size(mask) == size(C)`, whereas `size(mask) == size(A) in `subassign!`.
+
+# Arguments
+- `C::GBMatrix`: the matrix being subassigned to where `C[I,J] = A`.
+- `A::GBMatrix`: the matrix being assigned to a submatrix of `C`.
+- `I` and `J`: A colon, scalar, vector, or range indexing C.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
+    `size(M) == size(C)`.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBMatrix`: The input matrix A.
+
+# Throws
+- `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(C) != size(mask)`.
+"""
 function assign!(
     C::GBMatrix, A, I, J;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
@@ -241,6 +325,7 @@ function assign!(
     else
         libgb.scalarmatassign[eltype(A)](C, mask, accum, A, I, ni, J, nj, desc)
     end
+    return A # Not sure this is correct, but it's what Base seems to do.
 end
 
 # setindex! uses subassign rather than assign. This behavior may change in the future.
