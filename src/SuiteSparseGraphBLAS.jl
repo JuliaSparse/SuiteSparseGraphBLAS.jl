@@ -6,6 +6,7 @@ using SparseArrays
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG
+using CEnum
 
 include("abstracts.jl")
 include("libutils.jl")
@@ -69,6 +70,7 @@ include("operations/kronecker.jl")
 include("with.jl")
 include("import.jl")
 include("export.jl")
+include("options.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export xtype, ytype, ztype
@@ -89,6 +91,9 @@ function __init__()
     _load_globaltypes()
     _loadselectops()
     _loaddescriptors()
+    # I would like to do the below, it's what the docs ask for. But it *seems* to work
+    # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
+    #libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
     @eval(Descriptors, $:(const NULL = Descriptor()))
     atexit() do

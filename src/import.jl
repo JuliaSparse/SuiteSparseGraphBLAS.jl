@@ -7,13 +7,17 @@ function importcscmat(
     jumbled::Bool = false,
     desc::Descriptor = Descriptors.NULL
 ) where {T}
-A = Ref{libgb.GrB_Matrix}()
-m = libgb.GrB_Index(m)
-n = libgb.GrB_Index(n)
-colsize = libgb.GrB_Index(sizeof(colptr))
-rowsize = libgb.GrB_Index(sizeof(rowindices))
-valsize = libgb.GrB_Index(sizeof(values))
+A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
+m = libgb.GrB_Index(m) #nrows
+n = libgb.GrB_Index(n) #ncols
+colsize = libgb.GrB_Index(sizeof(colptr)) #Size of colptr vector
+rowsize = libgb.GrB_Index(sizeof(rowindices)) #Size of rowindex vector
+valsize = libgb.GrB_Index(sizeof(values)) #Size of nzval vector
 
+# This section comes after some chatting with Keno Fisher.
+# Cannot directly pass Julia arrays to GraphBLAS, it expects malloc'd arrays.
+# Instead we'll malloc some memory for each of the three vectors, and unsafe_copyto!
+# into them.
 col = Ptr{libgb.GrB_Index}(Libc.malloc(colsize))
 unsafe_copyto!(col, Ptr{UInt64}(pointer(colptr .- 1)), length(colptr))
 row = Ptr{libgb.GrB_Index}(Libc.malloc(rowsize))
@@ -35,11 +39,14 @@ libgb.GxB_Matrix_import_CSC(
     jumbled,
     desc
 )
+# Construct the Julia GBMatrix object with the GrB_Matrix pointer.
 return GBMatrix{T}(A[])
 end
 
 function GBMatrix(S::SparseMatrixCSC)
-    return importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval)
+    O = importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval)
+    finalize(S) # This doesn't work?
+    return O
 end
 
 function importcscvec(

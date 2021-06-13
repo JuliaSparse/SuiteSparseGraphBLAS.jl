@@ -5,21 +5,21 @@ function exportdensematrix(
     nrows = Ref{libgb.GrB_Index}(size(A,1))
     ncols = Ref{libgb.GrB_Index}(size(A,2))
     Csize = Ref{libgb.GrB_Index}(length(A) * sizeof(T))
-    Cx = Ptr{T}(Libc.malloc(length(A) * sizeof(T)))
-    CRef = Ref{Ptr{Cvoid}}(Cx)
+    values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isuniform = Ref{Bool}(false)
     libgb.GxB_Matrix_export_FullC(
         Ref(A.p),
         Ref(toGBType(T).p),
         nrows,
         ncols,
-        CRef,
+        values,
         Csize,
         isuniform,
         desc
     )
     C = Matrix{T}(undef, nrows[], ncols[])
-    unsafe_copyto!(pointer(C), Ptr{T}(CRef[]), length(C))
+    unsafe_copyto!(pointer(C), Ptr{T}(values[]), length(C))
+    Libc.free(values[])
     return C
 end
 
@@ -31,36 +31,52 @@ function exportcscmatrix(
     A::GBMatrix{T};
     desc::Descriptor = Descriptors.NULL
     ) where {T}
-    nrows = Ref{libgb.GrB_Index}()
-    ncols = Ref{libgb.GrB_Index}()
-    t = Ref{libgb.GrB_Type}()
+    nrows = Ref{libgb.GrB_Index}(size(A, 1))
+    ncols = Ref{libgb.GrB_Index}(size(A, 2))
+    t = Ref{libgb.GrB_Type}(toGBType(T).p)
     colptr = Ref{Ptr{libgb.GrB_Index}}()
     rowidx = Ref{Ptr{libgb.GrB_Index}}()
-    Ax = Ref{Ptr{T}}()
+    values = Ref{Ptr{Cvoid}}(Ptr{T}())
     colptrsize = Ref{libgb.GrB_Index}()
     rowidxsize = Ref{libgb.GrB_Index}()
     Axsize = Ref{libgb.GrB_Index}()
     isuniform = Ref{Bool}(false)
     isjumbled = C_NULL
-    
-    libgb.GxB_Matrix_export_CSC(A.p, t, nrows, ncols, colptr, rowidx, Ax, colptrsize, rowidxsize, Axsize, isuniform, isjumbled, desc)
+
+    libgb.GxB_Matrix_export_CSC(
+        Ref(A.p),
+        t,
+        nrows,
+        ncols,
+        colptr,
+        rowidx,
+        values,
+        colptrsize,
+        rowidxsize,
+        Axsize,
+        isuniform,
+        isjumbled,
+        desc
+    )
     A.p = C_NULL
     t = t[]
     nrows = nrows[]
     ncols = ncols[]
     colptr = colptr[]
     rowidx = rowidx[]
-    Ax = Ax[]
     colptrsize = colptrsize[]
     rowidxsize = rowidxsize[]
     Axsize = Axsize[]
-    values = Vector{T}(undef, Axsize ÷ sizeof(T))
-    col = Vector{libgb.GrB_Index}(colptrsize ÷ sizeof(libgb.GrB_Index))
-    row = Vector{libgb.GrB_Index}(rowidxsize ÷ sizeof(libgb.GrB_Index))
-    unsafe_copyto!(pointer(values), Ptr{T}(Ax), length(values))
+    outvalues = Vector{T}(undef, Axsize ÷ sizeof(T))
+    col = Vector{libgb.GrB_Index}(undef, Int(colptrsize ÷ sizeof(libgb.GrB_Index)))
+    row = Vector{libgb.GrB_Index}(undef, Int(rowidxsize ÷ sizeof(libgb.GrB_Index)))
+    unsafe_copyto!(pointer(outvalues), Ptr{T}(values[]), length(outvalues))
     unsafe_copyto!(pointer(col), Ptr{libgb.GrB_Index}(colptr), length(col))
     unsafe_copyto!(pointer(row), Ptr{libgb.GrB_Index}(rowidx), length(row))
-    return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, values)
+    Libc.free(colptr)
+    Libc.free(rowidx)
+    Libc.free(values[])
+    return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, outvalues)
 end
 
 function SparseArrays.SparseMatrixCSC(A::GBMatrix; desc::Descriptor = Descriptors.NULL)
@@ -72,20 +88,20 @@ function exportdensevec(
     ) where {T}
     n = Ref{libgb.GrB_Index}(size(v,1))
     vsize = Ref{libgb.GrB_Index}(length(v) * sizeof(T))
-    vx = Ptr{T}(Libc.malloc(length(v) * sizeof(T)))
-    CRef = Ref{Ptr{Cvoid}}(vx)
+    values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isuniform = Ref{Bool}(false)
     libgb.GxB_Vector_export_Full(
         Ref(v.p),
         Ref(toGBType(T).p),
         n,
-        CRef,
+        values,
         vsize,
         isuniform,
         desc
     )
     v = Vector{T}(undef, n[])
-    unsafe_copyto!(pointer(v), Ptr{T}(CRef[]), length(v))
+    unsafe_copyto!(pointer(v), Ptr{T}(values[]), length(v))
+    Libc.free(values[])
     return v
 end
 

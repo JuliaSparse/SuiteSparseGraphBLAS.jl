@@ -3,6 +3,7 @@ using Base: Float64
 import ..libgraphblas
 using ..SuiteSparseGraphBLAS: suffix, towrappertype
 using MacroTools
+using CEnum
 const GxB_FC32_t = ComplexF32
 
 const GxB_FC64_t = ComplexF32
@@ -2234,21 +2235,100 @@ end
 
 function GxB_Global_Option_get(field)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        T = Float64
+        T = Cdouble
     elseif field ∈ [GxB_FORMAT]
-        T = GxB_Format_Value
+        T = UInt32
     elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
         T = Cint
     end
     v = Ref{T}()
     ccall(
-        (:GxB_Global_Option_get, libgraphblas), 
+        (:GxB_Global_Option_get, libgraphblas),
         Cvoid,
-        (GxB_Option_Field, Ptr{Cvoid}),
+        (UInt32, Ptr{Cvoid}),
         field,
         v
     )
     return v[]
+end
+
+function GxB_Global_Option_set(field, value)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        ccall(
+            (:GxB_Global_Option_set, libgraphblas),
+            Cvoid,
+            (UInt32, Cdouble),
+            field,
+            value
+        )
+    elseif field ∈ [GxB_FORMAT]
+        ccall(
+            (:GxB_Global_Option_set, libgraphblas),
+            Cvoid,
+            (UInt32, UInt32),
+            field,
+            value
+        )
+    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
+        ccall(
+            (:GxB_Global_Option_set, libgraphblas),
+            Cvoid,
+            (UInt32, Cint),
+            field,
+            value
+        )
+    end
+end
+
+function GxB_Matrix_Option_get(A, field)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        T = Cdouble
+    elseif field ∈ [GxB_FORMAT]
+        T = UInt32
+    elseif field ∈ [GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
+        T = Cint
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Matrix_Option_get, libgraphblas),
+        Cvoid,
+        (GrB_Matrix, UInt32, Ptr{Cvoid}),
+        A,
+        field,
+        v
+    )
+    return v[]
+end
+
+function GxB_Matrix_Option_set(A, field, value)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        ccall(
+            (:GxB_Matrix_Option_set, libgraphblas),
+            Cvoid,
+            (GrB_Matrix, UInt32, Cdouble),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_FORMAT]
+        ccall(
+            (:GxB_Matrix_Option_set, libgraphblas),
+            Cvoid,
+            (GrB_Matrix, UInt32, UInt32),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_SPARSITY_CONTROL]
+        ccall(
+            (:GxB_Matrix_Option_set, libgraphblas),
+            Cvoid,
+            (GrB_Matrix, UInt32, Cint),
+            A,
+            field,
+            value
+        )
+    end
 end
 
 # Skipping MacroDefinition: GB_PUBLIC extern
@@ -2312,8 +2392,6 @@ const GxB_CHUNK = 7
 const GxB_GPU_CONTROL = 21
 
 const GxB_GPU_CHUNK = 22
-
-const GxB_HYPER = 0
 
 const GxB_HYPERSPARSE = 1
 
