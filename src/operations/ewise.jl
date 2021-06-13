@@ -183,7 +183,7 @@ intersection equivalent see [`emul`](@ref).
 - `GBArray`: Output `GBVector` or `GBMatrix` whose eltype is determined by the `eltype` of
     `A` and `B` or the binary operation if a type specific operation is provided.
 """
-function emul end
+function eadd end
 
 function eadd!(
     w::GBVector,

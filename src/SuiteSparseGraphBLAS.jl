@@ -58,6 +58,8 @@ const MonoidBinaryOrRig = Union{
     AbstractMonoid
 }
 
+optype(A::GBArray, B::GBArray) = optype(eltype(A), eltype(B))
+
 include("operations/transpose.jl")
 include("operations/mul.jl")
 include("operations/ewise.jl")

@@ -116,6 +116,13 @@ end
 Apply a unary or binary operation to `A`. The mutating methods above each have a
 non-mutating form without the `!`.
 
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask which determines the output
+    pattern.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: optional binary accumulator
+    operation where `C[i,j] = accum(C[i,j], A[i,j])`.
+- `desc::Descriptor = Descriptors.NULL`
+
 # Examples
 
 With matrix `X` with `eltype(X) = Float64`:

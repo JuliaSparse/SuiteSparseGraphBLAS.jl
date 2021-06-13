@@ -10,6 +10,7 @@ This is an in-progress Julia wrapper around the SuiteSparse:GraphBLAS library.
 - [x] Printing v1
 - [x] Import/Export of CSC and Dense
 - [x] Global and matrix descriptors
+- [ ] Kwargs v2
 - [ ] Tests
 - [ ] Docs
 

@@ -15,5 +15,3 @@ function optype(atype, btype)
         return promote_type(atype, btype)
     end
 end
-
-optype(A::GBArray, B::GBArray) = optype(eltype(A), eltype(B))
