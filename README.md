@@ -19,3 +19,4 @@ This is an in-progress Julia wrapper around the SuiteSparse:GraphBLAS library.
 - [ ] UDTs/UDFs
 - [ ] Printing v2
 - [ ] @with macro
+- [ ] Full infix coverage
