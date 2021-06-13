@@ -26,6 +26,19 @@ const opfunctions = [
     :mul,
     :mul!,
 ]
+# The goal with this macro looks something like this:
+# x = GBVector([1,2,3,4]); m=GBVector([true, true, false, false])
+# @with mask=m apply(x, 10, BinaryOps.PLUS)
+# should be transformed to: apply(x, 10 BinaryOps.PLUS; mask)
+
+# This should also work with blocks of functions and keyword args :op, :mask, :desc, :accum,
+# although the :op will not be passed for functions not in opfunctions above.
+
+# I'd like it to be possible to do :mask=<var> and :mask=<expression>
+# Finally if a keyword is already in a function call it should not be replaced. 
+
+#This currently works exactly as: @with mask=<expr> <func>(x, 10, BinaryOps.PLUS)
+# and it correctly handles not replacing instances of <func>(...; mask = <var>).
 macro with(exp...)
     kargs = Symbol[]
     returnexp = []
