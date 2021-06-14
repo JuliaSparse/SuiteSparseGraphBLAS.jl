@@ -58,6 +58,7 @@ const MonoidBinaryOrRig = Union{
     AbstractMonoid
 }
 
+#Move somewhere
 optype(A::GBArray, B::GBArray) = optype(eltype(A), eltype(B))
 
 include("operations/transpose.jl")
@@ -69,14 +70,14 @@ include("operations/reduce.jl")
 include("operations/kronecker.jl")
 
 #EXPERIMENTAL
-include("with.jl")
+#include("with.jl")
 include("import.jl")
 include("export.jl")
 include("options.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export xtype, ytype, ztype
-export GBScalar, GBVector, GBMatrix
+export GBScalar, GBVector, GBMatrix #arrays
 export clear!, extract, extract!, subassign!, assign! #array functions
 export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply! #operations
 
