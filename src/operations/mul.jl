@@ -95,3 +95,14 @@ function mul(
     mul!(C, A, B; op, mask, accum, desc)
     return C
 end
+
+function Base.:*(
+    A::GBArray,
+    B::GBArray;
+    op::SemiringUnion = Semirings.PLUS_TIMES,
+    mask = C_NULL,
+    accum = C_NULL,
+    desc::Descriptor = Descriptors.NULL
+)
+    mul(A, B; op, mask, accum, desc)
+end

@@ -28,8 +28,6 @@ include("operators/selectops.jl")
 
 include("descriptors.jl")
 
-include("operations/operationutils.jl")
-
 include("indexutils.jl")
 include("libarray.jl")
 include("scalar.jl")
@@ -58,9 +56,7 @@ const MonoidBinaryOrRig = Union{
     AbstractMonoid
 }
 
-#Move somewhere
-optype(A::GBArray, B::GBArray) = optype(eltype(A), eltype(B))
-
+include("operations/operationutils.jl")
 include("operations/transpose.jl")
 include("operations/mul.jl")
 include("operations/ewise.jl")
@@ -70,7 +66,6 @@ include("operations/reduce.jl")
 include("operations/kronecker.jl")
 
 #EXPERIMENTAL
-#include("with.jl")
 include("import.jl")
 include("export.jl")
 include("options.jl")
@@ -79,10 +74,12 @@ export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodul
 export xtype, ytype, ztype
 export GBScalar, GBVector, GBMatrix #arrays
 export clear!, extract, extract!, subassign!, assign! #array functions
-export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply! #operations
+
+#operations
+export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply!, gbtranspose, gbtranspose!
 
 # Reexports.
-export diag, Diagonal, mul!, kron, kron!
+export diag, Diagonal, mul!, kron, kron!, transpose
 export nnz, sprand
 
 

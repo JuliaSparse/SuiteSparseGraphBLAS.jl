@@ -13,7 +13,10 @@ const GrB_Index = UInt64
 macro wraperror(code)
     MacroTools.@q begin
         info = $(esc(code))
-        if info == GrB_SUCCESS || info == GrB_NO_VALUE
+        if info == GrB_SUCCESS
+            return true
+        elseif info == GrB_NO_VALUE
+            return nothing
         else
             error(string(info))
         end
@@ -758,9 +761,12 @@ for T ∈ valid_vec
             @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{$type}, GrB_Vector, GrB_Index), x, v, i)
         end
         function $func(v, i)
-            x = Ref(zero($T))
-            $func(x,v,i)
-            return x[]
+            x = Ref{$T}()
+            if $func(x,v,i) === nothing
+                return nothing
+            else
+                return x[]
+            end
         end
     end
 
@@ -896,9 +902,12 @@ for T ∈ valid_vec
             @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{$type}, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
         end
         function $func(A, i, j)
-            x = Ref(zero($T))
-            $func(x, A, i, j)
-            return x[]
+            x = Ref{$T}()
+            if $func(x, A, i, j) === nothing
+                return nothing
+            else
+                return x[]
+            end
         end
     end
 

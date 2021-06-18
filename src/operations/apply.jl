@@ -1,7 +1,7 @@
 
 
-function apply!(
-    C::GBArray, A::GBArray, op::UnaryUnion;
+function Base.map!(
+    op::UnaryUnion, C::GBArray, A::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
     )
     op = getoperator(op, eltype(A))
@@ -12,22 +12,22 @@ function apply!(
     end
     return C
 end
-function apply!(
-    A::GBArray, op::UnaryUnion;
+function Base.map!(
+    op::UnaryUnion, A::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return apply!(A, A, op; mask, accum, desc)
+    return map!(op, A, A; mask, accum, desc)
 end
 
-function apply(
-    A::GBArray, op::UnaryUnion;
+function Base.map(
+    op::UnaryUnion, A::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return apply!(similar(A), A, op; mask, accum, desc)
+    return map!(op, similar(A), A; mask, accum, desc)
 end
 
-function apply!(
-    C::GBArray, x, A::GBArray, op::BinaryUnion;
+function Base.map!(
+    op::BinaryUnion, C::GBArray, x, A::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
     op = getoperator(op, optype(eltype(A), typeof(x)))
@@ -39,22 +39,22 @@ function apply!(
     return C
 end
 
-function apply!(
-    x, A::GBArray, op::BinaryUnion;
+function Base.map!(
+    op::BinaryUnion, x, A::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return apply!(A, x, A, op; mask, accum, desc)
+    return map!(op, A, x, A; mask, accum, desc)
 end
 
-function apply(
-    x, A::GBArray, op::BinaryUnion;
+function Base.map(
+    op::BinaryUnion, x, A::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return apply!(similar(A), x, A, op; mask, accum, desc)
+    return map!(op, similar(A), x, A; mask, accum, desc)
 end
 
-function apply!(
-    C::GBArray, A::GBArray, x, op::BinaryUnion;
+function Base.map!(
+    op::BinaryUnion, C::GBArray, A::GBArray, x;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
     op = getoperator(op, optype(eltype(A), typeof(x)))
@@ -66,41 +66,41 @@ function apply!(
     return C
 end
 
-function apply!(
-    A::GBArray, x, op::BinaryUnion;
+function Base.map!(
+    op::BinaryUnion, A::GBArray, x;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return apply!(A, A, x, op; mask, accum, desc)
+    return map!(op,A, A, x; mask, accum, desc)
 end
 
-function apply(
-    A::GBArray, x, op::BinaryUnion;
+function Base.map(
+    op::BinaryUnion, A::GBArray, x;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return apply!(similar(A), A, x, op; mask, accum, desc)
+    return map!(op, similar(A), A, x; mask, accum, desc)
 end
 
 function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    apply(u, x, BinaryOps.PLUS; mask, accum, desc)
+    map(BinaryOps.PLUS, u, x; mask, accum, desc)
 end
 function Base.broadcasted(
     ::typeof(+), x::valid_union, u::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    apply(x, u, BinaryOps.PLUS; mask, accum, desc)
+    map(BinaryOps.PLUS, x, u; mask, accum, desc)
 end
 
 function Base.broadcasted(::typeof(*), u::GBArray, x::valid_union;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    apply(u, x, BinaryOps.TIMES; mask, accum, desc)
+    map(BinaryOps.TIMES, u, x; mask, accum, desc)
 end
 function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    apply(x, u, BinaryOps.TIMES; mask, accum, desc)
+    map(BinaryOps.TIMES, x, u; mask, accum, desc)
 end
 
 """
@@ -133,4 +133,4 @@ With matrix `X` with `eltype(X) = Float64`:
 - Test whether each element is equal to 1: `apply(1, X, BinaryOps.EQ)`.
 - Typecast: `apply(similar(Int64, X), X, UnaryOps.IDENTITY)`
 """
-apply, apply!
+map, map!
