@@ -1,4 +1,4 @@
-function exportdensematrix(
+function exportdensematrix!(
     A::GBMatrix{T};
     desc::Descriptor = Descriptors.NULL
 ) where {T}
@@ -22,12 +22,14 @@ function exportdensematrix(
     Libc.free(values[])
     return C
 end
-
+function exportdensematrix(A::GBMatrix; desc::Descriptor = Descriptors.NULL)
+    exportdensematrix!(copy(A); desc)
+end
 function Matrix(A::GBMatrix)
     return exportdensematrix(A)
 end
 
-function exportcscmatrix(
+function exportcscmatrix!(
     A::GBMatrix{T};
     desc::Descriptor = Descriptors.NULL
     ) where {T}
@@ -79,10 +81,14 @@ function exportcscmatrix(
     return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, outvalues)
 end
 
+function exportcscmatrix(A::GBMatrix; desc::Descriptor = Descriptors.NULL)
+    return exportcscmatrix!(copy(A); desc)
+end
+
 function SparseArrays.SparseMatrixCSC(A::GBMatrix; desc::Descriptor = Descriptors.NULL)
     return exportcscmatrix(A; desc)
 end
-function exportdensevec(
+function exportdensevec!(
     v::GBVector{T};
     desc::Descriptor = Descriptors.NULL
     ) where {T}
@@ -103,6 +109,11 @@ function exportdensevec(
     unsafe_copyto!(pointer(v), Ptr{T}(values[]), length(v))
     Libc.free(values[])
     return v
+end
+
+function exportdensevec(v::GBVector; desc::Descriptor = Descriptors.NULL)
+    v = copy(v)
+    return exportdensevec!(v; desc)
 end
 
 function Vector(v::GBVector)

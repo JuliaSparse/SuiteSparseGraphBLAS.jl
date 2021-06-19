@@ -443,6 +443,7 @@ end
 
     function GxB_Scalar_clear(s)
     @wraperror ccall((:GxB_Scalar_clear, libgraphblas), GrB_Info, (GxB_Scalar,), s)
+    return nothing
 end
 
 function GxB_Scalar_nvals(nvals, s)
@@ -671,6 +672,7 @@ end
 
 function GrB_Vector_clear(v)
     @wraperror ccall((:GrB_Vector_clear, libgraphblas), GrB_Info, (GrB_Vector,), v)
+    return nothing
 end
 
 function GrB_Vector_size(n, v)
@@ -777,7 +779,7 @@ for T ∈ valid_vec
         function $func(I, X, nvals, v)
             #I, X, and nvals are outputs
             @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{$T}, Ptr{GrB_Index}, GrB_Vector), I, X, nvals, v)
-            I .+= 1 #Back to 1-based indexing after ccall
+            #I .+= 1 #Back to 1-based indexing after ccall
         end
         function $func(v)
             nvals = GrB_Vector_nvals(v)
@@ -786,7 +788,7 @@ for T ∈ valid_vec
             nvals = Ref{GrB_Index}()
             $func(I, X, nvals, v)
             nvals[] == length(I) == length(X) || error("Mismatched Lengths")
-            return I, X
+            return I .+ 1, X
         end
     end
 end
@@ -820,6 +822,7 @@ end
 
 function GrB_Matrix_clear(A)
     @wraperror ccall((:GrB_Matrix_clear, libgraphblas), GrB_Info, (GrB_Matrix,), A)
+    return nothing
 end
 
 function GrB_Matrix_nrows(nrows, A)
@@ -916,10 +919,13 @@ for T ∈ valid_vec
     funcstr = string(func)
     @eval begin
         function $func(I, J, X, nvals, A)
-            #I, X, and nvals are outputs
+            #I, X, and nvals are output
+            #println("I: $(size(I)); J: $(size(J)); X: $(size(X))")
+            #TODO: This is somehow bugged, need to repro and discuss with Tim Davis.
             @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{$type}, Ptr{GrB_Index}, GrB_Matrix), I, J, X, nvals, A)
-            I = toonebased(I) #Back to 1-based indexing after ccall
-            J = toonebased(J)
+            # Not working:
+            #toonebased!(I) #Back to 1-based indexing after ccall
+            #toonebased!(J)
         end
         function $func(A)
             nvals = GrB_Matrix_nvals(A)
@@ -929,7 +935,7 @@ for T ∈ valid_vec
             nvals = Ref{GrB_Index}()
             $func(I, J, X, nvals, A)
             nvals[] == length(I) == length(X) == length(J) || error("Mismatched Lengths")
-            return I, J, X
+            return I .+ 1, J .+ 1, X
         end
     end
 end

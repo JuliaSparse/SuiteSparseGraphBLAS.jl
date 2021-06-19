@@ -31,7 +31,7 @@ function getoperator(op, t)
     elseif op isa GrBOp
         return op
     else
-        error("Not a valid GrB op/semiring")
+        return op
     end
 end
 

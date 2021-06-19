@@ -5,7 +5,7 @@ using SSGraphBLAS_jll
 using SparseArrays
 using MacroTools
 using LinearAlgebra
-using Random: randsubseq, default_rng, AbstractRNG
+using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
 
 include("abstracts.jl")
@@ -17,7 +17,7 @@ using .libgb
 
 include("types.jl")
 include("gbtypes.jl")
-include("print.jl")
+
 
 include("operators/operatorutils.jl")
 include("operators/unaryops.jl")
@@ -29,11 +29,8 @@ include("operators/selectops.jl")
 include("descriptors.jl")
 
 include("indexutils.jl")
-include("libarray.jl")
-include("scalar.jl")
-include("vector.jl")
-include("matrix.jl")
-include("random.jl")
+
+
 const GBVecOrMat = Union{GBVector, GBMatrix}
 const GBMatOrTranspose = Union{<:GBMatrix, Transpose{<:Any, <:GBMatrix}}
 const GBArray = Union{<:GBVector, GBMatOrTranspose}
@@ -55,6 +52,10 @@ const MonoidBinaryOrRig = Union{
     AbstractBinaryOp,
     AbstractMonoid
 }
+include("scalar.jl")
+include("vector.jl")
+include("matrix.jl")
+include("random.jl")
 
 include("operations/operationutils.jl")
 include("operations/transpose.jl")
@@ -65,10 +66,14 @@ include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
 
-#EXPERIMENTAL
+include("print.jl")
 include("import.jl")
 include("export.jl")
+
+#EXPERIMENTAL
 include("options.jl")
+#include("random.jl")
+include("misc.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export xtype, ytype, ztype
@@ -91,7 +96,7 @@ function __init__()
     _load_globaltypes()
     _loadselectops()
     _loaddescriptors()
-    # I would like to do the below, it's what the docs ask for. But it *seems* to work
+    # I would like to do below, it's what the docs ask for. But it *seems* to work
     # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
     #libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
     libgb.GrB_init(libgb.GrB_NONBLOCKING)

@@ -134,7 +134,7 @@ function extract!(
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
 )
     I, ni = idx(I)
-    libgb.GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
+    libgb.GrB_Vector_extract(w, mask, getoperator(accum, eltype(w)), u, I, ni, desc)
     return w
 end
 
@@ -178,9 +178,9 @@ function subassign!(
     I, ni = idx(I)
     u isa Vector && (u = GBVector(u))
     if u isa GBVector
-        libgb.GxB_Vector_subassign(w, mask, accum, u, I, ni, desc)
+        libgb.GxB_Vector_subassign(w, mask, getoperator(accum, eltype(w)), u, I, ni, desc)
     else
-        libgb.scalarvecsubassign[eltype(u)](w, mask, accum, u, I, ni, desc)
+        libgb.scalarvecsubassign[eltype(u)](w, mask, getoperator(accum, eltype(w)), u, I, ni, desc)
     end
     return nothing
 end
@@ -197,9 +197,9 @@ function assign!(
     I, ni = idx(I)
     u isa Vector && (u = GBVector(u))
     if u isa GBVector
-        libgb.GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
+        libgb.GrB_Vector_assign(w, mask, getoperator(accum, eltype(w)), u, I, ni, desc)
     else
-        libgb.scalarvecassign[eltype(u)](w, mask, accum, u, I, ni, desc)
+        libgb.scalarvecassign[eltype(u)](w, mask, getoperator(accum, eltype(w)), u, I, ni, desc)
     end
     return nothing
 end

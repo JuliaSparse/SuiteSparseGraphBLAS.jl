@@ -35,6 +35,13 @@ function Base.copy(A::GBMatrix{T}) where {T}
     return GBMatrix{T}(libgb.GrB_Matrix_dup(A))
 end
 
+"""
+    clear!(v::GBVector)
+    clear!(A::GBMatrix)
+
+Clear all the entries from the GBArray.
+Does not modify the type or dimensions.
+"""
 clear!(A::GBMatrix) = libgb.GrB_Matrix_clear(A)
 
 function Base.size(A::GBMatrix)
@@ -98,7 +105,8 @@ for T ∈ valid_vec
     # Setindex functions
     func = Symbol(prefix, :_Matrix_setElement_, suffix(T))
     @eval begin
-        function Base.setindex!(A::GBMatrix{$T}, x::$T, i, j)
+        function Base.setindex!(A::GBMatrix{$T}, x, i::Integer, j::Integer)
+            x = convert($T, x)
             return libgb.$func(A, x, libgb.GrB_Index(i), libgb.GrB_Index(j))
         end
     end
@@ -118,12 +126,12 @@ for T ∈ valid_vec
     end
 end
 
-# Want to try default show functions.
-#=
+
 function Base.show(io::IO, ::MIME"text/plain", A::GBMatrix)
     gxbprint(io, A)
 end
-=#
+
+SparseArrays.nonzeros(A::GBArray) = findnz(A)[3]
 
 # Indexing functions
 ####################
@@ -176,7 +184,9 @@ function extract!(
 )
     I, ni = idx(I)
     J, nj = idx(J)
-    libgb.GrB_Matrix_extract(C, mask, accum, A, I, ni, J, nj, desc)
+    I isa Number && (I = UInt64[I])
+    J isa Number && (J = UInt64[J])
+    libgb.GrB_Matrix_extract(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
     return C
 end
 
@@ -231,12 +241,15 @@ function Base.getindex(
 end
 
 function Base.getindex(
-    A, i::Union{Vector, UnitRange, StepRange}, j::Union{Vector, UnitRange, StepRange};
+    A::GBMatrix, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
 )
     return extract(A, i, j; mask, accum, desc)
 end
 
+function Base.getindex(A::GBMatrix, v::AbstractVector)
+    throw("Not implemented")
+end
 """
     subassign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 
@@ -267,19 +280,26 @@ function subassign!(
 )
     I, ni = idx(I)
     J, nj = idx(J)
-    A isa Vector && (A = GBVector(A))
+    print(A)
+    print(typeof(A))
+    if A isa GBArray
+    elseif A isa AbstractVector
+        A = GBVector(A)
+    elseif A isa AbstractMatrix
+        A = GBMatrix(A)
+    end
     if A isa GBVector
-        if !(I isa Vector) && (J isa Vector)
-            libgb.GxB_Row_subassign(C, mask, accum, A, I, J, nj, desc)
-        elseif !(J isa Vector) && (I isa Vector)
-            libgb.GxB_Col_subassign(C, mask, accum, A, I, ni, J, desc)
+        if (I isa Number) && (J isa Vector || J == ALL)
+            libgb.GxB_Row_subassign(C, mask, getoperator(accum, eltype(A)), A, I, J, nj, desc)
+        elseif (J isa Number) && (I isa Vector || I == ALL)
+            libgb.GxB_Col_subassign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, desc)
         else
             throw(MethodError(subassign!, [C, A, I, J]))
         end
     elseif A isa GBMatrix
-        libgb.GxB_Matrix_subassign(C, mask, accum, A, I, ni, J, nj, desc)
+        libgb.GxB_Matrix_subassign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
     else
-        libgb.scalarmatsubassign[eltype(A)](C, mask, accum, A, I, ni, J, nj, desc)
+        libgb.scalarmatsubassign[eltype(A)](C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
     end
     return A # Not sure this is correct, but it's what Base seems to do.
 end
@@ -314,19 +334,24 @@ function assign!(
 )
     I, ni = idx(I)
     J, nj = idx(J)
-    A isa Vector && (A = GBVector(A))
+    if A isa GBArray
+    elseif A isa AbstractVector
+        A = GBVector(A)
+    elseif A isa AbstractMatrix
+        A = GBMatrix(A)
+    end
     if A isa GBVector
-        if !(I isa Vector) && (J isa Vector)
-            libgb.GrB_Row_assign(C, mask, accum, A, I, J, nj, desc)
-        elseif !(J isa Vector) && (I isa Vector)
-            libgb.GrB_Col_assign(C, mask, accum, A, I, ni, J, desc)
+        if (I isa Number) && (J isa Vector || J == ALL)
+            libgb.GrB_Row_assign(C, mask, getoperator(accum, eltype(A)), A, I, J, nj, desc)
+        elseif (J isa Number) && (I isa Vector || I == ALL)
+            libgb.GrB_Col_assign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, desc)
         else
             throw(MethodError(subassign!, [C, A, I, J]))
         end
     elseif A isa GBMatrix
-        libgb.GrB_Matrix_assign(C, mask, accum, A, I, ni, J, nj, desc)
+        libgb.GrB_Matrix_assign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
     else
-        libgb.scalarmatassign[eltype(A)](C, mask, accum, A, I, ni, J, nj, desc)
+        libgb.scalarmatassign[eltype(A)](C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
     end
     return A # Not sure this is correct, but it's what Base seems to do.
 end
@@ -354,11 +379,18 @@ end
 function Base.setindex!(
     C::GBMatrix,
     A,
-    I::Union{Vector, UnitRange, StepRange},
-    J::Union{Vector, UnitRange, StepRange};
+    I::Union{Vector, UnitRange, StepRange, Number},
+    J::Union{Vector, UnitRange, StepRange, Number};
     mask = C_NULL,
     accum = C_NULL,
     desc = Descriptors.NULL
 )
     subassign!(C, A, I, J; mask, accum, desc)
+end
+
+function Base.setindex(
+    C::GBMatrix, A, I::AbstractVector;
+    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+)
+    throw("Not implemented")
 end

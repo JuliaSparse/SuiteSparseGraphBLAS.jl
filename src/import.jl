@@ -50,11 +50,16 @@ function GBMatrix(S::SparseMatrixCSC)
     return importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval)
 end
 
+function GBMatrix(v::SparseVector)
+    S = SparseMatrixCSC(v)
+    return GBMatrix(S)
+end
+
 function importcscvec(
     n::Integer, vi, vx::Vector{T};
     jumbled::Bool = false, desc::Descriptor = Descriptors.NULL
 ) where {T}
-    v = Ref{libgb.GrB_Vector}
+    v = Ref{libgb.GrB_Vector}()
     n = libgb.GrB_Index(n)
     vi_size = libgb.GrB_Index(sizeof(vi))
     vx_size = libgb.GrB_Index(sizeof(vx))
@@ -62,7 +67,7 @@ function importcscvec(
     indices = Ptr{libgb.GrB_Index}(Libc.malloc(vi_size))
     unsafe_copyto!(indices, Ptr{UInt64}(pointer(vi .- 1)), length(vi))
 
-    values = Ptr{libgb.GrB_Index}(Libc.malloc(vx_size))
+    values = Ptr{T}(Libc.malloc(vx_size))
     unsafe_copyto!(values, pointer(vx), length(vx))
     libgb.GxB_Vector_import_CSC(
         v,
@@ -90,7 +95,7 @@ function GBVector(v::SparseVector)
 end
 
 function importdensematrix(
-    m::Integer, n::Integer, A::Matrix{T};
+    m::Integer, n::Integer, A::VecOrMat{T};
     desc::Descriptor = Descriptors.NULL
 ) where {T}
     C = Ref{libgb.GrB_Matrix}()
@@ -118,10 +123,9 @@ end
 
 Create a GBMatrix from a Julia dense matrix.
 """
-function GBMatrix(M::Matrix)
+function GBMatrix(M::VecOrMat)
     return importdensematrix(size(M, 1), size(M, 2), M)
 end
-
 
 function importdensevec(
     n::Integer, v::Vector{T};

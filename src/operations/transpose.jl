@@ -38,7 +38,7 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 function gbtranspose(A::GBMatrix;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.C_NULL
 )
-    C = similar(A.parent, size(A.parent,2), size(A.parent, 1))
+    C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
     return C
 end
@@ -80,3 +80,7 @@ end
 #This is ok per the GraphBLAS Slack channel. May wish to change its effect on Complex input.
 
 LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
+
+#Todo: fix this, unecessarily slow.
+Base.show(io::IO, ::MIME"text/plain", A::LinearAlgebra.Transpose{<:Any, <:GBMatrix}) =
+    show(io, MIME"text/plain"(), copy(A))

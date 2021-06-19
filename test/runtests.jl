@@ -1,17 +1,16 @@
-using GraphBLASInterface, SuiteSparseGraphBLAS
+using SuiteSparseGraphBLAS
+using SparseArrays
 using Test
+using Random
 
-@test GrB_init(GrB_NONBLOCKING) == GrB_SUCCESS
+Random.seed!(1)
 
-const testdir = dirname(@__FILE__)
+function include_test(path)
+    println("Testing $path:")
+    @time include(path)
+end
 
-tests = [
-    "matrix_and_vector_methods",
-]
-
+println("Testing SuiteSparseGraphBLAS.jl")
 @testset "SuiteSparseGraphBLAS" begin
-    for t in tests
-        tp = joinpath(testdir, "$(t).jl")
-        include(tp)
-    end
+    include_test("gbarray.jl")
 end
