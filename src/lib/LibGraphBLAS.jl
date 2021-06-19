@@ -922,7 +922,12 @@ for T ∈ valid_vec
             #I, X, and nvals are output
             #println("I: $(size(I)); J: $(size(J)); X: $(size(X))")
             #TODO: This is somehow bugged, need to repro and discuss with Tim Davis.
-            @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{$type}, Ptr{GrB_Index}, GrB_Matrix), I, J, X, nvals, A)
+            @wraperror ccall(
+                ($funcstr, libgraphblas),
+                GrB_Info,
+                (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{$type}, Ptr{GrB_Index}, GrB_Matrix),
+                I, J, X, nvals, A
+            )
             # Not working:
             #toonebased!(I) #Back to 1-based indexing after ccall
             #toonebased!(J)
@@ -932,7 +937,7 @@ for T ∈ valid_vec
             I = Vector{GrB_Index}(undef, nvals)
             J = Vector{GrB_Index}(undef, nvals)
             X = Vector{$type}(undef, nvals)
-            nvals = Ref{GrB_Index}()
+            nvals = Ref{GrB_Index}(nvals)
             $func(I, J, X, nvals, A)
             nvals[] == length(I) == length(X) == length(J) || error("Mismatched Lengths")
             return I .+ 1, J .+ 1, X
@@ -1072,44 +1077,66 @@ function GrB_Matrix_wait(A)
     @wraperror ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (Ptr{GrB_Matrix},), A)
 end
 
-function GrB_Type_error(error, type)
-    @wraperror ccall((:GrB_Type_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Type), error, type)
+function GrB_Type_error(type)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_Type_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Type), p, type)
+    return unsafe_string(p[])
 end
 
-function GrB_UnaryOp_error(error, op)
-    @wraperror ccall((:GrB_UnaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_UnaryOp), error, op)
+function GrB_UnaryOp_error(op)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_UnaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_UnaryOp), p, op)
+    return unsafe_string(p[])
 end
 
-function GrB_BinaryOp_error(error, op)
-    @wraperror ccall((:GrB_BinaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_BinaryOp), error, op)
+function GrB_BinaryOp_error(op)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_BinaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_BinaryOp), p, op)
+    return unsafe_string(p[])
 end
 
-function GxB_SelectOp_error(error, op)
-    @wraperror ccall((:GxB_SelectOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_SelectOp), error, op)
+function GxB_SelectOp_error(op)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GxB_SelectOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_SelectOp), p, op)
+    return unsafe_string(p[])
 end
 
-function GrB_Monoid_error(error, monoid)
-    @wraperror ccall((:GrB_Monoid_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Monoid), error, monoid)
+function GrB_Monoid_error(monoid)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_Monoid_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Monoid), p, monoid)
+    return unsafe_string(p[])
 end
 
-function GrB_Semiring_error(error, semiring)
-    @wraperror ccall((:GrB_Semiring_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Semiring), error, semiring)
+function GrB_Semiring_error(semiring)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_Semiring_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Semiring), p, semiring)
+    return unsafe_string(p[])
 end
 
-function GxB_Scalar_error(error, s)
-    @wraperror ccall((:GxB_Scalar_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_Scalar), error, s)
+function GxB_Scalar_error(s)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GxB_Scalar_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_Scalar), p, s)
+    return unsafe_string(p[])
 end
 
-function GrB_Vector_error(error, v)
-    @wraperror ccall((:GrB_Vector_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Vector), error, v)
+function GrB_Vector_error(v)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_Vector_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Vector), p, v)
+    return unsafe_string(p[])
 end
 
-function GrB_Matrix_error(error, A)
-    @wraperror ccall((:GrB_Matrix_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Matrix), error, A)
+function GrB_Matrix_error(A)
+    p = Vector{String}()
+    println("HI")
+
+    @wraperror ccall((:GrB_Matrix_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Matrix), p, A)
+    return unsafe_string(pointer(p))
 end
 
-function GrB_Descriptor_error(error, d)
-    @wraperror ccall((:GrB_Descriptor_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Descriptor), error, d)
+function GrB_Descriptor_error(d)
+    p = Ptr{Ptr{Cchar}}()
+    @wraperror ccall((:GrB_Descriptor_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Descriptor), p, d)
+    return unsafe_string(p[])
 end
 
 #Most functions here have an input only version, creating the output.

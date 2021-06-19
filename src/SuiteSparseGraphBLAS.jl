@@ -61,7 +61,7 @@ include("operations/operationutils.jl")
 include("operations/transpose.jl")
 include("operations/mul.jl")
 include("operations/ewise.jl")
-include("operations/apply.jl")
+include("operations/map.jl")
 include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
@@ -85,7 +85,7 @@ export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply!, gbtranspos
 
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!, transpose
-export nnz, sprand
+export nnz, sprand, findnz
 
 
 function __init__()

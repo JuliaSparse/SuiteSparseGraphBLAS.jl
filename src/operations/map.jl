@@ -102,35 +102,3 @@ function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray;
 )
     map(BinaryOps.TIMES, x, u; mask, accum, desc)
 end
-
-"""
-    apply!(C::GBArray, A::GBArray, op::UnaryOp; kwargs...)::GBArray
-    apply!(A::GBArray, op::UnaryOp; kwargs...)::GBArray
-    apply!(C::GBArray, A::GBArray, x, op::BinaryOp; kwargs...)::GBArray
-    apply!(C::GBArray, x, A::GBArray, op::BinaryOp; kwargs...)::GBArray
-    apply!(x, A::GBArray, op::BinaryOp; kwargs...)::GBArray
-    apply!(A::GBArray, x, op::BinaryOp; kwargs...)::GBArray
-
-    apply(...; kwargs...)::GBArray
-
-Apply a unary or binary operation to `A`. The mutating methods above each have a
-non-mutating form without the `!`.
-
-# Keywords
-- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask which determines the output
-    pattern.
-- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: optional binary accumulator
-    operation where `C[i,j] = accum(C[i,j], A[i,j])`.
-- `desc::Descriptor = Descriptors.NULL`
-
-# Examples
-
-With matrix `X` with `eltype(X) = Float64`:
-
-- Apply the `sin` function to each element: `apply(X, UnaryOps.SIN)`.
-- Add `0.5` to each element: `apply(X, 0.5, BinaryOps.PLUS)`.
-- Test whether each element is greater than 10: `apply(X, 10, BinaryOps.GT)`.
-- Test whether each element is equal to 1: `apply(1, X, BinaryOps.EQ)`.
-- Typecast: `apply(similar(Int64, X), X, UnaryOps.IDENTITY)`
-"""
-map, map!

@@ -68,10 +68,14 @@
         v = GBVector(x)
         clear!(v)
         @test nnz(v) == 0
+
+        #steprange
         v[10:10:100] = collect(1:10)
         @test v[100] == 10
-        m[10:10:100, mask = GBVector(rand(Bool, 10)), accum = BinaryOps.ISEQ] =
+
+        #steprange, mask, accum
+        v[10:10:100, mask = GBVector(rand(Bool, 10)), accum = BinaryOps.ISEQ] =
         collect(1:10)
-        @test v[10] == 1 && v[50] == 5 && v[100] == 1
+        @test v[10] == 1 && v[60] == 6 && v[100] == 1
     end
 end

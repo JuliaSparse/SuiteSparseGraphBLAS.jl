@@ -13,4 +13,5 @@ end
 println("Testing SuiteSparseGraphBLAS.jl")
 @testset "SuiteSparseGraphBLAS" begin
     include_test("gbarray.jl")
+    include_test("operations.jl")
 end

@@ -71,6 +71,10 @@ function Base.show(io::IO, v::GBVector)
     gxbprint(io, v)
 end
 
+function Base.show(io::IOContext, v::GBVector)
+    gxbprint(io, v)
+end
+
 # Type dependent functions build, setindex, getindex, and findnz:
 for T ∈ valid_vec
     if T ∈ gxb_vec

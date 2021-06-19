@@ -280,8 +280,6 @@ function subassign!(
 )
     I, ni = idx(I)
     J, nj = idx(J)
-    print(A)
-    print(typeof(A))
     if A isa GBArray
     elseif A isa AbstractVector
         A = GBVector(A)
