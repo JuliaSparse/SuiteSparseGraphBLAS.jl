@@ -6,7 +6,7 @@ makedocs(
     sitename="SuiteSparse:GraphBLAS",
     pages = [
         "Introduction" => "index.md",
-        "Arrays" => "arrays.md".
+        "Arrays" => "arrays.md",
         "Operations" => "operations.md"
     ]
 )
