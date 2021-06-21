@@ -1,0 +1,1430 @@
+baremodule Semirings
+    using ..Types
+end
+
+SemiringUnion = Union{AbstractSemiring, libgb.GrB_Semiring}
+
+function _semiringnames(name)
+    simple = name[5:end]
+    simple = replace(simple, "_SEMIRING" => "")
+    containername = Symbol(simple, "_RIG_T")
+    exportedname = Symbol(simple)
+    return containername, exportedname
+end
+
+#TODO: Rewrite
+function _createsemirings()
+    builtins = [
+        "GxB_PLUS_FIRST",
+        "GxB_TIMES_FIRST",
+        "GxB_ANY_FIRST",
+        "GxB_PLUS_SECOND",
+        "GxB_TIMES_SECOND",
+        "GxB_ANY_SECOND",
+        "GxB_MIN_PAIR",
+        "GxB_MAX_PAIR",
+        "GxB_PLUS_PAIR",
+        "GxB_TIMES_PAIR",
+        "GxB_ANY_PAIR",
+        "GxB_MIN_MIN",
+        "GxB_TIMES_MIN",
+        "GxB_ANY_MIN",
+        "GxB_MAX_MAX",
+        "GxB_PLUS_MAX",
+        "GxB_TIMES_MAX",
+        "GxB_ANY_MAX",
+        "GxB_PLUS_PLUS",
+        "GxB_TIMES_PLUS",
+        "GxB_ANY_PLUS",
+        "GxB_MIN_MINUS",
+        "GxB_MAX_MINUS",
+        "GxB_PLUS_MINUS",
+        "GxB_TIMES_MINUS",
+        "GxB_ANY_MINUS",
+        "GxB_TIMES_TIMES",
+        "GxB_ANY_TIMES",
+        "GxB_MIN_DIV",
+        "GxB_MAX_DIV",
+        "GxB_PLUS_DIV",
+        "GxB_TIMES_DIV",
+        "GxB_ANY_DIV",
+        "GxB_MIN_RDIV",
+        "GxB_MAX_RDIV",
+        "GxB_PLUS_RDIV",
+        "GxB_TIMES_RDIV",
+        "GxB_ANY_RDIV",
+        "GxB_MIN_RMINUS",
+        "GxB_MAX_RMINUS",
+        "GxB_PLUS_RMINUS",
+        "GxB_TIMES_RMINUS",
+        "GxB_ANY_RMINUS",
+        "GxB_MIN_ISEQ",
+        "GxB_MAX_ISEQ",
+        "GxB_PLUS_ISEQ",
+        "GxB_TIMES_ISEQ",
+        "GxB_ANY_ISEQ",
+        "GxB_MIN_ISNE",
+        "GxB_MAX_ISNE",
+        "GxB_PLUS_ISNE",
+        "GxB_TIMES_ISNE",
+        "GxB_ANY_ISNE",
+        "GxB_MIN_ISGT",
+        "GxB_MAX_ISGT",
+        "GxB_PLUS_ISGT",
+        "GxB_TIMES_ISGT",
+        "GxB_ANY_ISGT",
+        "GxB_MIN_ISLT",
+        "GxB_MAX_ISLT",
+        "GxB_PLUS_ISLT",
+        "GxB_TIMES_ISLT",
+        "GxB_ANY_ISLT",
+        "GxB_MIN_ISGE",
+        "GxB_MAX_ISGE",
+        "GxB_PLUS_ISGE",
+        "GxB_TIMES_ISGE",
+        "GxB_ANY_ISGE",
+        "GxB_MIN_ISLE",
+        "GxB_MAX_ISLE",
+        "GxB_PLUS_ISLE",
+        "GxB_TIMES_ISLE",
+        "GxB_ANY_ISLE",
+        "GxB_MIN_LOR",
+        "GxB_MAX_LOR",
+        "GxB_PLUS_LOR",
+        "GxB_TIMES_LOR",
+        "GxB_ANY_LOR",
+        "GxB_MIN_LAND",
+        "GxB_MAX_LAND",
+        "GxB_PLUS_LAND",
+        "GxB_TIMES_LAND",
+        "GxB_ANY_LAND",
+        "GxB_MIN_LXOR",
+        "GxB_MAX_LXOR",
+        "GxB_PLUS_LXOR",
+        "GxB_TIMES_LXOR",
+        "GxB_ANY_LXOR",
+        "GxB_LOR_NE",
+        "GxB_LOR_EQ",
+        "GxB_LAND_EQ",
+        "GxB_LXOR_EQ",
+        "GxB_EQ_EQ",
+        "GxB_ANY_EQ",
+        "GxB_LAND_NE",
+        "GxB_LXOR_NE",
+        "GxB_EQ_NE",
+        "GxB_ANY_NE",
+        "GxB_LOR_GT",
+        "GxB_LAND_GT",
+        "GxB_LXOR_GT",
+        "GxB_EQ_GT",
+        "GxB_ANY_GT",
+        "GxB_LOR_LT",
+        "GxB_LAND_LT",
+        "GxB_LXOR_LT",
+        "GxB_EQ_LT",
+        "GxB_ANY_LT",
+        "GxB_LOR_GE",
+        "GxB_LAND_GE",
+        "GxB_LXOR_GE",
+        "GxB_EQ_GE",
+        "GxB_ANY_GE",
+        "GxB_LOR_LE",
+        "GxB_LAND_LE",
+        "GxB_LXOR_LE",
+        "GxB_EQ_LE",
+        "GxB_ANY_LE",
+        "GxB_LOR_FIRST",
+        "GxB_LAND_FIRST",
+        "GxB_LXOR_FIRST",
+        "GxB_EQ_FIRST",
+        "GxB_LOR_SECOND",
+        "GxB_LAND_SECOND",
+        "GxB_LXOR_SECOND",
+        "GxB_EQ_SECOND",
+        "GxB_LOR_PAIR",
+        "GxB_LAND_PAIR",
+        "GxB_LXOR_PAIR",
+        "GxB_EQ_PAIR",
+        "GxB_LOR_LOR",
+        "GxB_LXOR_LOR",
+        "GxB_EQ_LOR",
+        "GxB_LAND_LAND",
+        "GxB_EQ_LAND",
+        "GxB_LOR_LXOR",
+        "GxB_LAND_LXOR",
+        "GxB_LXOR_LXOR",
+        "GxB_EQ_LXOR",
+        "GxB_BOR_BOR",
+        "GxB_BOR_BAND",
+        "GxB_BOR_BXOR",
+        "GxB_BOR_BXNOR",
+        "GxB_BAND_BOR",
+        "GxB_BAND_BAND",
+        "GxB_BAND_BXOR",
+        "GxB_BAND_BXNOR",
+        "GxB_BXOR_BOR",
+        "GxB_BXOR_BAND",
+        "GxB_BXOR_BXOR",
+        "GxB_BXOR_BXNOR",
+        "GxB_BXNOR_BOR",
+        "GxB_BXNOR_BAND",
+        "GxB_BXNOR_BXOR",
+        "GxB_BXNOR_BXNOR",
+        "GxB_MIN_FIRSTI",
+        "GxB_MAX_FIRSTI",
+        "GxB_ANY_FIRSTI",
+        "GxB_PLUS_FIRSTI",
+        "GxB_TIMES_FIRSTI",
+        "GxB_MIN_FIRSTI1",
+        "GxB_MAX_FIRSTI1",
+        "GxB_ANY_FIRSTI1",
+        "GxB_PLUS_FIRSTI1",
+        "GxB_TIMES_FIRSTI1",
+        "GxB_MIN_FIRSTJ",
+        "GxB_MAX_FIRSTJ",
+        "GxB_ANY_FIRSTJ",
+        "GxB_PLUS_FIRSTJ",
+        "GxB_TIMES_FIRSTJ",
+        "GxB_MIN_FIRSTJ1",
+        "GxB_MAX_FIRSTJ1",
+        "GxB_ANY_FIRSTJ1",
+        "GxB_PLUS_FIRSTJ1",
+        "GxB_TIMES_FIRSTJ1",
+        "GxB_MIN_SECONDI",
+        "GxB_MAX_SECONDI",
+        "GxB_ANY_SECONDI",
+        "GxB_PLUS_SECONDI",
+        "GxB_TIMES_SECONDI",
+        "GxB_MIN_SECONDI1",
+        "GxB_MAX_SECONDI1",
+        "GxB_ANY_SECONDI1",
+        "GxB_PLUS_SECONDI1",
+        "GxB_TIMES_SECONDI1",
+        "GxB_MIN_SECONDJ",
+        "GxB_MAX_SECONDJ",
+        "GxB_ANY_SECONDJ",
+        "GxB_PLUS_SECONDJ",
+        "GxB_TIMES_SECONDJ",
+        "GxB_MIN_SECONDJ1",
+        "GxB_MAX_SECONDJ1",
+        "GxB_ANY_SECONDJ1",
+        "GxB_PLUS_SECONDJ1",
+        "GxB_TIMES_SECONDJ1",
+        "GrB_PLUS_TIMES_SEMIRING",
+        "GrB_PLUS_MIN_SEMIRING",
+        "GrB_MIN_PLUS_SEMIRING",
+        "GrB_MIN_TIMES_SEMIRING",
+        "GrB_MIN_FIRST_SEMIRING",
+        "GrB_MIN_SECOND_SEMIRING",
+        "GrB_MIN_MAX_SEMIRING",
+        "GrB_MAX_PLUS_SEMIRING",
+        "GrB_MAX_TIMES_SEMIRING",
+        "GrB_MAX_FIRST_SEMIRING",
+        "GrB_MAX_SECOND_SEMIRING",
+        "GrB_MAX_MIN_SEMIRING",
+        "GrB_LOR_LAND_SEMIRING",
+        "GrB_LAND_LOR_SEMIRING",
+        "GrB_LXOR_LAND_SEMIRING",
+        "GrB_LXNOR_LOR_SEMIRING",
+    ]
+
+    for name ∈ builtins
+        containername, exportedname = _semiringnames(name)
+        structquote = quote
+            struct $containername <: AbstractSemiring
+                pointers::Dict{DataType, libgb.GrB_Semiring}
+                name::String
+                $containername() = new(Dict{DataType, libgb.GrB_Semiring}(), $name)
+            end
+        end
+        @eval(Types, $structquote)
+        constquote = quote
+            const $exportedname = Types.$containername()
+            export $exportedname
+        end
+        @eval(Semirings,$constquote)
+    end
+end
+function _load(rig::AbstractSemiring)
+    booleans = ["GxB_LOR_FIRST",
+        "GxB_LAND_FIRST",
+        "GxB_LXOR_FIRST",
+        "GxB_EQ_FIRST",
+        "GxB_ANY_FIRST",
+        "GxB_LOR_SECOND",
+        "GxB_LAND_SECOND",
+        "GxB_LXOR_SECOND",
+        "GxB_EQ_SECOND",
+        "GxB_ANY_SECOND",
+        "GxB_LOR_PAIR",
+        "GxB_LAND_PAIR",
+        "GxB_LXOR_PAIR",
+        "GxB_EQ_PAIR",
+        "GxB_ANY_PAIR",
+        "GxB_LOR_LOR",
+        "GxB_LXOR_LOR",
+        "GxB_EQ_LOR",
+        "GxB_ANY_LOR",
+        "GxB_LAND_LAND",
+        "GxB_EQ_LAND",
+        "GxB_ANY_LAND",
+        "GxB_LOR_LXOR",
+        "GxB_LAND_LXOR",
+        "GxB_LXOR_LXOR",
+        "GxB_EQ_LXOR",
+        "GxB_ANY_LXOR",
+        "GxB_LOR_EQ",
+        "GxB_LAND_EQ",
+        "GxB_LXOR_EQ",
+        "GxB_EQ_EQ",
+        "GxB_ANY_EQ",
+        "GxB_LOR_GT",
+        "GxB_LAND_GT",
+        "GxB_LXOR_GT",
+        "GxB_EQ_GT",
+        "GxB_ANY_GT",
+        "GxB_LOR_LT",
+        "GxB_LAND_LT",
+        "GxB_LXOR_LT",
+        "GxB_EQ_LT",
+        "GxB_ANY_LT",
+        "GxB_LOR_GE",
+        "GxB_LAND_GE",
+        "GxB_LXOR_GE",
+        "GxB_EQ_GE",
+        "GxB_ANY_GE",
+        "GxB_LOR_LE",
+        "GxB_LAND_LE",
+        "GxB_LXOR_LE",
+        "GxB_EQ_LE",
+        "GxB_ANY_LE",
+        "GrB_LOR_LAND_SEMIRING",
+        "GrB_LAND_LOR_SEMIRING",
+        "GrB_LXOR_LAND_SEMIRING",
+        "GrB_LXNOR_LOR_SEMIRING",
+    ]
+
+    integers = ["GxB_PLUS_FIRST",
+        "GxB_TIMES_FIRST",
+        "GxB_ANY_FIRST",
+        "GxB_PLUS_SECOND",
+        "GxB_TIMES_SECOND",
+        "GxB_ANY_SECOND",
+        "GxB_MIN_PAIR",
+        "GxB_MAX_PAIR",
+        "GxB_PLUS_PAIR",
+        "GxB_TIMES_PAIR",
+        "GxB_ANY_PAIR",
+        "GxB_MIN_MIN",
+        "GxB_TIMES_MIN",
+        "GxB_ANY_MIN",
+        "GxB_MAX_MAX",
+        "GxB_PLUS_MAX",
+        "GxB_TIMES_MAX",
+        "GxB_ANY_MAX",
+        "GxB_PLUS_PLUS",
+        "GxB_TIMES_PLUS",
+        "GxB_ANY_PLUS",
+        "GxB_MIN_MINUS",
+        "GxB_MAX_MINUS",
+        "GxB_PLUS_MINUS",
+        "GxB_TIMES_MINUS",
+        "GxB_ANY_MINUS",
+        "GxB_TIMES_TIMES",
+        "GxB_ANY_TIMES",
+        "GxB_MIN_DIV",
+        "GxB_MAX_DIV",
+        "GxB_PLUS_DIV",
+        "GxB_TIMES_DIV",
+        "GxB_ANY_DIV",
+        "GxB_MIN_RDIV",
+        "GxB_MAX_RDIV",
+        "GxB_PLUS_RDIV",
+        "GxB_TIMES_RDIV",
+        "GxB_ANY_RDIV",
+        "GxB_MIN_RMINUS",
+        "GxB_MAX_RMINUS",
+        "GxB_PLUS_RMINUS",
+        "GxB_TIMES_RMINUS",
+        "GxB_ANY_RMINUS",
+        "GxB_MIN_ISEQ",
+        "GxB_MAX_ISEQ",
+        "GxB_PLUS_ISEQ",
+        "GxB_TIMES_ISEQ",
+        "GxB_ANY_ISEQ",
+        "GxB_MIN_ISNE",
+        "GxB_MAX_ISNE",
+        "GxB_PLUS_ISNE",
+        "GxB_TIMES_ISNE",
+        "GxB_ANY_ISNE",
+        "GxB_MIN_ISGT",
+        "GxB_MAX_ISGT",
+        "GxB_PLUS_ISGT",
+        "GxB_TIMES_ISGT",
+        "GxB_ANY_ISGT",
+        "GxB_MIN_ISLT",
+        "GxB_MAX_ISLT",
+        "GxB_PLUS_ISLT",
+        "GxB_TIMES_ISLT",
+        "GxB_ANY_ISLT",
+        "GxB_MIN_ISGE",
+        "GxB_MAX_ISGE",
+        "GxB_PLUS_ISGE",
+        "GxB_TIMES_ISGE",
+        "GxB_ANY_ISGE",
+        "GxB_MIN_ISLE",
+        "GxB_MAX_ISLE",
+        "GxB_PLUS_ISLE",
+        "GxB_TIMES_ISLE",
+        "GxB_ANY_ISLE",
+        "GxB_MIN_LOR",
+        "GxB_MAX_LOR",
+        "GxB_PLUS_LOR",
+        "GxB_TIMES_LOR",
+        "GxB_ANY_LOR",
+        "GxB_MIN_LAND",
+        "GxB_MAX_LAND",
+        "GxB_PLUS_LAND",
+        "GxB_TIMES_LAND",
+        "GxB_ANY_LAND",
+        "GxB_MIN_LXOR",
+        "GxB_MAX_LXOR",
+        "GxB_PLUS_LXOR",
+        "GxB_TIMES_LXOR",
+        "GxB_ANY_LXOR",
+        "GxB_LOR_NE",
+        "GxB_LOR_EQ",
+        "GxB_LAND_EQ",
+        "GxB_LXOR_EQ",
+        "GxB_EQ_EQ",
+        "GxB_ANY_EQ",
+        "GxB_LAND_NE",
+        "GxB_LXOR_NE",
+        "GxB_EQ_NE",
+        "GxB_ANY_NE",
+        "GxB_LOR_GT",
+        "GxB_LAND_GT",
+        "GxB_LXOR_GT",
+        "GxB_EQ_GT",
+        "GxB_ANY_GT",
+        "GxB_LOR_LT",
+        "GxB_LAND_LT",
+        "GxB_LXOR_LT",
+        "GxB_EQ_LT",
+        "GxB_ANY_LT",
+        "GxB_LOR_GE",
+        "GxB_LAND_GE",
+        "GxB_LXOR_GE",
+        "GxB_EQ_GE",
+        "GxB_ANY_GE",
+        "GxB_LOR_LE",
+        "GxB_LAND_LE",
+        "GxB_LXOR_LE",
+        "GxB_EQ_LE",
+        "GxB_ANY_LE",
+        "GrB_PLUS_TIMES_SEMIRING",
+        "GrB_PLUS_MIN_SEMIRING",
+        "GrB_MIN_PLUS_SEMIRING",
+        "GrB_MIN_TIMES_SEMIRING",
+        "GrB_MIN_FIRST_SEMIRING",
+        "GrB_MIN_SECOND_SEMIRING",
+        "GrB_MIN_MAX_SEMIRING",
+        "GrB_MAX_PLUS_SEMIRING",
+        "GrB_MAX_TIMES_SEMIRING",
+        "GrB_MAX_FIRST_SEMIRING",
+        "GrB_MAX_SECOND_SEMIRING",
+        "GrB_MAX_MIN_SEMIRING",
+    ]
+
+    unsignedintegers = ["GxB_PLUS_FIRST",
+        "GxB_TIMES_FIRST",
+        "GxB_ANY_FIRST",
+        "GxB_PLUS_SECOND",
+        "GxB_TIMES_SECOND",
+        "GxB_ANY_SECOND",
+        "GxB_MIN_PAIR",
+        "GxB_MAX_PAIR",
+        "GxB_PLUS_PAIR",
+        "GxB_TIMES_PAIR",
+        "GxB_ANY_PAIR",
+        "GxB_MIN_MIN",
+        "GxB_TIMES_MIN",
+        "GxB_ANY_MIN",
+        "GxB_MAX_MAX",
+        "GxB_PLUS_MAX",
+        "GxB_TIMES_MAX",
+        "GxB_ANY_MAX",
+        "GxB_PLUS_PLUS",
+        "GxB_TIMES_PLUS",
+        "GxB_ANY_PLUS",
+        "GxB_MIN_MINUS",
+        "GxB_MAX_MINUS",
+        "GxB_PLUS_MINUS",
+        "GxB_TIMES_MINUS",
+        "GxB_ANY_MINUS",
+        "GxB_TIMES_TIMES",
+        "GxB_ANY_TIMES",
+        "GxB_MIN_DIV",
+        "GxB_MAX_DIV",
+        "GxB_PLUS_DIV",
+        "GxB_TIMES_DIV",
+        "GxB_ANY_DIV",
+        "GxB_MIN_RDIV",
+        "GxB_MAX_RDIV",
+        "GxB_PLUS_RDIV",
+        "GxB_TIMES_RDIV",
+        "GxB_ANY_RDIV",
+        "GxB_MIN_RMINUS",
+        "GxB_MAX_RMINUS",
+        "GxB_PLUS_RMINUS",
+        "GxB_TIMES_RMINUS",
+        "GxB_ANY_RMINUS",
+        "GxB_MIN_ISEQ",
+        "GxB_MAX_ISEQ",
+        "GxB_PLUS_ISEQ",
+        "GxB_TIMES_ISEQ",
+        "GxB_ANY_ISEQ",
+        "GxB_MIN_ISNE",
+        "GxB_MAX_ISNE",
+        "GxB_PLUS_ISNE",
+        "GxB_TIMES_ISNE",
+        "GxB_ANY_ISNE",
+        "GxB_MIN_ISGT",
+        "GxB_MAX_ISGT",
+        "GxB_PLUS_ISGT",
+        "GxB_TIMES_ISGT",
+        "GxB_ANY_ISGT",
+        "GxB_MIN_ISLT",
+        "GxB_MAX_ISLT",
+        "GxB_PLUS_ISLT",
+        "GxB_TIMES_ISLT",
+        "GxB_ANY_ISLT",
+        "GxB_MIN_ISGE",
+        "GxB_MAX_ISGE",
+        "GxB_PLUS_ISGE",
+        "GxB_TIMES_ISGE",
+        "GxB_ANY_ISGE",
+        "GxB_MIN_ISLE",
+        "GxB_MAX_ISLE",
+        "GxB_PLUS_ISLE",
+        "GxB_TIMES_ISLE",
+        "GxB_ANY_ISLE",
+        "GxB_MIN_LOR",
+        "GxB_MAX_LOR",
+        "GxB_PLUS_LOR",
+        "GxB_TIMES_LOR",
+        "GxB_ANY_LOR",
+        "GxB_MIN_LAND",
+        "GxB_MAX_LAND",
+        "GxB_PLUS_LAND",
+        "GxB_TIMES_LAND",
+        "GxB_ANY_LAND",
+        "GxB_MIN_LXOR",
+        "GxB_MAX_LXOR",
+        "GxB_PLUS_LXOR",
+        "GxB_TIMES_LXOR",
+        "GxB_ANY_LXOR",
+        "GxB_LOR_NE",
+        "GxB_LOR_EQ",
+        "GxB_LAND_EQ",
+        "GxB_LXOR_EQ",
+        "GxB_EQ_EQ",
+        "GxB_ANY_EQ",
+        "GxB_LAND_NE",
+        "GxB_LXOR_NE",
+        "GxB_EQ_NE",
+        "GxB_ANY_NE",
+        "GxB_LOR_GT",
+        "GxB_LAND_GT",
+        "GxB_LXOR_GT",
+        "GxB_EQ_GT",
+        "GxB_ANY_GT",
+        "GxB_LOR_LT",
+        "GxB_LAND_LT",
+        "GxB_LXOR_LT",
+        "GxB_EQ_LT",
+        "GxB_ANY_LT",
+        "GxB_LOR_GE",
+        "GxB_LAND_GE",
+        "GxB_LXOR_GE",
+        "GxB_EQ_GE",
+        "GxB_ANY_GE",
+        "GxB_LOR_LE",
+        "GxB_LAND_LE",
+        "GxB_LXOR_LE",
+        "GxB_EQ_LE",
+        "GxB_ANY_LE",
+        "GxB_BOR_BOR",
+        "GxB_BOR_BAND",
+        "GxB_BOR_BXOR",
+        "GxB_BOR_BXNOR",
+        "GxB_BAND_BOR",
+        "GxB_BAND_BAND",
+        "GxB_BAND_BXOR",
+        "GxB_BAND_BXNOR",
+        "GxB_BXOR_BOR",
+        "GxB_BXOR_BAND",
+        "GxB_BXOR_BXOR",
+        "GxB_BXOR_BXNOR",
+        "GxB_BXNOR_BOR",
+        "GxB_BXNOR_BAND",
+        "GxB_BXNOR_BXOR",
+        "GxB_BXNOR_BXNOR",
+        "GrB_PLUS_TIMES_SEMIRING",
+        "GrB_PLUS_MIN_SEMIRING",
+        "GrB_MIN_PLUS_SEMIRING",
+        "GrB_MIN_TIMES_SEMIRING",
+        "GrB_MIN_FIRST_SEMIRING",
+        "GrB_MIN_SECOND_SEMIRING",
+        "GrB_MIN_MAX_SEMIRING",
+        "GrB_MAX_PLUS_SEMIRING",
+        "GrB_MAX_TIMES_SEMIRING",
+        "GrB_MAX_FIRST_SEMIRING",
+        "GrB_MAX_SECOND_SEMIRING",
+        "GrB_MAX_MIN_SEMIRING",
+    ]
+
+    floats = ["GxB_PLUS_FIRST",
+        "GxB_TIMES_FIRST",
+        "GxB_ANY_FIRST",
+        "GxB_PLUS_SECOND",
+        "GxB_TIMES_SECOND",
+        "GxB_ANY_SECOND",
+        "GxB_MIN_PAIR",
+        "GxB_MAX_PAIR",
+        "GxB_PLUS_PAIR",
+        "GxB_TIMES_PAIR",
+        "GxB_ANY_PAIR",
+        "GxB_MIN_MIN",
+        "GxB_TIMES_MIN",
+        "GxB_ANY_MIN",
+        "GxB_MAX_MAX",
+        "GxB_PLUS_MAX",
+        "GxB_TIMES_MAX",
+        "GxB_ANY_MAX",
+        "GxB_PLUS_PLUS",
+        "GxB_TIMES_PLUS",
+        "GxB_ANY_PLUS",
+        "GxB_MIN_MINUS",
+        "GxB_MAX_MINUS",
+        "GxB_PLUS_MINUS",
+        "GxB_TIMES_MINUS",
+        "GxB_ANY_MINUS",
+        "GxB_TIMES_TIMES",
+        "GxB_ANY_TIMES",
+        "GxB_MIN_DIV",
+        "GxB_MAX_DIV",
+        "GxB_PLUS_DIV",
+        "GxB_TIMES_DIV",
+        "GxB_ANY_DIV",
+        "GxB_MIN_RDIV",
+        "GxB_MAX_RDIV",
+        "GxB_PLUS_RDIV",
+        "GxB_TIMES_RDIV",
+        "GxB_ANY_RDIV",
+        "GxB_MIN_RMINUS",
+        "GxB_MAX_RMINUS",
+        "GxB_PLUS_RMINUS",
+        "GxB_TIMES_RMINUS",
+        "GxB_ANY_RMINUS",
+        "GxB_MIN_ISEQ",
+        "GxB_MAX_ISEQ",
+        "GxB_PLUS_ISEQ",
+        "GxB_TIMES_ISEQ",
+        "GxB_ANY_ISEQ",
+        "GxB_MIN_ISNE",
+        "GxB_MAX_ISNE",
+        "GxB_PLUS_ISNE",
+        "GxB_TIMES_ISNE",
+        "GxB_ANY_ISNE",
+        "GxB_MIN_ISGT",
+        "GxB_MAX_ISGT",
+        "GxB_PLUS_ISGT",
+        "GxB_TIMES_ISGT",
+        "GxB_ANY_ISGT",
+        "GxB_MIN_ISLT",
+        "GxB_MAX_ISLT",
+        "GxB_PLUS_ISLT",
+        "GxB_TIMES_ISLT",
+        "GxB_ANY_ISLT",
+        "GxB_MIN_ISGE",
+        "GxB_MAX_ISGE",
+        "GxB_PLUS_ISGE",
+        "GxB_TIMES_ISGE",
+        "GxB_ANY_ISGE",
+        "GxB_MIN_ISLE",
+        "GxB_MAX_ISLE",
+        "GxB_PLUS_ISLE",
+        "GxB_TIMES_ISLE",
+        "GxB_ANY_ISLE",
+        "GxB_MIN_LOR",
+        "GxB_MAX_LOR",
+        "GxB_PLUS_LOR",
+        "GxB_TIMES_LOR",
+        "GxB_ANY_LOR",
+        "GxB_MIN_LAND",
+        "GxB_MAX_LAND",
+        "GxB_PLUS_LAND",
+        "GxB_TIMES_LAND",
+        "GxB_ANY_LAND",
+        "GxB_MIN_LXOR",
+        "GxB_MAX_LXOR",
+        "GxB_PLUS_LXOR",
+        "GxB_TIMES_LXOR",
+        "GxB_ANY_LXOR",
+        "GxB_LOR_NE",
+        "GxB_LOR_EQ",
+        "GxB_LAND_EQ",
+        "GxB_LXOR_EQ",
+        "GxB_EQ_EQ",
+        "GxB_ANY_EQ",
+        "GxB_LAND_NE",
+        "GxB_LXOR_NE",
+        "GxB_EQ_NE",
+        "GxB_ANY_NE",
+        "GxB_LOR_GT",
+        "GxB_LAND_GT",
+        "GxB_LXOR_GT",
+        "GxB_EQ_GT",
+        "GxB_ANY_GT",
+        "GxB_LOR_LT",
+        "GxB_LAND_LT",
+        "GxB_LXOR_LT",
+        "GxB_EQ_LT",
+        "GxB_ANY_LT",
+        "GxB_LOR_GE",
+        "GxB_LAND_GE",
+        "GxB_LXOR_GE",
+        "GxB_EQ_GE",
+        "GxB_ANY_GE",
+        "GxB_LOR_LE",
+        "GxB_LAND_LE",
+        "GxB_LXOR_LE",
+        "GxB_EQ_LE",
+        "GxB_ANY_LE",
+        "GrB_PLUS_TIMES_SEMIRING",
+        "GrB_PLUS_MIN_SEMIRING",
+        "GrB_MIN_PLUS_SEMIRING",
+        "GrB_MIN_TIMES_SEMIRING",
+        "GrB_MIN_FIRST_SEMIRING",
+        "GrB_MIN_SECOND_SEMIRING",
+        "GrB_MIN_MAX_SEMIRING",
+        "GrB_MAX_PLUS_SEMIRING",
+        "GrB_MAX_TIMES_SEMIRING",
+        "GrB_MAX_FIRST_SEMIRING",
+        "GrB_MAX_SECOND_SEMIRING",
+        "GrB_MAX_MIN_SEMIRING",
+    ]
+
+    positionals = [
+        "GxB_MIN_FIRSTI",
+        "GxB_MAX_FIRSTI",
+        "GxB_ANY_FIRSTI",
+        "GxB_PLUS_FIRSTI",
+        "GxB_TIMES_FIRSTI",
+        "GxB_MIN_FIRSTI1",
+        "GxB_MAX_FIRSTI1",
+        "GxB_ANY_FIRSTI1",
+        "GxB_PLUS_FIRSTI1",
+        "GxB_TIMES_FIRSTI1",
+        "GxB_MIN_FIRSTJ",
+        "GxB_MAX_FIRSTJ",
+        "GxB_ANY_FIRSTJ",
+        "GxB_PLUS_FIRSTJ",
+        "GxB_TIMES_FIRSTJ",
+        "GxB_MIN_FIRSTJ1",
+        "GxB_MAX_FIRSTJ1",
+        "GxB_ANY_FIRSTJ1",
+        "GxB_PLUS_FIRSTJ1",
+        "GxB_TIMES_FIRSTJ1",
+        "GxB_MIN_SECONDI",
+        "GxB_MAX_SECONDI",
+        "GxB_ANY_SECONDI",
+        "GxB_PLUS_SECONDI",
+        "GxB_TIMES_SECONDI",
+        "GxB_MIN_SECONDI1",
+        "GxB_MAX_SECONDI1",
+        "GxB_ANY_SECONDI1",
+        "GxB_PLUS_SECONDI1",
+        "GxB_TIMES_SECONDI1",
+        "GxB_MIN_SECONDJ",
+        "GxB_MAX_SECONDJ",
+        "GxB_ANY_SECONDJ",
+        "GxB_PLUS_SECONDJ",
+        "GxB_TIMES_SECONDJ",
+        "GxB_MIN_SECONDJ1",
+        "GxB_MAX_SECONDJ1",
+        "GxB_ANY_SECONDJ1",
+        "GxB_PLUS_SECONDJ1",
+        "GxB_TIMES_SECONDJ1",
+    ]
+    name = rig.name
+    if name ∈ booleans
+        rig.pointers[Bool] = load_global(name * "_BOOL")
+    end
+
+    if name ∈ integers
+        rig.pointers[Int8] =load_global(name * "_INT8")
+        rig.pointers[Int16] = load_global(name * "_INT16")
+        rig.pointers[Int32] = load_global(name * "_INT32")
+        rig.pointers[Int64] = load_global(name * "_INT64")
+    end
+
+    if name ∈ unsignedintegers
+        rig.pointers[UInt8] =load_global(name * "_UINT8")
+        rig.pointers[UInt16] = load_global(name * "_UINT16")
+        rig.pointers[UInt32] = load_global(name * "_UINT32")
+        rig.pointers[UInt64] = load_global(name * "_UINT64")
+    end
+
+    if name ∈ floats
+        rig.pointers[Float32] = load_global(name * "_FP32")
+        rig.pointers[Float64] = load_global(name * "_FP64")
+    end
+    if name ∈ positionals
+        rig.pointers[Any] = load_global(name * "_INT64")
+    end
+end
+
+Base.show(io::IO, ::MIME"text/plain", s::libgb.GrB_Semiring) = gxbprint(io, s)
+
+multiplyop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_multiply(rig)
+addop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_add(rig)
+
+xtype(rig::libgb.GrB_Semiring) = xtype(addop(rig))
+ytype(rig::libgb.GrB_Semiring) = ytype(addop(rig))
+ztype(rig::libgb.GrB_Semiring) = ztype(addop(rig))
+
+"""
+"""
+Semirings.PLUS_FIRST
+"""
+"""
+Semirings.TIMES_FIRST
+"""
+"""
+Semirings.ANY_FIRST
+"""
+"""
+Semirings.PLUS_SECOND
+"""
+"""
+Semirings.TIMES_SECOND
+"""
+"""
+Semirings.ANY_SECOND
+"""
+"""
+Semirings.MIN_PAIR
+"""
+"""
+Semirings.MAX_PAIR
+"""
+"""
+Semirings.PLUS_PAIR
+"""
+"""
+Semirings.TIMES_PAIR
+"""
+"""
+Semirings.ANY_PAIR
+"""
+"""
+Semirings.MIN_MIN
+"""
+"""
+Semirings.TIMES_MIN
+"""
+"""
+Semirings.ANY_MIN
+"""
+"""
+Semirings.MAX_MAX
+"""
+"""
+Semirings.PLUS_MAX
+"""
+"""
+Semirings.TIMES_MAX
+"""
+"""
+Semirings.ANY_MAX
+"""
+"""
+Semirings.PLUS_PLUS
+"""
+"""
+Semirings.TIMES_PLUS
+"""
+"""
+Semirings.ANY_PLUS
+"""
+"""
+Semirings.MIN_MINUS
+"""
+"""
+Semirings.MAX_MINUS
+"""
+"""
+Semirings.PLUS_MINUS
+"""
+"""
+Semirings.TIMES_MINUS
+"""
+"""
+Semirings.ANY_MINUS
+"""
+"""
+Semirings.TIMES_TIMES
+"""
+"""
+Semirings.ANY_TIMES
+"""
+"""
+Semirings.MIN_DIV
+"""
+"""
+Semirings.MAX_DIV
+"""
+"""
+Semirings.PLUS_DIV
+"""
+"""
+Semirings.TIMES_DIV
+"""
+"""
+Semirings.ANY_DIV
+"""
+"""
+Semirings.MIN_RDIV
+"""
+"""
+Semirings.MAX_RDIV
+"""
+"""
+Semirings.PLUS_RDIV
+"""
+"""
+Semirings.TIMES_RDIV
+"""
+"""
+Semirings.ANY_RDIV
+"""
+"""
+Semirings.MIN_RMINUS
+"""
+"""
+Semirings.MAX_RMINUS
+"""
+"""
+Semirings.PLUS_RMINUS
+"""
+"""
+Semirings.TIMES_RMINUS
+"""
+"""
+Semirings.ANY_RMINUS
+"""
+"""
+Semirings.MIN_ISEQ
+"""
+"""
+Semirings.MAX_ISEQ
+"""
+"""
+Semirings.PLUS_ISEQ
+"""
+"""
+Semirings.TIMES_ISEQ
+"""
+"""
+Semirings.ANY_ISEQ
+"""
+"""
+Semirings.MIN_ISNE
+"""
+"""
+Semirings.MAX_ISNE
+"""
+"""
+Semirings.PLUS_ISNE
+"""
+"""
+Semirings.TIMES_ISNE
+"""
+"""
+Semirings.ANY_ISNE
+"""
+"""
+Semirings.MIN_ISGT
+"""
+"""
+Semirings.MAX_ISGT
+"""
+"""
+Semirings.PLUS_ISGT
+"""
+"""
+Semirings.TIMES_ISGT
+"""
+"""
+Semirings.ANY_ISGT
+"""
+"""
+Semirings.MIN_ISLT
+"""
+"""
+Semirings.MAX_ISLT
+"""
+"""
+Semirings.PLUS_ISLT
+"""
+"""
+Semirings.TIMES_ISLT
+"""
+"""
+Semirings.ANY_ISLT
+"""
+"""
+Semirings.MIN_ISGE
+"""
+"""
+Semirings.MAX_ISGE
+"""
+"""
+Semirings.PLUS_ISGE
+"""
+"""
+Semirings.TIMES_ISGE
+"""
+"""
+Semirings.ANY_ISGE
+"""
+"""
+Semirings.MIN_ISLE
+"""
+"""
+Semirings.MAX_ISLE
+"""
+"""
+Semirings.PLUS_ISLE
+"""
+"""
+Semirings.TIMES_ISLE
+"""
+"""
+Semirings.ANY_ISLE
+"""
+"""
+Semirings.MIN_LOR
+"""
+"""
+Semirings.MAX_LOR
+"""
+"""
+Semirings.PLUS_LOR
+"""
+"""
+Semirings.TIMES_LOR
+"""
+"""
+Semirings.ANY_LOR
+"""
+"""
+Semirings.MIN_LAND
+"""
+"""
+Semirings.MAX_LAND
+"""
+"""
+Semirings.PLUS_LAND
+"""
+"""
+Semirings.TIMES_LAND
+"""
+"""
+Semirings.ANY_LAND
+"""
+"""
+Semirings.MIN_LXOR
+"""
+"""
+Semirings.MAX_LXOR
+"""
+"""
+Semirings.PLUS_LXOR
+"""
+"""
+Semirings.TIMES_LXOR
+"""
+"""
+Semirings.ANY_LXOR
+"""
+"""
+Semirings.LOR_NE
+"""
+"""
+Semirings.LOR_EQ
+"""
+"""
+Semirings.LAND_EQ
+"""
+"""
+Semirings.LXOR_EQ
+"""
+"""
+Semirings.EQ_EQ
+"""
+"""
+Semirings.ANY_EQ
+"""
+"""
+Semirings.LAND_NE
+"""
+"""
+Semirings.LXOR_NE
+"""
+"""
+Semirings.EQ_NE
+"""
+"""
+Semirings.ANY_NE
+"""
+"""
+Semirings.LOR_GT
+"""
+"""
+Semirings.LAND_GT
+"""
+"""
+Semirings.LXOR_GT
+"""
+"""
+Semirings.EQ_GT
+"""
+"""
+Semirings.ANY_GT
+"""
+"""
+Semirings.LOR_LT
+"""
+"""
+Semirings.LAND_LT
+"""
+"""
+Semirings.LXOR_LT
+"""
+"""
+Semirings.EQ_LT
+"""
+"""
+Semirings.ANY_LT
+"""
+"""
+Semirings.LOR_GE
+"""
+"""
+Semirings.LAND_GE
+"""
+"""
+Semirings.LXOR_GE
+"""
+"""
+Semirings.EQ_GE
+"""
+"""
+Semirings.ANY_GE
+"""
+"""
+Semirings.LOR_LE
+"""
+"""
+Semirings.LAND_LE
+"""
+"""
+Semirings.LXOR_LE
+"""
+"""
+Semirings.EQ_LE
+"""
+"""
+Semirings.ANY_LE
+"""
+"""
+Semirings.LOR_FIRST
+"""
+"""
+Semirings.LAND_FIRST
+"""
+"""
+Semirings.LXOR_FIRST
+"""
+"""
+Semirings.EQ_FIRST
+"""
+"""
+Semirings.LOR_SECOND
+"""
+"""
+Semirings.LAND_SECOND
+"""
+"""
+Semirings.LXOR_SECOND
+"""
+"""
+Semirings.EQ_SECOND
+"""
+"""
+Semirings.LOR_PAIR
+"""
+"""
+Semirings.LAND_PAIR
+"""
+"""
+Semirings.LXOR_PAIR
+"""
+"""
+Semirings.EQ_PAIR
+"""
+"""
+Semirings.LOR_LOR
+"""
+"""
+Semirings.LXOR_LOR
+"""
+"""
+Semirings.EQ_LOR
+"""
+"""
+Semirings.LAND_LAND
+"""
+"""
+Semirings.EQ_LAND
+"""
+"""
+Semirings.LOR_LXOR
+"""
+"""
+Semirings.LAND_LXOR
+"""
+"""
+Semirings.LXOR_LXOR
+"""
+"""
+Semirings.EQ_LXOR
+"""
+"""
+Semirings.BOR_BOR
+"""
+"""
+Semirings.BOR_BAND
+"""
+"""
+Semirings.BOR_BXOR
+"""
+"""
+Semirings.BOR_BXNOR
+"""
+"""
+Semirings.BAND_BOR
+"""
+"""
+Semirings.BAND_BAND
+"""
+"""
+Semirings.BAND_BXOR
+"""
+"""
+Semirings.BAND_BXNOR
+"""
+"""
+Semirings.BXOR_BOR
+"""
+"""
+Semirings.BXOR_BAND
+"""
+"""
+Semirings.BXOR_BXOR
+"""
+"""
+Semirings.BXOR_BXNOR
+"""
+"""
+Semirings.BXNOR_BOR
+"""
+"""
+Semirings.BXNOR_BAND
+"""
+"""
+Semirings.BXNOR_BXOR
+"""
+"""
+Semirings.BXNOR_BXNOR
+"""
+"""
+Semirings.MIN_FIRSTI
+"""
+"""
+Semirings.MAX_FIRSTI
+"""
+"""
+Semirings.ANY_FIRSTI
+"""
+"""
+Semirings.PLUS_FIRSTI
+"""
+"""
+Semirings.TIMES_FIRSTI
+"""
+"""
+Semirings.MIN_FIRSTI1
+"""
+"""
+Semirings.MAX_FIRSTI1
+"""
+"""
+Semirings.ANY_FIRSTI1
+"""
+"""
+Semirings.PLUS_FIRSTI1
+"""
+"""
+Semirings.TIMES_FIRSTI1
+"""
+"""
+Semirings.MIN_FIRSTJ
+"""
+"""
+Semirings.MAX_FIRSTJ
+"""
+"""
+Semirings.ANY_FIRSTJ
+"""
+"""
+Semirings.PLUS_FIRSTJ
+"""
+"""
+Semirings.TIMES_FIRSTJ
+"""
+"""
+Semirings.MIN_FIRSTJ1
+"""
+"""
+Semirings.MAX_FIRSTJ1
+"""
+"""
+Semirings.ANY_FIRSTJ1
+"""
+"""
+Semirings.PLUS_FIRSTJ1
+"""
+"""
+Semirings.TIMES_FIRSTJ1
+"""
+"""
+Semirings.MIN_SECONDI
+"""
+"""
+Semirings.MAX_SECONDI
+"""
+"""
+Semirings.ANY_SECONDI
+"""
+"""
+Semirings.PLUS_SECONDI
+"""
+"""
+Semirings.TIMES_SECONDI
+"""
+"""
+Semirings.MIN_SECONDI1
+"""
+"""
+Semirings.MAX_SECONDI1
+"""
+"""
+Semirings.ANY_SECONDI1
+"""
+"""
+Semirings.PLUS_SECONDI1
+"""
+"""
+Semirings.TIMES_SECONDI1
+"""
+"""
+Semirings.MIN_SECONDJ
+"""
+"""
+Semirings.MAX_SECONDJ
+"""
+"""
+Semirings.ANY_SECONDJ
+"""
+"""
+Semirings.PLUS_SECONDJ
+"""
+"""
+Semirings.TIMES_SECONDJ
+"""
+"""
+Semirings.MIN_SECONDJ1
+"""
+"""
+Semirings.MAX_SECONDJ1
+"""
+"""
+Semirings.ANY_SECONDJ1
+"""
+"""
+Semirings.PLUS_SECONDJ1
+"""
+"""
+Semirings.TIMES_SECONDJ1
+"""
+"""
+Semirings.PLUS_TIMES
+"""
+"""
+Semirings.PLUS_MIN
+"""
+"""
+Semirings.MIN_PLUS
+"""
+"""
+Semirings.MIN_TIMES
+"""
+"""
+Semirings.MIN_FIRST
+"""
+"""
+Semirings.MIN_SECOND
+"""
+"""
+Semirings.MIN_MAX
+"""
+"""
+Semirings.MAX_PLUS
+"""
+"""
+Semirings.MAX_TIMES
+"""
+"""
+Semirings.MAX_FIRST
+"""
+"""
+Semirings.MAX_SECOND
+"""
+"""
+Semirings.MAX_MIN
+"""
+"""
+Semirings.LOR_LAND
+"""
+"""
+Semirings.LAND_LOR
+"""
+"""
+Semirings.LXOR_LAND
+"""
+"""
+Semirings.LXNOR_LOR

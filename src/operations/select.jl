@@ -1,42 +1,60 @@
-GxB_select(C::GrB_Matrix, Mask, accum, op, A, k, desc) = GxB_Matrix_select(C, Mask, accum, op, A, k, desc)
-GxB_select(C::GrB_Vector, Mask, accum, op, A, k, desc) = GxB_Vector_select(C, Mask, accum, op, A, k, desc)
-
-function GxB_Vector_select(             # w<mask> = accum (w, op(u,k))
-        w::GrB_Vector,                  # input/output vector for results
-        mask::T,                        # optional mask for w, unused if NULL
-        accum::U,                       # optional accum for z=accum(w,t)
-        op::GxB_SelectOp,               # operator to apply to the entries
-        u::GrB_Vector,                  # first input:  vector u
-        thunk::GrB_NULL_Type,           # optional input for the select operator
-        desc::V                         # descriptor for w and mask
-        ) where {T <: valid_vector_mask_types, U <: valid_accum_types, V <: valid_desc_types}
-
-    return GrB_Info(
-                ccall(
-                        dlsym(graphblas_lib, "GxB_Vector_select"),
-                        Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        w.p, mask.p, accum.p, op.p, u.p, thunk.p, desc.p
-                    )
-                )
+"In place version of `select`."
+function select!(
+    op::SelectUnion,
+    C::GBVecOrMat,
+    A::GBArray,
+    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    mask = C_NULL,
+    accum = C_NULL,
+    desc::Descriptor = Descriptors.NULL
+)
+    thunk === nothing && (thunk = C_NULL)
+    A, desc, _ = _handletranspose(A, desc)
+    accum = getoperator(accum, eltype(C))
+    if thunk isa Number
+        thunk = GBScalar(thunk)
+    end
+    if A isa GBVector && C isa GBVector
+        libgb.GxB_Vector_select(C, mask, accum, op, A, thunk, desc)
+    elseif A isa GBMatrix && C isa GBMatrix
+        libgb.GxB_Matrix_select(C, mask, accum, op, A, thunk, desc)
+    end
+    return C
 end
 
-function GxB_Matrix_select(             # C<Mask> = accum (C, op(A,k)) or op(A',k)
-        C::GrB_Matrix,                  # input/output matrix for results
-        Mask::T,                        # optional mask for C, unused if NULL
-        accum::U,                       # optional accum for Z=accum(C,T)
-        op::GxB_SelectOp,               # operator to apply to the entries
-        A::GrB_Matrix,                  # first input:  matrix A
-        thunk::GrB_NULL_Type,           # optional input for the select operator
-        desc::V                         # descriptor for C, mask, and A
-        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
+"""
+    select(op::SelectUnion, A::GBArray; kwargs...)::GBArray
+    select(op::SelectUnion, A::GBArray, thunk; kwargs...)::GBArray
 
-    return GrB_Info(
-                ccall(
-                        dlsym(graphblas_lib, "GxB_Matrix_select"),
-                        Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        C.p, Mask.p, accum.p, op.p, A.p, thunk.p, desc.p
-                    )
-                )
+Return a `GBArray` whose elements satisfy the predicate defined by `op`.
+Some SelectOps may require an additional argument `thunk`, for use in comparison operations
+such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which maps to
+`select(SelectOps.GT_THUNK, A, thunk)`.
+
+# Arguments
+- `op::SelectUnion`: A select operator from the SelectOps submodule.
+- `A::GBArray`: GBVector or optionally transposed GBMatrix.
+- `thunk::Union{GBScalar, nothing, valid_union}`: Optional value used to evaluate `op`.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask which determines the output
+    pattern.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: optional binary accumulator
+    operation where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `GBArray`: The output matrix whose `eltype` is determined by `A`.
+"""
+function select(
+    op::SelectUnion,
+    A::GBArray,
+    thunk::Union{GBScalar, Nothing, valid_union} = nothing;
+    mask = C_NULL,
+    accum = C_NULL,
+    desc::Descriptor = Descriptors.NULL
+)
+    C = similar(A)
+    select!(op, C, A, thunk; accum, mask, desc)
+    return C
 end

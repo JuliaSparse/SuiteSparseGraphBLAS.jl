@@ -1,68 +1,98 @@
-import GraphBLASInterface.GrB_transpose
-
+# TODO: Document additional trick functionality
 """
-    GrB_transpose(C, Mask, accum, A, desc)
+    gbtranspose!(C::GBMatrix, A::GBMatrix; kwargs...)::Nothing
 
-Compute a new matrix that is the transpose of the source matrix.
+Eagerly evaluated matrix transpose, storing the output in `C`.
 
-# Examples
-```jldoctest
-julia> using GraphBLASInterface, SuiteSparseGraphBLAS
+# Arguments
+- `C::GBMatrix`: output matrix.
+- `A::GBMatrix`: input matrix.
 
-julia> GrB_init(GrB_NONBLOCKING)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> M = GrB_Matrix{Int64}()
-GrB_Matrix{Int64}
-
-julia> GrB_Matrix_new(M, GrB_INT64, 4, 4)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> I = ZeroBasedIndex[0, 0]; J = ZeroBasedIndex[1, 2]; X = [10, 20]; n = 2;
-
-julia> GrB_Matrix_build(M, I, J, X, n, GrB_FIRST_INT64)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> @GxB_fprint(M, GxB_COMPLETE)
-
-4x4 GraphBLAS int64_t matrix, sparse by row:
-M, 2 entries
-
-  (0,1)   10
-  (0,2)   20
-
-julia> M_TRAN = GrB_Matrix{Int64}()
-GrB_Matrix{Int64}
-
-julia> GrB_Matrix_new(M_TRAN, GrB_INT64, 4, 4)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> GrB_transpose(M_TRAN, GrB_NULL, GrB_NULL, M, GrB_NULL)
-GrB_SUCCESS::GrB_Info = 0
-
-julia> @GxB_fprint(M_TRAN, GxB_COMPLETE)
-
-4x4 GraphBLAS int64_t matrix, sparse by row:
-M_TRAN, 2 entries
-
-  (1,0)   10
-  (2,0)   20
-```
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Descriptor = Descriptors.NULL`
 """
-function GrB_transpose(                 # C<Mask> = accum (C, A')
-        C::GrB_Matrix,                  # input/output matrix for results
-        Mask::T,                        # optional mask for C, unused if NULL
-        accum::U,                       # optional accum for Z=accum(C,T)
-        A::GrB_Matrix,                  # first input:  matrix A
-        desc::V                         # descriptor for C, Mask, and A
-        ) where {T <: valid_matrix_mask_types, U <: valid_accum_types, V <: valid_desc_types}
-
-    return GrB_Info(
-                ccall(
-                        dlsym(graphblas_lib, "GrB_transpose"),
-                        Cint,
-                        (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}),
-                        C.p, Mask.p, accum.p, A.p, desc.p
-                    )
-                )
+function gbtranspose!(
+    C::GBMatrix, A::GBMatOrTranspose;
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+)
+    if A isa Transpose && desc.input1 == Descriptors.TRANSPOSE
+        throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = Descriptors.TRANSPOSE."))
+    elseif A isa Transpose
+        A = A.parent
+        desc = desc + Descriptors.T0
+    end
+    accum = getoperator(accum, eltype(C))
+    libgb.GrB_transpose(C, mask, accum, A, desc)
+    return C
 end
+
+"""
+    gbtranspose(A::GBMatrix; kwargs...)::GBMatrix
+
+Eagerly evaluated matrix transpose which returns the transposed matrix.
+
+# Keywords
+- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
+- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Descriptor = Descriptors.NULL`
+
+# Returns
+- `C::GBMatrix`: output matrix.
+"""
+function gbtranspose(
+    A::GBMatOrTranspose;
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+)
+    C = similar(A, size(A,2), size(A, 1))
+    gbtranspose!(C, A; mask, accum, desc)
+    return C
+end
+
+function LinearAlgebra.transpose(A::GBMatOrTranspose)
+    return Transpose(A)
+end
+
+function Base.copy!(
+    C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.C_NULL
+)
+    return gbtranspose!(C, A.parent; mask, accum, desc)
+end
+
+function Base.copy(
+    A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+)
+    return gbtranspose(A.parent; mask, accum, desc)
+end
+
+function _handletranspose(
+    A::GBArray,
+    desc::Union{Descriptor, Nothing} = nothing,
+    B::Union{GBArray, Nothing} = nothing
+)
+    if A isa Transpose
+        desc = desc + Descriptors.T0
+        A = A.parent
+    end
+    if B isa Transpose
+        desc = desc + Descriptors.T1
+        B = B.parent
+    end
+    return A, desc, B
+end
+
+#This is ok per the GraphBLAS Slack channel. May wish to change its effect on Complex input.
+
+LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
+
+#Todo: fix this, unecessarily slow.
+#Base.show(io::IO, ::MIME"text/plain", A::LinearAlgebra.Transpose{<:Any, <:GBMatrix}) =
+    #show(io, MIME"text/plain"(), copy(A))
+# This is a worse idea but maybe better? Type piracy :/
+# TODO: Is this dangerous?
+LinearAlgebra.transpose(::Nothing) = nothing

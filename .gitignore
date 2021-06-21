@@ -4,3 +4,4 @@ deps/deps.jl
 docs/build/
 docs/site/
 .vscode
+Manifest.toml
