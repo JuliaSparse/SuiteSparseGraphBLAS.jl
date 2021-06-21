@@ -1,6 +1,12 @@
 using Documenter, SuiteSparseGraphBLAS
 
-makedocs(sitename="SuiteSparse:GraphBLAS")
+makedocs(
+    modules = [SuiteSparseGraphBLAS],
+    sitename="SuiteSparse:GraphBLAS",
+    pages = [
+        "Home" => "index.md"
+    ]
+)
 
 deploydocs(
     repo = "github.com/JuliaSparse/SuiteSparseGraphBLAS.jl.git",
