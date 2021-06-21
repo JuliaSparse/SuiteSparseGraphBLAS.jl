@@ -1,10 +1,13 @@
-using Documenter, SuiteSparseGraphBLAS
+using Documenter
+using SuiteSparseGraphBLAS
 
 makedocs(
     modules = [SuiteSparseGraphBLAS],
     sitename="SuiteSparse:GraphBLAS",
     pages = [
-        "Home" => "index.md"
+        "Introduction" => "index.md",
+        "Arrays" => "arrays.md".
+        "Operations" => "operations.md"
     ]
 )
 

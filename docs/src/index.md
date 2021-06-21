@@ -58,7 +58,7 @@ Below is an example of the adjacency matrix of a directed graph, and finding the
 
 The three primary components of GraphBLAS are: matrices, operators, and operations. Operators include monoids, binary operators, and semirings. Operations include the typical linear algebraic operations like matrix multiplication as well as indexing operations.
 
-## Matrices
+## GBArrays
 
 SuiteSparseGraphBLAS.jl provides `GBVector` and `GBMatrix` array types which are subtypes of `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively. Both can be constructed with no arguments to use the maximum size.
 
@@ -101,7 +101,7 @@ v = GBVector([4], [10])
 
     (3,0)   10
 ```
-## Operations
+## GraphBLAS Operations
 
 A complete list of supported operations can be found in [Operations](@ref).
 GraphBLAS operations are, where possible, wrapped in existing Julia functions. The equivalent Julia functions are:
