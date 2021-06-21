@@ -6,7 +6,6 @@
             m = GBMatrix(x)
             @test m[50, 64] == x[50, 64]
             @test Matrix(m) == x
-
             #Construction and indexing correct for dense vectors
             x = rand(Bool, 10000)
             v = GBVector(x)

@@ -3,7 +3,7 @@ function optype(atype, btype)
     if atype <: Integer || btype <: Integer
         if atype <: Signed || btype <: Signed
             p = promote_type(atype, btype)
-            if p isa Integer
+            if p <: Integer
                 return signed(p)
             else
                 return p

@@ -18,7 +18,7 @@ union equivalent see [`eadd!`](@ref).
     `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 """
 function emul! end
@@ -42,7 +42,7 @@ union equivalent see [`eadd`](@ref).
     `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 
 # Returns
@@ -61,7 +61,8 @@ function emul!(
     desc::Descriptor = Descriptors.NULL
 )
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
-    op = getoperator(op, eltype(w))
+    op = getoperator(op, optype(u, v))
+    accum = getoperator(accum, eltype(w))
     if op isa libgb.GrB_Semiring
         libgb.GrB_Vector_eWiseMult_Semiring(w, mask, accum, op, u, v, desc)
         return w
@@ -85,7 +86,7 @@ function emul(
     if op isa GrBOp
         t = ztype(op)
     else
-        t = optype(eltype(u), eltype(v))
+        t = optype(u, v)
     end
     w = GBVector{t}(size(u))
     return emul!(w, u, v; op, mask , accum, desc)
@@ -102,7 +103,8 @@ function emul!(
 )
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
-    op = getoperator(op, eltype(C))
+    op = getoperator(op, optype(A, B))
+    accum = getoperator(accum, eltype(C))
     if op isa libgb.GrB_Semiring
         libgb.GrB_Matrix_eWiseMult_Semiring(C, mask, accum, op, A, B, desc)
         return C
@@ -126,7 +128,7 @@ function emul(
     if op isa GrBOp
         t = ztype(op)
     else
-        t = optype(eltype(A), eltype(B))
+        t = optype(A, B)
     end
     C = GBMatrix{t}(size(A))
     return emul!(C, A, B; op, mask, accum, desc)
@@ -152,7 +154,7 @@ intersection equivalent see [`eadd!`](@ref).
     `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` or `B`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 """
 function eadd! end
@@ -176,7 +178,7 @@ intersection equivalent see [`emul`](@ref).
     `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` or `B`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 
 # Returns
@@ -195,7 +197,8 @@ function eadd!(
     desc::Descriptor = Descriptors.NULL
 )
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
-    op = getoperator(op, eltype(w))
+    op = getoperator(op, optype(u, v))
+    accum = getoperator(accum, eltype(w))
     if op isa libgb.GrB_Semiring
         libgb.GrB_Vector_eWiseAdd_Semiring(w, mask, accum, op, u, v, desc)
         return w
@@ -236,7 +239,8 @@ function eadd!(
 )
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
-    op = getoperator(op, eltype(C))
+    op = getoperator(op, optype(A, B))
+    accum = getoperator(accum, eltype(C))
     if op isa libgb.GrB_Semiring
         libgb.GrB_Matrix_eWiseAdd_Semiring(C, mask, accum, op, A, B, desc)
         return C
@@ -262,7 +266,7 @@ function eadd(
     if op isa GrBOp
         t = ztype(op)
     else
-        t = optype(eltype(A), eltype(B))
+        t = optype(A, B)
     end
     C = GBMatrix{t}(size(A))
     return eadd!(C, A, B; op, mask, accum, desc)

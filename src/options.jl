@@ -16,6 +16,21 @@ function gbget(A::GBMatrix, field)
     return libgb.GxB_Matrix_Option_get(A, field)
 end
 
+function gbset(A::GBVector, field, value)
+    libgb.GxB_Vector_Option_set(A, field, value)
+    return nothing
+end
+
+function gbget(A::GBVector, field)
+    return libgb.GxB_Vector_Option_get(A, field)
+end
+
+function format(A::GBVecOrMat)
+    t = gbget(A, SPARSITY_STATUS)
+    f = gbget(A, FORMAT)
+    return (GBSparsity(t), GBFormat(f))
+end
+
 @cenum GBOption::Int32 begin
     HYPER_SWITCH = 0
     BITMAP_SWITCH = 34

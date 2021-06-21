@@ -169,7 +169,7 @@ Extract a submatrix from `A` into `C`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
     `size(M) == (max(I), max(J))`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 
 # Returns
@@ -186,7 +186,7 @@ function extract!(
     J, nj = idx(J)
     I isa Number && (I = UInt64[I])
     J isa Number && (J = UInt64[J])
-    libgb.GrB_Matrix_extract(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
+    libgb.GrB_Matrix_extract(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
     return C
 end
 
@@ -203,7 +203,7 @@ Extract a submatrix from `A`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
     `size(M) == (max(I), max(J))`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`. `C` is, however, empty.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied. `C` is, however, empty.
 - `desc::Descriptor = Descriptors.NULL`
 
 # Returns
@@ -265,7 +265,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
     `size(M) == size(A)`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 
 # Returns
@@ -288,16 +288,16 @@ function subassign!(
     end
     if A isa GBVector
         if (I isa Number) && (J isa Vector || J == ALL)
-            libgb.GxB_Row_subassign(C, mask, getoperator(accum, eltype(A)), A, I, J, nj, desc)
+            libgb.GxB_Row_subassign(C, mask, getoperator(accum, eltype(C)), A, I, J, nj, desc)
         elseif (J isa Number) && (I isa Vector || I == ALL)
-            libgb.GxB_Col_subassign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, desc)
+            libgb.GxB_Col_subassign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, desc)
         else
             throw(MethodError(subassign!, [C, A, I, J]))
         end
     elseif A isa GBMatrix
-        libgb.GxB_Matrix_subassign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
+        libgb.GxB_Matrix_subassign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
     else
-        libgb.scalarmatsubassign[eltype(A)](C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
+        libgb.scalarmatsubassign[eltype(A)](C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
     return A # Not sure this is correct, but it's what Base seems to do.
 end
@@ -317,7 +317,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign`](@ref) except that
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: mask where
     `size(M) == size(C)`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], A[i,j])`.
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = Descriptors.NULL`
 
 # Returns
@@ -340,16 +340,16 @@ function assign!(
     end
     if A isa GBVector
         if (I isa Number) && (J isa Vector || J == ALL)
-            libgb.GrB_Row_assign(C, mask, getoperator(accum, eltype(A)), A, I, J, nj, desc)
+            libgb.GrB_Row_assign(C, mask, getoperator(accum, eltype(C)), A, I, J, nj, desc)
         elseif (J isa Number) && (I isa Vector || I == ALL)
-            libgb.GrB_Col_assign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, desc)
+            libgb.GrB_Col_assign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, desc)
         else
             throw(MethodError(subassign!, [C, A, I, J]))
         end
     elseif A isa GBMatrix
-        libgb.GrB_Matrix_assign(C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
+        libgb.GrB_Matrix_assign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
     else
-        libgb.scalarmatassign[eltype(A)](C, mask, getoperator(accum, eltype(A)), A, I, ni, J, nj, desc)
+        libgb.scalarmatassign[eltype(A)](C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
     return A # Not sure this is correct, but it's what Base seems to do.
 end

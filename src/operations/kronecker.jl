@@ -6,8 +6,9 @@ function LinearAlgebra.kron!(C::GBMatOrTranspose,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    op = getoperator(op, eltype(C))
+    op = getoperator(op, optype(A, B))
     A, desc, B = _handletranspose(A, desc, B)
+    accum = getoperator(accum, eltype(C))
     if op isa Union{AbstractBinaryOp, libgb.GrB_BinaryOp}
         libgb.GxB_kron(C, mask, accum, op, A, B, desc)
     elseif op isa Union{AbstractMonoid, libgb.GrB_Monoid}
@@ -25,7 +26,7 @@ function LinearAlgebra.kron(
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    op = getoperator(op, optype(eltype(A), eltype(B)))
+    op = getoperator(op, optype(A, B))
     t = tojuliatype(ztype(op))
     C = GBMatrix{t}(size(A,1) * size(B, 1), size(A, 2) * size(B, 2))
     kron!(C, A, B; op, mask, accum, desc)

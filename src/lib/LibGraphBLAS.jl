@@ -2373,6 +2373,57 @@ function GxB_Matrix_Option_set(A, field, value)
     end
 end
 
+function GxB_Vector_Option_get(A, field)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        T = Cdouble
+    elseif field ∈ [GxB_FORMAT]
+        T = UInt32
+    elseif field ∈ [GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
+        T = Cint
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Vector_Option_get, libgraphblas),
+        Cvoid,
+        (GrB_Vector, UInt32, Ptr{Cvoid}),
+        A,
+        field,
+        v
+    )
+    return v[]
+end
+
+function GxB_Vector_Option_set(A, field, value)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        ccall(
+            (:GxB_Vector_Option_set, libgraphblas),
+            Cvoid,
+            (GrB_Vector, UInt32, Cdouble),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_FORMAT]
+        ccall(
+            (:GxB_Vector_Option_set, libgraphblas),
+            Cvoid,
+            (GrB_Vector, UInt32, UInt32),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_SPARSITY_CONTROL]
+        ccall(
+            (:GxB_Vector_Option_set, libgraphblas),
+            Cvoid,
+            (GrB_Vector, UInt32, Cint),
+            A,
+            field,
+            value
+        )
+    end
+end
+
 # Skipping MacroDefinition: GB_PUBLIC extern
 
 # const GxB_STDC_VERSION = __STDC_VERSION__

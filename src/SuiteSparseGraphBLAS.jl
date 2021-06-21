@@ -100,6 +100,7 @@ function __init__()
     # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
     #libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
+    gbset(FORMAT, BYCOL) #This may not always be performant. Should put in Preferences.jl
     @eval(Descriptors, $:(const NULL = Descriptor()))
     atexit() do
         libgb.GrB_finalize()

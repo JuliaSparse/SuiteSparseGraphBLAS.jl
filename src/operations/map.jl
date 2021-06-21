@@ -5,6 +5,7 @@ function Base.map!(
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
     )
     op = getoperator(op, eltype(A))
+    accum = getoperator(accum, eltype(C))
     if C isa GBVector && A isa GBVector
         libgb.GrB_Vector_apply(C, mask, accum, op, A, desc)
     elseif C isa GBMatrix && A isa GBMatrix
@@ -31,6 +32,7 @@ function Base.map!(
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
     op = getoperator(op, optype(eltype(A), typeof(x)))
+    accum = getoperator(accum, eltype(C))
     if C isa GBVector && A isa GBVector
         libgb.scalarvecapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
     elseif C isa GBMatrix && A isa GBMatrix
@@ -58,6 +60,7 @@ function Base.map!(
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
     op = getoperator(op, optype(eltype(A), typeof(x)))
+    accum = getoperator(accum, eltype(C))
     if C isa GBVector && A isa GBVector
         libgb.scalarvecapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)
     elseif C isa GBMatrix && A isa GBMatrix
