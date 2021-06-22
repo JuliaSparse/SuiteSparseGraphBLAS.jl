@@ -1,4 +1,5 @@
-function LinearAlgebra.kron!(C::GBMatOrTranspose,
+function LinearAlgebra.kron!(
+    C::GBMatOrTranspose,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose;
     op::MonoidBinaryOrRig = BinaryOps.TIMES,
@@ -26,8 +27,7 @@ function LinearAlgebra.kron(
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    op = getoperator(op, optype(A, B))
-    t = tojuliatype(ztype(op))
+    t = optype(A, B)
     C = GBMatrix{t}(size(A,1) * size(B, 1), size(A, 2) * size(B, 2))
     kron!(C, A, B; op, mask, accum, desc)
     return C

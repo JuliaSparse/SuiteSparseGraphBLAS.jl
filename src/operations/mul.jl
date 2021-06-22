@@ -86,8 +86,7 @@ function mul(
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    op = getoperator(op, optype(A, B))
-    t = tojuliatype(ztype(op))
+    t = optype(A, B)
     if A isa GBVector && B isa GBMatOrTranspose
         C = GBVector{t}(size(B, 2))
     elseif A isa GBMatOrTranspose && B isa GBVector

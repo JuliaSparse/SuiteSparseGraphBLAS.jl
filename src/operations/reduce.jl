@@ -72,8 +72,8 @@ function Base.reduce(
 end
 
 function Base.reduce(
-    op::BinaryUnion,
-    A::GBArray;
+    ::BinaryUnion,
+    ::GBArray;
     dims = 2,
     typeout = nothing,
     init = nothing,
