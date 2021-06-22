@@ -1,8 +1,8 @@
 function LinearAlgebra.mul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::SemiringUnion = Semirings.PLUS_TIMES,
+    B::GBMatOrTranspose,
+    op::SemiringUnion = Semirings.PLUS_TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -20,8 +20,8 @@ end
 function LinearAlgebra.mul!(
     w::GBVector,
     u::GBVector,
-    A::GBMatOrTranspose;
-    op::SemiringUnion = Semirings.PLUS_TIMES,
+    A::GBMatOrTranspose,
+    op::SemiringUnion = Semirings.PLUS_TIMES;
     mask = C_NULl,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -38,8 +38,8 @@ end
 function LinearAlgebra.mul!(
     w::GBVector,
     A::GBMatOrTranspose,
-    u::GBVector;
-    op::SemiringUnion = Semirings.PLUS_TIMES,
+    u::GBVector,
+    op::SemiringUnion = Semirings.PLUS_TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -78,10 +78,13 @@ The default semiring is the `+.*` semiring.
 - `GBArray`: The output matrix whose `eltype` is determined by `A` and `B` or the semiring
     if a type specific semiring is provided.
 """
+function multiply(A::GBArray, B::GBArray)
+    return mul(A, B, Semirings.PLUS_TIMES)
+end
 function mul(
     A::GBArray,
-    B::GBArray;
-    op::SemiringUnion = Semirings.PLUS_TIMES,
+    B::GBArray,
+    op::SemiringUnion = Semirings.PLUS_TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -96,17 +99,17 @@ function mul(
     else
         throw(ArgumentError("Cannot multiply A::GBVector, B::GBVector. Try emul"))
     end
-    mul!(C, A, B; op, mask, accum, desc)
+    mul!(C, A, B, op; mask, accum, desc)
     return C
 end
 
 function Base.:*(
     A::GBArray,
-    B::GBArray;
-    op::SemiringUnion = Semirings.PLUS_TIMES,
+    B::GBArray,
+    op::SemiringUnion = Semirings.PLUS_TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    mul(A, B; op, mask, accum, desc)
+    mul(A, B, op; mask, accum, desc)
 end

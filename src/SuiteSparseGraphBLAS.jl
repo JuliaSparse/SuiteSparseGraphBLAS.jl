@@ -26,6 +26,11 @@ include("operators/monoids.jl")
 include("operators/semirings.jl")
 include("operators/selectops.jl")
 
+_createunaryops()
+_createbinaryops()
+_createmonoids()
+_createsemirings()
+
 include("descriptors.jl")
 
 include("indexutils.jl")
@@ -74,6 +79,7 @@ include("export.jl")
 include("options.jl")
 #include("random.jl")
 include("misc.jl")
+include("chainrules/mulrules.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export xtype, ytype, ztype
@@ -82,17 +88,13 @@ export clear!, extract, extract!, subassign!, assign! #array functions
 
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply!, gbtranspose, gbtranspose!
-
+export multiply
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!, transpose
 export nnz, sprand, findnz
 
 
 function __init__()
-    _createunaryops()
-    _createbinaryops()
-    _createmonoids()
-    _createsemirings()
     _load_globaltypes()
     _loadselectops()
     _loaddescriptors()

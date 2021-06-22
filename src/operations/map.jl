@@ -73,7 +73,7 @@ function Base.map!(
     op::BinaryUnion, A::GBArray, x;
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
-    return map!(op,A, A, x; mask, accum, desc)
+    return map!(op, A, A, x; mask, accum, desc)
 end
 
 function Base.map(

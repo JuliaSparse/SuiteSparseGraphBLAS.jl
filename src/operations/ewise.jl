@@ -54,8 +54,8 @@ function emul end
 function emul!(
     w::GBVector,
     u::GBVector,
-    v::GBVector;
-    op::MonoidBinaryOrRig = BinaryOps.TIMES,
+    v::GBVector,
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -77,8 +77,8 @@ end
 
 function emul(
     u::GBVector,
-    v::GBVector;
-    op::MonoidBinaryOrRig = BinaryOps.TIMES,
+    v::GBVector,
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -89,14 +89,14 @@ function emul(
         t = optype(u, v)
     end
     w = GBVector{t}(size(u))
-    return emul!(w, u, v; op, mask , accum, desc)
+    return emul!(w, u, v, op; mask , accum, desc)
 end
 
 function emul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::MonoidBinaryOrRig = BinaryOps.TIMES,
+    B::GBMatOrTranspose,
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -119,8 +119,8 @@ end
 
 function emul(
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::MonoidBinaryOrRig = BinaryOps.TIMES,
+    B::GBMatOrTranspose,
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -131,7 +131,7 @@ function emul(
         t = optype(A, B)
     end
     C = GBMatrix{t}(size(A))
-    return emul!(C, A, B; op, mask, accum, desc)
+    return emul!(C, A, B, op; mask, accum, desc)
 end
 
 """
@@ -190,8 +190,8 @@ function eadd end
 function eadd!(
     w::GBVector,
     u::GBVector,
-    v::GBVector;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    v::GBVector,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -213,8 +213,8 @@ end
 
 function eadd(
     u::GBVector,
-    v::GBVector;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    v::GBVector,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -225,14 +225,14 @@ function eadd(
         t = optype(eltype(u), eltype(v))
     end
     w = GBVector{t}(size(u))
-    return eadd!(w, u, v; op, mask, accum, desc)
+    return eadd!(w, u, v, op; mask, accum, desc)
 end
 
 function eadd!(
     C::GBMatrix,
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    B::GBMatOrTranspose,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -257,8 +257,8 @@ end
 
 function eadd(
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    B::GBMatOrTranspose,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
@@ -269,7 +269,7 @@ function eadd(
         t = optype(A, B)
     end
     C = GBMatrix{t}(size(A))
-    return eadd!(C, A, B; op, mask, accum, desc)
+    return eadd!(C, A, B, op; mask, accum, desc)
 end
 
 # Note well: `.*` and `.+` have clear counterparts in the language of GraphBLAS:
@@ -283,45 +283,45 @@ end
 function Base.broadcasted(
     ::typeof(+),
     u::GBVector,
-    v::GBVector;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    v::GBVector,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    return eadd(u, v; op, mask, accum, desc)
+    return eadd(u, v, op; mask, accum, desc)
 end
 function Base.broadcasted(
     ::typeof(*),
     u::GBVector,
-    v::GBVector;
-    op::MonoidBinaryOrRig = BinaryOps.TIMES,
+    v::GBVector,
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    return emul(u, v; op, mask, accum, desc)
+    return emul(u, v, op; mask, accum, desc)
 end
 
 function Base.broadcasted(
     ::typeof(+),
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    B::GBMatOrTranspose,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    return eadd(A, B; op, mask, accum, desc)
+    return eadd(A, B, op; mask, accum, desc)
 end
 function Base.broadcasted(
     ::typeof(*),
     A::GBMatOrTranspose,
-    B::GBMatOrTranspose;
-    op::MonoidBinaryOrRig = BinaryOps.PLUS,
+    B::GBMatOrTranspose,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = C_NULL,
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
-    return emul(A, B; op, mask, accum, desc)
+    return emul(A, B, op; mask, accum, desc)
 end
