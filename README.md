@@ -7,6 +7,7 @@ This is an in-progress Julia wrapper around the SuiteSparse:GraphBLAS library.
 ### TODO:
 #### vNext
 - [ ] Finish up Docs
+- [ ] Update to SuiteSparseGraphBLAS 5.1.0
 
 #### v1.0
 - [ ] Import/Export all formats
