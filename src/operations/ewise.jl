@@ -19,7 +19,7 @@ union equivalent see [`eadd!`](@ref).
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc = nothing`
 """
 function emul! end
 
@@ -43,7 +43,7 @@ union equivalent see [`eadd`](@ref).
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc = nothing`
 
 # Returns
 - `GBArray`: Output `GBVector` or `GBMatrix` whose eltype is determined by the `eltype` of
@@ -55,11 +55,13 @@ function emul!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.TIMES)
+
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -72,17 +74,20 @@ function emul!(
     elseif op isa libgb.GrB_BinaryOp
         libgb.GrB_Vector_eWiseMult_BinaryOp(w, mask, accum, op, u, v, desc)
         return w
+    else
+        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
 end
 
 function emul(
     u::GBVector,
     v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op = _handlectx(op, ctxop, BinaryOps.TIMES)
     if op isa GrBOp
         t = ztype(op)
     else
@@ -96,11 +101,12 @@ function emul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.TIMES)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
@@ -114,17 +120,20 @@ function emul!(
     elseif op isa libgb.GrB_BinaryOp
         libgb.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, A, B, desc)
         return C
+    else
+        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
 end
 
 function emul(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op = _handlectx(op, ctxop, BinaryOps.TIMES)
     if op isa GrBOp
         t = ztype(op)
     else
@@ -155,7 +164,7 @@ intersection equivalent see [`eadd!`](@ref).
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc = nothing`
 """
 function eadd! end
 
@@ -179,7 +188,7 @@ intersection equivalent see [`emul`](@ref).
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc = nothing`
 
 # Returns
 - `GBArray`: Output `GBVector` or `GBMatrix` whose eltype is determined by the `eltype` of
@@ -191,11 +200,12 @@ function eadd!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -208,17 +218,20 @@ function eadd!(
     elseif op isa libgb.GrB_BinaryOp
         libgb.GrB_Vector_eWiseAdd_BinaryOp(w, mask, accum, op, u, v, desc)
         return w
+    else
+        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
 end
 
 function eadd(
     u::GBVector,
     v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
     if op isa GrBOp
         t = ztype(op)
     else
@@ -232,11 +245,12 @@ function eadd!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
@@ -251,18 +265,19 @@ function eadd!(
         libgb.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, A, B, desc)
         return C
     else
-        error("Unreachable")
+        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
 end
 
 function eadd(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    op = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
     if op isa GrBOp
         t = ztype(op)
     else
@@ -270,58 +285,4 @@ function eadd(
     end
     C = GBMatrix{t}(size(A))
     return eadd!(C, A, B, op; mask, accum, desc)
-end
-
-# Note well: `.*` and `.+` have clear counterparts in the language of GraphBLAS:
-# edgewiseAdd and edgewiseMul. These do not necessarily have the same semantics though.
-# edgewiseAdd and edgewiseMul might better be described as edgewiseUnion and
-# edgewiseIntersection respectively, and then `op` is applied at materialized indices.
-#
-# So the plan is thus: `.*` and `.+` will have the Union and Intersection semantics *with*
-# the default ops of `*` and `+` respectively. *However*, they have `op` kwargs, which
-# may be used with a macro later on down the line to override the default ops.
-function Base.broadcasted(
-    ::typeof(+),
-    u::GBVector,
-    v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
-)
-    return eadd(u, v, op; mask, accum, desc)
-end
-function Base.broadcasted(
-    ::typeof(*),
-    u::GBVector,
-    v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
-)
-    return emul(u, v, op; mask, accum, desc)
-end
-
-function Base.broadcasted(
-    ::typeof(+),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
-)
-    return eadd(A, B, op; mask, accum, desc)
-end
-function Base.broadcasted(
-    ::typeof(*),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
-)
-    return emul(A, B, op; mask, accum, desc)
 end

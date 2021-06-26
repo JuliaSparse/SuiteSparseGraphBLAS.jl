@@ -16,8 +16,9 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 """
 function gbtranspose!(
     C::GBMatrix, A::GBMatOrTranspose;
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+    mask = nothing, accum = nothing, desc = nothing
 )
+    _, mask, accum, desc = _handlectx(nothing, mask, accum, desc)
     if A isa Transpose && desc.input1 == Descriptors.TRANSPOSE
         throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = Descriptors.TRANSPOSE."))
     elseif A isa Transpose
@@ -87,7 +88,6 @@ function _handletranspose(
 end
 
 #This is ok per the GraphBLAS Slack channel. May wish to change its effect on Complex input.
-
 LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
 
 #Todo: fix this, unecessarily slow.

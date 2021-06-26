@@ -8,6 +8,7 @@ function select!(
     accum = C_NULL,
     desc::Descriptor = Descriptors.NULL
 )
+    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
     thunk === nothing && (thunk = C_NULL)
     A, desc, _ = _handletranspose(A, desc)
     accum = getoperator(accum, eltype(C))

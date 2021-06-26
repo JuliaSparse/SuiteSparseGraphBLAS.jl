@@ -7,7 +7,7 @@ using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
-
+using ContextVariablesX
 include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
@@ -57,6 +57,18 @@ const MonoidBinaryOrRig = Union{
     AbstractBinaryOp,
     AbstractMonoid
 }
+
+const OperatorUnion = Union{
+    AbstractOp,
+    GrBOp
+}
+
+@contextvar ctxop::OperatorUnion
+@contextvar ctxmask::Union{GBArray, Ptr} = C_NULL
+@contextvar ctxaccum::Union{BinaryUnion, Ptr} = C_NULL
+@contextvar ctxdesc::Descriptor
+include("with.jl")
+
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
@@ -86,12 +98,13 @@ export GBScalar, GBVector, GBMatrix #arrays
 export clear!, extract, extract!, subassign!, assign! #array functions
 
 #operations
-export mul, select, select!, eadd, eadd!, emul, emul!, apply, apply!, gbtranspose, gbtranspose!
-export multiply
+export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!, transpose
 export nnz, sprand, findnz
 
+#with function
+export with
 
 function __init__()
     _load_globaltypes()
@@ -107,4 +120,8 @@ function __init__()
         libgb.GrB_finalize()
     end
 end
+
+#We need to do this after __init__
+
+
 end #end of module

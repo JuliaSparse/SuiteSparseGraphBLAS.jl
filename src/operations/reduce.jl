@@ -1,7 +1,8 @@
 function reduce!(
     op::MonoidUnion, w::GBVector, A::GBMatOrTranspose;
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+    mask = nothing, accum = nothing, desc = nothing
 )
+    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
     A, desc, _ = _handletranspose(A, desc, nothing)
     op = getoperator(op, eltype(w))
     accum = getoperator(accum, eltype(w))
@@ -14,10 +15,11 @@ function Base.reduce(
     dims = 2,
     typeout = nothing,
     init = nothing,
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
     if typeout === nothing
         typeout = eltype(A)
     end
@@ -51,10 +53,10 @@ function Base.reduce(
     v::GBVector;
     typeout = nothing,
     init = nothing,
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    accum = nothing,
+    desc = nothing
 )
+    _, _, accum, desc = _handlectx(op, nothing, accum, desc, BinaryOps.TIMES)
     if typeout === nothing
         typeout = eltype(v)
     end
@@ -77,9 +79,9 @@ function Base.reduce(
     dims = 2,
     typeout = nothing,
     init = nothing,
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
     throw(ArgumentError("reduce requires a Monoid op."))
 end

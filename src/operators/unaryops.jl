@@ -175,8 +175,8 @@ function _load(unaryop::AbstractUnaryOp)
     end
 end
 
-ztype(op::libgb.GrB_UnaryOp) = ptrtogbtype[libgb.GxB_UnaryOp_ztype(op)]
-xtype(op::libgb.GrB_UnaryOp) = ptrtogbtype[libgb.GxB_UnaryOp_xtype(op)]
+ztype(op::libgb.GrB_UnaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_UnaryOp_ztype(op)])
+xtype(op::libgb.GrB_UnaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_UnaryOp_xtype(op)])
 
 Base.show(io::IO, ::MIME"text/plain", u::libgb.GrB_UnaryOp) = gxbprint(io, u)
 function Base.show(io::IO, ::MIME"text/plain", u::AbstractUnaryOp)

@@ -269,9 +269,9 @@ end
 
 Base.show(io::IO, ::MIME"text/plain", u::libgb.GrB_BinaryOp) = gxbprint(io, u)
 
-xtype(op::BinaryUnion) = ptrtogbtype[libgb.GxB_BinaryOp_xtype(op)]
-ytype(op::BinaryUnion) = ptrtogbtype[libgb.GxB_BinaryOp_ytype(op)]
-ztype(op::BinaryUnion) = ptrtogbtype[libgb.GxB_BinaryOp_ztype(op)]
+xtype(op::BinaryUnion) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_xtype(op)])
+ytype(op::BinaryUnion) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ytype(op)])
+ztype(op::BinaryUnion) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ztype(op)])
 
 """
 """
