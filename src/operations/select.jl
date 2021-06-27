@@ -4,12 +4,12 @@ function select!(
     C::GBVecOrMat,
     A::GBArray,
     thunk::Union{GBScalar, Nothing, Number} = nothing;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    mask = nothing,
+    accum = nothing,
+    desc::Descriptor = nothing
 )
     _, mask, accum, desc = _handlectx(op, mask, accum, desc)
-    thunk === nothing && (thunk = C_NULL)
+    thunk === nothing && (thunk = nothing)
     A, desc, _ = _handletranspose(A, desc)
     accum = getoperator(accum, eltype(C))
     if thunk isa Number
@@ -38,11 +38,11 @@ such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which maps to
 - `thunk::Union{GBScalar, nothing, valid_union}`: Optional value used to evaluate `op`.
 
 # Keywords
-- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask which determines the output
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask which determines the output
     pattern.
-- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: optional binary accumulator
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: optional binary accumulator
     operation where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc = nothing`
 
 # Returns
 - `GBArray`: The output matrix whose `eltype` is determined by `A`.
@@ -51,10 +51,11 @@ function select(
     op::SelectUnion,
     A::GBArray,
     thunk::Union{GBScalar, Nothing, valid_union} = nothing;
-    mask = C_NULL,
-    accum = C_NULL,
-    desc::Descriptor = Descriptors.NULL
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
+    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C

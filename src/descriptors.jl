@@ -95,7 +95,7 @@ end
 #This is probably not ideal. Perhaps kwargs = nothing by default is better
 Base.:+(d1::Descriptor, ::Nothing) = d1
 Base.:+(::Nothing, d2::Descriptor) = d2
-
+Base.:+(f1::libgb.GrB_Desc_Value, f2::libgb.GrB_Desc_Value) = libgb.GrB_Desc_Value(UInt32(f1) + UInt32(f2))
 function Base.propertynames(d::Descriptor)
     return (
     :output,
@@ -117,6 +117,7 @@ GxB_DEFAULT,
 GrB_REPLACE,
 GrB_COMP,
 GrB_STRUCTURE,
+GrB_STRUCT_COMP,
 GrB_TRAN,
 GxB_GPU_ALWAYS,
 GxB_GPU_NEVER,
@@ -131,6 +132,7 @@ const DEFAULT = GxB_DEFAULT
 const REPLACE = GrB_REPLACE
 const COMPLEMENT = GrB_COMP
 const STRUCTURE = GrB_STRUCTURE
+const STRUCT_COMP = GrB_STRUCT_COMP
 const TRANSPOSE = GrB_TRAN
 const GUSTAVSON = GxB_AxB_GUSTAVSON
 const DOT = GxB_AxB_DOT

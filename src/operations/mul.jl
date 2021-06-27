@@ -71,12 +71,12 @@ The default semiring is the `+.*` semiring.
 
 # Arguments
 - `A::GBArray`: GBVector or optionally transposed GBMatrix.
-- `B::GBArray`: GBVector or optionally transposed GBVector.
+- `B::GBArray`: GBVector or optionally transposed GBMatrix.
 
 # Keywords
-- `mask::Union{Ptr{Nothing}, GBMatrix} = nothing`: optional mask which determines the output
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask which determines the output
     pattern.
-- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = nothing`: optional binary accumulator
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: optional binary accumulator
     operation where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 
@@ -84,7 +84,6 @@ The default semiring is the `+.*` semiring.
 - `GBArray`: The output matrix whose `eltype` is determined by `A` and `B` or the semiring
     if a type specific semiring is provided.
 """
-
 function mul(
     A::GBArray,
     B::GBArray,

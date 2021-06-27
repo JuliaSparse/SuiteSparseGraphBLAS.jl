@@ -7,6 +7,7 @@ function reduce!(
     op = getoperator(op, eltype(w))
     accum = getoperator(accum, eltype(w))
     libgb.GrB_Matrix_reduce_Monoid(w, mask, accum, op, A, desc)
+    return w
 end
 
 function Base.reduce(
@@ -56,7 +57,7 @@ function Base.reduce(
     accum = nothing,
     desc = nothing
 )
-    _, _, accum, desc = _handlectx(op, nothing, accum, desc, BinaryOps.TIMES)
+    _, _, accum, desc = _handlectx(op, nothing, accum, desc)
     if typeout === nothing
         typeout = eltype(v)
     end
@@ -85,3 +86,24 @@ function Base.reduce(
 )
     throw(ArgumentError("reduce requires a Monoid op."))
 end
+
+"""
+    reduce(op::Monoid, A::GBMatrix, dims=:; kwargs...)
+    reduce(op::Monoid, v::GBVector; kwargs...)
+
+Reduce `A` along dimensions of A with monoid `op`.
+
+# Arguments
+- `op::MonoidUnion`: the monoid reducer. This may not be a BinaryOp.
+- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `dims = :`: Optional dimensions for GBMatrix, may be `1`, `2`, or `:`.
+
+# Keywords
+- `typeout`: Optional output type specification. Defaults to `eltype(A)`.
+- `init`: Optional initial value.
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc = nothing`
+"""
+reduce

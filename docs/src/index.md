@@ -9,11 +9,10 @@ While the core library is mostly complete, and all GraphBLAS functionality is pr
 
 1. ChainRules.jl integration for AD.
 2. Complete SparseArrays and ArrayInterface interfaces.
-3. Import and Export in all formats including bitmap and csr. Currently only dense and csc are supported.
-4. Printing v2.
-5. User-defined types and functions.
-6. Alternative syntax for GraphBLAS ops (currently must use `BinaryOps.PLUS` instead of `+`).
-7. Complex builtins.
+3. Printing v2.
+4. User-defined types and functions.
+5. Alternative syntax for GraphBLAS ops (currently must use `BinaryOps.PLUS` instead of `+`).
+6. Complex builtins.
 
 Once these are completed there will be a v1.0 release, with the goal being JuliaCon 2021.
 
@@ -47,7 +46,7 @@ The SuiteSparse:GraphBLAS binary is installed automatically as `SSGraphBLAS_jll`
 
 # Introduction
 
-GraphBLAS harnesses the well-understood duality between graphs and matrices. 
+GraphBLAS harnesses the well-understood duality between graphs and matrices.
 Specifically a graph can be represented by its [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix), [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix), or the many variations on those formats. 
 With this matrix representation in hand we have a method to operate on the graph using linear algebra operations on the matrix.
 
@@ -104,8 +103,8 @@ v = GBVector([4], [10])
 ```
 ## GraphBLAS Operations
 
-A complete list of supported operations can be found in [Operations](@ref).
-GraphBLAS operations are, where possible, wrapped in existing Julia functions. The equivalent Julia functions are:
+The complete documentation of supported operations can be found in [Operations](@ref).
+GraphBLAS operations are, where possible, methods of existing Julia functions  listed in the third column.
 
 | GraphBLAS           | Operation                                                        | Julia                                   |
 |:--------------------|:----------------------------------------:                        |----------:                              |
@@ -126,24 +125,14 @@ GraphBLAS operations are, where possible, wrapped in existing Julia functions. T
 
 where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumulating into ``\bf C``, and ``\otimes`` and ``\oplus`` are a binary operation and commutative monoid respectively. 
 
-!!! note "assign vs subassign"
-
-    `subassign` is equivalent to `assign` except that the mask in `subassign` has the dimensions of ``\bf C(I,J)`` vs the dimensions of ``C`` for `assign`, and elements outside of the mask will never be modified by `subassign`.
-
 ### Common arguments
 
-The operations above have a typical set of common arguments. These are:
+The operations above have often accept most or all of the following arguments.
 
-#### `op` - `UnaryOp`, `BinaryOp`, `Monoid`, or `Semiring`:
+#### `op` - `UnaryOp`, `BinaryOp`, `Monoid`, `Semiring`, or `SelectOp`:
 
-This is the key argument to most of these operations, which determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`.
+This is the most important argument for most of these operations. It determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`.
 Most operations are restricted to one type of operator.
-
-!!! warning "Keyword vs Positional"
-    For some operations like `mul` and `emul` this is a keyword argument which defaults to the typical arithmetic operators.
-    For others like `map` this is the first argument, since there is no sensible default choice.
-
-
 
 !!! tip "Built-Ins"
     The built-in operators can be found in the submodules: `UnaryOps`, `BinaryOps`, `Monoids`, and `Semirings`.
@@ -157,12 +146,12 @@ The descriptor argument allows the user to modify the operation in some fashion.
     Transposes the inputs and can be found in `Descriptors.[T0 | T1 | T0T1]`. 
     Typically you should use Julia's built-in transpose functionality.
 
-- `desc.mask == [DEFAULT | STRUCTURE | COMPLEMENT | STRUCTURE + COMPLEMENT]` 
+- `desc.mask == [DEFAULT | STRUCTURE | COMPLEMENT | STRUCT_COMP]` 
 
     If `STRUCTURE` is set the operation will use the presence of a value rather than the value itself to determine whether the index is masked. 
     If `COMPLEMENT` is set the presence/truth value is complemented (ie. if **no** value is present or the value is **false** that index is masked).
 
-- `desc.output` == [DEFAULT | REPLACE]
+- `desc.output == [DEFAULT | REPLACE]`
 
     If `REPLACE` is set the operation will replace all values in the output matrix **after** the accumulation step. 
     If an index is found in the output matrix, but not in the results of the operation it will be set to `nothing`. 
@@ -177,18 +166,7 @@ The accumulation step is performed **before** masking.
 
 The `mask` keyword argument determines whether each index from the result of an operation appears in the output. 
 The mask may be structural, where the presence of a value indicates the mask is `true`, or valued where the value of the mask indicates its truth value. 
-The mask may also be complemented.
-
-
-### Order of Operations
-
-A GraphBLAS operation occurs in the following order (steps are skipped when possible):
-
-1. Calculate `T = <operation>(args...)`
-2. Elementwise accumulate `Z[i,j] = accum(C[i,j], T[i,j])`
-3. Optionally masked assignment `C[i,j] = mask[i,j] ? Z[i,j] : [nothing | C[i,j]]`
-
-If `REPLACE` is set the option in step 3. is `nothing`, otherwise it is `C[i,j]`.
+The mask may also be complemented. These options are controlled by the `desc` argument.
 
 ## GraphBLAS Operators
 
@@ -214,7 +192,25 @@ BOR       COPYSIGN   FIRSTJ     ISEQ       LAND       MAX        POW        SECO
 
 ## Example
 
+Here is an example of several different methods of triangle counting with GraphBLAS.
+The methods are drawn from the LAGraph [repo](https://github.com/GraphBLAS/LAGraph).
 
+Input `A` must be a square, symmetric matrix with any element type.
+We'll test it using the matrix from the GBArray section above, which has two triangles in its undirected form.
 
 ```julia
+function cohen(A)
+  U = select(SelectOps.TRIU, A)
+  L = select(SelectOps.TRIL, A)
+  return reduce(Monoids.PLUS_MONOID[Int64], mul(L, U, Semirings.PLUS_PAIR; mask=A)) ÷ 2
+end
+
+function sandia(A)
+  L = select(SelectOps.TRIL, A)
+  return reduce(Monoids.PLUS_MONOID[Int64], mul(L, L, Semirings.PLUS_PAIR; mask=L))
+end
+
+M = eadd(A, A', BinaryOps.PLUS) #Make undirected/symmetric
+cohen(A) # 2
+sandia(A) # 2
 ```

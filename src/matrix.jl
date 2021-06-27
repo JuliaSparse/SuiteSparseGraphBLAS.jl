@@ -305,7 +305,7 @@ end
 """
     assign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 
-Assign a submatrix of `C` to `A`. Equivalent to [`subassign`](@ref) except that
+Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
 `size(mask) == size(C)`, whereas `size(mask) == size(A) in `subassign!`.
 
 # Arguments
@@ -391,4 +391,19 @@ function Base.setindex(
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
 )
     throw("Not implemented")
+end
+
+#Printing fixes:
+function Base.isstored(A::GBArray, i::Integer, j::Integer)
+    @boundscheck checkbounds(A, i, j)
+    if A[i, j] === nothing
+        return false
+    else
+        return true
+    end
+end
+
+#Help wanted: This isn't really centered for a lot of eltypes.
+function Base.replace_in_print_matrix(A::GBArray, i::Integer, j::Integer, s::AbstractString)
+    Base.isstored(A, i, j) ? s : Base.replace_with_centered_mark(s)
 end

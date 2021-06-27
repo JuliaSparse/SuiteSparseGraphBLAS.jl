@@ -1,4 +1,10 @@
 function gxbprint(io::IO, x, name = "", level::libgb.GxB_Print_Level = libgb.GxB_SUMMARY)
+    str = gxbstring(x, name, level)
+    replace(str, "\n" => "")
+    print(io, str[4:end])
+end
+
+function gxbstring(x, name = "", level::libgb.GxB_Print_Level = libgb.GxB_SUMMARY)
     str = mktemp() do _, f
         cf = Libc.FILE(f)
         if x isa AbstractGBType
@@ -34,20 +40,9 @@ function gxbprint(io::IO, x, name = "", level::libgb.GxB_Print_Level = libgb.GxB
         close(cf)
         x
     end
-    replace(str, "\n" => "")
-    print(io, str[4:end])
 end
 
-function Base.isstored(A::GBArray, i::Integer, j::Integer)
-    @boundscheck checkbounds(A, i, j)
-    if A[i, j] === nothing
-        return false
-    else
-        return true
-    end
-end
-
-#Help wanted: This isn't really centered for a lot of eltypes.
-function Base.replace_in_print_matrix(A::GBArray, i::Integer, j::Integer, s::AbstractString)
-    Base.isstored(A, i, j) ? s : Base.replace_with_centered_mark(s)
+function getdocstring(x)
+    str = gxbstring(x)
+    return strip(split(str, '\n')[2])
 end

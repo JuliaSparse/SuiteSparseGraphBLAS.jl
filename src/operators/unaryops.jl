@@ -184,149 +184,245 @@ function Base.show(io::IO, ::MIME"text/plain", u::AbstractUnaryOp)
 end
 
 """
+Identity
+: `z=x`
 """
 UnaryOps.IDENTITY
 """
+Additive Inverse
+: `z=-x`
 """
 UnaryOps.AINV
 """
+Logical Negation
+
+``Bool`:  z=¬x`
+``Real`:  z=¬(x ≠ 0)`
 """
 UnaryOps.LNOT
 """
+Multiplicative Inverse
+: `z=1/x`
 """
 UnaryOps.MINV
 """
+One
+: `z=one(x)`
 """
 UnaryOps.ONE
 """
+Absolute Value
+: `z=|x|`
 """
 UnaryOps.ABS
 """
+Bitwise Negation
+: `z=¬x`
 """
 UnaryOps.BNOT
 """
+Square Root
+: `z=√(x)`
 """
 UnaryOps.SQRT
 """
+Natural Logarithm
+: `z=logₑ(x)`
 """
 UnaryOps.LOG
 """
+Natural Base Exponential
+: `z=eˣ`
 """
 UnaryOps.EXP
 """
+Log Base 2
+: `z=log₂(x)`
 """
 UnaryOps.LOG2
 """
+Sine
+: `z=sin(x)`
 """
 UnaryOps.SIN
 """
+Cosine
+: `z=cos(x)`
 """
 UnaryOps.COS
 """
+Tangent
+: `z=tan(x)`
 """
 UnaryOps.TAN
 """
+Inverse Cosine
+: `z=cos⁻¹(x)`
 """
 UnaryOps.ACOS
 """
+Inverse Sine
+: `z=sin⁻¹(x)`
 """
 UnaryOps.ASIN
 """
+Inverse Tangent
+: `z=tan⁻¹(x)`
 """
 UnaryOps.ATAN
 """
+Hyperbolic Sine
+: `z=sinh(x)`
 """
 UnaryOps.SINH
 """
+Hyperbolic Cosine
+: `z=cosh(x)`
 """
 UnaryOps.COSH
 """
+Hyperbolic Tangent
+: `z=tanh(x)`
 """
 UnaryOps.TANH
 """
+Inverse Hyperbolic Sine
+: `z=sinh⁻¹(x)`
 """
 UnaryOps.ASINH
 """
+Inverse Hyperbolic Cosine
+: `z=cosh⁻¹(x)`
 """
 UnaryOps.ACOSH
 """
+Inverse Hyperbolic Tangent
+: `z=tanh⁻¹(x)`
 """
 UnaryOps.ATANH
 """
+Sign Function
+: `z=signum(x)`
 """
 UnaryOps.SIGNUM
 """
+Ceiling Function
+: `z=⌈x⌉`
 """
 UnaryOps.CEIL
 """
+Floor Function
+: `z=⌊x⌋`
 """
 UnaryOps.FLOOR
 """
+Round to nearest
+: `z=round(x)`
 """
 UnaryOps.ROUND
 """
+Truncate
+: `z=trunc(x)`
 """
 UnaryOps.TRUNC
 """
+Base-2 Exponential
+: `z=2ˣ`
 """
 UnaryOps.EXP2
 """
+Natural Exponential - 1
+: `z=eˣ - 1`
 """
 UnaryOps.EXPM1
 """
+Log Base 10
+: `z=log₁₀(x)`
 """
 UnaryOps.LOG10
 """
+Natural Log of x + 1
+: `z=logₑ(x + 1)`
 """
 UnaryOps.LOG1P
 """
+Log of Gamma Function
+: `z=log(|Γ(x)|)`
 """
 UnaryOps.LGAMMA
 """
+Gamma Function
+: `z=Γ(x)`
 """
 UnaryOps.TGAMMA
 """
+Error Function
+: `z=erf(x)`
 """
 UnaryOps.ERF
 """
+Complimentary Error Function
+: `z=erfc(x)`
 """
 UnaryOps.ERFC
 """
+Normalized Exponent
+: `z=frexpe(x)`
 """
 UnaryOps.FREXPE
 """
+Normalized Fraction
+: `z=frexpx(x)`
 """
 UnaryOps.FREXPX
 """
+Complex Conjugate
+: `z=x̄`
 """
 UnaryOps.CONJ
 """
+Real Part
+: `z=real(x)`
 """
 UnaryOps.CREAL
 """
+Imaginary Part
+: `z=imag(x)`
 """
 UnaryOps.CIMAG
 """
+Angle
+: `z=carg(x)`
 """
 UnaryOps.CARG
 """
+isinf
+: `z=(x == ±∞)`
 """
 UnaryOps.ISINF
 """
+isnan
+: `z=(x == NaN)`
 """
 UnaryOps.ISNAN
 """
+isfinite
+: `z=isfinite(x)`
 """
 UnaryOps.ISFINITE
 """
+0-based Row Index: `z=i`
 """
 UnaryOps.POSITIONI
 """
+1-Based Row Index: `z=i + 1`
 """
 UnaryOps.POSITIONI1
 """
+0-Based Column Index: `z=j`
 """
 UnaryOps.POSITIONJ
 """
+1-Based Column Index: `z=j + 1`
 """
 UnaryOps.POSITIONJ1

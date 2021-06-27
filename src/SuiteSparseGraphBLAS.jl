@@ -63,6 +63,7 @@ const OperatorUnion = Union{
     GrBOp
 }
 
+#Context variables for the `with` function
 @contextvar ctxop::OperatorUnion
 @contextvar ctxmask::Union{GBArray, Ptr} = C_NULL
 @contextvar ctxaccum::Union{BinaryUnion, Ptr} = C_NULL
@@ -93,6 +94,7 @@ include("options.jl")
 include("misc.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
+export Descriptor #Types
 export xtype, ytype, ztype
 export GBScalar, GBVector, GBMatrix #arrays
 export clear!, extract, extract!, subassign!, assign! #array functions
@@ -100,10 +102,10 @@ export clear!, extract, extract!, subassign!, assign! #array functions
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!
 # Reexports.
-export diag, Diagonal, mul!, kron, kron!, transpose
+export diag, Diagonal, mul!, kron, kron!, transpose, reduce
 export nnz, sprand, findnz
 
-#with function
+#context/with
 export with
 
 function __init__()
@@ -120,8 +122,5 @@ function __init__()
         libgb.GrB_finalize()
     end
 end
-
-#We need to do this after __init__
-
 
 end #end of module

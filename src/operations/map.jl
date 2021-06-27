@@ -108,3 +108,28 @@ function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray;
 )
     map(BinaryOps.TIMES, x, u; mask, accum, desc)
 end
+
+"""
+    map(op::UnaryOp, A::GBArray; kwargs...)::GBArray
+    map(op::BinaryOp, A::GBArray, x; kwargs...)::GBArray
+    map(op::BinaryOp, x, A::GBArray, kwargs...)::GBArray
+
+Transform a GBArray by applying `op` to each element.
+
+UnaryOps apply elementwise in the usual fashion.
+BinaryOps require the additional argument `x` which is substituted as the first or second
+argument of `op` depending on its position.
+
+# Arguments
+- `op::MonoidBinaryOrRig = BinaryOps.PLUS`: the binary operation which is applied such that
+    `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and/or `B`.
+- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `x`: Position dependent argument to binary operators.
+
+# Keywords
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc = nothing`
+"""
+map

@@ -97,6 +97,7 @@ end
     GrB_COMP = 2
     # GrB_SCMP = 2
     GrB_STRUCTURE = 4
+    GrB_STRUCT_COMP = 6
     GrB_TRAN = 3
     GxB_GPU_ALWAYS = 2001
     GxB_GPU_NEVER = 2002

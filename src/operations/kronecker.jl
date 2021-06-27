@@ -1,3 +1,8 @@
+"""
+    kron!(A::GBMatrix, B::GBMatrix, op = BinaryOps.TIMES; kwargs...)::GBMatrix
+
+In-place version of [kron](@ref).
+"""
 function LinearAlgebra.kron!(
     C::GBMatOrTranspose,
     A::GBMatOrTranspose,
@@ -21,7 +26,24 @@ function LinearAlgebra.kron!(
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
 end
+"""
+   kron(A::GBMatrix, B::GBMatrix, op = BinaryOps.TIMES; kwargs...)::GBMatrix
 
+Kronecker product of two matrices using `op` as the multiplication operator.
+Does not support `GBVector`s at this time.
+
+# Arguments
+- `A::GBMatrix`: optionally transposed.
+- `B::GBMatrix`: optionally transposed.
+- `op::MonoidBinaryOrRig = BinaryOps.TIMES`: the binary operation which replaces the arithmetic
+    multiplication operation from the usual kron function.
+
+# Keywords
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc = nothing`
+"""
 function LinearAlgebra.kron(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
