@@ -12,7 +12,7 @@ end
 function Base.reduce(
     op::MonoidUnion,
     A::GBMatOrTranspose;
-    dims = 2,
+    dims = :,
     typeout = nothing,
     init = nothing,
     mask = nothing,

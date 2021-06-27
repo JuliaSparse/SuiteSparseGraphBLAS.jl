@@ -94,7 +94,7 @@ function mul(
     desc = nothing
 )
     op = _handlectx(op, ctxop, Semirings.PLUS_TIMES)
-    if op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))GrBOp
+    if op isa libgb.GrB_Semiring
         t = ztype(op)
     else
         t = optype(A, B)
@@ -105,8 +105,6 @@ function mul(
         C = GBVector{t}(size(A, 1))
     elseif A isa GBMatOrTranspose && B isa GBMatOrTranspose
         C = GBMatrix{t}(size(A, 1), size(B, 2))
-    else
-        throw(ArgumentError("Cannot multiply A::GBVector, B::GBVector. Try emul"))
     end
     mul!(C, A, B, op; mask, accum, desc)
     return C
