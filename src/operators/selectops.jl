@@ -71,12 +71,16 @@ SelectOps.TRIL
     select(SelectOps.TRIU, A, k=0)
 
 Select the entries on or above the `k`th diagonal of A.
+
+See also: `LinearAlgebra.TRIL`
 """
 SelectOps.TRIU
 """
     select(SelectOps.DIAG, A, k=0)
 
 Select the entries on the `k`th diagonal of A.
+
+See also: `LinearAlgebra.TRIU`
 """
 SelectOps.DIAG
 """
