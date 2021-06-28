@@ -61,5 +61,5 @@ function select(
     return C
 end
 
-LinearAlgebra.tril = select(SelectOps.TRIL, A)
-LinearAlgebra.triu = select(SelectOps.TRIU, A)
+LinearAlgebra.tril(A::GBArray) = select(SelectOps.TRIL, A)
+LinearAlgebra.triu(A::GBArray) = select(SelectOps.TRIU, A)
