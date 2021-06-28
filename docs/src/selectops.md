@@ -1,8 +1,9 @@
-# Unary Operators
+# Select Operators
+## About
 
 ## Built-Ins
 
 ```@autodocs
 Modules = [SuiteSparseGraphBLAS]
-Pages   = ["unaryops.jl"]
+Pages   = ["selectops.jl"]
 ```

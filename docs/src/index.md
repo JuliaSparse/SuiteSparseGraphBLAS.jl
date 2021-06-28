@@ -192,7 +192,7 @@ BOR       COPYSIGN   FIRSTJ     ISEQ       LAND       MAX        POW        SECO
 
 ## Example
 
-Here is an example of several different methods of triangle counting with GraphBLAS.
+Here is an example of two different methods of triangle counting with GraphBLAS.
 The methods are drawn from the LAGraph [repo](https://github.com/GraphBLAS/LAGraph).
 
 Input `A` must be a square, symmetric matrix with any element type.

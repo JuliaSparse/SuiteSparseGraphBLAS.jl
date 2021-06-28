@@ -132,4 +132,8 @@ argument of `op` depending on its position.
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 """
-map
+function Base.map(
+    op::AbstractOp, A::GBArray, x = nothing;
+    mask = nothing, accum = nothing, desc = nothing
+)
+end

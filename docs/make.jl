@@ -1,6 +1,6 @@
 using Documenter
 using SuiteSparseGraphBLAS
-
+using LinearAlgebra
 makedocs(
     modules = [SuiteSparseGraphBLAS],
     sitename="SuiteSparseGraphBLAS.jl",
@@ -12,7 +12,8 @@ makedocs(
             "unaryops.md",
             "binaryops.md",
             "monoids.md",
-            "semirings.md"
+            "semirings.md",
+            "selectops.md"
         ]
     ]
 )

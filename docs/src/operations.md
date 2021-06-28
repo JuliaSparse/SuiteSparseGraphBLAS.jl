@@ -46,9 +46,9 @@ extract
 extract!
 subassign!
 assign!
-map
+Base.map(::SuiteSparseGraphBLAS.AbstractOp, ::SuiteSparseGraphBLAS.GBArray, ::Any)
 select
-reduce
+Base.reduce
 gbtranspose
-kron
+LinearAlgebra.kron
 ```

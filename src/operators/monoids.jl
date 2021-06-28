@@ -104,44 +104,83 @@ ytype(monoid::libgb.GrB_Monoid) = ytype(operator(monoid))
 ztype(monoid::libgb.GrB_Monoid) = ztype(operator(monoid))
 
 """
+Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
+* Identity: +∞
+* Terminal: -∞
 """
 Monoids.MIN_MONOID
 """
+Max monoid: `f(x::ℝ, y::ℝ)::ℝ = max(x, y)`
+* Identity: -∞
+* Terminal: +∞
 """
 Monoids.MAX_MONOID
 """
+Plus monoid: `f(x::T, y::T)::T = x + y`
+* Identity: 0
+* Terminal: nothing
 """
 Monoids.PLUS_MONOID
 """
+Times monoid: `f(x::T, y::T)::T = xy`
+* Identity: 1
+* Terminal: 0 for non Floating-point numbers.
 """
 Monoids.TIMES_MONOID
 """
+Any monoid: `f(x::T, y::T)::T = x or y`
+* Identity: any
+* Terminal: any
 """
 Monoids.ANY_MONOID
 """
+Logical OR monoid: `f(x::Bool, y::Bool)::Bool = x ∨ y`
+* Identity: false
+* Terminal: true
 """
 Monoids.LOR_MONOID
 """
+Logical AND monoid: `f(x::Bool, y::Bool)::Bool = x ∧ y`
+* Identity: true
+* Terminal: false
 """
 Monoids.LAND_MONOID
 """
+Logical XOR monoid: `f(x::Bool, y::Bool)::Bool = x ⊻ y`
+* Identity: false
+* Terminal: nothing
 """
 Monoids.LXOR_MONOID
 """
+Logical XNOR monoid: `f(x::Bool, y::Bool)::Bool = x == y`
+* Identity: true
+* Terminal: nothing
 """
 Monoids.LXNOR_MONOID
 """
+Equivalent to LXNOR monoid.
 """
 Monoids.EQ_MONOID
 """
+Bitwise OR monoid: `f(x::ℤ, y::ℤ)::ℤ = x|y`
+* Identity: All bits `0`.* Terminal: All bits `1`.
 """
 Monoids.BOR_MONOID
 """
+Bitwise AND monoid: `f(x::ℤ, y::ℤ)::ℤ = x&y`
+* Identity: All bits `1`.
+* Terminal: All bits `0`.
 """
 Monoids.BAND_MONOID
 """
+Bitwise XOR monoid: `f(x::ℤ, y::ℤ)::ℤ = x^y`
+* Identity: All bits `0`.
+* Terminal: nothing
 """
 Monoids.BXOR_MONOID
 """
+Bitwise XNOR monoid: `f(x::ℤ, y::ℤ)::ℤ = ~(x^y)`
+* Identity: All bits `1`.
+* Terminal: nothing
 """
 Monoids.BXNOR_MONOID

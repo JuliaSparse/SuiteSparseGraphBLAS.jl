@@ -13,6 +13,8 @@ function gxbstring(x, name = "", level::libgb.GxB_Print_Level = libgb.GxB_SUMMAR
             libgb.GxB_UnaryOp_fprint(x, name, level, cf)
         elseif x isa libgb.GrB_BinaryOp
             libgb.GxB_BinaryOp_fprint(x, name, level, cf)
+        elseif x isa libgb.GrB_Monoid
+            libgb.GxB_Monoid_fprint(x, name, level, cf)
         elseif x isa SelectUnion
             libgb.GxB_SelectOp_fprint(x, name, level, cf)
         elseif x isa libgb.GrB_Semiring

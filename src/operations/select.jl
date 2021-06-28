@@ -9,7 +9,7 @@ function select!(
     desc::Descriptor = nothing
 )
     _, mask, accum, desc = _handlectx(op, mask, accum, desc)
-    thunk === nothing && (thunk = nothing)
+    thunk === nothing && (thunk = C_NULL)
     A, desc, _ = _handletranspose(A, desc)
     accum = getoperator(accum, eltype(C))
     if thunk isa Number
@@ -60,3 +60,6 @@ function select(
     select!(op, C, A, thunk; accum, mask, desc)
     return C
 end
+
+LinearAlgebra.tril = select(SelectOps.TRIL, A)
+LinearAlgebra.triu = select(SelectOps.TRIU, A)
