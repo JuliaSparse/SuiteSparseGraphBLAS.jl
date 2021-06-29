@@ -5,13 +5,6 @@ end
 
 const UnaryUnion = Union{AbstractUnaryOp, libgb.GrB_UnaryOp}
 
-function _unarynames(name)
-    simple = splitconstant(name)[2]
-    containername = Symbol(simple, "_UNARY_T")
-    exportedname = Symbol(simple)
-    return containername, exportedname
-end
-
 #TODO: Rewrite
 function _createunaryops()
     builtins = [
@@ -71,13 +64,14 @@ function _createunaryops()
 end
 
 function UnaryOp(name)
-    if isGxB(name) || isGrB(name)
+    if isGxB(name) || isGrB(name) #If it's a GrB/GxB op we don't want the prefix
         simplifiedname = name[5:end]
     else
         simplifiedname = name
     end
     tname = Symbol(simplifiedname * "_T")
     simplifiedname = Symbol(simplifiedname)
+    #If it's a built-in we probably want immutable struct. Need to check original name.
     if isGxB(name) || isGrB(name)
         structquote = quote
             struct $tname <: AbstractUnaryOp
@@ -86,7 +80,7 @@ function UnaryOp(name)
                 $tname() = new(Dict{DataType, libgb.GrB_UnaryOp}(), $name)
             end
         end
-    else
+    else #If it's a UDF we need a mutable for finalizing purposes.
         structquote = quote
             mutable struct $tname <: AbstractUnaryOp
                 pointers::Dict{DataType, libgb.GrB_UnaryOp}
@@ -104,7 +98,7 @@ function UnaryOp(name)
             end
         end
     end
-    @eval(Types, $structquote)
+    @eval(Types, $structquote) #Eval the struct into the Types submodule to avoid clutter.
     constquote = quote
         const $simplifiedname = Types.$tname()
         export $simplifiedname
@@ -114,8 +108,8 @@ function UnaryOp(name)
 end
 
 #This is adapted from the fork by cvdlab.
+#Add a new GrB_UnaryOp to an AbstractUnaryOp.
 function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype::GBType{U}) where {T, U}
-
     function unaryopfn(z, x)
         unsafe_store!(z, fn(x))
         return nothing
@@ -127,14 +121,18 @@ function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype:
     return nothing
 end
 
+#UnaryOp constructors
+#####################
 function UnaryOp(name::String, fn::Function, ztype, xtype)
     op = UnaryOp(name)
     _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
     return op
 end
+#Same xtype, ztype.
 function UnaryOp(name::String, fn::Function, type)
     return UnaryOp(name, fn, type, type)
 end
+#Vector of xtypes and ztypes, add a GrB_UnaryOp for each.
 function UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType})
     op = UnaryOp(name)
     length(ztype) == length(xtype) || error("Lengths of ztype and xtype must match.")
@@ -143,9 +141,11 @@ function UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vec
     end
     return op
 end
+#Vector but same ztype xtype.
 function UnaryOp(name::String, fn::Function, type::Vector{DataType})
     return UnaryOp(name, fn, type, type)
 end
+#Construct it using the built in primitives.
 function UnaryOp(name::String, fn::Function)
     return UnaryOp(name, fn, valid_vec)
 end

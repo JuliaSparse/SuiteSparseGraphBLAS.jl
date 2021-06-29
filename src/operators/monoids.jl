@@ -36,9 +36,10 @@ function _createmonoids()
         Monoid(name)
     end
 end
+
 function Monoid(name)
     containername, exportedname = _monoidnames(name)
-    if isGxB(name) || isGrB(name)
+    if isGxB(name) || isGrB(name) #Built-ins are immutable
         structquote = quote
             struct $containername <: AbstractMonoid
                 pointers::Dict{DataType, libgb.GrB_Monoid}
@@ -46,7 +47,7 @@ function Monoid(name)
                 $containername() = new(Dict{DataType, libgb.GrB_Monoid}(), $name)
             end
         end
-    else
+    else #UDFs are mutable for finalizing
         structquote = quote
             mutable struct $containername <: AbstractMonoid
                 pointers::Dict{DataType, libgb.GrB_Monoid}
@@ -74,6 +75,7 @@ function Monoid(name)
 end
 
 #This is adapted from the fork by cvdlab
+#NOTE: Terminals do not work with built in BinaryOps.
 function _addmonoid(op::AbstractMonoid, binop::BinaryUnion, id::T, terminal = nothing) where {T}
     if terminal === nothing
         terminal = C_NULL
@@ -96,8 +98,12 @@ function _addmonoid(op::AbstractMonoid, binop::BinaryUnion, id::T, terminal = no
     op.pointers[T] = monref[]
     return nothing
 end
+
+#Monoid Constructors
+####################
+
 function Monoid(name::String, binop::BinaryUnion, id::T, terminal = nothing) where {T}
-    if binop isa AbstractBinaryOp
+    if binop isa AbstractBinaryOp #If this is an AbstractBinaryOp we need to narrow down
         binop = binop[T]
     end
     m = Monoid(name)

@@ -94,6 +94,7 @@ include("options.jl")
 include("misc.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
+export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
 export xtype, ytype, ztype
 export GBScalar, GBVector, GBMatrix #arrays

@@ -68,14 +68,14 @@ function _createbinaryops()
 end
 
 function BinaryOp(name)
-    if isGxB(name) || isGrB(name)
+    if isGxB(name) || isGrB(name) #If it's a built-in drop the prefix
         simplifiedname = name[5:end]
     else
         simplifiedname = name
     end
     containername = Symbol(simplifiedname, "_T")
     exportedname = Symbol(simplifiedname)
-    if isGxB(name) || isGrB(name)
+    if isGxB(name) || isGrB(name) #Built-in is immutable, no finalizer
         structquote = quote
             struct $containername <: AbstractBinaryOp
                 pointers::Dict{DataType, libgb.GrB_BinaryOp}
@@ -83,7 +83,7 @@ function BinaryOp(name)
                 $containername() = new(Dict{DataType, libgb.GrB_BinaryOp}(), $name)
             end
         end
-    else
+    else #UDF is mutable for finalizer
         structquote = quote
             mutable struct $containername <: AbstractBinaryOp
                 pointers::Dict{DataType, libgb.GrB_BinaryOp}
@@ -101,16 +101,17 @@ function BinaryOp(name)
             end
         end
     end
-    @eval(Types, $structquote)
+    @eval(Types, $structquote) #eval container *type* into Types submodule
     constquote = quote
         const $exportedname = Types.$containername()
         export $exportedname
     end
-    @eval(BinaryOps, $constquote)
+    @eval(BinaryOps, $constquote) #eval actual op into BinaryOps submodule
     return getproperty(BinaryOps, exportedname)
 end
 
 #This is adapted from the fork by cvdlab.
+#Add a new GrB_BinaryOp to an AbstractBinaryOp
 function _addbinaryop(
     op::AbstractBinaryOp,
     fn::Function,
@@ -130,14 +131,21 @@ function _addbinaryop(
     return nothing
 end
 
+#BinaryOp constructors
+######################
+
 function BinaryOp(name::String, fn::Function, ztype, xtype, ytype)
     op = BinaryOp(name)
     _addbinaryop(op, fn, toGBType(ztype), toGBType(xtype), toGBType(ytype))
     return op
 end
+
+#xtype == ytype == ztype
 function BinaryOp(name::String, fn::Function, type::DataType)
     return BinaryOp(name, fn, type, type, type)
 end
+
+#Vectors of _type, add one function for each triple.
 function BinaryOp(
     name::String,
     fn::Function,
@@ -153,9 +161,13 @@ function BinaryOp(
     end
     return op
 end
+
+#Vector of type, xtype == ytype == ztype
 function BinaryOp(name::String, fn::Function, type::Vector{DataType})
     return BinaryOp(name, fn, type, type, type)
 end
+
+#Use the built-in primitives.
 function BinaryOp(name::String, fn::Function)
     return BinaryOp(name, fn, valid_vec)
 end

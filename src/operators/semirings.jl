@@ -274,6 +274,7 @@ function Semiring(name)
     return getproperty(Semirings, exportedname)
 end
 
+#Add typed ⊕ and ⊗ to semiring
 function _addsemiring(rig::AbstractSemiring, add::libgb.GrB_Monoid, mul::libgb.GrB_BinaryOp)
     rigref = Ref{libgb.GrB_Semiring}()
     libgb.GrB_Semiring_new(rigref, add, mul)
@@ -281,12 +282,14 @@ function _addsemiring(rig::AbstractSemiring, add::libgb.GrB_Monoid, mul::libgb.G
     return nothing
 end
 
+#New semiring with typed ⊕ and ⊗
 function Semiring(name::String, add::libgb.GrB_Monoid, mul::libgb.GrB_BinaryOp)
     rig = Semiring(name)
     _addsemiring(rig, add, mul)
     return rig
 end
 
+#New semiring with all supported types in the intersection of validtypes(⊕) and validtypes(⊗)
 function Semiring(name::String, add::AbstractMonoid, mul::AbstractBinaryOp)
     tadd = validtypes(add)
     tmul = validtypes(mul)
