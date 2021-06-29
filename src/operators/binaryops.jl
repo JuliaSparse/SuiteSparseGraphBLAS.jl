@@ -118,6 +118,7 @@ function _addbinaryop(
     xtype::GBType{U},
     ytype::GBType{V}
 ) where {T,U,V}
+    println(T)
     function binaryopfn(z, x, y)
         unsafe_store!(z, fn(x, y))
         return nothing

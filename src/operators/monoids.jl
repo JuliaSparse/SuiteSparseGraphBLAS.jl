@@ -37,7 +37,6 @@ function _createmonoids()
     end
 end
 function Monoid(name)
-    println(name)
     containername, exportedname = _monoidnames(name)
     if isGxB(name) || isGrB(name)
         structquote = quote

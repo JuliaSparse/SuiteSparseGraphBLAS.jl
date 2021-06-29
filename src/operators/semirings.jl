@@ -5,9 +5,13 @@ end
 SemiringUnion = Union{AbstractSemiring, libgb.GrB_Semiring}
 
 function _semiringnames(name)
-    simple = name[5:end]
+    if isGxB(name) || isGrB(name)
+        simple = name[5:end]
+    else
+        simple = name
+    end
     simple = replace(simple, "_SEMIRING" => "")
-    containername = Symbol(simple, "_RIG_T")
+    containername = Symbol(simple, "_T")
     exportedname = Symbol(simple)
     return containername, exportedname
 end
@@ -229,7 +233,13 @@ function _createsemirings()
     ]
 
     for name ∈ builtins
-        containername, exportedname = _semiringnames(name)
+        Semiring(name)
+    end
+end
+
+function Semiring(name)
+    containername, exportedname = _semiringnames(name)
+    if isGxB(name) || isGrB(name)
         structquote = quote
             struct $containername <: AbstractSemiring
                 pointers::Dict{DataType, libgb.GrB_Semiring}
@@ -237,14 +247,57 @@ function _createsemirings()
                 $containername() = new(Dict{DataType, libgb.GrB_Semiring}(), $name)
             end
         end
-        @eval(Types, $structquote)
-        constquote = quote
-            const $exportedname = Types.$containername()
-            export $exportedname
+    else
+        structquote = quote
+            mutable struct $containername <: AbstractSemiring
+                pointers::Dict{DataType, libgb.GrB_Semiring}
+                name::String
+                function $containername()
+                    r = new(Dict{DataType, libgb.GrB_Semiring}(), $name)
+                    function f(rig)
+                        for k ∈ keys(rig.pointers)
+                            libgb.GrB_Semiring_free(Ref(rig.pointers[k]))
+                            delete!(rig.pointers, k)
+                        end
+                    end
+                    return finalizer(f, r)
+                end
+            end
         end
-        @eval(Semirings,$constquote)
     end
+    @eval(Types, $structquote)
+    constquote = quote
+        const $exportedname = Types.$containername()
+        export $exportedname
+    end
+    @eval(Semirings,$constquote)
+    return getproperty(Semirings, exportedname)
 end
+
+function _addsemiring(rig::AbstractSemiring, add::libgb.GrB_Monoid, mul::libgb.GrB_BinaryOp)
+    rigref = Ref{libgb.GrB_Semiring}()
+    libgb.GrB_Semiring_new(rigref, add, mul)
+    rig.pointers[xtype(add)] = rigref[]
+    return nothing
+end
+
+function Semiring(name::String, add::libgb.GrB_Monoid, mul::libgb.GrB_BinaryOp)
+    rig = Semiring(name)
+    _addsemiring(rig, add, mul)
+    return rig
+end
+
+function Semiring(name::String, add::AbstractMonoid, mul::AbstractBinaryOp)
+    tadd = validtypes(add)
+    tmul = validtypes(mul)
+    trig = intersect(tadd, tmul)
+    rig = Semiring(name)
+    for t ∈ trig
+        _addsemiring(rig, add[t], mul[t])
+    end
+    return rig
+end
+
 function _load(rig::AbstractSemiring)
     booleans = ["GxB_LOR_FIRST",
         "GxB_LAND_FIRST",
