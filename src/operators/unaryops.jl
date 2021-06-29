@@ -66,23 +66,89 @@ function _createunaryops()
     "GxB_POSITIONJ1",
 ]
     for name ∈ builtins
-        containername, exportedname = _unarynames(name)
-        structquote = quote
-            struct $containername <: AbstractUnaryOp
-                pointers::Dict{DataType, libgb.GrB_UnaryOp}
-                name::String
-                $containername() = new(Dict{DataType, libgb.GrB_UnaryOp}(), $name)
-            end
-        end
-        @eval(Types, $structquote)
-        constquote = quote
-            const $exportedname = Types.$containername()
-            export $exportedname
-        end
-        @eval(UnaryOps, $constquote)
+        UnaryOp(name)
     end
 end
 
+function UnaryOp(name)
+    if isGxB(name) || isGrB(name)
+        simplifiedname = name[5:end]
+    else
+        simplifiedname = name
+    end
+    tname = Symbol(simplifiedname * "_T")
+    simplifiedname = Symbol(simplifiedname)
+    if isGxB(name) || isGrB(name)
+        structquote = quote
+            struct $tname <: AbstractUnaryOp
+                pointers::Dict{DataType, libgb.GrB_UnaryOp}
+                name::String
+                $tname() = new(Dict{DataType, libgb.GrB_UnaryOp}(), $name)
+            end
+        end
+    else
+        structquote = quote
+            mutable struct $tname <: AbstractUnaryOp
+                pointers::Dict{DataType, libgb.GrB_UnaryOp}
+                name::String
+                function $tname()
+                    u = new(Dict{DataType, libgb.GrB_UnaryOp}(), $name)
+                    function f(unaryop)
+                        for k ∈ keys(unaryop.pointers)
+                            libgb.GrB_UnaryOp_free(Ref(unaryop.pointers[k]))
+                            delete!(unaryop.pointers, k)
+                        end
+                    end
+                    return finalizer(f, u)
+                end
+            end
+        end
+    end
+    @eval(Types, $structquote)
+    constquote = quote
+        const $simplifiedname = Types.$tname()
+        export $simplifiedname
+    end
+    @eval(UnaryOps, $constquote)
+    return getproperty(UnaryOps, simplifiedname)
+end
+
+#This is adapted from the fork by cvdlab.
+function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype::GBType{U}) where {T, U}
+
+    function unaryopfn(z, x)
+        unsafe_store!(z, fn(x))
+        return nothing
+    end
+    opref = Ref{libgb.GrB_UnaryOp}()
+    unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{T}, Ref{U}))
+    libgb.GrB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
+    op.pointers[U] = opref[]
+    return nothing
+end
+
+function UnaryOp(name::String, fn::Function, ztype, xtype)
+    op = UnaryOp(name)
+    _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
+    return op
+end
+function UnaryOp(name::String, fn::Function, type)
+    return UnaryOp(name, fn, type, type)
+end
+function UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType})
+    op = UnaryOp(name)
+    length(ztype) == length(xtype) || error("Lengths of ztype and xtype must match.")
+    for i ∈ 1:length(ztype)
+        _addunaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]))
+    end
+    return op
+end
+function UnaryOp(name::String, fn::Function, type::Vector{DataType})
+    return UnaryOp(name, fn, type, type)
+end
+function UnaryOp(name::String, fn::Function)
+    return UnaryOp(name, fn, valid_vec)
+end
 function _load(unaryop::AbstractUnaryOp)
     booleans = ["GrB_IDENTITY", "GrB_AINV", "GrB_MINV", "GxB_LNOT", "GxB_ONE", "GrB_ABS"]
     integers = [

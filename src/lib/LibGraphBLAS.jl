@@ -256,118 +256,122 @@ end
 mutable struct GB_Monoid_opaque end
 
 const GrB_Monoid = Ptr{GB_Monoid_opaque}
+const monoididnew = Dict{DataType, Function}()
 
 function GrB_Monoid_new_BOOL(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_BOOL, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Bool), monoid, op, identity)
 end
-
+monoididnew[Bool] = GrB_Monoid_new_BOOL
 function GrB_Monoid_new_INT8(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_INT8, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int8), monoid, op, identity)
 end
-
+monoididnew[Int8] = GrB_Monoid_new_INT8
 function GrB_Monoid_new_UINT8(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_UINT8, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt8), monoid, op, identity)
 end
-
+monoididnew[UInt8] = GrB_Monoid_new_UINT8
 function GrB_Monoid_new_INT16(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_INT16, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int16), monoid, op, identity)
 end
-
+monoididnew[Int16] = GrB_Monoid_new_INT16
 function GrB_Monoid_new_UINT16(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_UINT16, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt16), monoid, op, identity)
 end
-
+monoididnew[UInt16] = GrB_Monoid_new_UINT16
 function GrB_Monoid_new_INT32(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_INT32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int32), monoid, op, identity)
 end
-
+monoididnew[Int32] = GrB_Monoid_new_INT32
 function GrB_Monoid_new_UINT32(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_UINT32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt32), monoid, op, identity)
 end
-
+monoididnew[UInt32] = GrB_Monoid_new_UINT32
 function GrB_Monoid_new_INT64(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_INT64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int64), monoid, op, identity)
 end
-
+monoididnew[Int64] = GrB_Monoid_new_INT64
 function GrB_Monoid_new_UINT64(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_UINT64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt64), monoid, op, identity)
 end
-
+monoididnew[UInt64] = GrB_Monoid_new_UINT64
 function GrB_Monoid_new_FP32(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_FP32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Cfloat), monoid, op, identity)
 end
-
+monoididnew[Float32] = GrB_Monoid_new_FP32
 function GrB_Monoid_new_FP64(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_FP64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Cdouble), monoid, op, identity)
 end
-
+monoididnew[Float64] = GrB_Monoid_new_FP64
 function GxB_Monoid_new_FC32(monoid, op, identity)
     @wraperror ccall((:GxB_Monoid_new_FC32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, GxB_FC32_t), monoid, op, identity)
 end
-
+monoididnew[ComplexF32] = GxB_Monoid_new_FC32
 function GxB_Monoid_new_FC64(monoid, op, identity)
     @wraperror ccall((:GxB_Monoid_new_FC64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, GxB_FC64_t), monoid, op, identity)
 end
-
+monoididnew[ComplexF64] = GxB_Monoid_new_FC64
 function GrB_Monoid_new_UDT(monoid, op, identity)
     @wraperror ccall((:GrB_Monoid_new_UDT, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Ptr{Cvoid}), monoid, op, identity)
 end
+monoididnew[Any] = GrB_Monoid_new_UDT
 
+const monoidtermnew = Dict{DataType, Function}()
 function GxB_Monoid_terminal_new_BOOL(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_BOOL, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Bool, Bool), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Bool] = GxB_Monoid_terminal_new_BOOL
 function GxB_Monoid_terminal_new_INT8(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_INT8, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int8, Int8), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Int8] = GxB_Monoid_terminal_new_INT8
 function GxB_Monoid_terminal_new_UINT8(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_UINT8, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt8, UInt8), monoid, op, identity, terminal)
 end
-
+monoidtermnew[UInt8] = GxB_Monoid_terminal_new_UINT8
 function GxB_Monoid_terminal_new_INT16(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_INT16, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int16, Int16), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Int16] = GxB_Monoid_terminal_new_INT16
 function GxB_Monoid_terminal_new_UINT16(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_UINT16, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt16, UInt16), monoid, op, identity, terminal)
 end
-
+monoidtermnew[UInt16] = GxB_Monoid_terminal_new_UINT16
 function GxB_Monoid_terminal_new_INT32(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_INT32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int32, Int32), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Int32] = GxB_Monoid_terminal_new_INT32
 function GxB_Monoid_terminal_new_UINT32(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_UINT32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt32, UInt32), monoid, op, identity, terminal)
 end
-
+monoidtermnew[UInt32] = GxB_Monoid_terminal_new_UINT32
 function GxB_Monoid_terminal_new_INT64(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_INT64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int64, Int64), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Int64] = GxB_Monoid_terminal_new_INT64
 function GxB_Monoid_terminal_new_UINT64(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_UINT64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, UInt64, UInt64), monoid, op, identity, terminal)
 end
-
+monoidtermnew[UInt64] = GxB_Monoid_terminal_new_UINT64
 function GxB_Monoid_terminal_new_FP32(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_FP32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Cfloat, Cfloat), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Float32] = GxB_Monoid_terminal_new_FP32
 function GxB_Monoid_terminal_new_FP64(monoid, op, identity, terminal)
 @wraperror ccall((:GxB_Monoid_terminal_new_FP64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Cdouble, Cdouble), monoid, op, identity, terminal)
 end
-
+monoidtermnew[Float64] = GxB_Monoid_terminal_new_FP64
 function GxB_Monoid_terminal_new_FC32(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_FC32, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, GxB_FC32_t, GxB_FC32_t), monoid, op, identity, terminal)
 end
-
+monoidtermnew[ComplexF32] = GxB_Monoid_terminal_new_FC32
 function GxB_Monoid_terminal_new_FC64(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_FC64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, GxB_FC64_t, GxB_FC64_t), monoid, op, identity, terminal)
 end
-
+monoidtermnew[ComplexF64] = GxB_Monoid_terminal_new_FC64
 function GxB_Monoid_terminal_new_UDT(monoid, op, identity, terminal)
     @wraperror ccall((:GxB_Monoid_terminal_new_UDT, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Ptr{Cvoid}, Ptr{Cvoid}), monoid, op, identity, terminal)
 end
+monoidtermnew[Any] = GxB_Monoid_terminal_new_UDT
 
 function GxB_Monoid_operator(op, monoid)
     @wraperror ccall((:GxB_Monoid_operator, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp}, GrB_Monoid), op, monoid)
@@ -381,8 +385,18 @@ function GxB_Monoid_identity(identity, monoid)
     @wraperror ccall((:GxB_Monoid_identity, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Monoid), identity, monoid)
 end
 
-function GxB_Monoid_terminal(has_terminal, terminal, monoid)
-    @wraperror ccall((:GxB_Monoid_terminal, libgraphblas), GrB_Info, (Ptr{Bool}, Ptr{Cvoid}, GrB_Monoid), has_terminal, terminal, monoid)
+function GxB_Monoid_terminal(T, monoid)
+
+    has_terminal = Ref{Bool}()
+    terminal = Ref{T}()
+    ccall((:GxB_Monoid_terminal, libgraphblas), GrB_Info, (Ptr{Bool}, Ptr{Cvoid}, GrB_Monoid), has_terminal, terminal, monoid)
+    has_terminal = has_terminal[]
+    println(has_terminal)
+    if has_terminal
+        return terminal[]
+    else
+        return nothing
+    end
 end
 
 function GrB_Monoid_free(monoid)

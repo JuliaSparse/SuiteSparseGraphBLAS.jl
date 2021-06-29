@@ -4,10 +4,7 @@ end
 const BinaryUnion = Union{AbstractBinaryOp, libgb.GrB_BinaryOp}
 
 function _binarynames(name)
-    simple = splitconstant(name)[2]
-    containername = Symbol(simple, "_BINARY_T")
-    exportedname = Symbol(simple)
-    return containername, exportedname
+
 end
 
 #TODO: Rewrite
@@ -66,7 +63,19 @@ function _createbinaryops()
     "GxB_SECONDJ1",
     ]
     for name ∈ builtins
-        containername, exportedname = _binarynames(name)
+        BinaryOp(name)
+    end
+end
+
+function BinaryOp(name)
+    if isGxB(name) || isGrB(name)
+        simplifiedname = name[5:end]
+    else
+        simplifiedname = name
+    end
+    containername = Symbol(simplifiedname, "_T")
+    exportedname = Symbol(simplifiedname)
+    if isGxB(name) || isGrB(name)
         structquote = quote
             struct $containername <: AbstractBinaryOp
                 pointers::Dict{DataType, libgb.GrB_BinaryOp}
@@ -74,15 +83,81 @@ function _createbinaryops()
                 $containername() = new(Dict{DataType, libgb.GrB_BinaryOp}(), $name)
             end
         end
-        @eval(Types, $structquote)
-        constquote = quote
-            const $exportedname = Types.$containername()
-            export $exportedname
+    else
+        structquote = quote
+            mutable struct $containername <: AbstractBinaryOp
+                pointers::Dict{DataType, libgb.GrB_BinaryOp}
+                name::String
+                function $containername()
+                    b = new(Dict{DataType, libgb.GrB_BinaryOp}(), $name)
+                    function f(binaryop)
+                        for k ∈ keys(binaryop.pointers)
+                            libgb.GrB_BinaryOp_free(Ref(binaryop.pointers[k]))
+                            delete!(binaryop.pointers, k)
+                        end
+                    end
+                    return finalizer(f, b)
+                end
+            end
         end
-        @eval(BinaryOps,$constquote)
     end
+    @eval(Types, $structquote)
+    constquote = quote
+        const $exportedname = Types.$containername()
+        export $exportedname
+    end
+    @eval(BinaryOps, $constquote)
+    return getproperty(BinaryOps, exportedname)
 end
 
+#This is adapted from the fork by cvdlab.
+function _addbinaryop(
+    op::AbstractBinaryOp,
+    fn::Function,
+    ztype::GBType{T},
+    xtype::GBType{U},
+    ytype::GBType{V}
+) where {T,U,V}
+    function binaryopfn(z, x, y)
+        unsafe_store!(z, fn(x, y))
+        return nothing
+    end
+    opref = Ref{libgb.GrB_BinaryOp}()
+    binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{T}, Ref{U}, Ref{V}))
+    libgb.GrB_BinaryOp_new(opref, binaryopfn_C, ztype, xtype, ytype, op.name)
+    op.pointers[U] = opref[]
+    return nothing
+end
+
+function BinaryOp(name::String, fn::Function, ztype, xtype, ytype)
+    op = BinaryOp(name)
+    _addbinaryop(op, fn, toGBType(ztype), toGBType(xtype), toGBType(ytype))
+    return op
+end
+function BinaryOp(name::String, fn::Function, type::DataType)
+    return BinaryOp(name, fn, type, type, type)
+end
+function BinaryOp(
+    name::String,
+    fn::Function,
+    ztype::Vector{DataType},
+    xtype::Vector{DataType},
+    ytype::Vector{DataType}
+)
+    op = BinaryOp(name)
+    length(ztype) == length(xtype) == length(ytype) ||
+        error("Lengths of ztype, xtype, and ytype must match")
+    for i ∈ 1:length(ztype)
+        _addbinaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]), toGBType(ytype[i]))
+    end
+    return op
+end
+function BinaryOp(name::String, fn::Function, type::Vector{DataType})
+    return BinaryOp(name, fn, type, type, type)
+end
+function BinaryOp(name::String, fn::Function)
+    return BinaryOp(name, fn, valid_vec)
+end
 function _load(binary::AbstractBinaryOp)
     booleans = [
         "GrB_FIRST",

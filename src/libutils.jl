@@ -77,7 +77,7 @@ function load_global(str, type = Cvoid)
 end
 
 isGxB(name) = name[1:3] == "GxB"
-
+isGrB(name) = name[1:3] == "GrB"
 """
     _print_unsigned_as_signed()
 

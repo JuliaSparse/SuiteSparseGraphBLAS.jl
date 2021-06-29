@@ -4,7 +4,11 @@ end
 const MonoidUnion = Union{AbstractMonoid, libgb.GrB_Monoid}
 
 function _monoidnames(name)
-    simple = splitconstant(name)[2]
+    if isGxB(name) || isGrB(name)
+        simple = splitconstant(name)[2]
+    else
+        simple = name
+    end
     containername = Symbol(simple, "_MONOID_T")
     exportedname = Symbol(simple * "_MONOID")
     return containername, exportedname
@@ -29,7 +33,13 @@ function _createmonoids()
         "GxB_BXNOR",
     ]
     for name ∈ builtins
-        containername, exportedname = _monoidnames(name)
+        Monoid(name)
+    end
+end
+function Monoid(name)
+    println(name)
+    containername, exportedname = _monoidnames(name)
+    if isGxB(name) || isGrB(name)
         structquote = quote
             struct $containername <: AbstractMonoid
                 pointers::Dict{DataType, libgb.GrB_Monoid}
@@ -37,15 +47,76 @@ function _createmonoids()
                 $containername() = new(Dict{DataType, libgb.GrB_Monoid}(), $name)
             end
         end
-        @eval(Types, $structquote)
-        constquote = quote
-            const $exportedname = Types.$containername()
-            export $exportedname
+    else
+        structquote = quote
+            mutable struct $containername <: AbstractMonoid
+                pointers::Dict{DataType, libgb.GrB_Monoid}
+                name::String
+                function $containername()
+                    m = new(Dict{DataType, libgb.GrB_Monoid}(), $name)
+                    function f(monoid)
+                        for k ∈ keys(monoid.pointers)
+                            libgb.GrB_Monoid_free(Ref(monoid.pointers[k]))
+                            delete!(monoid.pointers, k)
+                        end
+                    end
+                    return finalizer(f, m)
+                end
+            end
         end
-        @eval(Monoids, $constquote)
     end
+    @eval(Types, $structquote)
+    constquote = quote
+        const $exportedname = Types.$containername()
+        export $exportedname
+    end
+    @eval(Monoids, $constquote)
+    return getproperty(Monoids, exportedname)
 end
 
+#This is adapted from the fork by cvdlab
+function _addmonoid(op::AbstractMonoid, binop::BinaryUnion, id::T, terminal = nothing) where {T}
+    if terminal === nothing
+        terminal = C_NULL
+    else
+        typeof(terminal) == T || throw(ArgumentError("id and terminal must have the same type."))
+    end
+    if binop isa AbstractBinaryOp
+        binop = binop[T]
+    end
+    monref = Ref{libgb.GrB_Monoid}()
+    if T <: valid_union
+        if terminal === C_NULL
+            libgb.monoididnew[T](monref, binop, id)
+        else
+            libgb.monoidtermnew[T](monref, binop, id, terminal)
+        end
+    else
+        libgb.monoidtermnew[Any](monref, binop, Ptr{Cvoid}(id), Ptr{Cvoid}(terminal))
+    end
+    op.pointers[T] = monref[]
+    return nothing
+end
+function Monoid(name::String, binop::BinaryUnion, id::T, terminal = nothing) where {T}
+    if binop isa AbstractBinaryOp
+        binop = binop[T]
+    end
+    m = Monoid(name)
+    _addmonoid(m, binop, id, terminal)
+    return m
+end
+function Monoid(name::String, binop::AbstractBinaryOp, id::AbstractVector, terminal = nothing)
+    m = Monoid(name)
+    for i ∈ 1:length(id)
+        binop2 = binop[typeof(id[i])]
+        if terminal === nothing
+            _addmonoid(m, binop2, id[i], nothing)
+        else
+            _addmonoid(m, binop2, id[i], terminal[i])
+        end
+    end
+    return m
+end
 function _load(monoid::AbstractMonoid)
     booleans = ["GxB_ANY", "GrB_LOR", "GrB_LAND", "GrB_LXOR", "GrB_LXNOR", "GxB_EQ"]
     integers = ["GrB_MIN", "GrB_MAX", "GrB_PLUS", "GrB_TIMES", "GxB_ANY"]

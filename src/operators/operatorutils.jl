@@ -39,7 +39,7 @@ isloaded(o::AbstractOp) = !isempty(o.pointers)
 
 function validtypes(o::AbstractOp)
     isloaded(o) || _load(o)
-    return keys(o.pointers)
+    return collect(keys(o.pointers))
 end
 
 function Base.getindex(o::AbstractOp, t::DataType)
