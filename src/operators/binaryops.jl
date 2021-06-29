@@ -327,6 +327,23 @@ function _load(binary::AbstractBinaryOp)
         "GxB_SECONDJ1",
     ]
 
+    complexes = [
+        "GxB_FIRST",
+        "GxB_SECOND",
+        "GxB_POW",
+        "GxB_PLUS",
+        "GxB_MINUS",
+        "GxB_TIMES",
+        "GxB_DIV",
+        "GxB_RMINUS",
+        "GxB_RDIV",
+        "GxB_PAIR",
+        "GxB_ANY",
+        "GxB_ISEQ",
+        "GxB_ISNE",
+        "GxB_EQ",
+        "GxB_NE",
+    ]
     name = binary.name
     if name ∈ booleans
         binary.pointers[Bool] = load_global(name * "_BOOL")
@@ -352,6 +369,11 @@ function _load(binary::AbstractBinaryOp)
     end
     if name ∈ positionals
         binary.pointers[Any] = load_global(name * "_INT64")
+    end
+    name = "GxB_" * name[5:end]
+    if name ∈ complexes
+        binary.pointers[ComplexF32] = load_global(name * "_FC32")
+        binary.pointers[ComplexF64] = load_global(name * "_FC64")
     end
 end
 

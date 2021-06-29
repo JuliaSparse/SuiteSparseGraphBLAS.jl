@@ -814,6 +814,36 @@ function _load(rig::AbstractSemiring)
         "GxB_PLUS_SECONDJ1",
         "GxB_TIMES_SECONDJ1",
     ]
+
+    complexes = [
+        "GxB_PLUS_FIRST",
+        "GxB_TIMES_FIRST",
+        "GxB_ANY_FIRST",
+        "GxB_PLUS_SECOND",
+        "GxB_TIMES_SECOND",
+        "GxB_ANY_SECOND",
+        "GxB_PLUS_PAIR",
+        "GxB_TIMES_PAIR",
+        "GxB_ANY_PAIR",
+        "GxB_PLUS_PLUS",
+        "GxB_TIMES_PLUS",
+        "GxB_ANY_PLUS",
+        "GxB_PLUS_MINUS",
+        "GxB_TIMES_MINUS",
+        "GxB_ANY_MINUS",
+        "GxB_PLUS_TIMES",
+        "GxB_TIMES_TIMES",
+        "GxB_ANY_TIMES",
+        "GxB_PLUS_DIV",
+        "GxB_TIMES_DIV",
+        "GxB_ANY_DIV",
+        "GxB_PLUS_RDIV",
+        "GxB_TIMES_RDIV",
+        "GxB_ANY_RDIV",
+        "GxB_PLUS_RMINUS",
+        "GxB_TIMES_RMINUS",
+        "GxB_ANY_RMINUS",
+    ]
     name = rig.name
     if name ∈ booleans
         rig.pointers[Bool] = load_global(name * "_BOOL")
@@ -839,6 +869,12 @@ function _load(rig::AbstractSemiring)
     end
     if name ∈ positionals
         rig.pointers[Any] = load_global(name * "_INT64")
+    end
+    name = replace(name, "GrB_" => "GxB_")
+    name = replace(name, "_SEMIRING" => "")
+    if name ∈ complexes
+        rig.pointers[ComplexF32] = load_global(name * "_FC32")
+        rig.pointers[ComplexF64] = load_global(name * "_FC64")
     end
 end
 

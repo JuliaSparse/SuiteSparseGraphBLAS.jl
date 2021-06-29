@@ -137,6 +137,7 @@ function _load(monoid::AbstractMonoid)
         "GxB_BXNOR",
     ]
     floats = ["GrB_MIN", "GrB_MAX", "GrB_PLUS", "GrB_TIMES", "GxB_ANY"]
+    complexes = ["GxB_PLUS", "GxB_TIMES", "GxB_ANY"]
     name = monoid.name
 
     if name ∈ booleans
@@ -171,6 +172,12 @@ function _load(monoid::AbstractMonoid)
             load_global(name * (isGxB(name) ? "_FP32_MONOID" : "_MONOID_FP32"))
         monoid.pointers[Float64] =
             load_global(name * (isGxB(name) ? "_FP64_MONOID" : "_MONOID_FP64"))
+    end
+    name = "GxB_" * name[5:end]
+    if name ∈ complexes
+        #Complex monoids are always GxB, so "_MONOID" is always at the end.
+        monoid.pointers[ComplexF32] = load_global(name * "_FC32_MONOID")
+        monoid.pointer[ComplexF64] = load_global(name * "_FC64_MONOID")
     end
 end
 Base.show(io::IO, ::MIME"text/plain", m::libgb.GrB_Monoid) = gxbprint(io, m)

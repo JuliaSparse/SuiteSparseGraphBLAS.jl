@@ -212,6 +212,45 @@ function _load(unaryop::AbstractUnaryOp)
         "GxB_ISFINITE",
     ]
     positionals = ["GxB_POSITIONI", "GxB_POSITIONI1", "GxB_POSITIONJ", "GxB_POSITIONJ1"]
+    complexes = [
+        "GxB_IDENTITY",
+        "GxB_AINV",
+        "GxB_MINV",
+        "GxB_ONE",
+        "GxB_SQRT",
+        "GxB_LOG",
+        "GxB_EXP",
+        "GxB_LOG2",
+        "GxB_SIN",
+        "GxB_COS",
+        "GxB_TAN",
+        "GxB_ACOS",
+        "GxB_ASIN",
+        "GxB_ATAN",
+        "GxB_SINH",
+        "GxB_COSH",
+        "GxB_TANH",
+        "GxB_ASINH",
+        "GxB_ACOSH",
+        "GxB_ATANH",
+        "GxB_SIGNUM",
+        "GxB_CEIL",
+        "GxB_FLOOR",
+        "GxB_ROUND",
+        "GxB_TRUNC",
+        "GxB_EXP2",
+        "GxB_EXPM1",
+        "GxB_LOG10",
+        "GxB_LOG1P",
+        "GxB_CONJ",
+        "GxB_CREAL",
+        "GxB_CIMAG",
+        "GxB_CARG",
+        "GxB_ABS",
+        "GxB_ISINF",
+        "GxB_ISNAN",
+        "GxB_ISFINITE",
+    ]
     name = unaryop.name
     if name ∈ booleans
         constname = name * "_BOOL"
@@ -238,6 +277,11 @@ function _load(unaryop::AbstractUnaryOp)
     end
     if name ∈ positionals
         unaryop.pointers[Any] = load_global(name)
+    end
+    name = "GxB_" * name[5:end]
+    if name ∈ complexes
+        unaryop.pointers[ComplexF32] = load_global(name * "_FC32")
+        unaryop.pointers[ComplexF64] = load_global(name * "_FC64")
     end
 end
 
