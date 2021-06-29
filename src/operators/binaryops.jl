@@ -124,7 +124,7 @@ function _addbinaryop(
     end
     opref = Ref{libgb.GrB_BinaryOp}()
     binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{T}, Ref{U}, Ref{V}))
-    libgb.GrB_BinaryOp_new(opref, binaryopfn_C, ztype, xtype, ytype, op.name)
+    libgb.GB_BinaryOp_new(opref, binaryopfn_C, ztype, xtype, ytype, op.name)
     op.pointers[U] = opref[]
     return nothing
 end

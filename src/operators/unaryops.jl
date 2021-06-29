@@ -122,7 +122,7 @@ function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype:
     end
     opref = Ref{libgb.GrB_UnaryOp}()
     unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{T}, Ref{U}))
-    libgb.GrB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
+    libgb.GB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
     op.pointers[U] = opref[]
     return nothing
 end

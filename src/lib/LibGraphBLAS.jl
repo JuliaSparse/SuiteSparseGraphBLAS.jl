@@ -345,6 +345,10 @@ function GxB_Monoid_terminal_new_UINT32(monoid, op, identity, terminal)
 end
 monoidtermnew[UInt32] = GxB_Monoid_terminal_new_UINT32
 function GxB_Monoid_terminal_new_INT64(monoid, op, identity, terminal)
+    println(monoid)
+    println(op)
+    println(terminal)
+    println(identity)
     @wraperror ccall((:GxB_Monoid_terminal_new_INT64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int64, Int64), monoid, op, identity, terminal)
 end
 monoidtermnew[Int64] = GxB_Monoid_terminal_new_INT64
