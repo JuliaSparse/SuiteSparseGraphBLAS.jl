@@ -5,7 +5,8 @@ function importcscmat(
     rowindices,
     values::Vector{T};
     jumbled::Bool = false,
-    desc::Descriptor = Descriptors.NULL
+    desc::Descriptor = Descriptors.NULL,
+    iso = false
 ) where {T}
     A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
     m = libgb.GrB_Index(m) #nrows
@@ -35,7 +36,7 @@ function importcscmat(
         colsize,
         rowsize,
         valsize,
-        false,
+        iso,
         jumbled,
         desc
     )
@@ -57,7 +58,7 @@ end
 
 function importcscvec(
     n::Integer, vi, vx::Vector{T};
-    jumbled::Bool = false, desc::Descriptor = Descriptors.NULL
+    jumbled::Bool = false, desc::Descriptor = Descriptors.NULL, iso = false
 ) where {T}
     v = Ref{libgb.GrB_Vector}()
     n = libgb.GrB_Index(n)
@@ -77,7 +78,7 @@ function importcscvec(
         Ref{Ptr{Cvoid}}(values),
         vi_size,
         vx_size,
-        false,
+        iso,
         length(vx),
         false,
         desc
@@ -96,7 +97,7 @@ end
 
 function importdensematrix(
     m::Integer, n::Integer, A::VecOrMat{T};
-    desc::Descriptor = Descriptors.NULL
+    desc::Descriptor = Descriptors.NULL, iso = false
 ) where {T}
     C = Ref{libgb.GrB_Matrix}()
     m = libgb.GrB_Index(m)
@@ -112,7 +113,7 @@ function importdensematrix(
         n,
         Ref{Ptr{Cvoid}}(Ax),
         Asize,
-        false,
+        iso,
         desc
     )
     return GBMatrix{T}(C[])
@@ -129,7 +130,7 @@ end
 
 function importdensevec(
     n::Integer, v::Vector{T};
-    desc::Descriptor = Descriptors.NULL
+    desc::Descriptor = Descriptors.NULL, iso = false
 ) where {T}
     w = Ref{libgb.GrB_Vector}()
     n = libgb.GrB_Index(n)
@@ -143,7 +144,7 @@ function importdensevec(
         n,
         Ref{Ptr{Cvoid}}(vx),
         vsize,
-        false,
+        iso,
         desc
     )
     return GBVector{T}(w[])

@@ -1,18 +1,20 @@
 # SuiteSparseGraphBLAS.jl
 
-SuiteSparseGraphBLAS.jl is a WIP package for sparse linear algebra on arbitrary semirings, with a particular focus on graph computations.
+SuiteSparseGraphBLAS.jl is a package for sparse linear algebra on arbitrary semirings, with a particular focus on graph computations.
 It aims to provide a Julian wrapper over Tim Davis' SuiteSparse reference implementation of the GraphBLAS C specification.
 
 # Roadmap
+
+!!! note
+    This library is still very WIP, if you are missing any functionality, or find any incorrectly implemented functions from those interfaces please open an issue or PR!
 
 While the core library is mostly complete, and all GraphBLAS functionality is present, there are still quite a few features being worked on for v1.0:
 
 1. ChainRules.jl integration for AD.
 2. Complete SparseArrays and ArrayInterface interfaces.
-3. Printing v2.
-4. User-defined types and functions.
+3. Fancy printing
+4. User-defined types.
 5. Alternative syntax for GraphBLAS ops (currently must use `BinaryOps.PLUS` instead of `+`).
-6. Complex builtins.
 
 Once these are completed there will be a v1.0 release, with the goal being JuliaCon 2021.
 
@@ -23,16 +25,12 @@ Post 1.0 goals include:
 3. More efficient import and export between Julia and GraphBLAS
 4. Support for other GraphBLAS implementations in a follow-up GraphBLAS.jl
 
-!!! danger "Printing"
-
-    Printing is done directly by GraphBLAS in this release. This means printed indices are 0-based, and the displayed type is the equivalent C type. The v1.0 release will alleviate this issue.
-
 # Installation
 
 Install using the Julia package manager in the REPL:
 
 ```
-] add SuiteSparseGraphBLAS#master
+] add SuiteSparseGraphBLAS
 ```
 
 or with `Pkg`
@@ -62,13 +60,15 @@ The three primary components of GraphBLAS are: matrices, operators, and operatio
 
 SuiteSparseGraphBLAS.jl provides `GBVector` and `GBMatrix` array types which are subtypes of `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively. Both can be constructed with no arguments to use the maximum size.
 
-```julia
-julia> GBVector{Float64}()
-1152921504606846976x1 GraphBLAS double vector, sparse by col
-  no entries
+```@setup intro
+using SuiteSparseGraphBLAS
+using SparseArrays
+```
 
-1152921504606846976x1152921504606846976 GraphBLAS int8_t matrix, hypersparse by col
-  no entries
+```@repl intro
+GBVector{Float64}()
+
+GBMatrix{ComplexF64}()
 ```
 
 GraphBLAS array types are opaque to the user in order to allow the library author to choose the best storage format.
@@ -77,29 +77,10 @@ SuiteSparseGraphBLAS.jl sets the default to column major to ensure fast imports 
 
 A complete list of construction methods can be found in [Construction](@ref), but the matrix and vector above can be constructed as follows:
 
-```julia
-julia> A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
-7x7 GraphBLAS int64_t matrix, bitmap by col
-  12 entries
-
-    (3,0)   6
-    (0,1)   1
-    (3,2)   7
-    (5,2)   9
-    (6,2)   10
-    (0,3)   2
-    (6,3)   11
-    (1,4)   3
-    (6,4)   12
-    (2,5)   5
-    (4,5)   8
-    (1,6)   4
+```@repl intro
+A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
 
 v = GBVector([4], [10])
-4x1 GraphBLAS int64_t vector, bitmap by col
-  1 entry
-
-    (3,0)   10
 ```
 ## GraphBLAS Operations
 
@@ -125,49 +106,6 @@ GraphBLAS operations are, where possible, methods of existing Julia functions  l
 
 where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumulating into ``\bf C``, and ``\otimes`` and ``\oplus`` are a binary operation and commutative monoid respectively. 
 
-### Common arguments
-
-The operations above have often accept most or all of the following arguments.
-
-#### `op` - `UnaryOp`, `BinaryOp`, `Monoid`, `Semiring`, or `SelectOp`:
-
-This is the most important argument for most of these operations. It determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`.
-Most operations are restricted to one type of operator.
-
-!!! tip "Built-Ins"
-    The built-in operators can be found in the submodules: `UnaryOps`, `BinaryOps`, `Monoids`, and `Semirings`.
-
-#### `desc` - `Descriptor`:
-
-The descriptor argument allows the user to modify the operation in some fashion. The most common options are:
-
-- `desc.[input1 | input2] == [DEFAULT | TRANSPOSE]` 
-
-    Transposes the inputs and can be found in `Descriptors.[T0 | T1 | T0T1]`. 
-    Typically you should use Julia's built-in transpose functionality.
-
-- `desc.mask == [DEFAULT | STRUCTURE | COMPLEMENT | STRUCT_COMP]` 
-
-    If `STRUCTURE` is set the operation will use the presence of a value rather than the value itself to determine whether the index is masked. 
-    If `COMPLEMENT` is set the presence/truth value is complemented (ie. if **no** value is present or the value is **false** that index is masked).
-
-- `desc.output == [DEFAULT | REPLACE]`
-
-    If `REPLACE` is set the operation will replace all values in the output matrix **after** the accumulation step. 
-    If an index is found in the output matrix, but not in the results of the operation it will be set to `nothing`. 
-
-
-#### `accum` - `BinaryOp`:
-
-The `accum` keyword argument provides a binary operation to accumulate results into the result array. 
-The accumulation step is performed **before** masking.
-
-#### `mask` - `GBArray`:
-
-The `mask` keyword argument determines whether each index from the result of an operation appears in the output. 
-The mask may be structural, where the presence of a value indicates the mask is `true`, or valued where the value of the mask indicates its truth value. 
-The mask may also be complemented. These options are controlled by the `desc` argument.
-
 ## GraphBLAS Operators
 
 GraphBLAS operators are one of the following:
@@ -180,7 +118,7 @@ GraphBLAS operators are one of the following:
 Built-in operators can be found in exported submodules:
 
 ```julia
-julia> BinaryOps.
+julia> BinaryOps.\TAB
 
 ANY       BSET       DIV        FIRSTJ1    ISGE       LDEXP      MIN        RDIV       SECONDJ
 ATAN2     BSHIFT     EQ         FMOD       ISGT       LE         MINUS      REMAINDER  SECONDJ1
@@ -198,7 +136,7 @@ The methods are drawn from the LAGraph [repo](https://github.com/GraphBLAS/LAGra
 Input `A` must be a square, symmetric matrix with any element type.
 We'll test it using the matrix from the GBArray section above, which has two triangles in its undirected form.
 
-```julia
+```@repl intro
 function cohen(A)
   U = select(SelectOps.TRIU, A)
   L = select(SelectOps.TRIL, A)
@@ -211,6 +149,6 @@ function sandia(A)
 end
 
 M = eadd(A, A', BinaryOps.PLUS) #Make undirected/symmetric
-cohen(A) # 2
-sandia(A) # 2
+cohen(M)
+sandia(M)
 ```

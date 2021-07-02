@@ -20,6 +20,32 @@ function GBVector(I::Vector, X::Vector{T}; dup = BinaryOps.PLUS) where {T}
     return x
 end
 
+"""
+    GBVector(I, x; nrows = maximum(I))
+
+Create an nrows length GBVector v such that M[I[k]] = x.
+The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
+each index.
+"""
+function GBVector(I::Vector, x::T;
+    nrows = maximum(I)) where {T}
+    A = GBVector{T}(nrows)
+    build(A, I, x)
+    return A
+end
+
+function build(A::GBVector{T}, I::Vector, x::T) where {T}
+nnz(A) == 0 || error("Cannot build matrix with existing elements")
+x = GBScalar(x)
+
+libgb.GxB_Vector_build_Scalar(
+    A,
+    Vector{libgb.GrB_Index}(I),
+    x,
+    length(I)
+)
+end
+
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 Base.unsafe_convert(::Type{libgb.GrB_Vector}, v::GBVector) = v.p

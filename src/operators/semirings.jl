@@ -883,6 +883,6 @@ Base.show(io::IO, ::MIME"text/plain", s::libgb.GrB_Semiring) = gxbprint(io, s)
 multiplyop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_multiply(rig)
 addop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_add(rig)
 
-xtype(rig::libgb.GrB_Semiring) = xtype(addop(rig))
-ytype(rig::libgb.GrB_Semiring) = ytype(addop(rig))
+xtype(rig::libgb.GrB_Semiring) = xtype(multiplyop(rig))
+ytype(rig::libgb.GrB_Semiring) = ytype(multiplyop(rig))
 ztype(rig::libgb.GrB_Semiring) = ztype(addop(rig))

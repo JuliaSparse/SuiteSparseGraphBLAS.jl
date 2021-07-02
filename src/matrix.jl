@@ -26,6 +26,33 @@ function GBMatrix(
     return A
 end
 
+"""
+    GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J))
+
+Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = x.
+The resulting matrix is "iso-valued" such that it only stores `x` once rather than once for
+each index.
+"""
+function GBMatrix(I::Vector, J::Vector, x::T;
+    nrows = maximum(I), ncols = maximum(J)) where {T}
+    A = GBMatrix{T}(nrows, ncols)
+    build(A, I, J, x)
+    return A
+end
+
+function build(A::GBMatrix{T}, I::Vector, J::Vector, x::T) where {T}
+nnz(A) == 0 || error("Cannot build matrix with existing elements")
+length(I) == length(J) || DimensionMismatch("I, J and X must have the same length")
+x = GBScalar(x)
+
+libgb.GxB_Matrix_build_Scalar(
+    A,
+    Vector{libgb.GrB_Index}(I),
+    Vector{libgb.GrB_Index}(J),
+    x,
+    length(I)
+)
+end
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 
@@ -153,7 +180,6 @@ function _outlength(A, I, J)
     end
     return Ilen, Jlen
 end
-
 """
     extract!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 

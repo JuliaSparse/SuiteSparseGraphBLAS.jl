@@ -50,7 +50,7 @@ function _loadselectops()
     end
 end
 
-isloaded(d::AbstractSelectOp) = d.p !== C_NULL
+_isloaded(d::AbstractSelectOp) = d.p !== C_NULL
 function Base.getindex(o::AbstractSelectOp)
     o.p
 end

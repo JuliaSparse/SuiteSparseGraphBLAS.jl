@@ -37,6 +37,7 @@ end
     FORMAT = 1
     SPARSITY_STATUS = 33
     SPARSITY_CONTROL = 32
+    BASE1 = 104
 end
 
 @cenum GBFormat::Int32 begin

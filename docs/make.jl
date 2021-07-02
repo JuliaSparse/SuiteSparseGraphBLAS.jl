@@ -1,6 +1,7 @@
 using Documenter
 using SuiteSparseGraphBLAS
 using LinearAlgebra
+using SparseArrays
 makedocs(
     modules = [SuiteSparseGraphBLAS],
     sitename="SuiteSparseGraphBLAS.jl",
@@ -9,6 +10,7 @@ makedocs(
         "Arrays" => "arrays.md",
         "Operations" => "operations.md",
         "Operators" => [
+            "operators.md",
             "unaryops.md",
             "binaryops.md",
             "monoids.md",

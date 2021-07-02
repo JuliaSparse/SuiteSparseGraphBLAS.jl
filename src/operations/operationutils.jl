@@ -39,3 +39,24 @@ function _handlectx(op, mask, accum, desc, defaultop = nothing)
         _handlectx(desc, ctxdesc, Descriptors.NULL)
     )
 end
+
+"""
+    xtype(op::GrBOp)::DataType
+
+Determine type of the first argument to a typed operator.
+"""
+function xtype end
+
+"""
+    ytype(op::GrBOp)::DataType
+
+Determine type of the second argument to a typed operator.
+"""
+function ytype end
+
+"""
+    ytype(op::GrBOp)::DataType
+
+Determine type of the output of a typed operator.
+"""
+function ztype end

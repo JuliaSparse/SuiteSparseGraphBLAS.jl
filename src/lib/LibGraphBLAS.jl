@@ -729,6 +729,10 @@ function GrB_Vector_build_UDT(w, I, X, nvals, dup)
     @wraperror ccall((:GrB_Vector_build_UDT, libgraphblas), GrB_Info, (GrB_Vector, Ptr{GrB_Index}, Ptr{Cvoid}, GrB_Index, GrB_BinaryOp), w, I, X, nvals, dup)
 end
 
+function GxB_Vector_build_Scalar(w, I, scalar, nvals)
+    I = tozerobased(I)
+    @wraperror ccall((:GxB_Vector_build_Scalar, libgraphblas), GrB_Info, (GrB_Vector, Ptr{GrB_Index}, GxB_Scalar, GrB_Index), w, I, scalar, nvals)
+end
 
 function GrB_Vector_setElement_UDT(w, x, i)
     @wraperror ccall((:GrB_Vector_setElement_UDT, libgraphblas), GrB_Info, (GrB_Vector, Ptr{Cvoid}, GrB_Index), w, x, i)
@@ -968,6 +972,12 @@ function GrB_Matrix_build_UDT(C, I, J, X, nvals, dup)
     @wraperror ccall((:GrB_Matrix_build_UDT, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cvoid}, GrB_Index, GrB_BinaryOp), C, I, J, X, nvals, dup)
 end
 
+function GxB_Matrix_build_Scalar(C, I, J, scalar, nvals)
+    I = tozerobased(I)
+    J = tozerobased(J)
+    @wraperror ccall((:GxB_Matrix_build_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{GrB_Index}, Ptr{GrB_Index}, GxB_Scalar, GrB_Index), C, I, J, scalar, nvals)
+end
+
 function GrB_Matrix_setElement_UDT(C, x, i, j)
     @wraperror ccall((:GrB_Matrix_setElement_UDT, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{Cvoid}, GrB_Index, GrB_Index), C, x, i, j)
 end
@@ -1043,6 +1053,7 @@ end
     GxB_PRINTF = 101
     GxB_FLUSH = 102
     GxB_MEMORY_POOL = 103
+    GxB_PRINT_1BASED = 104
     GxB_SPARSITY_STATUS = 33
     GxB_IS_HYPER = 6
     GxB_SPARSITY_CONTROL = 32
@@ -2335,6 +2346,14 @@ function GxB_Global_Option_set(field, value)
             (:GxB_Global_Option_set, libgraphblas),
             Cvoid,
             (UInt32, Cint),
+            field,
+            value
+        )
+    elseif field ∈ [GxB_PRINT_1BASED]
+        ccall(
+            (:GxB_Global_Option_set, libgraphblas),
+            Cvoid,
+            (UInt32, Bool),
             field,
             value
         )

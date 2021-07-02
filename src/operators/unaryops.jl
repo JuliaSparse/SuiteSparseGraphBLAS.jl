@@ -276,7 +276,7 @@ function _load(unaryop::AbstractUnaryOp)
         unaryop.pointers[Float64] = load_global(name * "_FP64")
     end
     if name ∈ positionals
-        unaryop.pointers[Any] = load_global(name)
+        unaryop.pointers[Any] = load_global(name * "_INT64")
     end
     name = "GxB_" * name[5:end]
     if name ∈ complexes
@@ -289,9 +289,6 @@ ztype(op::libgb.GrB_UnaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_UnaryOp_ztype(o
 xtype(op::libgb.GrB_UnaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_UnaryOp_xtype(op)])
 
 Base.show(io::IO, ::MIME"text/plain", u::libgb.GrB_UnaryOp) = gxbprint(io, u)
-function Base.show(io::IO, ::MIME"text/plain", u::AbstractUnaryOp)
-    print(io, u.name, ": ", keys(u.pointers))
-end
 
 """
 Identity: `z=x`

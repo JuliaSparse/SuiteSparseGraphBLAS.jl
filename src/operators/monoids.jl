@@ -177,7 +177,7 @@ function _load(monoid::AbstractMonoid)
     if name ∈ complexes
         #Complex monoids are always GxB, so "_MONOID" is always at the end.
         monoid.pointers[ComplexF32] = load_global(name * "_FC32_MONOID")
-        monoid.pointer[ComplexF64] = load_global(name * "_FC64_MONOID")
+        monoid.pointers[ComplexF64] = load_global(name * "_FC64_MONOID")
     end
 end
 Base.show(io::IO, ::MIME"text/plain", m::libgb.GrB_Monoid) = gxbprint(io, m)

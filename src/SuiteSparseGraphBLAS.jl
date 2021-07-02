@@ -37,8 +37,8 @@ include("indexutils.jl")
 
 
 const GBVecOrMat = Union{GBVector, GBMatrix}
-const GBMatOrTranspose = Union{<:GBMatrix, Transpose{<:Any, <:GBMatrix}}
-const GBArray = Union{<:GBVector, GBMatOrTranspose}
+const GBMatOrTranspose = Union{GBMatrix, Transpose{<:Any, <:GBMatrix}}
+const GBArray = Union{GBVector, GBMatOrTranspose}
 const ptrtogbtype = Dict{Ptr, AbstractGBType}()
 
 const GrBOp = Union{
@@ -96,7 +96,7 @@ export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
-export xtype, ytype, ztype
+export xtype, ytype, ztype, validtypes #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix #arrays
 export clear!, extract, extract!, subassign!, assign! #array functions
 
@@ -104,7 +104,7 @@ export clear!, extract, extract!, subassign!, assign! #array functions
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!, transpose, reduce
-export nnz, sprand, findnz
+export nnz, sprand, findnz, nonzeros
 
 #context/with
 export with
@@ -118,6 +118,7 @@ function __init__()
     #libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
     gbset(FORMAT, BYCOL) #This may not always be performant. Should put in Preferences.jl
+    gbset(BASE1, true)
     @eval(Descriptors, $:(const NULL = Descriptor()))
     atexit() do
         libgb.GrB_finalize()

@@ -94,3 +94,13 @@ end
 function splitconstant(str)
     return String.(split(str, "_"))
 end
+
+function tolist(vec)
+    vec = sort(string.(vec))
+    s = ""
+    for i in 1:(length(vec) - 1)
+        s = s * "`$(vec[i])`, "
+    end
+    s = s * "`$(vec[end])`"
+    return s
+end

@@ -35,15 +35,28 @@ function getoperator(op, t)
     end
 end
 
-isloaded(o::AbstractOp) = !isempty(o.pointers)
+_isloaded(o::AbstractOp) = !isempty(o.pointers)
 
+"""
+    validtypes(operator::AbstractOp)::Vector{DataType}
+    validtypes(operator::SelectOp)::Nothing
+
+Determine the types available as a domain for a particular operator.
+Each operator is defined on a specific set of types, for instance the [`LAND_LOR`](@ref)
+    semiring is only defined for `Boolean` arguments.
+
+When applied to an `AbstractSelectOp` this will return `nothing`.
+When applied to certain operators like positional semirings it will return `[Any]`.
+"""
 function validtypes(o::AbstractOp)
-    isloaded(o) || _load(o)
+    if !_isloaded(o)
+        _load(o)
+    end
     return collect(keys(o.pointers))
 end
 
 function Base.getindex(o::AbstractOp, t::DataType)
-    isloaded(o) || _load(o)
+    _isloaded(o) || _load(o)
     if Any ∈ keys(o.pointers)
         getindex(o.pointers, Any)
     else
