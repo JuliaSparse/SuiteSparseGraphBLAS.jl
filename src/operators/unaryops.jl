@@ -123,6 +123,7 @@ end
 
 #UnaryOp constructors
 #####################
+function UnaryOp end
 function UnaryOp(name::String, fn::Function, ztype, xtype)
     op = UnaryOp(name)
     _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))

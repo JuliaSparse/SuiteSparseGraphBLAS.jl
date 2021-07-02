@@ -32,7 +32,7 @@ The operations above have often accept most or all of the following arguments.
 
 ### `op` - `UnaryOp`, `BinaryOp`, `Monoid`, `Semiring`, or `SelectOp`:
 
-This is the most important argument for most of these operations. It determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`.
+This is the most important argument for most of the GraphBLAS operations. It determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`.
 Most operations are restricted to one type of operator.
 
 !!! tip "Built-Ins"

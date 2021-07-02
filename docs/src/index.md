@@ -6,7 +6,7 @@ It aims to provide a Julian wrapper over Tim Davis' SuiteSparse reference implem
 # Roadmap
 
 !!! note
-    This library is still very WIP, if you are missing any functionality, or find any incorrectly implemented functions from those interfaces please open an issue or PR!
+    This library is still a WIP, if you are missing any functionality, find any incorrectly implemented functions, or need further/better documentation please open an issue, PR, or ask in the [#GraphBLAS channel on the Julia Zulip](https://julialang.zulipchat.com/#narrow/stream/289264-GraphBLAS) (preferred) or the [#graphblas channel on the Julia Slack](https://julialang.slack.com/archives/C023B0WGMHR)!
 
 While the core library is mostly complete, and all GraphBLAS functionality is present, there are still quite a few features being worked on for v1.0:
 

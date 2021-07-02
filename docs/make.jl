@@ -15,7 +15,8 @@ makedocs(
             "binaryops.md",
             "monoids.md",
             "semirings.md",
-            "selectops.md"
+            "selectops.md",
+            "udfs.md"
         ]
     ]
 )

@@ -4,13 +4,13 @@
         n = GBMatrix([1,2,3,2], [1,2,2,1], [1,2,3,4])
         #eadd correctness
         @test eadd(m, n) == GBMatrix([1,1,2,2,3,3], [1,2,1,2,1,2], [2,4,6,7,3,9])
-        @test eadd(m, n; op = BinaryOps.GT)[1, 1] == 0
+        @test eadd(m, n, BinaryOps.GT)[1, 1] == 0
         #check that the (+) op is being picked up from the semiring.
-        @test eadd(m, n; op = Semirings.PLUS_MAX) == eadd(m, n; op = BinaryOps.PLUS)
+        @test eadd(m, n, Semirings.PLUS_MAX) == eadd(m, n, BinaryOps.PLUS)
         #emul correctness
-        @test emul(m, n; op = BinaryOps.POW)[3, 2] == m[3,2] ^ n[3,2]
+        @test emul(m, n, BinaryOps.POW)[3, 2] == m[3,2] ^ n[3,2]
         #check that the (*) op is being picked up from the semiring
-        @test emul(m, n; op = Semirings.MAX_PLUS) == emul(m, n; op = BinaryOps.PLUS)
+        @test emul(m, n, Semirings.MAX_PLUS) == emul(m, n, BinaryOps.PLUS)
     end
     @testset "kron" begin
         m1 = GBMatrix(UInt64[1, 2, 3, 5], UInt64[1, 3, 1, 2], Int8[1, 2, 3, 5])
@@ -68,7 +68,7 @@
         m = GBMatrix([[1,2,3] [4,5,6] [7,8,9]])
         s = select(SelectOps.TRIL, m)
         @test s[1,2] === nothing && s[3,1] == 3
-        s = select(SelectOps.LT_THUNK, m, 6)
+        s = select(SelectOps.LT, m, 6)
         @test s[2,2] == 5 && s[3,3] === nothing
     end
     @testset "transpose" begin

@@ -67,6 +67,16 @@ SparseMatrixCSC(A[:,:, desc=Descriptors.T0]) #Transpose the first argument
 
 All of this same functionality exists for vectors in 1-dimension.
 
+# Transpose
+The typical lazy Julia `transpose` is available as usual, and the adjoint operator `'` is also
+overloaded to be equivalent.
+
+`x = A'` will create a `Transpose` wrapper.
+When an operation uses this argument it will cause the `desc` to set `INP<0|1> = T_<0|1>`. 
+
+!!! warning
+    Vectors do not support transposition at this time. A matrix with the column or row size set to `1` may be a solution.
+
 # Utilities
 
 ```@docs
