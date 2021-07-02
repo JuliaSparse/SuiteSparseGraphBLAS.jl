@@ -136,7 +136,7 @@ end
 #Vector of xtypes and ztypes, add a GrB_UnaryOp for each.
 function UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType})
     op = UnaryOp(name)
-    length(ztype) == length(xtype) || error("Lengths of ztype and xtype must match.")
+    length(ztype) == length(xtype) || throw(DimensionMismatch("Lengths of ztype and xtype must match."))
     for i ∈ 1:length(ztype)
         _addunaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]))
     end

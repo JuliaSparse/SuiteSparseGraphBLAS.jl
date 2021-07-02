@@ -35,7 +35,7 @@ function GBVector(I::Vector, x::T;
 end
 
 function build(A::GBVector{T}, I::Vector, x::T) where {T}
-nnz(A) == 0 || error("Cannot build matrix with existing elements")
+nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
 x = GBScalar(x)
 
 libgb.GxB_Vector_build_Scalar(
@@ -113,7 +113,7 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Vector_build_, suffix(T))
     @eval begin
         function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = BinaryOps.PLUS)
-            nnz(v) == 0 || error("Cannot build vector with existing elements")
+            nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
             libgb.$func(v, Vector{libgb.GrB_Index}(I), X, length(X), dup[$T])
         end

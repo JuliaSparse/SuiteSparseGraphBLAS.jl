@@ -41,7 +41,7 @@ function GBMatrix(I::Vector, J::Vector, x::T;
 end
 
 function build(A::GBMatrix{T}, I::Vector, J::Vector, x::T) where {T}
-nnz(A) == 0 || error("Cannot build matrix with existing elements")
+nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
 length(I) == length(J) || DimensionMismatch("I, J and X must have the same length")
 x = GBScalar(x)
 
@@ -116,7 +116,7 @@ for T ∈ valid_vec
                 dup = BinaryOps.PLUS
             )
             dup = getoperator(dup, $T)
-            nnz(A) == 0 || error("Cannot build matrix with existing elements")
+            nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
             length(X) == length(I) == length(J) ||
                 DimensionMismatch("I, J and X must have the same length")
             libgb.$func(

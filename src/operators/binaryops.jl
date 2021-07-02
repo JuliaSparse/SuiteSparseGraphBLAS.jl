@@ -155,7 +155,7 @@ function BinaryOp(
 )
     op = BinaryOp(name)
     length(ztype) == length(xtype) == length(ytype) ||
-        error("Lengths of ztype, xtype, and ytype must match")
+        throw(DimensionMismatch("Lengths of ztype, xtype, and ytype must match"))
     for i ∈ 1:length(ztype)
         _addbinaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]), toGBType(ytype[i]))
     end

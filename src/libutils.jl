@@ -27,7 +27,7 @@ function suffix(T)
     elseif T == ComplexF64
         return "FC64"
     else
-        error("Not a valid GrB data type")
+        throw(ArgumentError("Not a valid GrB data type"))
     end
 end
 
@@ -59,7 +59,7 @@ function towrappertype(T)
     elseif T == ComplexF64
         return :GxB_FC64_t
     else
-        error("Not a valid GrB data type")
+        throw(ArgumentError("Not a valid GrB data type"))
     end
 end
 

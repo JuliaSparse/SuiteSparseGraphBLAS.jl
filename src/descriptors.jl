@@ -35,7 +35,7 @@ function Base.getproperty(d::Descriptor, s::Symbol)
     #elseif s == :sort
         #f = libgb.GxB_SORT
     else
-        error("type Descriptor has no field $s")
+        throw(UndefRefError())
     end
     return libgb.GxB_Descriptor_get(d, f)
 end
@@ -60,7 +60,7 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
     #elseif s == :sort
         #f = libgb.GxB_SORT
     else
-        error("type Descriptor has no field $s")
+        throw(UndefRefError())
     end
     libgb.GrB_Descriptor_set(d, f, x)
 end

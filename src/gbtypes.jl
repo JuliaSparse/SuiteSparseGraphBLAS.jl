@@ -129,6 +129,6 @@ function toGBType(x)
     elseif x == ComplexF64
         return FC64
     else
-        error("Not a valid GrB data type")
+        throw(ArgumentError("Not a valid GrB data type"))
     end
 end
