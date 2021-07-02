@@ -9,11 +9,8 @@ using Pkg
 Pkg.add("SuiteSparseGraphBLAS.jl")
 ```
 
-#### v1.0
-- [ ] Import/Export all formats
-- [ ] UDTs
-- [ ] Full infix coverage
-- [ ] ChainRules.jl support
+### v1.0
+For functionality still in-progres for v1 mid-late July see the issues and projects tabs.
 
 ## Acknowledgements
 Original author: Abhinav Mehndiratta
