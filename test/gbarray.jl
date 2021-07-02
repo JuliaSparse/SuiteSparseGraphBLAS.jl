@@ -26,14 +26,14 @@
         end
         @testset "sparse" begin
             #Construction and indexing correct for sparse matrices
-            x = sprand(Int32, 10000, 10000, 0.001)
+            x = sprand(Int32, 1000, 1000, 0.001)
             m = GBMatrix(x)
             @test nnz(x) == nnz(m)
             mnz = findnz(m) #This has occasional "GrB_INSUFFICIENT_SPACE" errors...
             xnz = findnz(x)
             @test mnz == xnz
 
-            x = sprand(UInt8, 10000, 0.05)
+            x = sprand(UInt8, 1000, 0.05)
             v = GBVector(x)
             @test nnz(v) == nnz(x)
             vnz = findnz(v)
