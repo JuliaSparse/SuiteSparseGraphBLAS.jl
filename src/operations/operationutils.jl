@@ -19,12 +19,14 @@ end
 optype(A::GBArray, B::GBArray) = optype(eltype(A), eltype(B))
 
 function _handlectx(ctx, ctxvar, default = nothing)
-    if ctx === nothing
+    if ctx === nothing || ctx === missing
         ctx2 = get(ctxvar)
         if ctx2 !== nothing
             return something(ctx2)
-        else
+        elseif ctx !== missing
             return default
+        else
+            throw(ArgumentError("This operation requires an operator specified by the `with` function."))
         end
     else
         return ctx
