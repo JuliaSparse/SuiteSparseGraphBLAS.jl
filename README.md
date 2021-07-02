@@ -14,5 +14,9 @@ For functionality still in-progres for v1 mid-late July see the issues and proje
 
 ## Acknowledgements
 Original author: Abhinav Mehndiratta
+
+Current maintainer: William Kimmerer
+
 SuiteSparse author: Tim Davis
+
 Mentors: Viral B Shah, Miha Zgubic
