@@ -316,10 +316,6 @@ function Base.broadcasted(::typeof(-), A::GBArray, B::GBArray)
     eadd(A, B, BinaryOps.MINUS)
 end
 
-function Base.broadcasted(::typeof(/), A::GBArray, B::GBArray)
-    emul(A, B, BinaryOps.DIV)
-end
-
 #TODO: fix tricky gotchas, this will do type-specific (ie sometimes integer) division.
 function Base.broadcasted(::typeof(/), A::GBArray, B::GBArray)
     emul(A, B, BinaryOps.DIV)

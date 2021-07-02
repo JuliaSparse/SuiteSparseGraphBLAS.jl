@@ -10,6 +10,15 @@ const GxB_FC64_t = ComplexF32
 
 const GrB_Index = UInt64
 
+struct UninitializedObjectError <: Exception end
+struct InvalidObjectError <: Exception end
+struct NullPointerError <: Exception end
+struct InvalidValueError <: Exception end
+struct InvalidIndexError <: Exception end
+struct OutputNotEmptyError <: Exception end
+struct InsufficientSpaceError <: Exception end
+struct PANIC <: Exception end
+
 macro wraperror(code)
     MacroTools.@q begin
         info = $(esc(code))
@@ -18,7 +27,33 @@ macro wraperror(code)
         elseif info == GrB_NO_VALUE
             return nothing
         else
-            error(string(info))
+            if info == GrB_UNINITIALIZED_OBJECT 
+                throw(UninitializedObjectError)
+            elseif info == GrB_INVALID_OBJECT 
+                throw(InvalidObjectError)
+            elseif info == GrB_NULL_POINTER 
+                throw(NullPointerError)
+            elseif info == GrB_INVALID_VALUE 
+                throw(InvalidValueError)
+            elseif info == GrB_INVALID_INDEX 
+                throw(InvalidIndexError)
+            elseif info == GrB_DOMAIN_MISMATCH 
+                throw(DomainError(nothing, "GraphBLAS Domain Mismatch"))
+            elseif info == GrB_DIMENSION_MISMATCH
+                throw(DimensionMismatch())
+            elseif info == GrB_OUTPUT_NOT_EMPTY 
+                throw(OutputNotEmptyError)
+            elseif info == GrB_OUT_OF_MEMORY 
+                throw(OutOfMemoryError())
+            elseif info == GrB_INSUFFICIENT_SPACE 
+                throw(InsufficientSpaceError)
+            elseif info == GrB_INDEX_OUT_OF_BOUNDS 
+                throw(BoundsError())
+            elseif info == GrB_PANIC
+                throw(PANIC)
+            else
+                throw(ErrorException("I don't know how I got here."))
+            end
         end
     end
 end
@@ -810,7 +845,7 @@ for T ∈ valid_vec
             X = Vector{$type}(undef, nvals)
             nvals = Ref{GrB_Index}()
             $func(I, X, nvals, v)
-            nvals[] == length(I) == length(X) || error("Mismatched Lengths")
+            nvals[] == length(I) == length(X) || throw(DimensionMismatch())
             return I .+ 1, X
         end
     end
@@ -962,7 +997,7 @@ for T ∈ valid_vec
             X = Vector{$type}(undef, nvals)
             nvals = Ref{GrB_Index}(nvals)
             $func(I, J, X, nvals, A)
-            nvals[] == length(I) == length(X) == length(J) || error("Mismatched Lengths")
+            nvals[] == length(I) == length(X) == length(J) || throw(DimensionMismatch())
             return I .+ 1, J .+ 1, X
         end
     end
