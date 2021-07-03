@@ -14,37 +14,37 @@ julia&gt; x = GBMatrix([[1,2] [3,4]])
 
 julia&gt; x = GBMatrix(sprand(100, 100, 0.5))
 100x100 GraphBLAS double matrix, sparse by col
-  4906 entries, memory: 77.7 KB
+  4950 entries, memory: 78.4 KB
 
-    (1,1)    0.837053
-    (4,1)    0.879593
-    (5,1)    0.0614785
-    (9,1)    0.153741
-    (11,1)    0.814404
-    (12,1)    0.907276
-    (16,1)    0.504577
-    (17,1)    0.416942
-    (19,1)    0.981892
-    (21,1)    0.711947
-    (23,1)    0.858944
-    (24,1)    0.624689
-    (28,1)    0.23184
-    (29,1)    0.255923
-    (30,1)    0.0473515
-    (31,1)    0.718542
-    (34,1)    0.276899
-    (35,1)    0.00476633
-    (39,1)    0.0150819
-    (41,1)    0.197546
-    (42,1)    0.701251
-    (43,1)    0.51361
-    (44,1)    0.694598
-    (46,1)    0.67807
-    (48,1)    0.0990104
-    (50,1)    0.053651
-    (53,1)    0.645986
-    (58,1)    0.0652875
-    (61,1)    0.200658
+    (2,1)    0.478407
+    (3,1)    0.791635
+    (5,1)    0.13763
+    (8,1)    0.326863
+    (9,1)    0.438735
+    (11,1)    0.836367
+    (13,1)    0.320531
+    (15,1)    0.567546
+    (17,1)    0.274821
+    (18,1)    0.871892
+    (20,1)    0.0467357
+    (22,1)    0.277395
+    (23,1)    0.242337
+    (26,1)    0.671268
+    (29,1)    0.652546
+    (31,1)    0.524571
+    (32,1)    0.568467
+    (34,1)    0.0272543
+    (36,1)    0.988884
+    (38,1)    0.115422
+    (40,1)    0.529125
+    (41,1)    0.649035
+    (42,1)    0.636023
+    (44,1)    0.0254367
+    (47,1)    0.802614
+    (53,1)    0.927427
+    (54,1)    0.311028
+    (55,1)    0.8427
+    (57,1)    0.71781
     ...
 
 julia&gt; x = GBMatrix(rand(1:50_000, 5000), rand(1:500_000, 5000), 1; ncols = 500_000, nrows = 500_000)
@@ -52,39 +52,39 @@ julia&gt; x = GBMatrix(rand(1:50_000, 5000), rand(1:500_000, 5000), 1; ncols = 5
   5000 entries, memory: 192.3 KB
   iso value:   1
 
-    (12525,44)   1
-    (38658,221)   1
-    (989,225)   1
-    (36316,373)   1
-    (31343,737)   1
-    (27438,770)   1
-    (5022,808)   1
-    (36608,993)   1
-    (27649,994)   1
-    (48607,1082)   1
-    (24083,1144)   1
-    (9084,1247)   1
-    (36531,1436)   1
-    (31332,1614)   1
-    (11818,1970)   1
-    (47322,2091)   1
-    (6491,2215)   1
-    (36018,2249)   1
-    (26026,2290)   1
-    (15278,2345)   1
-    (21728,2568)   1
-    (34104,2632)   1
-    (28649,2808)   1
-    (9806,2904)   1
-    (19440,3074)   1
-    (23041,3089)   1
-    (47346,3173)   1
-    (17322,3176)   1
-    (29289,3250)   1
+    (32502,181)   1
+    (45476,229)   1
+    (22041,246)   1
+    (14540,329)   1
+    (11666,335)   1
+    (4537,514)   1
+    (5563,582)   1
+    (13014,629)   1
+    (28649,756)   1
+    (23993,779)   1
+    (6592,979)   1
+    (22535,1049)   1
+    (45705,1269)   1
+    (46001,1270)   1
+    (31256,1308)   1
+    (25765,1381)   1
+    (41771,1784)   1
+    (5758,1817)   1
+    (2141,1850)   1
+    (10106,1895)   1
+    (30444,1968)   1
+    (9840,2283)   1
+    (29380,2479)   1
+    (31279,2543)   1
+    (10472,2671)   1
+    (5362,2747)   1
+    (29983,2825)   1
+    (26705,2835)   1
+    (23265,2981)   1
     ...</code></pre><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrix" href="#SuiteSparseGraphBLAS.GBMatrix"><code>SuiteSparseGraphBLAS.GBMatrix</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">GBMatrix{T} &lt;: AbstractSparseArray{T, UInt64, 2}</code></pre><p>TWo-dimensional GraphBLAS array with elements of type T. Internal representation is specified as opaque, but in this implementation is stored as one of the following in either row or column orientation:</p><pre><code class="nohighlight">1. Dense
 2. Bitmap
 3. Sparse Compressed
-4. Hypersparse</code></pre><p>The storage type is automatically determined by the library.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/types.jl#L44-L57">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrix-Tuple{Matrix{T} where T}" href="#SuiteSparseGraphBLAS.GBMatrix-Tuple{Matrix{T} where T}"><code>SuiteSparseGraphBLAS.GBMatrix</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX)</code></pre><p>Create a GBMatrix with the max size.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/matrix.jl#L3-L7">source</a></section><section><div><pre><code class="nohighlight">GBMatrix(I, J, X; dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J))</code></pre><p>Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The dup function defaults to <code>|</code> for booleans and <code>+</code> for nonbooleans.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/matrix.jl#L14-L19">source</a></section><section><div><pre><code class="nohighlight">GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J))</code></pre><p>Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = x. The resulting matrix is &quot;iso-valued&quot; such that it only stores <code>x</code> once rather than once for each index.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/matrix.jl#L29-L35">source</a></section><section><div><pre><code class="nohighlight">GBMatrix(M::Matrix)</code></pre><p>Create a GBMatrix from a Julia dense matrix.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/import.jl#L122-L126">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrix-Tuple{SparseMatrixCSC}" href="#SuiteSparseGraphBLAS.GBMatrix-Tuple{SparseMatrixCSC}"><code>SuiteSparseGraphBLAS.GBMatrix</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBMatrix(S::SparseMatrixCSC)</code></pre><p>Create a GBMatrix from SparseArrays sparse matrix <code>S</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/import.jl#L45-L49">source</a></section></article><p>Conversion back to matrices, sparse or dense, is also supported.</p><h2 id="Vector-Construction"><a class="docs-heading-anchor" href="#Vector-Construction">Vector Construction</a><a id="Vector-Construction-1"></a><a class="docs-heading-anchor-permalink" href="#Vector-Construction" title="Permalink"></a></h2><pre><code class="language-julia-repl">julia&gt; v = GBVector{ComplexF32}(100)
+4. Hypersparse</code></pre><p>The storage type is automatically determined by the library.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/types.jl#L44-L57">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrix-Tuple{Matrix{T} where T}" href="#SuiteSparseGraphBLAS.GBMatrix-Tuple{Matrix{T} where T}"><code>SuiteSparseGraphBLAS.GBMatrix</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX)</code></pre><p>Create a GBMatrix with the max size.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/matrix.jl#L3-L7">source</a></section><section><div><pre><code class="nohighlight">GBMatrix(I, J, X; dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J))</code></pre><p>Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The dup function defaults to <code>|</code> for booleans and <code>+</code> for nonbooleans.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/matrix.jl#L14-L19">source</a></section><section><div><pre><code class="nohighlight">GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J))</code></pre><p>Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = x. The resulting matrix is &quot;iso-valued&quot; such that it only stores <code>x</code> once rather than once for each index.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/matrix.jl#L29-L35">source</a></section><section><div><pre><code class="nohighlight">GBMatrix(M::Matrix)</code></pre><p>Create a GBMatrix from a Julia dense matrix.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/import.jl#L122-L126">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrix-Tuple{SparseMatrixCSC}" href="#SuiteSparseGraphBLAS.GBMatrix-Tuple{SparseMatrixCSC}"><code>SuiteSparseGraphBLAS.GBMatrix</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBMatrix(S::SparseMatrixCSC)</code></pre><p>Create a GBMatrix from SparseArrays sparse matrix <code>S</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/import.jl#L45-L49">source</a></section></article><p>Conversion back to matrices, sparse or dense, is also supported.</p><h2 id="Vector-Construction"><a class="docs-heading-anchor" href="#Vector-Construction">Vector Construction</a><a id="Vector-Construction-1"></a><a class="docs-heading-anchor-permalink" href="#Vector-Construction" title="Permalink"></a></h2><pre><code class="language-julia-repl">julia&gt; v = GBVector{ComplexF32}(100)
 100x1 GraphBLAS double complex vector, sparse by col
   no entries, memory: 272 bytes
 
@@ -92,44 +92,44 @@ julia&gt; v = GBMatrix(rand(ComplexF64, 3))
 3x1 GraphBLAS double complex matrix, full by col
   3 entries, memory: 304 bytes
 
-    (1,1)    0.972175 + 0.0213331i
-    (2,1)    0.422279 + 0.0112787i
-    (3,1)    0.83024 + 0.17043i
+    (1,1)    0.701882 + 0.168795i
+    (2,1)    0.277355 + 0.201135i
+    (3,1)    0.220139 + 0.201491i
 
 julia&gt; v = GBVector(sprand(Bool, 100_000_000, 0.001))
 100000000x1 GraphBLAS bool vector, sparse by col
-  99751 entries, memory: 877.0 KB
+  100173 entries, memory: 880.7 KB
 
-    (2310,1)   1
-    (2886,1)   1
-    (3200,1)   1
-    (5495,1)   1
-    (6001,1)   1
-    (7339,1)   1
-    (9093,1)   1
-    (9251,1)   1
-    (10504,1)   1
-    (15109,1)   1
-    (15728,1)   1
-    (17699,1)   1
-    (19581,1)   1
-    (21708,1)   1
-    (23170,1)   1
-    (24428,1)   1
-    (25425,1)   1
-    (25931,1)   1
-    (26480,1)   1
-    (26561,1)   1
-    (26698,1)   1
-    (27801,1)   1
-    (28777,1)   1
-    (29672,1)   1
-    (30617,1)   1
-    (32024,1)   1
-    (32356,1)   1
-    (33357,1)   1
-    (33743,1)   1
-    ...</code></pre><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector" href="#SuiteSparseGraphBLAS.GBVector"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">GBVector{T} &lt;: AbstractSparseArray{T, UInt64, 1}</code></pre><p>One-dimensional GraphBLAS array with elements of type T. Internal representation is specified as opaque, but may be either a dense array, bitmap array, or compressed sparse vector.</p><p>See also: <a href="#SuiteSparseGraphBLAS.GBMatrix"><code>GBMatrix</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/types.jl#L24-L32">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector-Union{Tuple{}, Tuple{T}} where T" href="#SuiteSparseGraphBLAS.GBVector-Union{Tuple{}, Tuple{T}} where T"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBVector{T}(n = libgb.GxB_INDEX_MAX)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/vector.jl#L3-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector-Tuple{Vector{T} where T, Vector{T} where T}" href="#SuiteSparseGraphBLAS.GBVector-Tuple{Vector{T} where T, Vector{T} where T}"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBVector(I::Vector, X::Vector{T})</code></pre><p>Create a GBVector from a vector of indices <code>I</code> and a vector of values <code>X</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/vector.jl#L12-L16">source</a></section><section><div><pre><code class="nohighlight">GBVector(I, x; nrows = maximum(I))</code></pre><p>Create an nrows length GBVector v such that M[I[k]] = x. The resulting vector is &quot;iso-valued&quot; such that it only stores <code>x</code> once rather than once for each index.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/vector.jl#L23-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector-Tuple{SparseVector}" href="#SuiteSparseGraphBLAS.GBVector-Tuple{SparseVector}"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBVector(v::SparseVector)</code></pre><p>Create a GBVector from SparseArrays sparse vector <code>v</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/import.jl#L89-L93">source</a></section></article><h1 id="Indexing"><a class="docs-heading-anchor" href="#Indexing">Indexing</a><a id="Indexing-1"></a><a class="docs-heading-anchor-permalink" href="#Indexing" title="Permalink"></a></h1><p>The usual AbstractArray and SparseArray indexing should work here. Including indexing by scalars, vectors, and ranges.</p><div class="admonition is-danger"><header class="admonition-header">Indexing Structural Zeros</header><div class="admonition-body"><p>When you index a <code>SparseMatrixCSC</code> from <code>SparseArrays</code> and hit a structural zero (a value within the dimensions of the matrix but not stored) you can expect a <code>zero(T)</code>.</p><p>When you index a GBArray you will get <code>nothing</code> when you hit a structural zero. This is because the zero in GraphBLAS depends not just on the domain of the elements but also on what you are <strong>doing</strong> with them. For instance with an element type of <code>Float64</code> you could want the zero to be <code>0.0</code>, <code>-∞</code> or <code>+∞</code>.</p></div></div><p>We&#39;ll use the small matrix from the Introduction to illustrate the indexing capabilities. We will also use <code>SparseArrays.SparseMatrixCSC</code> for the pretty printing functionality, which should be available in this package in <code>v1.0</code>.</p><pre><code class="language-julia-repl">julia&gt; A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
+    (1704,1)   1
+    (2121,1)   1
+    (2821,1)   1
+    (3531,1)   1
+    (4116,1)   1
+    (4138,1)   1
+    (4540,1)   1
+    (5012,1)   1
+    (5796,1)   1
+    (6475,1)   1
+    (7363,1)   1
+    (8040,1)   1
+    (9287,1)   1
+    (10559,1)   1
+    (10763,1)   1
+    (11496,1)   1
+    (12445,1)   1
+    (15665,1)   1
+    (17685,1)   1
+    (18026,1)   1
+    (18736,1)   1
+    (18946,1)   1
+    (22428,1)   1
+    (22647,1)   1
+    (23307,1)   1
+    (24324,1)   1
+    (25051,1)   1
+    (26914,1)   1
+    (28150,1)   1
+    ...</code></pre><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector" href="#SuiteSparseGraphBLAS.GBVector"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">GBVector{T} &lt;: AbstractSparseArray{T, UInt64, 1}</code></pre><p>One-dimensional GraphBLAS array with elements of type T. Internal representation is specified as opaque, but may be either a dense array, bitmap array, or compressed sparse vector.</p><p>See also: <a href="#SuiteSparseGraphBLAS.GBMatrix"><code>GBMatrix</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/types.jl#L24-L32">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector-Union{Tuple{}, Tuple{T}} where T" href="#SuiteSparseGraphBLAS.GBVector-Union{Tuple{}, Tuple{T}} where T"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBVector{T}(n = libgb.GxB_INDEX_MAX)</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/vector.jl#L3-L5">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector-Tuple{Vector{T} where T, Vector{T} where T}" href="#SuiteSparseGraphBLAS.GBVector-Tuple{Vector{T} where T, Vector{T} where T}"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBVector(I::Vector, X::Vector{T})</code></pre><p>Create a GBVector from a vector of indices <code>I</code> and a vector of values <code>X</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/vector.jl#L12-L16">source</a></section><section><div><pre><code class="nohighlight">GBVector(I, x; nrows = maximum(I))</code></pre><p>Create an nrows length GBVector v such that M[I[k]] = x. The resulting vector is &quot;iso-valued&quot; such that it only stores <code>x</code> once rather than once for each index.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/vector.jl#L23-L29">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector-Tuple{SparseVector}" href="#SuiteSparseGraphBLAS.GBVector-Tuple{SparseVector}"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">GBVector(v::SparseVector)</code></pre><p>Create a GBVector from SparseArrays sparse vector <code>v</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/import.jl#L89-L93">source</a></section></article><h1 id="Indexing"><a class="docs-heading-anchor" href="#Indexing">Indexing</a><a id="Indexing-1"></a><a class="docs-heading-anchor-permalink" href="#Indexing" title="Permalink"></a></h1><p>The usual AbstractArray and SparseArray indexing should work here. Including indexing by scalars, vectors, and ranges.</p><div class="admonition is-danger"><header class="admonition-header">Indexing Structural Zeros</header><div class="admonition-body"><p>When you index a <code>SparseMatrixCSC</code> from <code>SparseArrays</code> and hit a structural zero (a value within the dimensions of the matrix but not stored) you can expect a <code>zero(T)</code>.</p><p>When you index a GBArray you will get <code>nothing</code> when you hit a structural zero. This is because the zero in GraphBLAS depends not just on the domain of the elements but also on what you are <strong>doing</strong> with them. For instance with an element type of <code>Float64</code> you could want the zero to be <code>0.0</code>, <code>-∞</code> or <code>+∞</code>.</p></div></div><p>We&#39;ll use the small matrix from the Introduction to illustrate the indexing capabilities. We will also use <code>SparseArrays.SparseMatrixCSC</code> for the pretty printing functionality, which should be available in this package in <code>v1.0</code>.</p><pre><code class="language-julia-repl">julia&gt; A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
 7x7 GraphBLAS int64_t matrix, bitmap by col
   12 entries, memory: 832 bytes
 
@@ -219,4 +219,4 @@ julia&gt; SparseMatrixCSC(A[:,:, desc=Descriptors.T0]) #Transpose the first argu
  ⋅  3  ⋅  ⋅  ⋅  ⋅  12
  ⋅  ⋅  5  ⋅  8  ⋅   ⋅
  ⋅  4  ⋅  ⋅  ⋅  ⋅   ⋅</code></pre><p>All of this same functionality exists for vectors in 1-dimension.</p><h1 id="Transpose"><a class="docs-heading-anchor" href="#Transpose">Transpose</a><a id="Transpose-1"></a><a class="docs-heading-anchor-permalink" href="#Transpose" title="Permalink"></a></h1><p>The typical lazy Julia <code>transpose</code> is available as usual, and the adjoint operator <code>&#39;</code> is also overloaded to be equivalent.</p><p><code>x = A&#39;</code> will create a <code>Transpose</code> wrapper. When an operation uses this argument it will cause the <code>desc</code> to set <code>INP&lt;0|1&gt; = T_&lt;0|1&gt;</code>. </p><div class="admonition is-warning"><header class="admonition-header">Warning</header><div class="admonition-body"><p>Vectors do not support transposition at this time. A matrix with the column or row size set to <code>1</code> may be a solution.</p></div></div><h1 id="Utilities"><a class="docs-heading-anchor" href="#Utilities">Utilities</a><a id="Utilities-1"></a><a class="docs-heading-anchor-permalink" href="#Utilities" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.clear!" href="#SuiteSparseGraphBLAS.clear!"><code>SuiteSparseGraphBLAS.clear!</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">clear!(v::GBVector)
-clear!(A::GBMatrix)</code></pre><p>Clear all the entries from the GBArray. Does not modify the type or dimensions.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/15fc1f4ef02d51f7d2bc24fbd46c9d39461dc12c/src/matrix.jl#L65-L71">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Introduction</a><a class="docs-footer-nextpage" href="../operations/">Operations »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Saturday 3 July 2021 20:11">Saturday 3 July 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+clear!(A::GBMatrix)</code></pre><p>Clear all the entries from the GBArray. Does not modify the type or dimensions.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/8e45498896236e0f86344e0eebaaae32486f09d8/src/matrix.jl#L65-L71">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Introduction</a><a class="docs-footer-nextpage" href="../operations/">Operations »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Saturday 3 July 2021 20:12">Saturday 3 July 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
