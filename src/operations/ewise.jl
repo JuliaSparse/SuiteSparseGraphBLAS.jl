@@ -275,6 +275,13 @@ function eadd(
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
+function Base.:+(A::GBArray, B::GBArray)
+    eadd(A, B, nothing)
+end
+
+function Base.:-(A::GBArray, B::GBArray)
+    eadd(A, B, BinaryOps.MINUS)
+end
 #Elementwise Broadcasts
 #######################
 
