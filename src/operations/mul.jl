@@ -59,7 +59,6 @@ function LinearAlgebra.mul!(
     return w
 end
 
-
 """
     mul(A::GBArray, B::GBArray; kwargs...)::GBArray
 

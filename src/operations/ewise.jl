@@ -61,7 +61,6 @@ function emul!(
     desc = nothing
 )
     op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.TIMES)
-
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))

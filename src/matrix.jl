@@ -158,7 +158,8 @@ function Base.show(io::IO, ::MIME"text/plain", A::GBMatrix)
     gxbprint(io, A)
 end
 
-SparseArrays.nonzeros(A::GBArray) = findnz(A)[3]
+SparseArrays.nonzeros(A::GBArray) = findnz(A)[end]
+
 
 # Indexing functions
 ####################

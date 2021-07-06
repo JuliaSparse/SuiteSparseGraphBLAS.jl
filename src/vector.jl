@@ -14,8 +14,8 @@ GBVector{T}(dims::Dims{1}) where {T} = GBVector{T}(dims...)
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
-function GBVector(I::Vector, X::Vector{T}; dup = BinaryOps.PLUS) where {T}
-    x = GBVector{T}(maximum(I))
+function GBVector(I::Vector, X::Vector{T}; dup = BinaryOps.PLUS, nrows = maximum(I)) where {T}
+    x = GBVector{T}(nrows)
     build(x, I, X, dup = dup)
     return x
 end
