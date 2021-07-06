@@ -27,27 +27,27 @@ macro wraperror(code)
         elseif info == GrB_NO_VALUE
             return nothing
         else
-            if info == GrB_UNINITIALIZED_OBJECT 
+            if info == GrB_UNINITIALIZED_OBJECT
                 throw(UninitializedObjectError)
-            elseif info == GrB_INVALID_OBJECT 
+            elseif info == GrB_INVALID_OBJECT
                 throw(InvalidObjectError)
-            elseif info == GrB_NULL_POINTER 
+            elseif info == GrB_NULL_POINTER
                 throw(NullPointerError)
-            elseif info == GrB_INVALID_VALUE 
+            elseif info == GrB_INVALID_VALUE
                 throw(InvalidValueError)
-            elseif info == GrB_INVALID_INDEX 
+            elseif info == GrB_INVALID_INDEX
                 throw(InvalidIndexError)
-            elseif info == GrB_DOMAIN_MISMATCH 
+            elseif info == GrB_DOMAIN_MISMATCH
                 throw(DomainError(nothing, "GraphBLAS Domain Mismatch"))
             elseif info == GrB_DIMENSION_MISMATCH
                 throw(DimensionMismatch())
-            elseif info == GrB_OUTPUT_NOT_EMPTY 
+            elseif info == GrB_OUTPUT_NOT_EMPTY
                 throw(OutputNotEmptyError)
-            elseif info == GrB_OUT_OF_MEMORY 
+            elseif info == GrB_OUT_OF_MEMORY
                 throw(OutOfMemoryError())
-            elseif info == GrB_INSUFFICIENT_SPACE 
+            elseif info == GrB_INSUFFICIENT_SPACE
                 throw(InsufficientSpaceError)
-            elseif info == GrB_INDEX_OUT_OF_BOUNDS 
+            elseif info == GrB_INDEX_OUT_OF_BOUNDS
                 throw(BoundsError())
             elseif info == GrB_PANIC
                 throw(PANIC)
@@ -843,7 +843,7 @@ for T ∈ valid_vec
             nvals = GrB_Vector_nvals(v)
             I = Vector{GrB_Index}(undef, nvals)
             X = Vector{$type}(undef, nvals)
-            nvals = Ref{GrB_Index}()
+            nvals = Ref{GrB_Index}(nvals)
             $func(I, X, nvals, v)
             nvals[] == length(I) == length(X) || throw(DimensionMismatch())
             return I .+ 1, X
