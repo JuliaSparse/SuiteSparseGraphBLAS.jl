@@ -89,11 +89,7 @@ function emul(
     desc = nothing
 )
     op = _handlectx(op, ctxop, BinaryOps.TIMES)
-    if op isa GrBOp
-        t = ztype(op)
-    else
-        t = optype(u, v)
-    end
+    t = inferoutputtype(u, v, op)
     w = GBVector{t}(size(u))
     return emul!(w, u, v, op; mask , accum, desc)
 end
@@ -136,11 +132,7 @@ function emul(
     desc = nothing
 )
     op = _handlectx(op, ctxop, BinaryOps.TIMES)
-    if op isa GrBOp
-        t = ztype(op)
-    else
-        t = optype(A, B)
-    end
+    t = inferoutputtype(A, B, op)
     C = GBMatrix{t}(size(A))
     return emul!(C, A, B, op; mask, accum, desc)
 end
@@ -235,11 +227,7 @@ function eadd(
     desc = nothing
 )
     op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
-    if op isa GrBOp
-        t = ztype(op)
-    else
-        t = optype(eltype(u), eltype(v))
-    end
+    t = inferoutputtype(u, v, op)
     w = GBVector{t}(size(u))
     return eadd!(w, u, v, op; mask, accum, desc)
 end
@@ -282,11 +270,7 @@ function eadd(
     desc = nothing
 )
     op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
-    if op isa GrBOp
-        t = ztype(op)
-    else
-        t = optype(A, B)
-    end
+    t = inferoutputtype(A, B, op)
     C = GBMatrix{t}(size(A))
     return eadd!(C, A, B, op; mask, accum, desc)
 end

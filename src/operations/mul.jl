@@ -93,11 +93,7 @@ function mul(
     desc = nothing
 )
     op = _handlectx(op, ctxop, Semirings.PLUS_TIMES)
-    if op isa libgb.GrB_Semiring
-        t = ztype(op)
-    else
-        t = optype(A, B)
-    end
+    t = inferoutputtype(A, B, op)
     if A isa GBVector && B isa GBMatOrTranspose
         C = GBVector{t}(size(B, 2))
     elseif A isa GBMatOrTranspose && B isa GBVector

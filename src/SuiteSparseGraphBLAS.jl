@@ -36,9 +36,9 @@ include("descriptors.jl")
 include("indexutils.jl")
 
 
-const GBVecOrMat = Union{GBVector, GBMatrix}
-const GBMatOrTranspose = Union{GBMatrix, Transpose{<:Any, <:GBMatrix}}
-const GBArray = Union{GBVector, GBMatOrTranspose}
+const GBVecOrMat{T} = Union{GBVector{T}, GBMatrix{T}}
+const GBMatOrTranspose{T} = Union{GBMatrix{T}, Transpose{<:Any, GBMatrix{T}}}
+const GBArray{T} = Union{GBVector{T}, GBMatOrTranspose{T}}
 const ptrtogbtype = Dict{Ptr, AbstractGBType}()
 
 const GrBOp = Union{
@@ -125,4 +125,5 @@ function __init__()
     end
 end
 
+include("operators/ztypes.jl")
 end #end of module

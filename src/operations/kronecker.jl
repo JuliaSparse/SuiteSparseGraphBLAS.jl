@@ -53,11 +53,7 @@ function LinearAlgebra.kron(
     desc = nothing
 )
     op = _handlectx(op, ctxop, BinaryOps.TIMES)
-    if op isa GrBOp
-        t = ztype(op)
-    else
-        t = optype(A, B)
-    end
+    t = inferoutputtype(A, B, op)
     C = GBMatrix{t}(size(A,1) * size(B, 1), size(A, 2) * size(B, 2))
     kron!(C, A, B, op; mask, accum, desc)
     return C
