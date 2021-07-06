@@ -28,8 +28,6 @@ function getoperator(op, t)
 
     if op isa AbstractOp
         return op[t]
-    elseif op isa GrBOp
-        return op
     else
         return op
     end

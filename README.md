@@ -6,9 +6,9 @@ A fast, general sparse linear algebra and graph computation package, based on Su
 ### Installation
 ```julia
 using Pkg
-Pkg.add("SuiteSparseGraphBLAS.jl")
+Pkg.add("SuiteSparseGraphBLAS")
 ```
-
+Note: This package supports Julia 1.6+
 ### v1.0
 For functionality still in-progres for v1 mid-late July see the issues and projects tabs.
 

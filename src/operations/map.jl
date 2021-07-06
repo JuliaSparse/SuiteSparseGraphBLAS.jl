@@ -25,7 +25,8 @@ function Base.map(
     op::UnaryUnion, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    return map!(op, similar(A), A; mask, accum, desc)
+    t = inferoutputtype(A, op)
+    return map!(op, similar(A, t), A; mask, accum, desc)
 end
 
 function Base.map!(
@@ -54,7 +55,8 @@ function Base.map(
     op::BinaryUnion, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    return map!(op, similar(A), x, A; mask, accum, desc)
+    t = inferoutputtype(A, op)
+    return map!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
 function Base.map!(
@@ -83,7 +85,8 @@ function Base.map(
     op::BinaryUnion, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
-    return map!(op, similar(A), A, x; mask, accum, desc)
+    t = inferoutputtype(A, op)
+    return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
 function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union;

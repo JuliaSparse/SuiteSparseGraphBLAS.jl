@@ -379,9 +379,9 @@ end
 
 Base.show(io::IO, ::MIME"text/plain", u::libgb.GrB_BinaryOp) = gxbprint(io, u)
 
-xtype(op::BinaryUnion) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_xtype(op)])
-ytype(op::BinaryUnion) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ytype(op)])
-ztype(op::BinaryUnion) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ztype(op)])
+xtype(op::libgb.GrB_BinaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_xtype(op)])
+ytype(op::libgb.GrB_BinaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ytype(op)])
+ztype(op::libgb.GrB_BinaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ztype(op)])
 
 """
 First argument: `f(x::T,y::T)::T = x`

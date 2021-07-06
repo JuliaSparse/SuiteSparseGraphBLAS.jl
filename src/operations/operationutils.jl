@@ -16,8 +16,21 @@ function optype(atype, btype)
     end
 end
 
-optype(A::GBArray, B::GBArray) = optype(eltype(A), eltype(B))
+optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
 
+function inferoutputtype(A::GBArray{T}, B::GBArray{U}, op::AbstractOp) where {T, U}
+    t = optype(A, B)
+    return ztype(op, t)
+end
+function inferoutputtype(::GBArray{T}, op::AbstractOp) where {T}
+    return ztype(op, T)
+end
+function inferoutputtype(::GBArray{T}, op) where {T}
+    return ztype(op)
+end
+function inferoutputtype(::GBArray{T}, ::GBArray{U}, op) where {T, U}
+    return ztype(op)
+end
 function _handlectx(ctx, ctxvar, default = nothing)
     if ctx === nothing || ctx === missing
         ctx2 = get(ctxvar)
