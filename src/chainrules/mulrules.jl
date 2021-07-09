@@ -32,23 +32,20 @@ function rrule(
     ::typeof(Semirings.PLUS_TIMES)
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, B')
-        ∂B = mul(A', ΔΩ)
+        ∂A = mul(ΔΩ, B'; mask=A)
+        ∂B = mul(A', ΔΩ; mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return mul(A, B), mulpullback
 end
 
-# Do I have to duplicate this? :/
+
 function rrule(
     ::typeof(mul),
     A::GBMatOrTranspose,
     B::GBMatOrTranspose
 )
-    function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, B')
-        ∂B = mul(A', ΔΩ)
-        return NoTangent(), ∂A, ∂B
-    end
-return mul(A, B), mulpullback
+    Ω, mulpullback = rrule(mul, A, B, Semirings.PLUS_TIMES)
+    pullback(ΔΩ) = mulpullback(ΔΩ)[1:3]
+return Ω, pullback
 end
