@@ -64,6 +64,22 @@ function Base.copy!(
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
 
+"""
+    mask!(C::GBArray, A::GBArray, mask::GBArray)
+    mask(A::GBArray, mask::GBArray)
+
+
+"""
+function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
+    desc = Descriptors.T0
+    structural && (desc = desc + Descriptors.S)
+    complement && (desc = desc + Descriptors.C)
+    gbtranspose!(C, A; mask, desc)
+    return C
+end
+function mask(A::GBArray, mask::GBArray; structural = false, complement = false)
+    return mask!(similar(A), A, mask; structural, complement)
+end
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
