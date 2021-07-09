@@ -24,15 +24,18 @@ function rrule(::typeof(emul), A::GBArray, B::GBArray, ::typeof(BinaryOps.TIMES)
 end
 
 function rrule(::typeof(emul), A::GBArray, B::GBArray)
-    function timespullback(ΔΩ)
-        ∂A = emul(ΔΩ, B)
-        ∂B = emul(ΔΩ, A)
-        return NoTangent(), ∂A, ∂B
-    end
-    return emul(A, B, BinaryOps.TIMES), timespullback
+    Ω, fullpb = rrule(emul, A, B, BinaryOps.TIMES)
+    emulpb(ΔΩ) = fullpb(ΔΩ)[1:3]
+    return Ω, emulpb
 end
 
-#eadd PLUS
+############
+# eadd rules
+############
+
+# PLUS
+######
+
 function frule(
     (_, ΔA, ΔB, _),
     ::typeof(eadd),
@@ -50,15 +53,19 @@ end
 
 function rrule(::typeof(eadd), A::GBArray, B::GBArray, ::typeof(BinaryOps.PLUS))
     function pluspullback(ΔΩ)
-        return NoTangent(), ΔΩ, ΔΩ, NoTangent()
+        return (
+            NoTangent(),
+            mask(ΔΩ, A; structural = true),
+            mask(ΔΩ, B; structural = true),
+            NoTangent()
+        )
     end
     return eadd(A, B, BinaryOps.PLUS), pluspullback
 end
 
 # Do I have to duplicate this? I get 4 tangents instead of 3 if I call the previous rule.
 function rrule(::typeof(eadd), A::GBArray, B::GBArray)
-    function pluspullback(ΔΩ)
-        return NoTangent(), ΔΩ, ΔΩ
-    end
-    return eadd(A, B, BinaryOps.PLUS), pluspullback
+    Ω, fullpb = rrule(eadd, A, B, BinaryOps.PLUS)
+    eaddpb(ΔΩ) = fullpb(ΔΩ)[1:3]
+    return Ω, eaddpb
 end
