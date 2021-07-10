@@ -64,11 +64,44 @@ function Base.copy!(
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
 
+"""
+    mask!(C::GBArray, A::GBArray, mask::GBArray)
+
+Apply a mask to matrix `A`, storing the results in C.
+"""
+function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
+    desc = Descriptors.T0
+    structural && (desc = desc + Descriptors.S)
+    complement && (desc = desc + Descriptors.C)
+    gbtranspose!(C, A; mask, desc)
+    return C
+end
+
+"""
+    mask(A::GBArray, mask::GBArray)
+
+Apply a mask to matrix `A`.
+"""
+function mask(A::GBArray, mask::GBArray; structural = false, complement = false)
+    return mask!(similar(A), A, mask; structural, complement)
+end
+
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
 )
     return gbtranspose(A.parent; mask, accum, desc)
+end
+
+function Base.copy(v::LinearAlgebra.Transpose{<:Any, <:GBVector})
+    A = GBMatrix{eltype(v)}(size(v, 1), size(v, 2))
+    nz = findnz(v.parent)
+    for i ∈ 1:length(nz[1])
+        println(i)
+        println(nz[1][i], ": ", nz[2][i])
+        A[1, nz[1][i]] = nz[2][i]
+    end
+    return A
 end
 
 function _handletranspose(
