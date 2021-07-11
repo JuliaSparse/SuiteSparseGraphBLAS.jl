@@ -14,8 +14,8 @@ GBVector{T}(dims::Dims{1}) where {T} = GBVector{T}(dims...)
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
-function GBVector(I::Vector, X::Vector{T}; dup = BinaryOps.PLUS) where {T}
-    x = GBVector{T}(maximum(I))
+function GBVector(I::AbstractVector, X::AbstractVector{T}; dup = BinaryOps.PLUS, nrows = maximum(I)) where {T}
+    x = GBVector{T}(nrows)
     build(x, I, X, dup = dup)
     return x
 end
@@ -27,14 +27,14 @@ Create an nrows length GBVector v such that M[I[k]] = x.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
-function GBVector(I::Vector, x::T;
+function GBVector(I::AbstractVector, x::T;
     nrows = maximum(I)) where {T}
     A = GBVector{T}(nrows)
     build(A, I, x)
     return A
 end
 
-function build(A::GBVector{T}, I::Vector, x::T) where {T}
+function build(A::GBVector{T}, I::AbstractVector, x::T) where {T}
 nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
 x = GBScalar(x)
 

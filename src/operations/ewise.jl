@@ -61,7 +61,6 @@ function emul!(
     desc = nothing
 )
     op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.TIMES)
-
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -275,6 +274,13 @@ function eadd(
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
+function Base.:+(A::GBArray, B::GBArray)
+    eadd(A, B, nothing)
+end
+
+function Base.:-(A::GBArray, B::GBArray)
+    eadd(A, B, BinaryOps.MINUS)
+end
 #Elementwise Broadcasts
 #######################
 

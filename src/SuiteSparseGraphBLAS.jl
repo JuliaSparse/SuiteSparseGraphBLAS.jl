@@ -87,9 +87,14 @@ include("operations/kronecker.jl")
 include("print.jl")
 include("import.jl")
 include("export.jl")
-
-#EXPERIMENTAL
 include("options.jl")
+#EXPERIMENTAL
+include("chainrules/chainruleutils.jl")
+include("chainrules/mulrules.jl")
+include("chainrules/ewiserules.jl")
+include("chainrules/maprules.jl")
+include("chainrules/reducerules.jl")
+include("chainrules/selectrules.jl")
 #include("random.jl")
 include("misc.jl")
 export libgb

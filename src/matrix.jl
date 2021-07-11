@@ -18,7 +18,7 @@ Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The dup funct
 to `|` for booleans and `+` for nonbooleans.
 """
 function GBMatrix(
-    I::Vector, J::Vector, X::Vector{T};
+    I::AbstractVector, J::AbstractVector, X::AbstractVector{T};
     dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J)
 ) where {T}
     A = GBMatrix{T}(nrows, ncols)
@@ -33,14 +33,14 @@ Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = x.
 The resulting matrix is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
-function GBMatrix(I::Vector, J::Vector, x::T;
+function GBMatrix(I::AbstractVector, J::AbstractVector, x::T;
     nrows = maximum(I), ncols = maximum(J)) where {T}
     A = GBMatrix{T}(nrows, ncols)
     build(A, I, J, x)
     return A
 end
 
-function build(A::GBMatrix{T}, I::Vector, J::Vector, x::T) where {T}
+function build(A::GBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
 nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
 length(I) == length(J) || DimensionMismatch("I, J and X must have the same length")
 x = GBScalar(x)
@@ -158,7 +158,8 @@ function Base.show(io::IO, ::MIME"text/plain", A::GBMatrix)
     gxbprint(io, A)
 end
 
-SparseArrays.nonzeros(A::GBArray) = findnz(A)[3]
+SparseArrays.nonzeros(A::GBArray) = findnz(A)[end]
+
 
 # Indexing functions
 ####################
