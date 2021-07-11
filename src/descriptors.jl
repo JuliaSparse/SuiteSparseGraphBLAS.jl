@@ -183,3 +183,4 @@ function _loaddescriptors()
 end
 
 Base.show(io::IO, ::MIME"text/plain", d::Descriptor) = gxbprint(io, d)
+Base.print(io::IO, d::Descriptor) = gxbprint(io, d)
