@@ -106,7 +106,7 @@ function Base.copy(v::LinearAlgebra.Transpose{<:Any, <:GBVector})
 end
 
 function _handletranspose(
-    A::GBArray,
+    A::Union{GBArray, Nothing} = nothing,
     desc::Union{Descriptor, Nothing, Ptr{Nothing}} = nothing,
     B::Union{GBArray, Nothing} = nothing
 )

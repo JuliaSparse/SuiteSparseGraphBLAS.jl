@@ -7,6 +7,7 @@ function Base.map!(
     mask, accum, desc = _handlenothings(mask, accum, desc)
     op = getoperator(op, eltype(A))
     accum = getoperator(accum, eltype(C))
+    A, desc = _handletranspose(A, desc)
     if C isa GBVector && A isa GBVector
         libgb.GrB_Vector_apply(C, mask, accum, op, A, desc)
     elseif C isa GBMatrix && A isa GBMatrix
@@ -36,6 +37,7 @@ function Base.map!(
     mask, accum, desc = _handlenothings(mask, accum, desc)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
+    _, desc, A = _handletranspose(nothing, desc, A)
     if C isa GBVector && A isa GBVector
         libgb.scalarvecapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
     elseif C isa GBMatrix && A isa GBMatrix
@@ -66,6 +68,7 @@ function Base.map!(
     mask, accum, desc = _handlenothings(mask, accum, desc)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
+    A, desc, _ = _handletranspose(A, desc)
     if C isa GBVector && A isa GBVector
         libgb.scalarvecapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)
     elseif C isa GBMatrix && A isa GBMatrix
@@ -89,23 +92,39 @@ function Base.map(
     return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union
-)
+function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union)
     map(BinaryOps.PLUS, u, x)
 end
-function Base.broadcasted(
-    ::typeof(+), x::valid_union, u::GBArray
-)
+function Base.broadcasted(::typeof(+), x::valid_union, u::GBArray)
     map(BinaryOps.PLUS, x, u)
 end
 
-function Base.broadcasted(::typeof(*), u::GBArray, x::valid_union
-)
+function Base.broadcasted(::typeof(-), u::GBArray, x::valid_union)
+    map(BinaryOps.MINUS, u, x)
+end
+function Base.broadcasted(::typeof(-), x::valid_union, u::GBArray)
+    map(BinaryOps.MINUS, x, u)
+end
+
+function Base.broadcasted(::typeof(*), u::GBArray, x::valid_union)
     map(BinaryOps.TIMES, u, x)
 end
-function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray
-)
+function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray)
     map(BinaryOps.TIMES, x, u)
+end
+
+function Base.broadcasted(::typeof(/), u::GBArray, x::valid_union)
+    map(BinaryOps.DIV, u, x)
+end
+function Base.broadcasted(::typeof(/), x::valid_union, u::GBArray)
+    map(BinaryOps.DIV, x, u;)
+end
+
+function Base.broadcasted(::typeof(^), u::GBArray, x::valid_union)
+    map(BinaryOps.POW, u, x)
+end
+function Base.broadcasted(::typeof(^), x::valid_union, u::GBArray)
+    map(BinaryOps.POW, x, u)
 end
 
 """
