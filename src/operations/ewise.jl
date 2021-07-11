@@ -55,12 +55,12 @@ function emul!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op = nothing;
+    op = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -82,12 +82,11 @@ end
 function emul(
     u::GBVector,
     v::GBVector,
-    op = nothing;
+    op = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op = _handlectx(op, ctxop, BinaryOps.TIMES)
     t = inferoutputtype(u, v, op)
     w = GBVector{t}(size(u))
     return emul!(w, u, v, op; mask , accum, desc)
@@ -97,12 +96,12 @@ function emul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = nothing;
+    op = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
@@ -125,12 +124,11 @@ end
 function emul(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = nothing;
+    op = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op = _handlectx(op, ctxop, BinaryOps.TIMES)
     t = inferoutputtype(A, B, op)
     C = GBMatrix{t}(size(A))
     return emul!(C, A, B, op; mask, accum, desc)
@@ -193,12 +191,12 @@ function eadd!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op = nothing;
+    op = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -220,12 +218,11 @@ end
 function eadd(
     u::GBVector,
     v::GBVector,
-    op = nothing;
+    op = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
     t = inferoutputtype(u, v, op)
     w = GBVector{t}(size(u))
     return eadd!(w, u, v, op; mask, accum, desc)
@@ -235,12 +232,12 @@ function eadd!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = nothing;
+    op = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
@@ -263,19 +260,18 @@ end
 function eadd(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = nothing;
+    op = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, BinaryOps.PLUS)
     t = inferoutputtype(A, B, op)
     C = GBMatrix{t}(size(A))
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
 function Base.:+(A::GBArray, B::GBArray)
-    eadd(A, B, nothing)
+    eadd(A, B, BinaryOps.PLUS)
 end
 
 function Base.:-(A::GBArray, B::GBArray)
@@ -283,16 +279,6 @@ function Base.:-(A::GBArray, B::GBArray)
 end
 #Elementwise Broadcasts
 #######################
-
-# default argument is missing to avoid `nothing` picking up the default default :).
-function Base.broadcasted(::typeof(∪), A::GBArray, B::GBArray)
-    eadd(A, B, missing)
-end
-
-# default argument is missing to avoid `nothing` picking up the default default :).
-function Base.broadcasted(::typeof(∩), A::GBArray, B::GBArray)
-    emul(A, B, missing)
-end
 
 function Base.broadcasted(::typeof(*), A::GBArray, B::GBArray)
     emul(A, B, BinaryOps.TIMES)

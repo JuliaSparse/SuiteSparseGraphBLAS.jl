@@ -4,14 +4,14 @@
             #dense first
             Y = GBMatrix(rand(-10.0:0.05:10.0, 10))
             X = GBMatrix(rand(-10.0:0.05:10.0, 10))
-            test_frule(eadd, X, Y; check_inferred=false)
-            test_frule(eadd, X, Y, BinaryOps.PLUS; check_inferred=false)
-            test_rrule(eadd, X, Y; check_inferred=false)
-            test_rrule(eadd, X, Y, BinaryOps.PLUS; check_inferred=false)
-            test_frule(emul, X, Y; check_inferred=false)
-            test_frule(emul, X, Y, BinaryOps.TIMES; check_inferred=false)
-            test_rrule(emul, X, Y; check_inferred=false)
-            test_rrule(emul, X, Y, BinaryOps.TIMES; check_inferred=false)
+            test_frule(eadd, X, Y)
+            test_frule(eadd, X, Y, BinaryOps.PLUS)
+            test_rrule(eadd, X, Y)
+            test_rrule(eadd, X, Y, BinaryOps.PLUS)
+            test_frule(emul, X, Y)
+            test_frule(emul, X, Y, BinaryOps.TIMES)
+            test_rrule(emul, X, Y)
+            test_rrule(emul, X, Y, BinaryOps.TIMES)
         end
     end
 
@@ -19,14 +19,14 @@
         @testset "Arithmetic Semiring" begin
             Y = GBMatrix(sprand(10, 0.5)) #using matrix for now until I work out transpose(v::GBVector)
             X = GBMatrix(sprand(10, 0.5))
-            test_frule(eadd, X, Y; check_inferred=false)
-            test_frule(eadd, X, Y, BinaryOps.PLUS; check_inferred=false)
-            test_rrule(eadd, X, Y; check_inferred=false)
-            test_rrule(eadd, X, Y, BinaryOps.PLUS; check_inferred=false)
-            test_frule(emul, X, Y; check_inferred=false)
-            test_frule(emul, X, Y, BinaryOps.TIMES; check_inferred=false)
-            test_rrule(emul, X, Y; check_inferred=false)
-            test_rrule(emul, X, Y, BinaryOps.TIMES; check_inferred=false)
+            test_frule(eadd, X, Y)
+            test_frule(eadd, X, Y, BinaryOps.PLUS)
+            test_rrule(eadd, X, Y)
+            test_rrule(eadd, X, Y, BinaryOps.PLUS)
+            test_frule(emul, X, Y)
+            test_frule(emul, X, Y, BinaryOps.TIMES)
+            test_rrule(emul, X, Y)
+            test_rrule(emul, X, Y, BinaryOps.TIMES)
         end
     end
 end

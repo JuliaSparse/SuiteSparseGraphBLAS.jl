@@ -7,7 +7,6 @@ using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
-using ContextVariablesX
 include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
@@ -69,13 +68,6 @@ const OperatorUnion = Union{
     AbstractOp,
     GrBOp
 }
-
-#Context variables for the `with` function
-@contextvar ctxop::OperatorUnion
-@contextvar ctxmask::Union{GBArray, Ptr} = C_NULL
-@contextvar ctxaccum::Union{BinaryUnion, Ptr} = C_NULL
-@contextvar ctxdesc::Descriptor
-include("with.jl")
 
 include("scalar.jl")
 include("vector.jl")

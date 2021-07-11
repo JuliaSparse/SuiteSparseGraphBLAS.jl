@@ -2,12 +2,12 @@ function LinearAlgebra.mul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, Semirings.PLUS_TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
@@ -23,12 +23,12 @@ function LinearAlgebra.mul!(
     w::GBVector,
     u::GBVector,
     A::GBMatOrTranspose,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, Semirings.PLUS_TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(u, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(u)"))
     size(w, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(w)"))
     op = getoperator(op, optype(u, A))
@@ -43,12 +43,12 @@ function LinearAlgebra.mul!(
     w::GBVector,
     A::GBMatOrTranspose,
     u::GBVector,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, Semirings.PLUS_TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(u, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(u)"))
     size(w, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(w"))
     op = getoperator(op, optype(A, u))
@@ -86,12 +86,11 @@ The default semiring is the `+.*` semiring.
 function mul(
     A::GBArray,
     B::GBArray,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op = _handlectx(op, ctxop, Semirings.PLUS_TIMES)
     t = inferoutputtype(A, B, op)
     if A isa GBVector && B isa GBMatOrTranspose
         C = GBVector{t}(size(B, 2))
@@ -106,11 +105,10 @@ end
 
 function Base.:*(
     A::GBArray,
-    B::GBArray,
-    op = nothing;
+    B::GBArray;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    mul(A, B, op; mask, accum, desc)
+    mul(A, B, Semirings.PLUS_TIMES; mask, accum, desc)
 end

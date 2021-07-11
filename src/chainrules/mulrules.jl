@@ -14,8 +14,8 @@ function frule(
     B::GBMatOrTranspose,
     ::typeof(Semirings.PLUS_TIMES)
 )
-    Ω = mul(A, B)
-    ∂Ω = mul(ΔA, B) + mul(A, ΔB)
+    Ω = mul(A, B, Semirings.PLUS_TIMES)
+    ∂Ω = mul(ΔA, B, Semirings.PLUS_TIMES) + mul(A, ΔB, Semirings.PLUS_TIMES)
     return Ω, ∂Ω
 end
 # Tests will not pass for this. For two reasons.
@@ -32,8 +32,8 @@ function rrule(
     ::typeof(Semirings.PLUS_TIMES)
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, B'; mask=A)
-        ∂B = mul(A', ΔΩ; mask=B)
+        ∂A = mul(ΔΩ, B', Semirings.PLUS_TIMES; mask=A)
+        ∂B = mul(A', ΔΩ, Semirings.PLUS_TIMES; mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return mul(A, B), mulpullback

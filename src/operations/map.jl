@@ -4,7 +4,7 @@ function Base.map!(
     op::UnaryUnion, C::GBArray, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     op = getoperator(op, eltype(A))
     accum = getoperator(accum, eltype(C))
     if C isa GBVector && A isa GBVector
@@ -33,7 +33,7 @@ function Base.map!(
     op::BinaryUnion, C::GBArray, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
     if C isa GBVector && A isa GBVector
@@ -63,7 +63,7 @@ function Base.map!(
     op::BinaryUnion, C::GBArray, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
     if C isa GBVector && A isa GBVector
@@ -89,27 +89,23 @@ function Base.map(
     return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union;
-    mask = nothing, accum = nothing, desc = nothing
+function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union
 )
-    map(BinaryOps.PLUS, u, x; mask, accum, desc)
+    map(BinaryOps.PLUS, u, x)
 end
 function Base.broadcasted(
-    ::typeof(+), x::valid_union, u::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
+    ::typeof(+), x::valid_union, u::GBArray
 )
-    map(BinaryOps.PLUS, x, u; mask, accum, desc)
+    map(BinaryOps.PLUS, x, u)
 end
 
-function Base.broadcasted(::typeof(*), u::GBArray, x::valid_union;
-    mask = nothing, accum = nothing, desc = nothing
+function Base.broadcasted(::typeof(*), u::GBArray, x::valid_union
 )
-    map(BinaryOps.TIMES, u, x; mask, accum, desc)
+    map(BinaryOps.TIMES, u, x)
 end
-function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
+function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray
 )
-    map(BinaryOps.TIMES, x, u; mask, accum, desc)
+    map(BinaryOps.TIMES, x, u)
 end
 
 """

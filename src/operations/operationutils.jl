@@ -31,30 +31,10 @@ end
 function inferoutputtype(::GBArray{T}, ::GBArray{U}, ::AbstractTypedOp{Z}) where {T, U, Z}
     return Z
 end
-function _handlectx(ctx, ctxvar, default = nothing)
-    if ctx === nothing || ctx === missing
-        ctx2 = get(ctxvar)
-        if ctx2 !== nothing
-            return something(ctx2)
-        elseif ctx !== missing
-            return default
-        else
-            throw(ArgumentError("This operation requires an operator specified by the `with` function."))
-        end
-    else
-        return ctx
-    end
-end
 
-function _handlectx(op, mask, accum, desc, defaultop = nothing)
-    return (
-        _handlectx(op, ctxop, defaultop),
-        _handlectx(mask, ctxmask, C_NULL),
-        _handlectx(accum, ctxaccum, C_NULL),
-        _handlectx(desc, ctxdesc, Descriptors.NULL)
-    )
+function _handlenothings(kwargs...)
+    return (x === nothing ? C_NULL : x for x in kwargs)
 end
-
 """
     xtype(op::GrBOp)::DataType
 
