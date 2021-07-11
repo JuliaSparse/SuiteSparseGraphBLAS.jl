@@ -95,7 +95,6 @@ include("chainrules/ewiserules.jl")
 include("chainrules/maprules.jl")
 include("chainrules/reducerules.jl")
 include("chainrules/selectrules.jl")
-include("chainrules/constructorrules.jl")
 #include("random.jl")
 include("misc.jl")
 export libgb
