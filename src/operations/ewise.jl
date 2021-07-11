@@ -64,13 +64,13 @@ function emul!(
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
-    if op isa libgb.GrB_Semiring
+    if op isa TypedSemiring
         libgb.GrB_Vector_eWiseMult_Semiring(w, mask, accum, op, u, v, desc)
         return w
-    elseif op isa libgb.GrB_Monoid
+    elseif op isa TypedMonoid
         libgb.GrB_Vector_eWiseMult_Monoid(w, mask, accum, op, u, v, desc)
         return w
-    elseif op isa libgb.GrB_BinaryOp
+    elseif op isa TypedBinaryOperator
         libgb.GrB_Vector_eWiseMult_BinaryOp(w, mask, accum, op, u, v, desc)
         return w
     else
@@ -107,13 +107,13 @@ function emul!(
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
     accum = getoperator(accum, eltype(C))
-    if op isa libgb.GrB_Semiring
+    if op isa TypedSemiring
         libgb.GrB_Matrix_eWiseMult_Semiring(C, mask, accum, op, A, B, desc)
         return C
-    elseif op isa libgb.GrB_Monoid
+    elseif op isa TypedMonoid
         libgb.GrB_Matrix_eWiseMult_Monoid(C, mask, accum, op, A, B, desc)
         return C
-    elseif op isa libgb.GrB_BinaryOp
+    elseif op isa TypedBinaryOperator
         libgb.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, A, B, desc)
         return C
     else
@@ -202,13 +202,13 @@ function eadd!(
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
-    if op isa libgb.GrB_Semiring
+    if op isa TypedSemiring
         libgb.GrB_Vector_eWiseAdd_Semiring(w, mask, accum, op, u, v, desc)
         return w
-    elseif op isa libgb.GrB_Monoid
+    elseif op isa TypedMonoid
         libgb.GrB_Vector_eWiseAdd_Monoid(w, mask, accum, op, u, v, desc)
         return w
-    elseif op isa libgb.GrB_BinaryOp
+    elseif op isa TypedBinaryOperator
         libgb.GrB_Vector_eWiseAdd_BinaryOp(w, mask, accum, op, u, v, desc)
         return w
     else
@@ -245,13 +245,13 @@ function eadd!(
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
     accum = getoperator(accum, eltype(C))
-    if op isa libgb.GrB_Semiring
+    if op isa TypedSemiring
         libgb.GrB_Matrix_eWiseAdd_Semiring(C, mask, accum, op, A, B, desc)
         return C
-    elseif op isa libgb.GrB_Monoid
+    elseif op isa TypedMonoid
         libgb.GrB_Matrix_eWiseAdd_Monoid(C, mask, accum, op, A, B, desc)
         return C
-    elseif op isa libgb.GrB_BinaryOp
+    elseif op isa TypedBinaryOperator
         libgb.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, A, B, desc)
         return C
     else

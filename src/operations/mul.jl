@@ -14,7 +14,7 @@ function LinearAlgebra.mul!(
     op = getoperator(op, optype(A, B))
     accum = getoperator(accum, eltype(C))
     A, desc, B = _handletranspose(A, desc, B)
-    op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))
+    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_mxm(C, mask, accum, op, A, B, desc)
     return C
 end
@@ -34,7 +34,7 @@ function LinearAlgebra.mul!(
     op = getoperator(op, optype(u, A))
     accum = getoperator(accum, eltype(w))
     u, desc, A = _handletranspose(u, desc, A)
-    op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))
+    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_vxm(w, mask, accum, op, u, A, desc)
     return w
 end
@@ -54,7 +54,7 @@ function LinearAlgebra.mul!(
     op = getoperator(op, optype(A, u))
     accum = getoperator(accum, eltype(w))
     A, desc, u = _handletranspose(A, desc, u)
-    op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))
+    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_mxv(w, mask, accum, op, A, u, desc)
     return w
 end

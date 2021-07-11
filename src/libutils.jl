@@ -65,7 +65,7 @@ end
 
 
 "Load a global constant from SSGrB, optionally specify the resulting pointer type."
-function load_global(str, type = Cvoid)
+function load_global(str, type::Type{Ptr{T}} = Ptr{Nothing}) where {T}
     x =
     try
         dlsym(SSGraphBLAS_jll.libgraphblas_handle, str)
@@ -73,23 +73,13 @@ function load_global(str, type = Cvoid)
         @warn "Symbol not available " * str
         return C_NULL
     end
-    return unsafe_load(cglobal(x, Ptr{type}))
+    return unsafe_load(cglobal(x, type))
 end
+
+load_global(str, type) = load_global(str, Ptr{type})
 
 isGxB(name) = name[1:3] == "GxB"
 isGrB(name) = name[1:3] == "GrB"
-"""
-    _print_unsigned_as_signed()
-
-The SuiteSparseGraphBLAS index, GrB_Index, is an alias for UInt64. Julia prints values of
-this type in hex, so this can be used to change the printing method to decimal.
-
-This is not recommended for general use and will likely be removed once better printing is
-added to this package.
-"""
-function _print_unsigned_as_signed()
-    eval(:(Base.show(io::IO, a::Unsigned) = print(io, Int(a))))
-end
 
 function splitconstant(str)
     return String.(split(str, "_"))

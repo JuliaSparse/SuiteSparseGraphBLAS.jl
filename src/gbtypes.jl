@@ -75,7 +75,7 @@ function _load_globaltypes()
     ptrtogbtype[FP32.p] = FP32
     global FP64 = GBType{Float64}("GrB_FP64")
     ptrtogbtype[FP64.p] = FP64
-    global FC32 = GBType{ComplexF32}("GxB_FC64")
+    global FC32 = GBType{ComplexF32}("GxB_FC32")
     ptrtogbtype[FC32.p] = FC32
     global FC64 = GBType{ComplexF32}("GxB_FC64")
     ptrtogbtype[FC64.p] = FC64
