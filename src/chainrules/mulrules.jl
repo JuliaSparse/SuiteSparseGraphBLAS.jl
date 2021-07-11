@@ -67,6 +67,18 @@ function rrule(
 end
 
 # PLUS_PLUS:
+function frule(
+    (_, ΔA, ΔB, _),
+    ::typeof(mul),
+    A::GBMatOrTranspose,
+    B::GBMatOrTranspose,
+    ::typeof(Semirings.PLUS_PLUS)
+)
+    Ω = mul(A, B, Semirings.PLUS_PLUS)
+    ∂Ω = mul(ΔA, ΔB, Semirings.PLUS_PLUS)
+    return Ω, ∂Ω
+end
+
 function rrule(
     ::typeof(mul),
     A::GBMatOrTranspose,
@@ -82,6 +94,18 @@ function rrule(
 end
 
 # PLUS_MINUS:
+function frule(
+    (_, ΔA, ΔB, _),
+    ::typeof(mul),
+    A::GBMatOrTranspose,
+    B::GBMatOrTranspose,
+    ::typeof(Semirings.PLUS_MINUS)
+)
+    Ω = mul(A, B, Semirings.PLUS_MINUS)
+    ∂Ω = mul(ΔA, ΔB, Semirings.PLUS_MINUS)
+    return Ω, ∂Ω
+end
+
 function rrule(
     ::typeof(mul),
     A::GBMatOrTranspose,
