@@ -1,9 +1,10 @@
 
 baremodule UnaryOps
     using ..Types
+    using ..SuiteSparseGraphBLAS: TypedUnaryOperator
 end
 
-const UnaryUnion = Union{AbstractUnaryOp, libgb.GrB_UnaryOp}
+const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
 
 #TODO: Rewrite
 function _createunaryops()
@@ -75,22 +76,22 @@ function UnaryOp(name)
     if isGxB(name) || isGrB(name)
         structquote = quote
             struct $tname <: AbstractUnaryOp
-                pointers::Dict{DataType, libgb.GrB_UnaryOp}
+                typedops::Dict{DataType, TypedUnaryOperator}
                 name::String
-                $tname() = new(Dict{DataType, libgb.GrB_UnaryOp}(), $name)
+                $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
             end
         end
     else #If it's a UDF we need a mutable for finalizing purposes.
         structquote = quote
             mutable struct $tname <: AbstractUnaryOp
-                pointers::Dict{DataType, libgb.GrB_UnaryOp}
+                typedops::Dict{DataType, TypedUnaryOperator}
                 name::String
                 function $tname()
-                    u = new(Dict{DataType, libgb.GrB_UnaryOp}(), $name)
+                    u = new(Dict{DataType, TypedUnaryOperator}(), $name)
                     function f(unaryop)
-                        for k ∈ keys(unaryop.pointers)
-                            libgb.GrB_UnaryOp_free(Ref(unaryop.pointers[k]))
-                            delete!(unaryop.pointers, k)
+                        for k ∈ keys(unaryop.typedops)
+                            libgb.GrB_UnaryOp_free(Ref(unaryop.typedops[k]))
+                            delete!(unaryop.typedops, k)
                         end
                     end
                     return finalizer(f, u)
@@ -117,7 +118,7 @@ function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype:
     opref = Ref{libgb.GrB_UnaryOp}()
     unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{T}, Ref{U}))
     libgb.GB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
-    op.pointers[U] = opref[]
+    op.typedops[U] = TypedUnaryOperator{xtype, ztype}(opref[])
     return nothing
 end
 
@@ -146,10 +147,11 @@ end
 function UnaryOp(name::String, fn::Function, type::Vector{DataType})
     return UnaryOp(name, fn, type, type)
 end
-#Construct it using the built in primitives.
+#Construct it using all the built in primitives.
 function UnaryOp(name::String, fn::Function)
     return UnaryOp(name, fn, valid_vec)
 end
+
 function _load(unaryop::AbstractUnaryOp)
     booleans = ["GrB_IDENTITY", "GrB_AINV", "GrB_MINV", "GxB_LNOT", "GxB_ONE", "GrB_ABS"]
     integers = [
@@ -255,41 +257,40 @@ function _load(unaryop::AbstractUnaryOp)
     name = unaryop.name
     if name ∈ booleans
         constname = name * "_BOOL"
-        unaryop.pointers[Bool] = load_global(constname)
+        unaryop.typedops[Bool] = TypedUnaryOperator(load_global(constname, libgb.GrB_UnaryOp))
     end
 
     if name ∈ integers
-        unaryop.pointers[Int8] = load_global(name * "_INT8")
-        unaryop.pointers[Int16] = load_global(name * "_INT16")
-        unaryop.pointers[Int32] = load_global(name * "_INT32")
-        unaryop.pointers[Int64] = load_global(name * "_INT64")
+        unaryop.typedops[Int8] = TypedUnaryOperator(load_global(name * "_INT8", libgb.GrB_UnaryOp))
+        unaryop.typedops[Int16] = TypedUnaryOperator(load_global(name * "_INT16", libgb.GrB_UnaryOp))
+        unaryop.typedops[Int32] = TypedUnaryOperator(load_global(name * "_INT32", libgb.GrB_UnaryOp))
+        unaryop.typedops[Int64] = TypedUnaryOperator(load_global(name * "_INT64", libgb.GrB_UnaryOp))
     end
 
     if name ∈ unsignedintegers
-        unaryop.pointers[UInt8] = load_global(name * "_UINT8")
-        unaryop.pointers[UInt16] = load_global(name * "_UINT16")
-        unaryop.pointers[UInt32] = load_global(name * "_UINT32")
-        unaryop.pointers[UInt64] = load_global(name * "_UINT64")
+        unaryop.typedops[UInt8] = TypedUnaryOperator(load_global(name * "_UINT8", libgb.GrB_UnaryOp))
+        unaryop.typedops[UInt16] = TypedUnaryOperator(load_global(name * "_UINT16", libgb.GrB_UnaryOp))
+        unaryop.typedops[UInt32] = TypedUnaryOperator(load_global(name * "_UINT32", libgb.GrB_UnaryOp))
+        unaryop.typedops[UInt64] = TypedUnaryOperator(load_global(name * "_UINT64", libgb.GrB_UnaryOp))
     end
 
     if name ∈ floats
-        unaryop.pointers[Float32] = load_global(name * "_FP32")
-        unaryop.pointers[Float64] = load_global(name * "_FP64")
+        unaryop.typedops[Float32] = TypedUnaryOperator(load_global(name * "_FP32", libgb.GrB_UnaryOp))
+        unaryop.typedops[Float64] = TypedUnaryOperator(load_global(name * "_FP64", libgb.GrB_UnaryOp))
     end
     if name ∈ positionals
-        unaryop.pointers[Any] = load_global(name * "_INT64")
+        unaryop.typedops[Any] = TypedUnaryOperator(load_global(name * "_INT64", libgb.GrB_UnaryOp))
     end
     name = "GxB_" * name[5:end]
     if name ∈ complexes
-        unaryop.pointers[ComplexF32] = load_global(name * "_FC32")
-        unaryop.pointers[ComplexF64] = load_global(name * "_FC64")
+        unaryop.typedops[ComplexF32] = TypedUnaryOperator(load_global(name * "_FC32", libgb.GrB_UnaryOp))
+        unaryop.typedops[ComplexF64] = TypedUnaryOperator(load_global(name * "_FC64", libgb.GrB_UnaryOp))
     end
 end
 
-ztype(op::libgb.GrB_UnaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_UnaryOp_ztype(op)])
-xtype(op::libgb.GrB_UnaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_UnaryOp_xtype(op)])
+ztype(::TypedUnaryOperator{I, O}) where {I, O} = O
+xtype(::TypedUnaryOperator{I, O}) where {I, O} = I
 
-Base.show(io::IO, ::MIME"text/plain", u::libgb.GrB_UnaryOp) = gxbprint(io, u)
 
 """
 Identity: `z=x`

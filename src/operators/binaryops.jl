@@ -1,11 +1,8 @@
 baremodule BinaryOps
     using ..Types
+    using ..SuiteSparseGraphBLAS: TypedUnaryOperator
 end
-const BinaryUnion = Union{AbstractBinaryOp, libgb.GrB_BinaryOp}
-
-function _binarynames(name)
-
-end
+const BinaryUnion = Union{AbstractBinaryOp, TypedBinaryOperator}
 
 #TODO: Rewrite
 function _createbinaryops()
@@ -78,22 +75,22 @@ function BinaryOp(name)
     if isGxB(name) || isGrB(name) #Built-in is immutable, no finalizer
         structquote = quote
             struct $containername <: AbstractBinaryOp
-                pointers::Dict{DataType, libgb.GrB_BinaryOp}
+                typedops::Dict{DataType, TypedBinaryOperator}
                 name::String
-                $containername() = new(Dict{DataType, libgb.GrB_BinaryOp}(), $name)
+                $containername() = new(Dict{DataType, TypedBinaryOperator}(), $name)
             end
         end
     else #UDF is mutable for finalizer
         structquote = quote
             mutable struct $containername <: AbstractBinaryOp
-                pointers::Dict{DataType, libgb.GrB_BinaryOp}
+                typedops::Dict{DataType, TypedBinaryOperator}
                 name::String
                 function $containername()
-                    b = new(Dict{DataType, libgb.GrB_BinaryOp}(), $name)
+                    b = new(Dict{DataType, TypedBinaryOperator}(), $name)
                     function f(binaryop)
-                        for k ∈ keys(binaryop.pointers)
-                            libgb.GrB_BinaryOp_free(Ref(binaryop.pointers[k]))
-                            delete!(binaryop.pointers, k)
+                        for k ∈ keys(binaryop.typedops)
+                            libgb.GrB_BinaryOp_free(Ref(binaryop.typedops[k]))
+                            delete!(binaryop.typedops, k)
                         end
                     end
                     return finalizer(f, b)
@@ -127,7 +124,7 @@ function _addbinaryop(
     opref = Ref{libgb.GrB_BinaryOp}()
     binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{T}, Ref{U}, Ref{V}))
     libgb.GB_BinaryOp_new(opref, binaryopfn_C, ztype, xtype, ytype, op.name)
-    op.pointers[U] = opref[]
+    op.typedops[U] = TypedBinaryOperator{xtype, ytype, ztype}(opref[])
     return nothing
 end
 
@@ -346,42 +343,40 @@ function _load(binary::AbstractBinaryOp)
     ]
     name = binary.name
     if name ∈ booleans
-        binary.pointers[Bool] = load_global(name * "_BOOL")
+        binary.typedops[Bool] = TypedBinaryOperator(load_global(name * "_BOOL", libgb.GrB_BinaryOp))
     end
 
     if name ∈ integers
-        binary.pointers[Int8] = load_global(name * "_INT8")
-        binary.pointers[Int16] = load_global(name * "_INT16")
-        binary.pointers[Int32] = load_global(name * "_INT32")
-        binary.pointers[Int64] = load_global(name * "_INT64")
+        binary.typedops[Int8] = TypedBinaryOperator(load_global(name * "_INT8", libgb.GrB_BinaryOp))
+        binary.typedops[Int16] = TypedBinaryOperator(load_global(name * "_INT16", libgb.GrB_BinaryOp))
+        binary.typedops[Int32] = TypedBinaryOperator(load_global(name * "_INT32", libgb.GrB_BinaryOp))
+        binary.typedops[Int64] = TypedBinaryOperator(load_global(name * "_INT64", libgb.GrB_BinaryOp))
     end
 
     if name ∈ unsignedintegers
-        binary.pointers[UInt8] = load_global(name * "_UINT8")
-        binary.pointers[UInt16] = load_global(name * "_UINT16")
-        binary.pointers[UInt32] = load_global(name * "_UINT32")
-        binary.pointers[UInt64] = load_global(name * "_UINT64")
+        binary.typedops[UInt8] = TypedBinaryOperator(load_global(name * "_UINT8", libgb.GrB_BinaryOp))
+        binary.typedops[UInt16] = TypedBinaryOperator(load_global(name * "_UINT16", libgb.GrB_BinaryOp))
+        binary.typedops[UInt32] = TypedBinaryOperator(load_global(name * "_UINT32", libgb.GrB_BinaryOp))
+        binary.typedops[UInt64] = TypedBinaryOperator(load_global(name * "_UINT64", libgb.GrB_BinaryOp))
     end
 
     if name ∈ floats
-        binary.pointers[Float32] = load_global(name * "_FP32")
-        binary.pointers[Float64] = load_global(name * "_FP64")
+        binary.typedops[Float32] = TypedBinaryOperator(load_global(name * "_FP32", libgb.GrB_BinaryOp))
+        binary.typedops[Float64] = TypedBinaryOperator(load_global(name * "_FP64", libgb.GrB_BinaryOp))
     end
     if name ∈ positionals
-        binary.pointers[Any] = load_global(name * "_INT64")
+        binary.typedops[Any] = TypedBinaryOperator(load_global(name * "_INT64", libgb.GrB_BinaryOp))
     end
     name = "GxB_" * name[5:end]
     if name ∈ complexes
-        binary.pointers[ComplexF32] = load_global(name * "_FC32")
-        binary.pointers[ComplexF64] = load_global(name * "_FC64")
+        binary.typedops[ComplexF32] = TypedBinaryOperator(load_global(name * "_FC32", libgb.GrB_BinaryOp))
+        binary.typedops[ComplexF64] = TypedBinaryOperator(load_global(name * "_FC64", libgb.GrB_BinaryOp))
     end
 end
 
-Base.show(io::IO, ::MIME"text/plain", u::libgb.GrB_BinaryOp) = gxbprint(io, u)
-
-xtype(op::libgb.GrB_BinaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_xtype(op)])
-ytype(op::libgb.GrB_BinaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ytype(op)])
-ztype(op::libgb.GrB_BinaryOp) = tojuliatype(ptrtogbtype[libgb.GxB_BinaryOp_ztype(op)])
+ztype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = Z
+xtype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = X
+ytype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = Y
 
 """
 First argument: `f(x::T,y::T)::T = x`

@@ -18,7 +18,7 @@ function gbtranspose!(
     C::GBMatrix, A::GBMatOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
-    _, mask, accum, desc = _handlectx(nothing, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     if A isa Transpose && desc.input1 == Descriptors.TRANSPOSE
         throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = Descriptors.TRANSPOSE."))
     elseif A isa Transpose
@@ -107,9 +107,12 @@ end
 
 function _handletranspose(
     A::GBArray,
-    desc::Union{Descriptor, Nothing} = nothing,
+    desc::Union{Descriptor, Nothing, Ptr{Nothing}} = nothing,
     B::Union{GBArray, Nothing} = nothing
 )
+    if desc == C_NULL
+        desc = Descriptors.NULL
+    end
     if A isa Transpose
         desc = desc + Descriptors.T0
         A = A.parent

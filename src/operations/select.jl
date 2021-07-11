@@ -6,9 +6,9 @@ function select!(
     thunk::Union{GBScalar, Nothing, Number} = nothing;
     mask = nothing,
     accum = nothing,
-    desc::Descriptor = nothing
+    desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     thunk === nothing && (thunk = C_NULL)
     A, desc, _ = _handletranspose(A, desc)
     accum = getoperator(accum, eltype(C))
@@ -55,7 +55,7 @@ function select(
     accum = nothing,
     desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C

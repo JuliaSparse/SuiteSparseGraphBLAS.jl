@@ -1,3 +1,35 @@
+struct TypedUnaryOperator{X, Z} <: AbstractTypedOp{Z}
+    p::libgb.GrB_UnaryOp
+end
+function TypedUnaryOperator(p::libgb.GrB_UnaryOp)
+    return TypedUnaryOperator{xtype(p), ztype(p)}(p)
+end
+Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator) = op.p
+
+struct TypedBinaryOperator{X, Y, Z} <: AbstractTypedOp{Z}
+    p::libgb.GrB_BinaryOp
+end
+function TypedBinaryOperator(p::libgb.GrB_BinaryOp)
+    return TypedBinaryOperator{xtype(p), ytype(p), ztype(p)}(p)
+end
+Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator) = op.p
+
+struct TypedMonoid{X, Y, Z} <: AbstractTypedOp{Z}
+    p::libgb.GrB_Monoid
+end
+function TypedMonoid(p::libgb.GrB_Monoid)
+    return TypedMonoid{xtype(p), ytype(p), ztype(p)}(p)
+end
+Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid) = op.p
+
+struct TypedSemiring{X, Y, Z} <: AbstractTypedOp{Z}
+    p::libgb.GrB_Semiring
+end
+function TypedSemiring(p::libgb.GrB_Semiring)
+    return TypedSemiring{xtype(p), ytype(p), ztype(p)}(p)
+end
+Base.unsafe_convert(::Type{libgb.GrB_Semiring}, op::TypedSemiring) = op.p
+
 """
 Automatically generated type definitions. The struct definitions for
 built in monoids, binary ops, etc can be found here.
@@ -5,6 +37,8 @@ built in monoids, binary ops, etc can be found here.
 module Types
     import ...SuiteSparseGraphBLAS: AbstractUnaryOp, AbstractMonoid, AbstractSelectOp,
     AbstractSemiring, AbstractBinaryOp, AbstractDescriptor
+    using ...SuiteSparseGraphBLAS: TypedUnaryOperator, TypedBinaryOperator, TypedMonoid,
+    TypedSemiring
     using ..libgb
 end
 

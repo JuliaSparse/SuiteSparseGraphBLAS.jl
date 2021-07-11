@@ -7,14 +7,13 @@ using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
-using ContextVariablesX
 include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
 using .libgb
 
 
-
+include("operators/libgbops.jl")
 include("types.jl")
 include("gbtypes.jl")
 
@@ -49,10 +48,17 @@ const GrBOp = Union{
     libgb.GxB_SelectOp
 }
 
+const TypedOp = Union{
+    TypedUnaryOperator,
+    TypedBinaryOperator,
+    TypedMonoid,
+    TypedSemiring
+}
+
 const MonoidBinaryOrRig = Union{
-    libgb.GrB_Monoid,
-    libgb.GrB_Semiring,
-    libgb.GrB_BinaryOp,
+    TypedMonoid,
+    TypedSemiring,
+    TypedBinaryOperator,
     AbstractSemiring,
     AbstractBinaryOp,
     AbstractMonoid
@@ -62,13 +68,6 @@ const OperatorUnion = Union{
     AbstractOp,
     GrBOp
 }
-
-#Context variables for the `with` function
-@contextvar ctxop::OperatorUnion
-@contextvar ctxmask::Union{GBArray, Ptr} = C_NULL
-@contextvar ctxaccum::Union{BinaryUnion, Ptr} = C_NULL
-@contextvar ctxdesc::Descriptor
-include("with.jl")
 
 include("scalar.jl")
 include("vector.jl")

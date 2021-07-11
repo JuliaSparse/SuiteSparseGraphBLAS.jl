@@ -2,19 +2,19 @@ function LinearAlgebra.mul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, Semirings.PLUS_TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
     op = getoperator(op, optype(A, B))
     accum = getoperator(accum, eltype(C))
     A, desc, B = _handletranspose(A, desc, B)
-    op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))
+    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_mxm(C, mask, accum, op, A, B, desc)
     return C
 end
@@ -23,18 +23,18 @@ function LinearAlgebra.mul!(
     w::GBVector,
     u::GBVector,
     A::GBMatOrTranspose,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, Semirings.PLUS_TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(u, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(u)"))
     size(w, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(w)"))
     op = getoperator(op, optype(u, A))
     accum = getoperator(accum, eltype(w))
     u, desc, A = _handletranspose(u, desc, A)
-    op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))
+    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_vxm(w, mask, accum, op, u, A, desc)
     return w
 end
@@ -43,18 +43,18 @@ function LinearAlgebra.mul!(
     w::GBVector,
     A::GBMatOrTranspose,
     u::GBVector,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op, mask, accum, desc = _handlectx(op, mask, accum, desc, Semirings.PLUS_TIMES)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     size(u, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(u)"))
     size(w, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(w"))
     op = getoperator(op, optype(A, u))
     accum = getoperator(accum, eltype(w))
     A, desc, u = _handletranspose(A, desc, u)
-    op isa libgb.GrB_Semiring || throw(ArgumentError("$op is not a valid libgb.GrB_Semiring"))
+    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_mxv(w, mask, accum, op, A, u, desc)
     return w
 end
@@ -86,12 +86,11 @@ The default semiring is the `+.*` semiring.
 function mul(
     A::GBArray,
     B::GBArray,
-    op = nothing;
+    op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    op = _handlectx(op, ctxop, Semirings.PLUS_TIMES)
     t = inferoutputtype(A, B, op)
     if A isa GBVector && B isa GBMatOrTranspose
         C = GBVector{t}(size(B, 2))
@@ -106,11 +105,10 @@ end
 
 function Base.:*(
     A::GBArray,
-    B::GBArray,
-    op = nothing;
+    B::GBArray;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    mul(A, B, op; mask, accum, desc)
+    mul(A, B, Semirings.PLUS_TIMES; mask, accum, desc)
 end

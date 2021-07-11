@@ -33,7 +33,7 @@ function getoperator(op, t)
     end
 end
 
-_isloaded(o::AbstractOp) = !isempty(o.pointers)
+_isloaded(o::AbstractOp) = !isempty(o.typedops)
 
 """
     validtypes(operator::AbstractOp)::Vector{DataType}
@@ -50,15 +50,15 @@ function validtypes(o::AbstractOp)
     if !_isloaded(o)
         _load(o)
     end
-    return collect(keys(o.pointers))
+    return collect(keys(o.typedops))
 end
 
 function Base.getindex(o::AbstractOp, t::DataType)
     _isloaded(o) || _load(o)
-    if Any ∈ keys(o.pointers)
-        getindex(o.pointers, Any)
+    if Any ∈ keys(o.typedops)
+        getindex(o.typedops, Any)
     else
-        getindex(o.pointers, t)
+        getindex(o.typedops, t)
     end
 end
 

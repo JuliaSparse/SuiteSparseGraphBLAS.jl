@@ -2,7 +2,7 @@ function reduce!(
     op::MonoidUnion, w::GBVector, A::GBMatOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     A, desc, _ = _handletranspose(A, desc, nothing)
     op = getoperator(op, eltype(w))
     accum = getoperator(accum, eltype(w))
@@ -20,7 +20,7 @@ function Base.reduce(
     accum = nothing,
     desc = nothing
 )
-    _, mask, accum, desc = _handlectx(op, mask, accum, desc)
+    mask, accum, desc = _handlenothings(mask, accum, desc)
     if typeout === nothing
         typeout = eltype(A)
     end
@@ -57,7 +57,7 @@ function Base.reduce(
     accum = nothing,
     desc = nothing
 )
-    _, _, accum, desc = _handlectx(op, nothing, accum, desc)
+    accum, desc = _handlenothings(accum, desc)
     if typeout === nothing
         typeout = eltype(v)
     end

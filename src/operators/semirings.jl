@@ -2,7 +2,7 @@ baremodule Semirings
     using ..Types
 end
 
-SemiringUnion = Union{AbstractSemiring, libgb.GrB_Semiring}
+SemiringUnion = Union{AbstractSemiring, TypedSemiring}
 
 function _semiringnames(name)
     if isGxB(name) || isGrB(name)
@@ -242,22 +242,22 @@ function Semiring(name)
     if isGxB(name) || isGrB(name)
         structquote = quote
             struct $containername <: AbstractSemiring
-                pointers::Dict{DataType, libgb.GrB_Semiring}
+                typedops::Dict{DataType, TypedSemiring}
                 name::String
-                $containername() = new(Dict{DataType, libgb.GrB_Semiring}(), $name)
+                $containername() = new(Dict{DataType, TypedSemiring}(), $name)
             end
         end
     else
         structquote = quote
             mutable struct $containername <: AbstractSemiring
-                pointers::Dict{DataType, libgb.GrB_Semiring}
+                typedops::Dict{DataType, TypedSemiring}
                 name::String
                 function $containername()
-                    r = new(Dict{DataType, libgb.GrB_Semiring}(), $name)
+                    r = new(Dict{DataType, TypedSemiring}(), $name)
                     function f(rig)
-                        for k ∈ keys(rig.pointers)
-                            libgb.GrB_Semiring_free(Ref(rig.pointers[k]))
-                            delete!(rig.pointers, k)
+                        for k ∈ keys(rig.typedops)
+                            libgb.GrB_Semiring_free(Ref(rig.typedops[k]))
+                            delete!(rig.typedops, k)
                         end
                     end
                     return finalizer(f, r)
@@ -275,15 +275,15 @@ function Semiring(name)
 end
 
 #Add typed ⊕ and ⊗ to semiring
-function _addsemiring(rig::AbstractSemiring, add::libgb.GrB_Monoid, mul::libgb.GrB_BinaryOp)
-    rigref = Ref{libgb.GrB_Semiring}()
+function _addsemiring(rig::AbstractSemiring, add::TypedMonoid, mul::TypedBinaryOperator)
+    rigref = Ref{TypedSemiring}()
     libgb.GrB_Semiring_new(rigref, add, mul)
-    rig.pointers[xtype(add)] = rigref[]
+    rig.typedops[xtype(add)] = TypedSemiring(rigref[])
     return nothing
 end
 
 #New semiring with typed ⊕ and ⊗
-function Semiring(name::String, add::libgb.GrB_Monoid, mul::libgb.GrB_BinaryOp)
+function Semiring(name::String, add::TypedMonoid, mul::TypedBinaryOperator)
     rig = Semiring(name)
     _addsemiring(rig, add, mul)
     return rig
@@ -300,6 +300,10 @@ function Semiring(name::String, add::AbstractMonoid, mul::AbstractBinaryOp)
     end
     return rig
 end
+
+ztype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = Z
+xtype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = X
+ytype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = Y
 
 function _load(rig::AbstractSemiring)
     booleans = ["GxB_LOR_FIRST",
@@ -846,43 +850,34 @@ function _load(rig::AbstractSemiring)
     ]
     name = rig.name
     if name ∈ booleans
-        rig.pointers[Bool] = load_global(name * "_BOOL")
+        rig.typedops[Bool] = TypedSemiring(load_global(name * "_BOOL", libgb.GrB_Semiring))
     end
 
     if name ∈ integers
-        rig.pointers[Int8] =load_global(name * "_INT8")
-        rig.pointers[Int16] = load_global(name * "_INT16")
-        rig.pointers[Int32] = load_global(name * "_INT32")
-        rig.pointers[Int64] = load_global(name * "_INT64")
+        rig.typedops[Int8] = TypedSemiring(load_global(name * "_INT8", libgb.GrB_Semiring))
+        rig.typedops[Int16] = TypedSemiring(load_global(name * "_INT16", libgb.GrB_Semiring))
+        rig.typedops[Int32] = TypedSemiring(load_global(name * "_INT32", libgb.GrB_Semiring))
+        rig.typedops[Int64] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
     end
 
     if name ∈ unsignedintegers
-        rig.pointers[UInt8] =load_global(name * "_UINT8")
-        rig.pointers[UInt16] = load_global(name * "_UINT16")
-        rig.pointers[UInt32] = load_global(name * "_UINT32")
-        rig.pointers[UInt64] = load_global(name * "_UINT64")
+        rig.typedops[UInt8] = TypedSemiring(load_global(name * "_UINT8", libgb.GrB_Semiring))
+        rig.typedops[UInt16] = TypedSemiring(load_global(name * "_UINT16", libgb.GrB_Semiring))
+        rig.typedops[UInt32] = TypedSemiring(load_global(name * "_UINT32", libgb.GrB_Semiring))
+        rig.typedops[UInt64] = TypedSemiring(load_global(name * "_UINT64", libgb.GrB_Semiring))
     end
 
     if name ∈ floats
-        rig.pointers[Float32] = load_global(name * "_FP32")
-        rig.pointers[Float64] = load_global(name * "_FP64")
+        rig.typedops[Float32] = TypedSemiring(load_global(name * "_FP32", libgb.GrB_Semiring))
+        rig.typedops[Float64] = TypedSemiring(load_global(name * "_FP64", libgb.GrB_Semiring))
     end
     if name ∈ positionals
-        rig.pointers[Any] = load_global(name * "_INT64")
+        rig.typedops[Any] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
     end
     name = replace(name, "GrB_" => "GxB_")
     name = replace(name, "_SEMIRING" => "")
     if name ∈ complexes
-        rig.pointers[ComplexF32] = load_global(name * "_FC32")
-        rig.pointers[ComplexF64] = load_global(name * "_FC64")
+        rig.typedops[ComplexF32] = TypedSemiring(load_global(name * "_FC32", libgb.GrB_Semiring))
+        rig.typedops[ComplexF64] = TypedSemiring(load_global(name * "_FC64", libgb.GrB_Semiring))
     end
 end
-
-Base.show(io::IO, ::MIME"text/plain", s::libgb.GrB_Semiring) = gxbprint(io, s)
-
-multiplyop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_multiply(rig)
-addop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_add(rig)
-
-xtype(rig::libgb.GrB_Semiring) = xtype(multiplyop(rig))
-ytype(rig::libgb.GrB_Semiring) = ytype(multiplyop(rig))
-ztype(rig::libgb.GrB_Semiring) = ztype(addop(rig))

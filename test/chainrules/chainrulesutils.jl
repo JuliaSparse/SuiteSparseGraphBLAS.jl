@@ -1,4 +1,3 @@
-using FiniteDifferences
 function test_to_vec(x::T; check_inferred=true) where {T}
     check_inferred && @inferred FiniteDifferences.to_vec(x)
     x_vec, back = FiniteDifferences.to_vec(x)

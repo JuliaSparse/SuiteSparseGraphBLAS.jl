@@ -18,43 +18,23 @@ end
 
 optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
 
-function inferoutputtype(A::GBArray{T}, B::GBArray{U}, op::AbstractOp) where {T, U}
-    t = optype(A, B)
+function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractOp) where {T, U}
+    t = optype(T, U)
     return ztype(op, t)
 end
 function inferoutputtype(::GBArray{T}, op::AbstractOp) where {T}
     return ztype(op, T)
 end
-function inferoutputtype(::GBArray{T}, op) where {T}
-    return ztype(op)
+function inferoutputtype(::GBArray{T}, ::AbstractTypedOp{Z}) where {T, Z}
+    return Z
 end
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, op) where {T, U}
-    return ztype(op)
-end
-function _handlectx(ctx, ctxvar, default = nothing)
-    if ctx === nothing || ctx === missing
-        ctx2 = get(ctxvar)
-        if ctx2 !== nothing
-            return something(ctx2)
-        elseif ctx !== missing
-            return default
-        else
-            throw(ArgumentError("This operation requires an operator specified by the `with` function."))
-        end
-    else
-        return ctx
-    end
+function inferoutputtype(::GBArray{T}, ::GBArray{U}, ::AbstractTypedOp{Z}) where {T, U, Z}
+    return Z
 end
 
-function _handlectx(op, mask, accum, desc, defaultop = nothing)
-    return (
-        _handlectx(op, ctxop, defaultop),
-        _handlectx(mask, ctxmask, C_NULL),
-        _handlectx(accum, ctxaccum, C_NULL),
-        _handlectx(desc, ctxdesc, Descriptors.NULL)
-    )
+function _handlenothings(kwargs...)
+    return (x === nothing ? C_NULL : x for x in kwargs)
 end
-
 """
     xtype(op::GrBOp)::DataType
 

@@ -1,7 +1,7 @@
 baremodule Monoids
     using ..Types
 end
-const MonoidUnion = Union{AbstractMonoid, libgb.GrB_Monoid}
+const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
 
 function _monoidnames(name)
     if isGxB(name) || isGrB(name)
@@ -42,22 +42,22 @@ function Monoid(name)
     if isGxB(name) || isGrB(name) #Built-ins are immutable
         structquote = quote
             struct $containername <: AbstractMonoid
-                pointers::Dict{DataType, libgb.GrB_Monoid}
+                typedops::Dict{DataType, TypedMonoid}
                 name::String
-                $containername() = new(Dict{DataType, libgb.GrB_Monoid}(), $name)
+                $containername() = new(Dict{DataType, TypedMonoid}(), $name)
             end
         end
     else #UDFs are mutable for finalizing
         structquote = quote
             mutable struct $containername <: AbstractMonoid
-                pointers::Dict{DataType, libgb.GrB_Monoid}
+                typedops::Dict{DataType, TypedMonoid}
                 name::String
                 function $containername()
-                    m = new(Dict{DataType, libgb.GrB_Monoid}(), $name)
+                    m = new(Dict{DataType, TypedMonoid}(), $name)
                     function f(monoid)
-                        for k ∈ keys(monoid.pointers)
-                            libgb.GrB_Monoid_free(Ref(monoid.pointers[k]))
-                            delete!(monoid.pointers, k)
+                        for k ∈ keys(monoid.typedops)
+                            libgb.GrB_Monoid_free(Ref(monoid.typedops[k]))
+                            delete!(monoid.typedops, k)
                         end
                     end
                     return finalizer(f, m)
@@ -95,7 +95,7 @@ function _addmonoid(op::AbstractMonoid, binop::BinaryUnion, id::T, terminal = no
     else
         libgb.monoidtermnew[Any](monref, binop, Ptr{Cvoid}(id), Ptr{Cvoid}(terminal))
     end
-    op.pointers[T] = monref[]
+    op.typedops[T] = TypedMonoid{xtype(binop), ytype(binop), ztype(binop)}(monref[])
     return nothing
 end
 
@@ -142,49 +142,49 @@ function _load(monoid::AbstractMonoid)
 
     if name ∈ booleans
         constname = name * ((isGxB(name) ? "_BOOL_MONOID" : "_MONOID_BOOL"))
-        monoid.pointers[Bool] = load_global(constname)
+        monoid.typedops[Bool] = TypedMonoid(load_global(constname, libgb.GrB_Monoid))
     end
 
     if name ∈ integers
-        monoid.pointers[Int8] =
-            load_global(name * (isGxB(name) ? "_INT8_MONOID" : "_MONOID_INT8"))
-        monoid.pointers[Int16] =
-            load_global(name * (isGxB(name) ? "_INT16_MONOID" : "_MONOID_INT16"))
-        monoid.pointers[Int32] =
-            load_global(name * (isGxB(name) ? "_INT32_MONOID" : "_MONOID_INT32"))
-        monoid.pointers[Int64] =
-            load_global(name * (isGxB(name) ? "_INT64_MONOID" : "_MONOID_INT64"))
+        monoid.typedops[Int8] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_INT8_MONOID" : "_MONOID_INT8"), libgb.GrB_Monoid))
+        monoid.typedops[Int16] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_INT16_MONOID" : "_MONOID_INT16"), libgb.GrB_Monoid))
+        monoid.typedops[Int32] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_INT32_MONOID" : "_MONOID_INT32"), libgb.GrB_Monoid))
+        monoid.typedops[Int64] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_INT64_MONOID" : "_MONOID_INT64"), libgb.GrB_Monoid))
     end
 
     if name ∈ unsignedintegers
-        monoid.pointers[UInt8] =
-            load_global(name * (isGxB(name) ? "_UINT8_MONOID" : "_MONOID_UINT8"))
-        monoid.pointers[UInt16] =
-            load_global(name * (isGxB(name) ? "_UINT16_MONOID" : "_MONOID_UINT16"))
-        monoid.pointers[UInt32] =
-            load_global(name * (isGxB(name) ? "_UINT32_MONOID" : "_MONOID_UINT32"))
-        monoid.pointers[UInt64] =
-            load_global(name * (isGxB(name) ? "_UINT64_MONOID" : "_MONOID_UINT64"))
+        monoid.typedops[UInt8] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT8_MONOID" : "_MONOID_UINT8"), libgb.GrB_Monoid))
+        monoid.typedops[UInt16] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT16_MONOID" : "_MONOID_UINT16"), libgb.GrB_Monoid))
+        monoid.typedops[UInt32] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT32_MONOID" : "_MONOID_UINT32"), libgb.GrB_Monoid))
+        monoid.typedops[UInt64] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT64_MONOID" : "_MONOID_UINT64"), libgb.GrB_Monoid))
     end
 
     if name ∈ floats
-        monoid.pointers[Float32] =
-            load_global(name * (isGxB(name) ? "_FP32_MONOID" : "_MONOID_FP32"))
-        monoid.pointers[Float64] =
-            load_global(name * (isGxB(name) ? "_FP64_MONOID" : "_MONOID_FP64"))
+        monoid.typedops[Float32] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_FP32_MONOID" : "_MONOID_FP32"), libgb.GrB_Monoid))
+        monoid.typedops[Float64] =
+            TypedMonoid(load_global(name * (isGxB(name) ? "_FP64_MONOID" : "_MONOID_FP64"), libgb.GrB_Monoid))
     end
     name = "GxB_" * name[5:end]
     if name ∈ complexes
         #Complex monoids are always GxB, so "_MONOID" is always at the end.
-        monoid.pointers[ComplexF32] = load_global(name * "_FC32_MONOID")
-        monoid.pointers[ComplexF64] = load_global(name * "_FC64_MONOID")
+        monoid.typedops[ComplexF32] = TypedMonoid(load_global(name * "_FC32_MONOID", libgb.GrB_Monoid))
+        monoid.typedops[ComplexF64] = TypedMonoid(load_global(name * "_FC64_MONOID", libgb.GrB_Monoid))
     end
 end
-Base.show(io::IO, ::MIME"text/plain", m::libgb.GrB_Monoid) = gxbprint(io, m)
-operator(monoid::libgb.GrB_Monoid) = libgb.GxB_Monoid_operator(monoid)
-xtype(monoid::libgb.GrB_Monoid) = xtype(operator(monoid))
-ytype(monoid::libgb.GrB_Monoid) = ytype(operator(monoid))
-ztype(monoid::libgb.GrB_Monoid) = ztype(operator(monoid))
+
+
+ztype(::TypedMonoid{X, Y, Z}) where {X, Y, Z} = Z
+xtype(::TypedMonoid{X, Y, Z}) where {X, Y, Z} = X
+ytype(::TypedMonoid{X, Y, Z}) where {X, Y, Z} = Y
 
 """
 Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
