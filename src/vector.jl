@@ -64,9 +64,6 @@ end
 SparseArrays.nnz(v::GBVector) = Int64(libgb.GrB_Vector_nvals(v))
 Base.eltype(::Type{GBVector{T}}) where{T} = T
 
-function Base.similar(v::GBVector{T}, ::Type{TNew}) where {T, TNew}
-    return GBVector{TNew}(size(v, 1))
-end
 function Base.similar(
     ::GBVector{T}, ::Type{TNew},
     dims::Dims{1}

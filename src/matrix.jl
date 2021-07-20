@@ -78,9 +78,6 @@ end
 SparseArrays.nnz(v::GBMatrix) = Int64(libgb.GrB_Matrix_nvals(v))
 Base.eltype(::Type{GBMatrix{T}}) where{T} = T
 
-function Base.similar(A::GBMatrix{T}, ::Type{TNew}) where {T, TNew}
-    return GBMatrix{TNew}(size(A, 1), size(A, 2))
-end
 function Base.similar(
     ::GBMatrix{T}, ::Type{TNew},
     dims::Union{Dims{1}, Dims{2}}
