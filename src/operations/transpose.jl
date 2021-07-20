@@ -58,6 +58,16 @@ function LinearAlgebra.transpose(A::GBMatOrTranspose)
     return Transpose(A)
 end
 
+#TODO: This should be lazy
+function LinearAlgebra.transpose(v::GBVector)
+    A = GBMatrix{eltype(v)}(size(v, 1), size(v, 2))
+    nz = findnz(v.parent)
+    for i ∈ 1:length(nz[1])
+        A[1, nz[1][i]] = nz[2][i]
+    end
+    return A
+end
+
 function Base.copy!(
     C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
     mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.C_NULL
@@ -95,17 +105,6 @@ function Base.copy(
     return gbtranspose(A.parent; mask, accum, desc)
 end
 
-function Base.copy(v::LinearAlgebra.Transpose{<:Any, <:GBVector})
-    A = GBMatrix{eltype(v)}(size(v, 1), size(v, 2))
-    nz = findnz(v.parent)
-    for i ∈ 1:length(nz[1])
-        println(i)
-        println(nz[1][i], ": ", nz[2][i])
-        A[1, nz[1][i]] = nz[2][i]
-    end
-    return A
-end
-
 function _handletranspose(
     A::Union{GBArray, Nothing} = nothing,
     desc::Union{Descriptor, Nothing, Ptr{Nothing}} = nothing,
@@ -125,12 +124,7 @@ function _handletranspose(
     return A, desc, B
 end
 
-#This is ok per the GraphBLAS Slack channel. May wish to change its effect on Complex input.
+#This is ok per the GraphBLAS Slack channel. Should change its effect on Complex input.
 LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
 
-#Todo: fix this, unecessarily slow.
-#Base.show(io::IO, ::MIME"text/plain", A::LinearAlgebra.Transpose{<:Any, <:GBMatrix}) =
-    #show(io, MIME"text/plain"(), copy(A))
-# This is a worse idea but maybe better? Type piracy :/
-# TODO: Is this dangerous?
-LinearAlgebra.transpose(::Nothing) = nothing
+LinearAlgebra.adjoint(v::GBVector) = transpose(v)
