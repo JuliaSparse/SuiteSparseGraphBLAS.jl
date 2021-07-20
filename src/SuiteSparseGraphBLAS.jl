@@ -88,6 +88,7 @@ include("import.jl")
 include("export.jl")
 include("options.jl")
 #EXPERIMENTAL
+include("operations/broadcasts.jl")
 include("chainrules/chainruleutils.jl")
 include("chainrules/mulrules.jl")
 include("chainrules/ewiserules.jl")
@@ -109,9 +110,6 @@ export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, g
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!, transpose, reduce
 export nnz, sprand, findnz, nonzeros
-
-#context/with
-export with
 
 function __init__()
     _load_globaltypes()
