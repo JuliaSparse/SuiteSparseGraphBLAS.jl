@@ -24,7 +24,7 @@
         mask[17:20, 5:8] = false #don't care value, using structural
         #mask out bottom chunk using structural complement
         o2 = kron(m1, n1; mask, desc=Descriptors.SC)
-        @test o2[20, 5] === nothing #We don't want values in masked out area
+        @test o2[20, 5] == zero(eltype(o2)) #We don't want values in masked out area
         @test o2[1:2:15, :] == o1[1:2:15, :] #The rest should match, test indexing too.
     end
     @testset "map" begin
@@ -68,9 +68,9 @@
     @testset "select" begin
         m = GBMatrix([[1,2,3] [4,5,6] [7,8,9]])
         s = select(SelectOps.TRIL, m)
-        @test s[1,2] === nothing && s[3,1] == 3
+        @test s[1,2] == zero(eltype(s)) && s[3,1] == 3
         s = select(SelectOps.LT, m, 6)
-        @test s[2,2] == 5 && s[3,3] === nothing
+        @test s[2,2] == 5 && s[3,3] == zero(eltype(s))
     end
     @testset "transpose" begin
         m = GBMatrix(sprand(3, 3, 0.5))

@@ -818,14 +818,17 @@ for T ∈ valid_vec
     @eval begin
         function $func(x, v, i)
             i = tozerobased(i) #Switch to 0-based indexing at ccall barrier
-            @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{$type}, GrB_Vector, GrB_Index), x, v, i)
+            ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{$type}, GrB_Vector, GrB_Index), x, v, i)
         end
         function $func(v, i)
             x = Ref{$T}()
-            if $func(x,v,i) === nothing
-                return nothing
-            else
+            result = $func(x, v, i)
+            if result == GrB_SUCCESS
                 return x[]
+            elseif result == GrB_NO_VALUE
+                return zero($T)
+            else
+                throw(ErrorException("Invalid extractElement return value."))
             end
         end
     end
@@ -960,14 +963,17 @@ for T ∈ valid_vec
         function $func(x, A, i, j)
             i = tozerobased(i) #Switch to 0-based indexing at ccall barrier
             j = tozerobased(j)
-            @wraperror ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{$type}, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
+            return ccall(($funcstr, libgraphblas), GrB_Info, (Ptr{$type}, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
         end
         function $func(A, i, j)
             x = Ref{$T}()
-            if $func(x, A, i, j) === nothing
-                return nothing
-            else
+            result = $func(x, A, i, j)
+            if result == GrB_SUCCESS
                 return x[]
+            elseif result == GrB_NO_VALUE
+                zero($T)
+            else
+                throw(ErrorException("Invalid return from Matrix_extractElement"))
             end
         end
     end
@@ -978,17 +984,12 @@ for T ∈ valid_vec
     @eval begin
         function $func(I, J, X, nvals, A)
             #I, X, and nvals are output
-            #println("I: $(size(I)); J: $(size(J)); X: $(size(X))")
-            #TODO: This is somehow bugged, need to repro and discuss with Tim Davis.
             @wraperror ccall(
                 ($funcstr, libgraphblas),
                 GrB_Info,
                 (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{$type}, Ptr{GrB_Index}, GrB_Matrix),
                 I, J, X, nvals, A
             )
-            # Not working:
-            #toonebased!(I) #Back to 1-based indexing after ccall
-            #toonebased!(J)
         end
         function $func(A)
             nvals = GrB_Matrix_nvals(A)
