@@ -92,11 +92,10 @@ function Base.:+(d1::Descriptor, d2::Descriptor)
     return d
 end
 
-#This is probably not ideal. Perhaps kwargs = nothing by default is better
 Base.:+(d1::Descriptor, ::Nothing) = d1
 Base.:+(::Nothing, d2::Descriptor) = d2
 Base.:+(f1::libgb.GrB_Desc_Value, f2::libgb.GrB_Desc_Value) = libgb.GrB_Desc_Value(UInt32(f1) + UInt32(f2))
-function Base.propertynames(d::Descriptor)
+function Base.propertynames(::Descriptor)
     return (
     :output,
     :mask,

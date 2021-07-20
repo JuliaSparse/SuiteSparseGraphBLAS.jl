@@ -7,7 +7,8 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
@@ -28,7 +29,8 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     size(u, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(u)"))
     size(w, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(w)"))
     op = getoperator(op, optype(u, A))
@@ -48,7 +50,8 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     size(u, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(u)"))
     size(w, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(w"))
     op = getoperator(op, optype(A, u))

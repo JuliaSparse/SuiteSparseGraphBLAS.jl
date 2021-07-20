@@ -18,7 +18,8 @@ function gbtranspose!(
     C::GBMatrix, A::GBMatOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     if A isa Transpose && desc.input1 == Descriptors.TRANSPOSE
         throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = Descriptors.TRANSPOSE."))
     elseif A isa Transpose

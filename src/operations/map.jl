@@ -4,7 +4,8 @@ function Base.map!(
     op::UnaryUnion, C::GBArray, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     op = getoperator(op, eltype(A))
     accum = getoperator(accum, eltype(C))
     A, desc = _handletranspose(A, desc)
@@ -34,7 +35,8 @@ function Base.map!(
     op::BinaryUnion, C::GBArray, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
     _, desc, A = _handletranspose(nothing, desc, A)
@@ -65,7 +67,8 @@ function Base.map!(
     op::BinaryUnion, C::GBArray, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
     A, desc, _ = _handletranspose(A, desc)

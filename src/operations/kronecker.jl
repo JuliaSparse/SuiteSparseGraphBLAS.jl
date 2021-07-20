@@ -12,7 +12,8 @@ function LinearAlgebra.kron!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum, desc = _handlenothings(mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc === nothing && (desc = Descriptors.NULL)
     op = getoperator(op, optype(A, B))
     A, desc, B = _handletranspose(A, desc, B)
     accum = getoperator(accum, eltype(C))
