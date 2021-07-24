@@ -94,9 +94,9 @@ function Base.resize!(A::GBMatrix, nrows_new, ncols_new)
     libgb.GrB_Matrix_resize(A, nrows_new, ncols_new)
     return A
 end
-
-function LinearAlgebra.Diagonal(v::GBVector, k::Integer; desc = Descriptors.NULL)
-    return libgb.GxB_Matrix_diag(v, k, desc)
+# This does not conform to the normal definition with a lazy wrapper.
+function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = Descriptors.NULL)
+    return GBMatrix{eltype(v)}(libgb.GxB_Matrix_diag(v, k, desc))
 end
 
 # Type dependent functions build, setindex, getindex, and findnz:

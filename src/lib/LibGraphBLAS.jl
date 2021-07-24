@@ -1045,7 +1045,7 @@ function GxB_Matrix_diag(C, v, k, desc)
 end
 function GxB_Matrix_diag(v, k, desc)
     s = GrB_Vector_size(v)
-    C = GrB_Matrix_new(GrB_Vector_type(v), s + abs(k), s + abs(k))
+    C = GrB_Matrix_new(GxB_Vector_type(v), s + abs(k), s + abs(k))
     GxB_Matrix_diag(C, v, k, desc)
     return C
 end

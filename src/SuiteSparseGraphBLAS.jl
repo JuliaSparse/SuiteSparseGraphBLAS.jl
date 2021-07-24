@@ -88,6 +88,7 @@ include("import.jl")
 include("export.jl")
 include("options.jl")
 #EXPERIMENTAL
+include("operations/argminmax.jl")
 include("operations/broadcasts.jl")
 include("chainrules/chainruleutils.jl")
 include("chainrules/mulrules.jl")

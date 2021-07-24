@@ -54,7 +54,7 @@ function gbtranspose(
     return C
 end
 
-function LinearAlgebra.transpose(A::GBMatOrTranspose)
+function LinearAlgebra.transpose(A::GBMatrix)
     return Transpose(A)
 end
 
