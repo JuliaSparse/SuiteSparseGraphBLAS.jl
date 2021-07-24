@@ -239,30 +239,11 @@ end
 
 function Semiring(name)
     containername, exportedname = _semiringnames(name)
-    if isGxB(name) || isGrB(name)
-        structquote = quote
-            struct $containername <: AbstractSemiring
-                typedops::Dict{DataType, TypedSemiring}
-                name::String
-                $containername() = new(Dict{DataType, TypedSemiring}(), $name)
-            end
-        end
-    else
-        structquote = quote
-            mutable struct $containername <: AbstractSemiring
-                typedops::Dict{DataType, TypedSemiring}
-                name::String
-                function $containername()
-                    r = new(Dict{DataType, TypedSemiring}(), $name)
-                    function f(rig)
-                        for k ∈ keys(rig.typedops)
-                            libgb.GrB_Semiring_free(Ref(rig.typedops[k]))
-                            delete!(rig.typedops, k)
-                        end
-                    end
-                    return finalizer(f, r)
-                end
-            end
+    structquote = quote
+        struct $containername <: AbstractSemiring
+            typedops::Dict{DataType, TypedSemiring}
+            name::String
+            $containername() = new(Dict{DataType, TypedSemiring}(), $name)
         end
     end
     @eval(Types, $structquote)

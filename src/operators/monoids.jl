@@ -39,30 +39,11 @@ end
 
 function Monoid(name)
     containername, exportedname = _monoidnames(name)
-    if isGxB(name) || isGrB(name) #Built-ins are immutable
-        structquote = quote
-            struct $containername <: AbstractMonoid
-                typedops::Dict{DataType, TypedMonoid}
-                name::String
-                $containername() = new(Dict{DataType, TypedMonoid}(), $name)
-            end
-        end
-    else #UDFs are mutable for finalizing
-        structquote = quote
-            mutable struct $containername <: AbstractMonoid
-                typedops::Dict{DataType, TypedMonoid}
-                name::String
-                function $containername()
-                    m = new(Dict{DataType, TypedMonoid}(), $name)
-                    function f(monoid)
-                        for k ∈ keys(monoid.typedops)
-                            libgb.GrB_Monoid_free(Ref(monoid.typedops[k]))
-                            delete!(monoid.typedops, k)
-                        end
-                    end
-                    return finalizer(f, m)
-                end
-            end
+    structquote = quote
+        struct $containername <: AbstractMonoid
+            typedops::Dict{DataType, TypedMonoid}
+            name::String
+            $containername() = new(Dict{DataType, TypedMonoid}(), $name)
         end
     end
     @eval(Types, $structquote)

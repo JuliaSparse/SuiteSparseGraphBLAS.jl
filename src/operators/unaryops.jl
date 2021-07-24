@@ -11,31 +11,11 @@ module UnaryOps
         end
         tname = Symbol(simplifiedname * "_T")
         simplifiedname = Symbol(simplifiedname)
-        #If it's a built-in we probably want immutable struct. Need to check original name.
-        if isGxB(name) || isGrB(name)
-            structquote = quote
-                struct $tname <: AbstractUnaryOp
-                    typedops::Dict{DataType, TypedUnaryOperator}
-                    name::String
-                    $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
-                end
-            end
-        else #If it's a UDF we need a mutable for finalizing purposes.
-            structquote = quote
-                mutable struct $tname <: AbstractUnaryOp
-                    typedops::Dict{DataType, TypedUnaryOperator}
-                    name::String
-                    function $tname()
-                        u = new(Dict{DataType, TypedUnaryOperator}(), $name)
-                        function f(unaryop)
-                            for k ∈ keys(unaryop.typedops)
-                                libgb.GrB_UnaryOp_free(Ref(unaryop.typedops[k]))
-                                delete!(unaryop.typedops, k)
-                            end
-                        end
-                        return finalizer(f, u)
-                    end
-                end
+        structquote = quote
+            struct $tname <: AbstractUnaryOp
+                typedops::Dict{DataType, TypedUnaryOperator}
+                name::String
+                $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
             end
         end
         @eval($structquote) #Eval the struct into the Types submodule to avoid clutter.

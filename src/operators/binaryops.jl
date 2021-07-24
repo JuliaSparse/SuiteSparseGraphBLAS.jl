@@ -10,30 +10,11 @@ module BinaryOps
         end
         containername = Symbol(simplifiedname, "_T")
         exportedname = Symbol(simplifiedname)
-        if isGxB(name) || isGrB(name) #Built-in is immutable, no finalizer
-            structquote = quote
-                struct $containername <: AbstractBinaryOp
-                    typedops::Dict{DataType, TypedBinaryOperator}
-                    name::String
-                    $containername() = new(Dict{DataType, TypedBinaryOperator}(), $name)
-                end
-            end
-        else #UDF is mutable for finalizer
-            structquote = quote
-                mutable struct $containername <: AbstractBinaryOp
-                    typedops::Dict{DataType, TypedBinaryOperator}
-                    name::String
-                    function $containername()
-                        b = new(Dict{DataType, TypedBinaryOperator}(), $name)
-                        function f(binaryop)
-                            for k ∈ keys(binaryop.typedops)
-                                libgb.GrB_BinaryOp_free(Ref(binaryop.typedops[k]))
-                                delete!(binaryop.typedops, k)
-                            end
-                        end
-                        return finalizer(f, b)
-                    end
-                end
+        structquote = quote
+            struct $containername <: AbstractBinaryOp
+                typedops::Dict{DataType, TypedBinaryOperator}
+                name::String
+                $containername() = new(Dict{DataType, TypedBinaryOperator}(), $name)
             end
         end
         @eval($structquote) #eval container *type* into Types submodule
