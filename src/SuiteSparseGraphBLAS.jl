@@ -1,5 +1,5 @@
 module SuiteSparseGraphBLAS
-
+__precompile__(true)
 using Libdl: dlsym
 using SSGraphBLAS_jll
 using SparseArrays
@@ -24,18 +24,19 @@ include("operators/binaryops.jl")
 include("operators/monoids.jl")
 include("operators/semirings.jl")
 include("operators/selectops.jl")
+include("descriptors.jl")
 using .UnaryOps
 using .BinaryOps
 using .Monoids
 using .Semirings
 using .SelectOps
-
+using .Descriptors
 _createunaryops()
 _createbinaryops()
 _createmonoids()
 _createsemirings()
-
-include("descriptors.jl")
+_createselectops()
+_createdescriptors()
 
 include("indexutils.jl")
 

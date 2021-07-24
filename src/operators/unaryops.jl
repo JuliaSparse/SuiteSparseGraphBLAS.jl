@@ -1,4 +1,3 @@
-
 module UnaryOps
     using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp
     using ..libgb

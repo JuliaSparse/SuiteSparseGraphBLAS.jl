@@ -1,7 +1,8 @@
 mutable struct Descriptor <: AbstractDescriptor
+    name::String
     p::libgb.GrB_Descriptor
-    function Descriptor(p::libgb.GrB_Descriptor)
-        d = new(p)
+    function Descriptor(name, p::libgb.GrB_Descriptor)
+        d = new(name, p)
         function f(descriptor)
             libgb.GrB_Descriptor_free(Ref(descriptor.p))
         end
@@ -10,13 +11,14 @@ mutable struct Descriptor <: AbstractDescriptor
 end
 
 function Descriptor()
-    return Descriptor(libgb.GrB_Descriptor_new())
+    return Descriptor("", libgb.GrB_Descriptor_new())
 end
 
 Base.unsafe_convert(::Type{libgb.GrB_Descriptor}, d::Descriptor) = d.p
 
 function Base.getproperty(d::Descriptor, s::Symbol)
     if s == :p
+        _isloaded(d) || _load(d)
         return getfield(d, s)
     elseif s == :output
         f = libgb.GrB_OUTP
@@ -35,7 +37,7 @@ function Base.getproperty(d::Descriptor, s::Symbol)
     #elseif s == :sort
         #f = libgb.GxB_SORT
     else
-        throw(UndefRefError())
+        return getfield(d, s)
     end
     return libgb.GxB_Descriptor_get(d, f)
 end
@@ -43,6 +45,7 @@ end
 function Base.setproperty!(d::Descriptor, s::Symbol, x)
     if s == :p
         setfield!(d, s, x)
+        return nothing
     elseif s == :output
         f = libgb.GrB_OUTP
     elseif s == :mask
@@ -60,7 +63,8 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
     #elseif s == :sort
         #f = libgb.GxB_SORT
     else
-        throw(UndefRefError())
+        setfield!(d, s, x)
+        return nothing
     end
     libgb.GrB_Descriptor_set(d, f, x)
 end
@@ -139,15 +143,16 @@ const HASH = GxB_AxB_HASH
 const SAXPY = GxB_AxB_SAXPY
 
 function Descriptor(name)
-simple = Symbol(string(name[10:end]))
+    simple = Symbol(string(name[10:end]))
     constquote = quote
-        const $simple = Descriptor(load_global($name, GB_Descriptor_opaque))
+        const $simple = Descriptor($name, GrB_Descriptor(C_NULL))
     end
     @eval($constquote)
 end
 
+end
 
-function _loaddescriptors()
+function _createdescriptors()
     builtins = ["GrB_DESC_T1",
     "GrB_DESC_T0",
     "GrB_DESC_T0T1",
@@ -184,10 +189,11 @@ function _loaddescriptors()
     end
 end
 
-function __init__()
-    _loaddescriptors()
+function _load(desc::Descriptor)
+    name = desc.name
+    desc.p = load_global(name, libgb.GB_Descriptor_opaque)
 end
-end
+
 
 Base.show(io::IO, ::MIME"text/plain", d::Descriptor) = gxbprint(io, d)
 Base.print(io::IO, d::Descriptor) = gxbprint(io, d)

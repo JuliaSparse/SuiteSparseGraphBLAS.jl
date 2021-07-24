@@ -1,7 +1,8 @@
 mutable struct SelectOp <: AbstractSelectOp
+    name::String
     p::libgb.GxB_SelectOp
-    function SelectOp(p::libgb.GxB_SelectOp)
-        d = new(p)
+    function SelectOp(name, p::libgb.GxB_SelectOp)
+        d = new(name, p)
         function f(selectop)
             libgb.GxB_SelectOp_free(Ref(selectop.p))
         end
@@ -11,17 +12,25 @@ end
 
 const SelectUnion = Union{AbstractSelectOp, libgb.GxB_SelectOp}
 
-function SelectOp()
-    return SelectOp(libgb.GxB_SelectOp_new())
-end
-
 Base.unsafe_convert(::Type{libgb.GxB_SelectOp}, selectop::SelectOp) = selectop.p
 
 
 module SelectOps
 import ..SuiteSparseGraphBLAS: load_global, SelectOp, AbstractSelectOp
-import ..libgb: GB_SelectOp_opaque
-function _loadselectops()
+import ..libgb
+
+
+function SelectOp(name)
+    simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
+    constquote = quote
+        const $simple = SelectOp($name, libgb.GxB_SelectOp(C_NULL))
+    end
+    @eval($constquote)
+end
+
+end
+
+function _createselectops()
     builtins = ["GxB_TRIL",
     "GxB_TRIU",
     "GxB_DIAG",
@@ -43,26 +52,12 @@ function _loadselectops()
     end
 end
 
-function SelectOp(name)
-    simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
-    constquote = quote
-        const $simple = SelectOp(load_global($name, GB_SelectOp_opaque))
-    end
-    @eval($constquote)
+function _load(selectop::AbstractSelectOp)
+    name = selectop.name
+    selectop.p = load_global(name, libgb.GB_SelectOp_opaque)
 end
 
-function __init__()
-    _loadselectops()
-end
-
-end
-
-
-
-_isloaded(d::AbstractSelectOp) = d.p !== C_NULL
-function Base.getindex(o::AbstractSelectOp)
-    o.p
-end
+Base.getindex(op::AbstractSelectOp, t::DataType) = nothing
 
 function validtypes(::AbstractSelectOp)
     return Any

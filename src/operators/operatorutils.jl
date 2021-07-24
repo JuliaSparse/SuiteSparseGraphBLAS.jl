@@ -33,8 +33,8 @@ function getoperator(op, t)
     end
 end
 
-_isloaded(o::AbstractOp) = !isempty(o.typedops)
-
+_isloaded(op::AbstractOp) = !isempty(getfield(op, :typedops))
+_isloaded(op::Union{AbstractSelectOp, AbstractDescriptor}) = getfield(op, :p) != C_NULL
 """
     validtypes(operator::AbstractOp)::Vector{DataType}
     validtypes(operator::SelectOp)::Nothing
@@ -60,6 +60,13 @@ function Base.getindex(o::AbstractOp, t::DataType)
     else
         getindex(o.typedops, t)
     end
+end
+
+function Base.getproperty(op::Union{AbstractOp, AbstractDescriptor}, name::Symbol)
+    if name == :p
+        _isloaded(op) || _load(op)
+    end
+    return getfield(op, name)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
