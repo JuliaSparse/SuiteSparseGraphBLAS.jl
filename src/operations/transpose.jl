@@ -12,19 +12,19 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc::Descriptor = DEFAULTDESC`
 """
 function gbtranspose!(
     C::GBMatrix, A::GBMatOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
-    if A isa Transpose && desc.input1 == Descriptors.TRANSPOSE
-        throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = Descriptors.TRANSPOSE."))
+    desc === nothing && (desc = DEFAULTDESC)
+    if A isa Transpose && desc.input1 == TRANSPOSE
+        throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = TRANSPOSE."))
     elseif A isa Transpose
         A = A.parent
-        desc = desc + Descriptors.T0
+        desc = desc + T0
     end
     accum = getoperator(accum, eltype(C))
     libgb.GrB_transpose(C, mask, accum, A, desc)
@@ -40,14 +40,14 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc::Descriptor = DEFAULTDESC`
 
 # Returns
 - `C::GBMatrix`: output matrix.
 """
 function gbtranspose(
     A::GBMatOrTranspose;
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = DEFAULTDESC
 )
     C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
@@ -70,7 +70,7 @@ end
 
 function Base.copy!(
     C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.C_NULL
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = C_NULL
 )
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
@@ -82,9 +82,9 @@ Apply a mask to matrix `A`, storing the results in C.
 
 """
 function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
-    desc = Descriptors.T0
-    structural && (desc = desc + Descriptors.S)
-    complement && (desc = desc + Descriptors.C)
+    desc = T0
+    structural && (desc = desc + S)
+    complement && (desc = desc + C)
     gbtranspose!(C, A; mask, desc)
     return C
 end
@@ -100,7 +100,7 @@ end
 
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc::Descriptor = DEFAULTDESC
 )
     return gbtranspose(A.parent; mask, accum, desc)
 end
@@ -111,14 +111,14 @@ function _handletranspose(
     B::Union{GBArray, Nothing} = nothing
 )
     if desc == C_NULL
-        desc = Descriptors.NULL
+        desc = DEFAULTDESC
     end
     if A isa Transpose
-        desc = desc + Descriptors.T0
+        desc = desc + T0
         A = A.parent
     end
     if B isa Transpose
-        desc = desc + Descriptors.T1
+        desc = desc + T1
         B = B.parent
     end
     return A, desc, B

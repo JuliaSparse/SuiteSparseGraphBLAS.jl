@@ -29,15 +29,10 @@ using .UnaryOps
 using .BinaryOps
 using .Monoids
 using .Semirings
-using .SelectOps
-using .Descriptors
 _createunaryops()
 _createbinaryops()
 _createmonoids()
 _createsemirings()
-_createselectops()
-_createdescriptors()
-
 include("indexutils.jl")
 
 
@@ -75,6 +70,11 @@ const OperatorUnion = Union{
     GrBOp
 }
 
+export T1, T0, T0T1, C, CT1, CT0, CT0T1, S, ST1, ST0, ST0T1, SC, SCT1, SCT0, SCT0T1, R, RT1,
+    RT0, RT0T1, RC, RCT1, RCT0, RCT0T1, RS, RST1, RST0, RST0T1, RSC, RSCT1, RSCT0, RSCT0T1
+
+export TRIL, TRIU, DIAG, OFFDIAG, NONZERO, EQ_ZERO, GT_ZERO, GE_ZERO, LT_ZERO, LE_ZERO, NE,
+    EQ, GT, GE, LT, LE
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
@@ -88,6 +88,7 @@ include("operations/map.jl")
 include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
+
 
 include("print.jl")
 include("import.jl")
@@ -117,16 +118,17 @@ export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, g
 # Reexports.
 export diag, Diagonal, mul!, kron, kron!, transpose, reduce
 export nnz, sprand, findnz, nonzeros
-
 function __init__()
     _load_globaltypes()
+
     # I would like to do below, it's what the docs ask for. But it *seems* to work
     # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
     #libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
+    _loaddescriptors()
+    _loadselectops()
     gbset(FORMAT, BYCOL) #This may not always be performant. Should put in Preferences.jl
     gbset(BASE1, true)
-    @eval(Descriptors, $:(const NULL = Descriptor()))
     atexit() do
         libgb.GrB_finalize()
     end

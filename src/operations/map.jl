@@ -5,7 +5,7 @@ function Base.map!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, eltype(A))
     accum = getoperator(accum, eltype(C))
     A, desc = _handletranspose(A, desc)
@@ -36,7 +36,7 @@ function Base.map!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
     _, desc, A = _handletranspose(nothing, desc, A)
@@ -68,7 +68,7 @@ function Base.map!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getoperator(accum, eltype(C))
     A, desc, _ = _handletranspose(A, desc)

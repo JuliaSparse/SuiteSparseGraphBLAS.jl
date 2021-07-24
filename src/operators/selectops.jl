@@ -14,11 +14,22 @@ const SelectUnion = Union{AbstractSelectOp, libgb.GxB_SelectOp}
 
 Base.unsafe_convert(::Type{libgb.GxB_SelectOp}, selectop::SelectOp) = selectop.p
 
-
-module SelectOps
-import ..SuiteSparseGraphBLAS: load_global, SelectOp, AbstractSelectOp
-import ..libgb
-
+const TRIL = SelectOp("GxB_TRIL", libgb.GxB_SelectOp(C_NULL))
+const TRIU = SelectOp("GxB_TRIU", libgb.GxB_SelectOp(C_NULL))
+const DIAG = SelectOp("GxB_DIAG", libgb.GxB_SelectOp(C_NULL))
+const OFFDIAG = SelectOp("GxB_OFFDIAG", libgb.GxB_SelectOp(C_NULL))
+const NONZERO = SelectOp("GxB_NONZERO", libgb.GxB_SelectOp(C_NULL))
+const EQ_ZERO = SelectOp("GxB_EQ_ZERO", libgb.GxB_SelectOp(C_NULL))
+const GT_ZERO = SelectOp("GxB_GT_ZERO", libgb.GxB_SelectOp(C_NULL))
+const GE_ZERO = SelectOp("GxB_GE_ZERO", libgb.GxB_SelectOp(C_NULL))
+const LT_ZERO = SelectOp("GxB_LT_ZERO", libgb.GxB_SelectOp(C_NULL))
+const LE_ZERO = SelectOp("GxB_LE_ZERO", libgb.GxB_SelectOp(C_NULL))
+const NE = SelectOp("GxB_NE_THUNK", libgb.GxB_SelectOp(C_NULL))
+const EQ = SelectOp("GxB_EQ_THUNK", libgb.GxB_SelectOp(C_NULL))
+const GT = SelectOp("GxB_GT_THUNK", libgb.GxB_SelectOp(C_NULL))
+const GE = SelectOp("GxB_GE_THUNK", libgb.GxB_SelectOp(C_NULL))
+const LT = SelectOp("GxB_LT_THUNK", libgb.GxB_SelectOp(C_NULL))
+const LE = SelectOp("GxB_LE_THUNK", libgb.GxB_SelectOp(C_NULL))
 
 function SelectOp(name)
     simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
@@ -28,34 +39,25 @@ function SelectOp(name)
     @eval($constquote)
 end
 
+function _loadselectops()
+    TRIL.p = load_global("GxB_TRIL", libgb.GxB_SelectOp)
+    TRIU.p = load_global("GxB_TRIU", libgb.GxB_SelectOp)
+    DIAG.p = load_global("GxB_DIAG", libgb.GxB_SelectOp)
+    OFFDIAG.p = load_global("GxB_OFFDIAG", libgb.GxB_SelectOp)
+    NONZERO.p = load_global("GxB_NONZERO", libgb.GxB_SelectOp)
+    EQ_ZERO.p = load_global("GxB_EQ_ZERO", libgb.GxB_SelectOp)
+    GT_ZERO.p = load_global("GxB_GT_ZERO", libgb.GxB_SelectOp)
+    GE_ZERO.p = load_global("GxB_GE_ZERO", libgb.GxB_SelectOp)
+    LT_ZERO.p = load_global("GxB_LT_ZERO", libgb.GxB_SelectOp)
+    LE_ZERO.p = load_global("GxB_LE_ZERO", libgb.GxB_SelectOp)
+    NE.p = load_global("GxB_NE_THUNK", libgb.GxB_SelectOp)
+    EQ.p = load_global("GxB_EQ_THUNK", libgb.GxB_SelectOp)
+    GT.p = load_global("GxB_GT_THUNK", libgb.GxB_SelectOp)
+    GE.p = load_global("GxB_GE_THUNK", libgb.GxB_SelectOp)
+    LT.p = load_global("GxB_LT_THUNK", libgb.GxB_SelectOp)
+    LE.p = load_global("GxB_LE_THUNK", libgb.GxB_SelectOp)
 end
 
-function _createselectops()
-    builtins = ["GxB_TRIL",
-    "GxB_TRIU",
-    "GxB_DIAG",
-    "GxB_OFFDIAG",
-    "GxB_NONZERO",
-    "GxB_EQ_ZERO",
-    "GxB_GT_ZERO",
-    "GxB_GE_ZERO",
-    "GxB_LT_ZERO",
-    "GxB_LE_ZERO",
-    "GxB_NE_THUNK",
-    "GxB_EQ_THUNK",
-    "GxB_GT_THUNK",
-    "GxB_GE_THUNK",
-    "GxB_LT_THUNK",
-    "GxB_LE_THUNK"]
-    for name ∈ builtins
-        SelectOps.SelectOp(name)
-    end
-end
-
-function _load(selectop::AbstractSelectOp)
-    name = selectop.name
-    selectop.p = load_global(name, libgb.GB_SelectOp_opaque)
-end
 
 Base.getindex(op::AbstractSelectOp, t::DataType) = nothing
 
@@ -66,102 +68,102 @@ end
 Base.show(io::IO, ::MIME"text/plain", s::SelectUnion) = gxbprint(io, s)
 
 """
-    select(SelectOps.TRIL, A, k=0)
+    select(TRIL, A, k=0)
 
 Select the entries on or below the `k`th diagonal of A.
 """
-SelectOps.TRIL
+TRIL
 """
-    select(SelectOps.TRIU, A, k=0)
+    select(TRIU, A, k=0)
 
 Select the entries on or above the `k`th diagonal of A.
 
 See also: `LinearAlgebra.TRIL`
 """
-SelectOps.TRIU
+TRIU
 """
-    select(SelectOps.DIAG, A, k=0)
+    select(DIAG, A, k=0)
 
 Select the entries on the `k`th diagonal of A.
 
 See also: `LinearAlgebra.TRIU`
 """
-SelectOps.DIAG
+DIAG
 """
-    select(SelectOps.OFFDIAG, A, k=0)
+    select(OFFDIAG, A, k=0)
 
 Select the entries **not** on the `k`th diagonal of A.
 """
-SelectOps.OFFDIAG
+OFFDIAG
 """
-    select(SelectOps.NONZERO, A)
+    select(NONZERO, A)
 
 Select all entries in A with nonzero value.
 """
-SelectOps.NONZERO
+NONZERO
 """
-    select(SelectOps.NONZERO, A)
+    select(NONZERO, A)
 
 Select all entries in A equal to zero.
 """
-SelectOps.EQ_ZERO
+EQ_ZERO
 """
-    select(SelectOps.EQ_ZERO, A)
+    select(EQ_ZERO, A)
 
 Select all entries in A greater than zero.
 """
-SelectOps.GT_ZERO
+GT_ZERO
 """
-    select(SelectOps.GT_ZERO, A)
+    select(GT_ZERO, A)
 
 Select all entries in A greater than or equal to zero.
 """
-SelectOps.GE_ZERO
+GE_ZERO
 """
-    select(SelectOps.GE_ZERO, A)
+    select(GE_ZERO, A)
 
 Select all entries in A less than zero.
 """
-SelectOps.LT_ZERO
+LT_ZERO
 """
-    select(SelectOps.LE_ZERO, A)
+    select(LE_ZERO, A)
 
 Select all entries in A less than or equal to zero.
 """
-SelectOps.LE_ZERO
+LE_ZERO
 """
-    select(SelectOps.NE, A, k)
+    select(NE, A, k)
 
 Select all entries not equal to `k`.
 """
-SelectOps.NE
+NE
 """
-    select(SelectOps.EQ, A, k)
+    select(EQ, A, k)
 
 Select all entries equal to `k`.
 """
-SelectOps.EQ
+EQ
 """
-    select(SelectOps.GT, A, k)
+    select(GT, A, k)
 
 Select all entries greater than `k`.
 """
-SelectOps.GT
+GT
 """
-    select(SelectOps.GE, A, k)
+    select(GE, A, k)
 
 Select all entries greater than or equal to `k`.
 """
-SelectOps.GE
+GE
 """
-    select(SelectOps.LT, A, k)
+    select(LT, A, k)
 
 Select all entries less than `k`.
 """
-SelectOps.LT
+LT
 """
-    select(SelectOps.LE, A, k)
+    select(LE, A, k)
 
 Select all entries less than or equal to `k`.
 """
-SelectOps.LE
+LE

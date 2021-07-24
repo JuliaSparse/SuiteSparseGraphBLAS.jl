@@ -61,7 +61,7 @@ function emul!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -103,7 +103,7 @@ function emul!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
@@ -199,7 +199,7 @@ function eadd!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
     accum = getoperator(accum, eltype(w))
@@ -241,7 +241,7 @@ function eadd!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))

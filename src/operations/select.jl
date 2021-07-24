@@ -9,7 +9,7 @@ function select!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     thunk === nothing && (thunk = C_NULL)
     A, desc, _ = _handletranspose(A, desc)
     accum = getoperator(accum, eltype(C))
@@ -57,7 +57,7 @@ function select(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C

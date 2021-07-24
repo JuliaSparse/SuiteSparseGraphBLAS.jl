@@ -158,7 +158,7 @@ Extract a subvector from `u` into the output vector `w`. Equivalent to the matri
 """
 function extract!(
     w::GBVector, u::GBVector, I;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     libgb.GrB_Vector_extract(w, mask, getoperator(accum, eltype(w)), u, I, ni, desc)
@@ -167,7 +167,7 @@ end
 
 function extract!(
     w::GBVector, u::GBVector, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract!(w, u, ALL; mask, accum, desc)
 end
@@ -179,31 +179,31 @@ Extract a subvector from `u` and return it. Equivalent to the matrix definition.
 """
 function extract(
     u::GBVector, I;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     wlen = _outlength(u, I)
     w = similar(u, wlen)
     return extract!(w, u, I; mask, accum, desc)
 end
 
-function extract(u::GBVector, ::Colon; mask = C_NULL, accum = C_NULL, desc=Descriptors.NULL)
+function extract(u::GBVector, ::Colon; mask = C_NULL, accum = C_NULL, desc=DEFAULTDESC)
     extract(u, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
     u::GBVector, I;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract(u, I; mask, accum, desc)
 end
 
-function Base.getindex(u::GBVector, ::Colon; mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL)
+function Base.getindex(u::GBVector, ::Colon; mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC)
     return extract(u, :)
 end
 
 function Base.getindex(
     u::GBVector, i::Union{Vector, UnitRange, StepRange};
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract(u, i; mask, accum, desc)
 end
@@ -214,7 +214,7 @@ Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definitio
 """
 function subassign!(
     w::GBVector, u, I;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     u isa Vector && (u = GBVector(u))
@@ -233,7 +233,7 @@ Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definitio
 """
 function assign!(
     w::GBVector, u, I;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     u isa Vector && (u = GBVector(u))
@@ -247,14 +247,14 @@ end
 
 function Base.setindex!(
     u::GBVector, x, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     subassign!(u, x, ALL; mask, accum, desc)
     return nothing
 end
 function Base.setindex!(
     u::GBVector, x, I::Union{Vector, UnitRange, StepRange};
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     subassign!(u, x, I; mask, accum, desc)
     return nothing

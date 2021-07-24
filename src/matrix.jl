@@ -95,7 +95,7 @@ function Base.resize!(A::GBMatrix, nrows_new, ncols_new)
     return A
 end
 # This does not conform to the normal definition with a lazy wrapper.
-function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = Descriptors.NULL)
+function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
     return GBMatrix{eltype(v)}(libgb.GxB_Matrix_diag(v, k, desc))
 end
 
@@ -194,7 +194,7 @@ Extract a submatrix from `A` into `C`.
     `size(M) == (max(I), max(J))`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc::Descriptor = DEFAULTDESC`
 
 # Returns
 - `GBMatrix`: the modified matrix `C`, now containing the submatrix `A[I, J]`.
@@ -204,7 +204,7 @@ Extract a submatrix from `A` into `C`.
 """
 function extract!(
     C::GBMatrix, A::GBMatrix, I, J;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -228,7 +228,7 @@ Extract a submatrix from `A`.
     `size(M) == (max(I), max(J))`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied. `C` is, however, empty.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc::Descriptor = DEFAULTDESC`
 
 # Returns
 - `GBMatrix`: the submatrix `A[I, J]`.
@@ -238,7 +238,7 @@ Extract a submatrix from `A`.
 """
 function extract(
     A::GBMatrix, I, J;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
@@ -247,26 +247,26 @@ end
 
 function Base.getindex(
     A::GBMatrix, ::Colon, j;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract(A, ALL, j; mask, accum, desc)
 end
 function Base.getindex(
     A::GBMatrix, i, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract(A, i, ALL; mask, accum, desc)
 end
 function Base.getindex(
     A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract(A, ALL, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
     A::GBMatrix, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     return extract(A, i, j; mask, accum, desc)
 end
@@ -290,7 +290,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
     `size(M) == size(A)`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc::Descriptor = DEFAULTDESC`
 
 # Returns
 - `GBMatrix`: The input matrix A.
@@ -300,7 +300,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
 """
 function subassign!(
     C::GBMatrix, A, I, J;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -342,7 +342,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
     `size(M) == size(C)`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = Descriptors.NULL`
+- `desc::Descriptor = DEFAULTDESC`
 
 # Returns
 - `GBMatrix`: The input matrix A.
@@ -352,7 +352,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
 """
 function assign!(
     C::GBMatrix, A, I, J;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -381,19 +381,19 @@ end
 # setindex! uses subassign rather than assign. This behavior may change in the future.
 function Base.setindex!(
     C::GBMatrix, A, ::Colon, J;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     subassign!(C, A, ALL, J; mask, accum, desc)
 end
 function Base.setindex!(
     C::GBMatrix, A, I, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     subassign!(C, A, I, ALL; mask, accum, desc)
 end
 function Base.setindex!(
     C::GBMatrix, A, ::Colon, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     subassign!(C, A, ALL, ALL; mask, accum, desc)
 end
@@ -405,14 +405,14 @@ function Base.setindex!(
     J::Union{Vector, UnitRange, StepRange, Number};
     mask = C_NULL,
     accum = C_NULL,
-    desc = Descriptors.NULL
+    desc = DEFAULTDESC
 )
     subassign!(C, A, I, J; mask, accum, desc)
 end
 
 function Base.setindex(
     C::GBMatrix, A, I::AbstractVector;
-    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     throw("Not implemented")
 end

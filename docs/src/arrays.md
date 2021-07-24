@@ -62,7 +62,7 @@ A[[1,3,5,7], :]
 A[1:2:7, :]
 A[:,:]
 A[:, 5]
-SparseMatrixCSC(A[:,:, desc=Descriptors.T0]) #Transpose the first argument
+SparseMatrixCSC(A[:,:, desc=T0]) #Transpose the first argument
 ```
 
 All of this same functionality exists for vectors in 1-dimension.

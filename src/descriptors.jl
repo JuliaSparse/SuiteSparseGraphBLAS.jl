@@ -10,15 +10,59 @@ mutable struct Descriptor <: AbstractDescriptor
     end
 end
 
+const DEFAULT = libgb.GxB_DEFAULT
+const REPLACE = libgb.GrB_REPLACE
+const COMPLEMENT = libgb.GrB_COMP
+const STRUCTURE = libgb.GrB_STRUCTURE
+const STRUCT_COMP = libgb.GrB_STRUCT_COMP
+const TRANSPOSE = libgb.GrB_TRAN
+const GUSTAVSON = libgb.GxB_AxB_GUSTAVSON
+const DOT = libgb.GxB_AxB_DOT
+const HASH = libgb.GxB_AxB_HASH
+const SAXPY = libgb.GxB_AxB_SAXPY
+
+const T1 = Descriptor("T1", libgb.GrB_Descriptor(C_NULL))
+const T0 = Descriptor("T0", libgb.GrB_Descriptor(C_NULL))
+const T0T1 = Descriptor("T0T1", libgb.GrB_Descriptor(C_NULL))
+const C = Descriptor("C", libgb.GrB_Descriptor(C_NULL))
+const CT1 = Descriptor("CT1", libgb.GrB_Descriptor(C_NULL))
+const CT0 = Descriptor("CT0", libgb.GrB_Descriptor(C_NULL))
+const CT0T1 = Descriptor("CT0T1", libgb.GrB_Descriptor(C_NULL))
+const S = Descriptor("S", libgb.GrB_Descriptor(C_NULL))
+const ST1 = Descriptor("ST1", libgb.GrB_Descriptor(C_NULL))
+const ST0 = Descriptor("ST0", libgb.GrB_Descriptor(C_NULL))
+const ST0T1 = Descriptor("ST0T1", libgb.GrB_Descriptor(C_NULL))
+const SC = Descriptor("SC", libgb.GrB_Descriptor(C_NULL))
+const SCT1 = Descriptor("SCT1", libgb.GrB_Descriptor(C_NULL))
+const SCT0 = Descriptor("SCT0", libgb.GrB_Descriptor(C_NULL))
+const SCT0T1 = Descriptor("SCT0T1", libgb.GrB_Descriptor(C_NULL))
+const R = Descriptor("R", libgb.GrB_Descriptor(C_NULL))
+const RT1 = Descriptor("RT1", libgb.GrB_Descriptor(C_NULL))
+const RT0 = Descriptor("RT0", libgb.GrB_Descriptor(C_NULL))
+const RT0T1 = Descriptor("RT0T1", libgb.GrB_Descriptor(C_NULL))
+const RC = Descriptor("RC", libgb.GrB_Descriptor(C_NULL))
+const RCT1 = Descriptor("RCT1", libgb.GrB_Descriptor(C_NULL))
+const RCT0 = Descriptor("RCT0", libgb.GrB_Descriptor(C_NULL))
+const RCT0T1 = Descriptor("RCT0T1", libgb.GrB_Descriptor(C_NULL))
+const RS = Descriptor("RS", libgb.GrB_Descriptor(C_NULL))
+const RST1 = Descriptor("RST1", libgb.GrB_Descriptor(C_NULL))
+const RST0 = Descriptor("RST0", libgb.GrB_Descriptor(C_NULL))
+const RST0T1 = Descriptor("RST0T1", libgb.GrB_Descriptor(C_NULL))
+const RSC = Descriptor("RSC", libgb.GrB_Descriptor(C_NULL))
+const RSCT1 = Descriptor("RSCT1", libgb.GrB_Descriptor(C_NULL))
+const RSCT0 = Descriptor("RSCT0", libgb.GrB_Descriptor(C_NULL))
+const RSCT0T1 = Descriptor("RSCT0T1", libgb.GrB_Descriptor(C_NULL))
+const DEFAULTDESC = Descriptor("DEFAULTDESC", libgb.GrB_Descriptor(C_NULL))
+
 function Descriptor()
     return Descriptor("", libgb.GrB_Descriptor_new())
 end
+
 
 Base.unsafe_convert(::Type{libgb.GrB_Descriptor}, d::Descriptor) = d.p
 
 function Base.getproperty(d::Descriptor, s::Symbol)
     if s == :p
-        _isloaded(d) || _load(d)
         return getfield(d, s)
     elseif s == :output
         f = libgb.GrB_OUTP
@@ -73,22 +117,22 @@ function Base.:+(d1::Descriptor, d2::Descriptor)
     d = Descriptor()
     for f ∈ propertynames(d)
         if f == :input1
-            if getproperty(d1, f) == Descriptors.TRANSPOSE && getproperty(d2, f) == Descriptors.TRANSPOSE
-                setproperty!(d, f, Descriptors.DEFAULT)
-            elseif getproperty(d1, f) == Descriptors.TRANSPOSE || getproperty(d2, f) == Descriptors.TRANSPOSE
-                setproperty!(d, f, Descriptors.TRANSPOSE)
+            if getproperty(d1, f) == TRANSPOSE && getproperty(d2, f) == TRANSPOSE
+                setproperty!(d, f, DEFAULT)
+            elseif getproperty(d1, f) == TRANSPOSE || getproperty(d2, f) == TRANSPOSE
+                setproperty!(d, f, TRANSPOSE)
             end
         elseif f == :input2
-            if getproperty(d1, f) == Descriptors.TRANSPOSE && getproperty(d2, f) == Descriptors.TRANSPOSE
-                setproperty!(d, f, Descriptors.DEFAULT)
-            elseif getproperty(d1, f) == Descriptors.TRANSPOSE || getproperty(d2, f) == Descriptors.TRANSPOSE
-                setproperty!(d, f, Descriptors.TRANSPOSE)
+            if getproperty(d1, f) == TRANSPOSE && getproperty(d2, f) == TRANSPOSE
+                setproperty!(d, f, DEFAULT)
+            elseif getproperty(d1, f) == TRANSPOSE || getproperty(d2, f) == TRANSPOSE
+                setproperty!(d, f, TRANSPOSE)
             end
         else
-            if getproperty(d1, f) != Descriptors.DEFAULT
+            if getproperty(d1, f) != DEFAULT
                 setproperty!(d, f, getproperty(d1, f))
             end
-            if getproperty(d2, f) != Descriptors.DEFAULT
+            if getproperty(d2, f) != DEFAULT
                 setproperty!(d, f, getproperty(d2, f))
             end
         end
@@ -112,88 +156,40 @@ function Base.propertynames(::Descriptor)
     )
 end
 
-module Descriptors
-import ..SuiteSparseGraphBLAS: load_global, Descriptor
-import ..libgb:
-GB_Descriptor_opaque,
-GrB_Descriptor,
-GxB_DEFAULT,
-GrB_REPLACE,
-GrB_COMP,
-GrB_STRUCTURE,
-GrB_STRUCT_COMP,
-GrB_TRAN,
-GxB_GPU_ALWAYS,
-GxB_GPU_NEVER,
-GxB_AxB_GUSTAVSON,
-GxB_AxB_DOT,
-GxB_AxB_HASH,
-GxB_AxB_SAXPY
-import Base.C_NULL
-
-const DEFAULT = GxB_DEFAULT
-const REPLACE = GrB_REPLACE
-const COMPLEMENT = GrB_COMP
-const STRUCTURE = GrB_STRUCTURE
-const STRUCT_COMP = GrB_STRUCT_COMP
-const TRANSPOSE = GrB_TRAN
-const GUSTAVSON = GxB_AxB_GUSTAVSON
-const DOT = GxB_AxB_DOT
-const HASH = GxB_AxB_HASH
-const SAXPY = GxB_AxB_SAXPY
-
-function Descriptor(name)
-    simple = Symbol(string(name[10:end]))
-    constquote = quote
-        const $simple = Descriptor($name, GrB_Descriptor(C_NULL))
-    end
-    @eval($constquote)
+function _loaddescriptors()
+    T1.p = load_global("GrB_DESC_T1", libgb.GrB_Descriptor)
+    T0.p = load_global("GrB_DESC_T0", libgb.GrB_Descriptor)
+    T0T1.p = load_global("GrB_DESC_T0T1", libgb.GrB_Descriptor)
+    C.p = load_global("GrB_DESC_C", libgb.GrB_Descriptor)
+    CT1.p = load_global("GrB_DESC_CT1", libgb.GrB_Descriptor)
+    CT0.p = load_global("GrB_DESC_CT0", libgb.GrB_Descriptor)
+    CT0T1.p = load_global("GrB_DESC_CT0T1", libgb.GrB_Descriptor)
+    S.p = load_global("GrB_DESC_S", libgb.GrB_Descriptor)
+    ST1.p = load_global("GrB_DESC_ST1", libgb.GrB_Descriptor)
+    ST0.p = load_global("GrB_DESC_ST0", libgb.GrB_Descriptor)
+    ST0T1.p = load_global("GrB_DESC_ST0T1", libgb.GrB_Descriptor)
+    SC.p = load_global("GrB_DESC_SC", libgb.GrB_Descriptor)
+    SCT1.p = load_global("GrB_DESC_SCT1", libgb.GrB_Descriptor)
+    SCT0.p = load_global("GrB_DESC_SCT0", libgb.GrB_Descriptor)
+    SCT0T1.p = load_global("GrB_DESC_SCT0T1", libgb.GrB_Descriptor)
+    R.p = load_global("GrB_DESC_R", libgb.GrB_Descriptor)
+    RT1.p = load_global("GrB_DESC_RT1", libgb.GrB_Descriptor)
+    RT0.p = load_global("GrB_DESC_RT0", libgb.GrB_Descriptor)
+    RT0T1.p = load_global("GrB_DESC_RT0T1", libgb.GrB_Descriptor)
+    RC.p = load_global("GrB_DESC_RC", libgb.GrB_Descriptor)
+    RCT1.p = load_global("GrB_DESC_RCT1", libgb.GrB_Descriptor)
+    RCT0.p = load_global("GrB_DESC_RCT0", libgb.GrB_Descriptor)
+    RCT0T1.p = load_global("GrB_DESC_RCT0T1", libgb.GrB_Descriptor)
+    RS.p = load_global("GrB_DESC_RS", libgb.GrB_Descriptor)
+    RST1.p = load_global("GrB_DESC_RST1", libgb.GrB_Descriptor)
+    RST0.p = load_global("GrB_DESC_RST0", libgb.GrB_Descriptor)
+    RST0T1.p = load_global("GrB_DESC_RST0T1", libgb.GrB_Descriptor)
+    RSC.p = load_global("GrB_DESC_RSC", libgb.GrB_Descriptor)
+    RSCT1.p = load_global("GrB_DESC_RSCT1", libgb.GrB_Descriptor)
+    RSCT0.p = load_global("GrB_DESC_RSCT0", libgb.GrB_Descriptor)
+    RSCT0T1.p = load_global("GrB_DESC_RSCT0T1", libgb.GrB_Descriptor)
+    DEFAULTDESC.p = libgb.GrB_Descriptor_new()
 end
-
-end
-
-function _createdescriptors()
-    builtins = ["GrB_DESC_T1",
-    "GrB_DESC_T0",
-    "GrB_DESC_T0T1",
-    "GrB_DESC_C",
-    "GrB_DESC_CT1",
-    "GrB_DESC_CT0",
-    "GrB_DESC_CT0T1",
-    "GrB_DESC_S",
-    "GrB_DESC_ST1",
-    "GrB_DESC_ST0",
-    "GrB_DESC_ST0T1",
-    "GrB_DESC_SC",
-    "GrB_DESC_SCT1",
-    "GrB_DESC_SCT0",
-    "GrB_DESC_SCT0T1",
-    "GrB_DESC_R",
-    "GrB_DESC_RT1",
-    "GrB_DESC_RT0",
-    "GrB_DESC_RT0T1",
-    "GrB_DESC_RC",
-    "GrB_DESC_RCT1",
-    "GrB_DESC_RCT0",
-    "GrB_DESC_RCT0T1",
-    "GrB_DESC_RS",
-    "GrB_DESC_RST1",
-    "GrB_DESC_RST0",
-    "GrB_DESC_RST0T1",
-    "GrB_DESC_RSC",
-    "GrB_DESC_RSCT1",
-    "GrB_DESC_RSCT0",
-    "GrB_DESC_RSCT0T1"]
-    for name ∈ builtins
-        Descriptors.Descriptor(name)
-    end
-end
-
-function _load(desc::Descriptor)
-    name = desc.name
-    desc.p = load_global(name, libgb.GB_Descriptor_opaque)
-end
-
 
 Base.show(io::IO, ::MIME"text/plain", d::Descriptor) = gxbprint(io, d)
 Base.print(io::IO, d::Descriptor) = gxbprint(io, d)

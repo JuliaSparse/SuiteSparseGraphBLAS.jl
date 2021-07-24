@@ -3,7 +3,7 @@ function reduce!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     A, desc, _ = _handletranspose(A, desc, nothing)
     op = getoperator(op, eltype(w))
     accum = getoperator(accum, eltype(w))
@@ -22,7 +22,7 @@ function Base.reduce(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = Descriptors.NULL)
+    desc === nothing && (desc = DEFAULTDESC)
     if typeout === nothing
         typeout = eltype(A)
     end
@@ -31,7 +31,7 @@ function Base.reduce(
         reduce!(op, w, A; desc, accum, mask)
         return w
     elseif dims == 1
-        desc = desc + Descriptors.T0
+        desc = desc + T0
         w = GBVector{typeout}(size(A, 2))
         reduce!(op, w, A; desc, accum, mask)
         return w

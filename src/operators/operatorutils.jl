@@ -62,13 +62,6 @@ function Base.getindex(o::AbstractOp, t::DataType)
     end
 end
 
-function Base.getproperty(op::Union{AbstractOp, AbstractDescriptor}, name::Symbol)
-    if name == :p
-        _isloaded(op) || _load(op)
-    end
-    return getfield(op, name)
-end
-
 function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
     print(io, o.name, ": ", validtypes(o))
 end

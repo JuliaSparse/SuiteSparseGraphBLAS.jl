@@ -44,7 +44,7 @@ The descriptor argument allows the user to modify the operation in some fashion.
 
 - `desc.[input1 | input2] == [DEFAULT | TRANSPOSE]` 
 
-    Transposes the inputs and can be found in `Descriptors.[T0 | T1 | T0T1]`. 
+    Transposes the inputs and can be found in `[T0 | T1 | T0T1]`. 
     Typically you should use Julia's built-in transpose functionality.
 
 - `desc.mask == [DEFAULT | STRUCTURE | COMPLEMENT | STRUCT_COMP]` 
