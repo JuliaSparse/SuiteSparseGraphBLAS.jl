@@ -4,6 +4,7 @@ authors = ["Will Kimmerer <wrkimmerer@outlook.com", "Abhinav Mehndiratta <abhina
 version = "0.4.0"
 
 [deps]
+BugReporting = "bcf9a6e7-4020-453c-b88e-690564246bb8"
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"

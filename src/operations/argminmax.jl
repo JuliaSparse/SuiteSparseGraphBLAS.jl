@@ -20,6 +20,6 @@ function argminmax(A::GBMatOrTranspose{T}, minmax, dim) where {T}
     else
         G = mul(D, A, Semirings.ANY_EQ)
     end
-    select!(SelectOps.NONZERO, G, G)
+    select!(NONZERO, G, G)
     mul(G, y, Semirings.MIN_SECONDI1; desc)
 end

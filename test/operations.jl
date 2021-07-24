@@ -67,9 +67,9 @@
     end
     @testset "select" begin
         m = GBMatrix([[1,2,3] [4,5,6] [7,8,9]])
-        s = select(SelectOps.TRIL, m)
+        s = select(TRIL, m)
         @test s[1,2] == zero(eltype(s)) && s[3,1] == 3
-        s = select(SelectOps.LT, m, 6)
+        s = select(LT, m, 6)
         @test s[2,2] == 5 && s[3,3] == zero(eltype(s))
     end
     @testset "transpose" begin
