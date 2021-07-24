@@ -165,6 +165,13 @@ function extract!(
     return w
 end
 
+function extract!(
+    w::GBVector, u::GBVector, ::Colon;
+    mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
+)
+    return extract!(w, u, ALL; mask, accum, desc)
+end
+
 """
     extract(u::GBVector, I; kwargs...)::GBVector
 
@@ -179,11 +186,19 @@ function extract(
     return extract!(w, u, I; mask, accum, desc)
 end
 
+function extract(u::GBVector, ::Colon; mask = C_NULL, accum = C_NULL, desc=Descriptors.NULL)
+    extract(u, ALL; mask, accum, desc)
+end
+
 function Base.getindex(
-    u::GBVector, ::Colon;
+    u::GBVector, I;
     mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL
 )
-    return extract(u, ALL; mask, accum, desc)
+    return extract(u, I; mask, accum, desc)
+end
+
+function Base.getindex(u::GBVector, ::Colon; mask = C_NULL, accum = C_NULL, desc = Descriptors.NULL)
+    return extract(u, :)
 end
 
 function Base.getindex(
@@ -192,7 +207,6 @@ function Base.getindex(
 )
     return extract(u, i; mask, accum, desc)
 end
-
 """
     subassign(w::GBVector, u::GBVector, I; kwargs...)::GBVector
 
