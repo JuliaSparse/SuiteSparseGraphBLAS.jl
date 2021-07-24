@@ -25,6 +25,8 @@ include("operators/monoids.jl")
 include("operators/semirings.jl")
 include("operators/selectops.jl")
 using .UnaryOps
+using .BinaryOps
+using .SelectOps
 
 _createunaryops()
 _createbinaryops()

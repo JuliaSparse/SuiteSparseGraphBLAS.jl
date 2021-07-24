@@ -18,10 +18,16 @@ end
 Base.unsafe_convert(::Type{libgb.GxB_SelectOp}, selectop::SelectOp) = selectop.p
 
 
-baremodule SelectOps
-import ..SuiteSparseGraphBLAS: load_global, SelectOp
-import ..Types
+module SelectOps
+import ..SuiteSparseGraphBLAS: load_global, SelectOp, AbstractSelectOp
 import ..libgb: GB_SelectOp_opaque
+function SelectOp(name)
+    simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
+    constquote = quote
+        const $simple = SelectOp(load_global($name, GB_SelectOp_opaque))
+    end
+    @eval($constquote)
+end
 end
 
 function _loadselectops()
@@ -42,11 +48,7 @@ function _loadselectops()
     "GxB_LT_THUNK",
     "GxB_LE_THUNK"]
     for name ∈ builtins
-        simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
-        constquote = quote
-            const $simple = SelectOp(load_global($name, GB_SelectOp_opaque))
-        end
-        @eval(SelectOps, $constquote)
+        SelectOps.SelectOp(name)
     end
 end
 

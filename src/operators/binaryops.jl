@@ -1,6 +1,49 @@
-baremodule BinaryOps
-    using ..Types
-    using ..SuiteSparseGraphBLAS: TypedUnaryOperator
+module BinaryOps
+    using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp
+    using ..libgb
+    export BinaryOp
+    function BinaryOp(name)
+        if isGxB(name) || isGrB(name) #If it's a built-in drop the prefix
+            simplifiedname = name[5:end]
+        else
+            simplifiedname = name
+        end
+        containername = Symbol(simplifiedname, "_T")
+        exportedname = Symbol(simplifiedname)
+        if isGxB(name) || isGrB(name) #Built-in is immutable, no finalizer
+            structquote = quote
+                struct $containername <: AbstractBinaryOp
+                    typedops::Dict{DataType, TypedBinaryOperator}
+                    name::String
+                    $containername() = new(Dict{DataType, TypedBinaryOperator}(), $name)
+                end
+            end
+        else #UDF is mutable for finalizer
+            structquote = quote
+                mutable struct $containername <: AbstractBinaryOp
+                    typedops::Dict{DataType, TypedBinaryOperator}
+                    name::String
+                    function $containername()
+                        b = new(Dict{DataType, TypedBinaryOperator}(), $name)
+                        function f(binaryop)
+                            for k ∈ keys(binaryop.typedops)
+                                libgb.GrB_BinaryOp_free(Ref(binaryop.typedops[k]))
+                                delete!(binaryop.typedops, k)
+                            end
+                        end
+                        return finalizer(f, b)
+                    end
+                end
+            end
+        end
+        @eval($structquote) #eval container *type* into Types submodule
+        constquote = quote
+            const $exportedname = $containername()
+            export $exportedname
+        end
+        @eval($constquote) #eval actual op into BinaryOps submodule
+        return getproperty(BinaryOps, exportedname)
+    end
 end
 const BinaryUnion = Union{AbstractBinaryOp, TypedBinaryOperator}
 
@@ -60,51 +103,8 @@ function _createbinaryops()
     "GxB_SECONDJ1",
     ]
     for name ∈ builtins
-        BinaryOp(name)
+        BinaryOps.BinaryOp(name)
     end
-end
-
-function BinaryOp(name)
-    if isGxB(name) || isGrB(name) #If it's a built-in drop the prefix
-        simplifiedname = name[5:end]
-    else
-        simplifiedname = name
-    end
-    containername = Symbol(simplifiedname, "_T")
-    exportedname = Symbol(simplifiedname)
-    if isGxB(name) || isGrB(name) #Built-in is immutable, no finalizer
-        structquote = quote
-            struct $containername <: AbstractBinaryOp
-                typedops::Dict{DataType, TypedBinaryOperator}
-                name::String
-                $containername() = new(Dict{DataType, TypedBinaryOperator}(), $name)
-            end
-        end
-    else #UDF is mutable for finalizer
-        structquote = quote
-            mutable struct $containername <: AbstractBinaryOp
-                typedops::Dict{DataType, TypedBinaryOperator}
-                name::String
-                function $containername()
-                    b = new(Dict{DataType, TypedBinaryOperator}(), $name)
-                    function f(binaryop)
-                        for k ∈ keys(binaryop.typedops)
-                            libgb.GrB_BinaryOp_free(Ref(binaryop.typedops[k]))
-                            delete!(binaryop.typedops, k)
-                        end
-                    end
-                    return finalizer(f, b)
-                end
-            end
-        end
-    end
-    @eval(Types, $structquote) #eval container *type* into Types submodule
-    constquote = quote
-        const $exportedname = Types.$containername()
-        export $exportedname
-    end
-    @eval(BinaryOps, $constquote) #eval actual op into BinaryOps submodule
-    return getproperty(BinaryOps, exportedname)
 end
 
 #This is adapted from the fork by cvdlab.
@@ -131,26 +131,26 @@ end
 #BinaryOp constructors
 ######################
 
-function BinaryOp(name::String, fn::Function, ztype, xtype, ytype)
-    op = BinaryOp(name)
+function BinaryOps.BinaryOp(name::String, fn::Function, ztype, xtype, ytype)
+    op = BinaryOps.BinaryOp(name)
     _addbinaryop(op, fn, toGBType(ztype), toGBType(xtype), toGBType(ytype))
     return op
 end
 
 #xtype == ytype == ztype
-function BinaryOp(name::String, fn::Function, type::DataType)
-    return BinaryOp(name, fn, type, type, type)
+function BinaryOps.BinaryOp(name::String, fn::Function, type::DataType)
+    return BinaryOps.BinaryOp(name, fn, type, type, type)
 end
 
 #Vectors of _type, add one function for each triple.
-function BinaryOp(
+function BinaryOps.BinaryOp(
     name::String,
     fn::Function,
     ztype::Vector{DataType},
     xtype::Vector{DataType},
     ytype::Vector{DataType}
 )
-    op = BinaryOp(name)
+    op = BinaryOps.BinaryOp(name)
     length(ztype) == length(xtype) == length(ytype) ||
         throw(DimensionMismatch("Lengths of ztype, xtype, and ytype must match"))
     for i ∈ 1:length(ztype)
@@ -160,13 +160,13 @@ function BinaryOp(
 end
 
 #Vector of type, xtype == ytype == ztype
-function BinaryOp(name::String, fn::Function, type::Vector{DataType})
-    return BinaryOp(name, fn, type, type, type)
+function BinaryOps.BinaryOp(name::String, fn::Function, type::Vector{DataType})
+    return BinaryOps.BinaryOp(name, fn, type, type, type)
 end
 
 #Use the built-in primitives.
-function BinaryOp(name::String, fn::Function)
-    return BinaryOp(name, fn, valid_vec)
+function BinaryOps.BinaryOp(name::String, fn::Function)
+    return BinaryOps.BinaryOp(name, fn, valid_vec)
 end
 function _load(binary::AbstractBinaryOp)
     booleans = [

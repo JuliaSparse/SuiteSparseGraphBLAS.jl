@@ -17,22 +17,22 @@ ztype(::UnaryOps.POSITIONJ_T, ::DataType) = Int64
 ztype(::UnaryOps.POSITIONJ1_T, ::DataType) = Int64
 
 #BinaryOps:
-ztype(::Types.EQ_T, ::DataType) = Bool
-ztype(::Types.NE_T, ::DataType) = Bool
-ztype(::Types.GT_T, ::DataType) = Bool
-ztype(::Types.LT_T, ::DataType) = Bool
-ztype(::Types.GE_T, ::DataType) = Bool
-ztype(::Types.LE_T, ::DataType) = Bool
-ztype(::Types.CMPLX_T, intype::Type{T}) where {T <: AbstractFloat} = Complex{T}
+ztype(::BinaryOps.EQ_T, ::DataType) = Bool
+ztype(::BinaryOps.NE_T, ::DataType) = Bool
+ztype(::BinaryOps.GT_T, ::DataType) = Bool
+ztype(::BinaryOps.LT_T, ::DataType) = Bool
+ztype(::BinaryOps.GE_T, ::DataType) = Bool
+ztype(::BinaryOps.LE_T, ::DataType) = Bool
+ztype(::BinaryOps.CMPLX_T, intype::Type{T}) where {T <: AbstractFloat} = Complex{T}
 
-ztype(::Types.FIRSTI_T, ::DataType) = Int64
-ztype(::Types.FIRSTI1_T, ::DataType) = Int64
-ztype(::Types.FIRSTJ_T, ::DataType) = Int64
-ztype(::Types.FIRSTJ1_T, ::DataType) = Int64
-ztype(::Types.SECONDI_T, ::DataType) = Int64
-ztype(::Types.SECONDI1_T, ::DataType) = Int64
-ztype(::Types.SECONDJ_T, ::DataType) = Int64
-ztype(::Types.SECONDJ1_T, ::DataType) = Int64
+ztype(::BinaryOps.FIRSTI_T, ::DataType) = Int64
+ztype(::BinaryOps.FIRSTI1_T, ::DataType) = Int64
+ztype(::BinaryOps.FIRSTJ_T, ::DataType) = Int64
+ztype(::BinaryOps.FIRSTJ1_T, ::DataType) = Int64
+ztype(::BinaryOps.SECONDI_T, ::DataType) = Int64
+ztype(::BinaryOps.SECONDI1_T, ::DataType) = Int64
+ztype(::BinaryOps.SECONDJ_T, ::DataType) = Int64
+ztype(::BinaryOps.SECONDJ1_T, ::DataType) = Int64
 
 #Semirings:
 ztype(::Types.LAND_EQ_T, ::DataType) = Bool
