@@ -107,7 +107,7 @@ function Base.propertynames(::Descriptor)
     #:sort,
     )
 end
-baremodule Descriptors
+module Descriptors
 import ..SuiteSparseGraphBLAS: load_global, Descriptor
 import ..libgb:
 GB_Descriptor_opaque,
@@ -124,7 +124,6 @@ GxB_AxB_GUSTAVSON,
 GxB_AxB_DOT,
 GxB_AxB_HASH,
 GxB_AxB_SAXPY
-import ..Types
 import Base.C_NULL
 
 const DEFAULT = GxB_DEFAULT
@@ -137,6 +136,14 @@ const GUSTAVSON = GxB_AxB_GUSTAVSON
 const DOT = GxB_AxB_DOT
 const HASH = GxB_AxB_HASH
 const SAXPY = GxB_AxB_SAXPY
+
+function Descriptor(name)
+    simple = Symbol(string(name[10:end]))
+        constquote = quote
+            const $simple = Descriptor(load_global($name, GB_Descriptor_opaque))
+        end
+        @eval($constquote)
+    end
 end
 
 function _loaddescriptors()
@@ -172,13 +179,8 @@ function _loaddescriptors()
     "GrB_DESC_RSCT0",
     "GrB_DESC_RSCT0T1"]
     for name ∈ builtins
-        simple = Symbol(string(name[10:end]))
-        constquote = quote
-            const $simple = Descriptor(load_global($name, GB_Descriptor_opaque))
-        end
-        @eval(Descriptors, $constquote)
+        Descriptors.Descriptor(name)
     end
-
 end
 
 Base.show(io::IO, ::MIME"text/plain", d::Descriptor) = gxbprint(io, d)
