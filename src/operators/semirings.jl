@@ -1,9 +1,7 @@
-baremodule Semirings
-    using ..Types
-end
-
-SemiringUnion = Union{AbstractSemiring, TypedSemiring}
-
+module Semirings
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, splitconstant
+using ..libgb
+export Semiring
 function _semiringnames(name)
     if isGxB(name) || isGrB(name)
         simple = name[5:end]
@@ -15,6 +13,30 @@ function _semiringnames(name)
     exportedname = Symbol(simple)
     return containername, exportedname
 end
+
+function Semiring(name)
+    containername, exportedname = _semiringnames(name)
+    structquote = quote
+        struct $containername <: AbstractSemiring
+            typedops::Dict{DataType, TypedSemiring}
+            name::String
+            $containername() = new(Dict{DataType, TypedSemiring}(), $name)
+        end
+    end
+    @eval($structquote)
+    constquote = quote
+        const $exportedname = $containername()
+        export $exportedname
+    end
+    @eval($constquote)
+    return getproperty(Semirings, exportedname)
+end
+
+end
+
+SemiringUnion = Union{AbstractSemiring, TypedSemiring}
+
+
 
 #TODO: Rewrite
 function _createsemirings()
@@ -237,24 +259,6 @@ function _createsemirings()
     end
 end
 
-function Semiring(name)
-    containername, exportedname = _semiringnames(name)
-    structquote = quote
-        struct $containername <: AbstractSemiring
-            typedops::Dict{DataType, TypedSemiring}
-            name::String
-            $containername() = new(Dict{DataType, TypedSemiring}(), $name)
-        end
-    end
-    @eval(Types, $structquote)
-    constquote = quote
-        const $exportedname = Types.$containername()
-        export $exportedname
-    end
-    @eval(Semirings,$constquote)
-    return getproperty(Semirings, exportedname)
-end
-
 #Add typed ⊕ and ⊗ to semiring
 function _addsemiring(rig::AbstractSemiring, add::TypedMonoid, mul::TypedBinaryOperator)
     rigref = Ref{TypedSemiring}()
@@ -264,18 +268,18 @@ function _addsemiring(rig::AbstractSemiring, add::TypedMonoid, mul::TypedBinaryO
 end
 
 #New semiring with typed ⊕ and ⊗
-function Semiring(name::String, add::TypedMonoid, mul::TypedBinaryOperator)
-    rig = Semiring(name)
+function Semirings.Semiring(name::String, add::TypedMonoid, mul::TypedBinaryOperator)
+    rig = Semirings.Semiring(name)
     _addsemiring(rig, add, mul)
     return rig
 end
 
 #New semiring with all supported types in the intersection of validtypes(⊕) and validtypes(⊗)
-function Semiring(name::String, add::AbstractMonoid, mul::AbstractBinaryOp)
+function Semirings.Semiring(name::String, add::AbstractMonoid, mul::AbstractBinaryOp)
     tadd = validtypes(add)
     tmul = validtypes(mul)
     trig = intersect(tadd, tmul)
-    rig = Semiring(name)
+    rig = Semirings.Semiring(name)
     for t ∈ trig
         _addsemiring(rig, add[t], mul[t])
     end

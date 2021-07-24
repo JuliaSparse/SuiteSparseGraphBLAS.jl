@@ -1,7 +1,7 @@
-baremodule Monoids
-    using ..Types
-end
-const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
+module Monoids
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, splitconstant
+using ..libgb
+export Monoid
 
 function _monoidnames(name)
     if isGxB(name) || isGrB(name)
@@ -13,6 +13,28 @@ function _monoidnames(name)
     exportedname = Symbol(simple * "_MONOID")
     return containername, exportedname
 end
+
+function Monoid(name)
+    containername, exportedname = _monoidnames(name)
+    structquote = quote
+        struct $containername <: AbstractMonoid
+            typedops::Dict{DataType, TypedMonoid}
+            name::String
+            $containername() = new(Dict{DataType, TypedMonoid}(), $name)
+        end
+    end
+    @eval($structquote)
+    constquote = quote
+        const $exportedname = $containername()
+        export $exportedname
+    end
+    @eval($constquote)
+    return getproperty(Monoids, exportedname)
+end
+end
+const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
+
+
 
 #TODO: Rewrite
 function _createmonoids()
@@ -33,26 +55,8 @@ function _createmonoids()
         "GxB_BXNOR",
     ]
     for name ∈ builtins
-        Monoid(name)
+        Monoids.Monoid(name)
     end
-end
-
-function Monoid(name)
-    containername, exportedname = _monoidnames(name)
-    structquote = quote
-        struct $containername <: AbstractMonoid
-            typedops::Dict{DataType, TypedMonoid}
-            name::String
-            $containername() = new(Dict{DataType, TypedMonoid}(), $name)
-        end
-    end
-    @eval(Types, $structquote)
-    constquote = quote
-        const $exportedname = Types.$containername()
-        export $exportedname
-    end
-    @eval(Monoids, $constquote)
-    return getproperty(Monoids, exportedname)
 end
 
 #This is adapted from the fork by cvdlab
@@ -83,16 +87,16 @@ end
 #Monoid Constructors
 ####################
 
-function Monoid(name::String, binop::BinaryUnion, id::T, terminal = nothing) where {T}
+function Monoids.Monoid(name::String, binop::BinaryUnion, id::T, terminal = nothing) where {T}
     if binop isa AbstractBinaryOp #If this is an AbstractBinaryOp we need to narrow down
         binop = binop[T]
     end
-    m = Monoid(name)
+    m = Monoids.Monoid(name)
     _addmonoid(m, binop, id, terminal)
     return m
 end
-function Monoid(name::String, binop::AbstractBinaryOp, id::AbstractVector, terminal = nothing)
-    m = Monoid(name)
+function Monoids.Monoid(name::String, binop::AbstractBinaryOp, id::AbstractVector, terminal = nothing)
+    m = Monoids.Monoid(name)
     for i ∈ 1:length(id)
         binop2 = binop[typeof(id[i])]
         if terminal === nothing

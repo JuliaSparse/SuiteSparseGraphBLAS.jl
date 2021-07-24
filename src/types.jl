@@ -58,17 +58,6 @@ function TypedSemiring(p::libgb.GrB_Semiring)
 end
 Base.unsafe_convert(::Type{libgb.GrB_Semiring}, op::TypedSemiring) = op.p
 
-"""
-Automatically generated type definitions. The struct definitions for
-built in monoids, binary ops, etc can be found here.
-"""
-module Types
-    import ...SuiteSparseGraphBLAS: AbstractUnaryOp, AbstractMonoid, AbstractSelectOp,
-    AbstractSemiring, AbstractBinaryOp, AbstractDescriptor
-    using ...SuiteSparseGraphBLAS: TypedUnaryOperator, TypedBinaryOperator, TypedMonoid,
-    TypedSemiring
-    using ..libgb
-end
 
 """
 """
