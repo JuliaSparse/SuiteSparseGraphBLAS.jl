@@ -21,15 +21,6 @@ Base.unsafe_convert(::Type{libgb.GxB_SelectOp}, selectop::SelectOp) = selectop.p
 module SelectOps
 import ..SuiteSparseGraphBLAS: load_global, SelectOp, AbstractSelectOp
 import ..libgb: GB_SelectOp_opaque
-function SelectOp(name)
-    simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
-    constquote = quote
-        const $simple = SelectOp(load_global($name, GB_SelectOp_opaque))
-    end
-    @eval($constquote)
-end
-end
-
 function _loadselectops()
     builtins = ["GxB_TRIL",
     "GxB_TRIU",
@@ -51,6 +42,22 @@ function _loadselectops()
         SelectOps.SelectOp(name)
     end
 end
+
+function SelectOp(name)
+    simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
+    constquote = quote
+        const $simple = SelectOp(load_global($name, GB_SelectOp_opaque))
+    end
+    @eval($constquote)
+end
+
+function __init__()
+    _loadselectops()
+end
+
+end
+
+
 
 _isloaded(d::AbstractSelectOp) = d.p !== C_NULL
 function Base.getindex(o::AbstractSelectOp)

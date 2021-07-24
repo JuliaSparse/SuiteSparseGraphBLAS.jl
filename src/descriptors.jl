@@ -107,6 +107,7 @@ function Base.propertynames(::Descriptor)
     #:sort,
     )
 end
+
 module Descriptors
 import ..SuiteSparseGraphBLAS: load_global, Descriptor
 import ..libgb:
@@ -138,13 +139,13 @@ const HASH = GxB_AxB_HASH
 const SAXPY = GxB_AxB_SAXPY
 
 function Descriptor(name)
-    simple = Symbol(string(name[10:end]))
-        constquote = quote
-            const $simple = Descriptor(load_global($name, GB_Descriptor_opaque))
-        end
-        @eval($constquote)
+simple = Symbol(string(name[10:end]))
+    constquote = quote
+        const $simple = Descriptor(load_global($name, GB_Descriptor_opaque))
     end
+    @eval($constquote)
 end
+
 
 function _loaddescriptors()
     builtins = ["GrB_DESC_T1",
@@ -181,6 +182,11 @@ function _loaddescriptors()
     for name ∈ builtins
         Descriptors.Descriptor(name)
     end
+end
+
+function __init__()
+    _loaddescriptors()
+end
 end
 
 Base.show(io::IO, ::MIME"text/plain", d::Descriptor) = gxbprint(io, d)

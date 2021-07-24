@@ -119,8 +119,6 @@ export nnz, sprand, findnz, nonzeros
 
 function __init__()
     _load_globaltypes()
-    _loadselectops()
-    _loaddescriptors()
     # I would like to do below, it's what the docs ask for. But it *seems* to work
     # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
     #libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
