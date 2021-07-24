@@ -1,7 +1,51 @@
 
-baremodule UnaryOps
-    using ..Types
-    using ..SuiteSparseGraphBLAS: TypedUnaryOperator
+module UnaryOps
+    using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp
+    using ..libgb
+    export UnaryOp
+    function UnaryOp(name)
+        if isGxB(name) || isGrB(name) #If it's a GrB/GxB op we don't want the prefix
+            simplifiedname = name[5:end]
+        else
+            simplifiedname = name
+        end
+        tname = Symbol(simplifiedname * "_T")
+        simplifiedname = Symbol(simplifiedname)
+        #If it's a built-in we probably want immutable struct. Need to check original name.
+        if isGxB(name) || isGrB(name)
+            structquote = quote
+                struct $tname <: AbstractUnaryOp
+                    typedops::Dict{DataType, TypedUnaryOperator}
+                    name::String
+                    $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
+                end
+            end
+        else #If it's a UDF we need a mutable for finalizing purposes.
+            structquote = quote
+                mutable struct $tname <: AbstractUnaryOp
+                    typedops::Dict{DataType, TypedUnaryOperator}
+                    name::String
+                    function $tname()
+                        u = new(Dict{DataType, TypedUnaryOperator}(), $name)
+                        function f(unaryop)
+                            for k ∈ keys(unaryop.typedops)
+                                libgb.GrB_UnaryOp_free(Ref(unaryop.typedops[k]))
+                                delete!(unaryop.typedops, k)
+                            end
+                        end
+                        return finalizer(f, u)
+                    end
+                end
+            end
+        end
+        @eval($structquote) #Eval the struct into the Types submodule to avoid clutter.
+        constquote = quote
+            const $simplifiedname = $tname()
+            export $simplifiedname
+        end
+        @eval($constquote)
+        return getproperty(UnaryOps, simplifiedname)
+    end
 end
 
 const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
@@ -60,52 +104,8 @@ function _createunaryops()
     "GxB_POSITIONJ1",
 ]
     for name ∈ builtins
-        UnaryOp(name)
+        UnaryOps.UnaryOp(name)
     end
-end
-
-function UnaryOp(name)
-    if isGxB(name) || isGrB(name) #If it's a GrB/GxB op we don't want the prefix
-        simplifiedname = name[5:end]
-    else
-        simplifiedname = name
-    end
-    tname = Symbol(simplifiedname * "_T")
-    simplifiedname = Symbol(simplifiedname)
-    #If it's a built-in we probably want immutable struct. Need to check original name.
-    if isGxB(name) || isGrB(name)
-        structquote = quote
-            struct $tname <: AbstractUnaryOp
-                typedops::Dict{DataType, TypedUnaryOperator}
-                name::String
-                $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
-            end
-        end
-    else #If it's a UDF we need a mutable for finalizing purposes.
-        structquote = quote
-            mutable struct $tname <: AbstractUnaryOp
-                typedops::Dict{DataType, TypedUnaryOperator}
-                name::String
-                function $tname()
-                    u = new(Dict{DataType, TypedUnaryOperator}(), $name)
-                    function f(unaryop)
-                        for k ∈ keys(unaryop.typedops)
-                            libgb.GrB_UnaryOp_free(Ref(unaryop.typedops[k]))
-                            delete!(unaryop.typedops, k)
-                        end
-                    end
-                    return finalizer(f, u)
-                end
-            end
-        end
-    end
-    @eval(Types, $structquote) #Eval the struct into the Types submodule to avoid clutter.
-    constquote = quote
-        const $simplifiedname = Types.$tname()
-        export $simplifiedname
-    end
-    @eval(UnaryOps, $constquote)
-    return getproperty(UnaryOps, simplifiedname)
 end
 
 #This is adapted from the fork by cvdlab.
@@ -124,19 +124,18 @@ end
 
 #UnaryOp constructors
 #####################
-function UnaryOp end
-function UnaryOp(name::String, fn::Function, ztype, xtype)
-    op = UnaryOp(name)
+function UnaryOps.UnaryOp(name::String, fn::Function, ztype, xtype)
+    op = UnaryOps.UnaryOp(name)
     _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
     return op
 end
 #Same xtype, ztype.
-function UnaryOp(name::String, fn::Function, type)
-    return UnaryOp(name, fn, type, type)
+function UnaryOps.UnaryOp(name::String, fn::Function, type)
+    return UnaryOps.UnaryOp(name, fn, type, type)
 end
 #Vector of xtypes and ztypes, add a GrB_UnaryOp for each.
-function UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType})
-    op = UnaryOp(name)
+function UnaryOps.UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType})
+    op = UnaryOps.UnaryOp(name)
     length(ztype) == length(xtype) || throw(DimensionMismatch("Lengths of ztype and xtype must match."))
     for i ∈ 1:length(ztype)
         _addunaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]))
@@ -144,12 +143,12 @@ function UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vec
     return op
 end
 #Vector but same ztype xtype.
-function UnaryOp(name::String, fn::Function, type::Vector{DataType})
-    return UnaryOp(name, fn, type, type)
+function UnaryOps.UnaryOp(name::String, fn::Function, type::Vector{DataType})
+    return UnaryOps.UnaryOp(name, fn, type, type)
 end
 #Construct it using all the built in primitives.
-function UnaryOp(name::String, fn::Function)
-    return UnaryOp(name, fn, valid_vec)
+function UnaryOps.UnaryOp(name::String, fn::Function)
+    return UnaryOps.UnaryOp(name, fn, valid_vec)
 end
 
 function _load(unaryop::AbstractUnaryOp)

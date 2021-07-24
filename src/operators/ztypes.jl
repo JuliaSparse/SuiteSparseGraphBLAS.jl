@@ -1,20 +1,20 @@
 ztype(::AbstractOp, intype::DataType) = intype
 
 #UnaryOps:
-ztype(::Types.ISINF_T, ::DataType) = Bool
-ztype(::Types.ISNAN_T, ::DataType) = Bool
-ztype(::Types.ISFINITE_T, ::DataType) = Bool
+ztype(::UnaryOps.ISINF_T, ::DataType) = Bool
+ztype(::UnaryOps.ISNAN_T, ::DataType) = Bool
+ztype(::UnaryOps.ISFINITE_T, ::DataType) = Bool
 
-ztype(::Types.CONJ_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
-ztype(::Types.ABS_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
-ztype(::Types.CREAL_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
-ztype(::Types.CIMAG_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
-ztype(::Types.CARG_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
+ztype(::UnaryOps.CONJ_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
+ztype(::UnaryOps.ABS_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
+ztype(::UnaryOps.CREAL_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
+ztype(::UnaryOps.CIMAG_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
+ztype(::UnaryOps.CARG_T, intype::Type{T}) where {T <: Complex} = intype.parameters[1]
 
-ztype(::Types.POSITIONI_T, ::DataType) = Int64
-ztype(::Types.POSITIONI1_T, ::DataType) = Int64
-ztype(::Types.POSITIONJ_T, ::DataType) = Int64
-ztype(::Types.POSITIONJ1_T, ::DataType) = Int64
+ztype(::UnaryOps.POSITIONI_T, ::DataType) = Int64
+ztype(::UnaryOps.POSITIONI1_T, ::DataType) = Int64
+ztype(::UnaryOps.POSITIONJ_T, ::DataType) = Int64
+ztype(::UnaryOps.POSITIONJ1_T, ::DataType) = Int64
 
 #BinaryOps:
 ztype(::Types.EQ_T, ::DataType) = Bool
