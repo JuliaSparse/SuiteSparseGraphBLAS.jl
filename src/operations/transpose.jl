@@ -60,8 +60,8 @@ end
 
 #TODO: This should be lazy
 function LinearAlgebra.transpose(v::GBVector)
-    A = GBMatrix{eltype(v)}(size(v, 1), size(v, 2))
-    nz = findnz(v.parent)
+    A = GBMatrix{eltype(v)}(size(v, 2), size(v, 1))
+    nz = findnz(v)
     for i ∈ 1:length(nz[1])
         A[1, nz[1][i]] = nz[2][i]
     end
