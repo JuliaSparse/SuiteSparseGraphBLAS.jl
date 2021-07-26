@@ -214,6 +214,27 @@ function extract!(
     return C
 end
 
+function extract!(
+    C::GBMatrix, A::GBMatrix, ::Colon, J;
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+)
+    return extract!(C, A, ALL, J; mask, accum, desc)
+end
+
+function extract!(
+    C::GBMatrix, A::GBMatrix, I, ::Colon;
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+)
+    return extract!(C, A, I, ALL; mask, accum, desc)
+end
+
+function extract!(
+    C::GBMatrix, A::GBMatrix, ::Colon, ::Colon;
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+)
+    return extract!(C, A, ALL, ALL; mask, accum, desc)
+end
+
 """
     extract(A::GBMatrix, I, J; kwargs...)::GBMatrix
 
@@ -243,6 +264,27 @@ function extract(
     Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
     return extract!(C, A, I, J; mask, accum, desc)
+end
+
+function extract(
+    A::GBMatrix, ::Colon, J;
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+)
+    return extract(A, ALL, J; mask, accum, desc)
+end
+
+function extract(
+    A::GBMatrix, I, ::Colon;
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+)
+    return extract(A, I, ALL; mask, accum, desc)
+end
+
+function extract(
+    A::GBMatrix, ::Colon, ::Colon;
+    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+)
+    return extract(A, ALL, ALL; mask, accum, desc)
 end
 
 function Base.getindex(

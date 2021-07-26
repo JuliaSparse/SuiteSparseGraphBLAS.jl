@@ -41,6 +41,6 @@ function FiniteDifferences.rand_tangent(
     return GBVector(I, v; nrows = size(x, 1))
 end
 
-FiniteDifferences.rand_tangent(rng::AbstractRNG, x::AbstractOp) = NoTangent()
-# LinearAlgebra.norm freaks over the nothings.
+FiniteDifferences.rand_tangent(::AbstractRNG, ::AbstractOp) = NoTangent()
+# LinearAlgebra.norm doesn't like the nothings.
 LinearAlgebra.norm(A::GBArray, p::Real=2) = norm(nonzeros(A), p)
