@@ -31,7 +31,7 @@ end
 Return a `GBArray` whose elements satisfy the predicate defined by `op`.
 Some SelectOps may require an additional argument `thunk`, for use in comparison operations
 such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which maps to
-`select(SelectOps.GT_THUNK, A, thunk)`.
+`select(GT, A, thunk)`.
 
 # Arguments
 - `op::SelectUnion`: A select operator from the SelectOps submodule.
@@ -63,5 +63,5 @@ function select(
     return C
 end
 
-LinearAlgebra.tril(A::GBArray) = select(SelectOps.TRIL, A)
-LinearAlgebra.triu(A::GBArray) = select(SelectOps.TRIU, A)
+LinearAlgebra.tril(A::GBArray) = select(TRIL, A)
+LinearAlgebra.triu(A::GBArray) = select(TRIU, A)

@@ -138,13 +138,13 @@ We'll test it using the matrix from the GBArray section above, which has two tri
 
 ```@repl intro
 function cohen(A)
-  U = select(SelectOps.TRIU, A)
-  L = select(SelectOps.TRIL, A)
+  U = select(TRIU, A)
+  L = select(TRIL, A)
   return reduce(Monoids.PLUS_MONOID[Int64], mul(L, U, Semirings.PLUS_PAIR; mask=A)) ÷ 2
 end
 
 function sandia(A)
-  L = select(SelectOps.TRIL, A)
+  L = select(TRIL, A)
   return reduce(Monoids.PLUS_MONOID[Int64], mul(L, L, Semirings.PLUS_PAIR; mask=L))
 end
 
