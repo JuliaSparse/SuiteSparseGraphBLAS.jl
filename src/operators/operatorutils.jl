@@ -65,3 +65,5 @@ end
 function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
     print(io, o.name, ": ", validtypes(o))
 end
+
+juliaop(op...) = nothing

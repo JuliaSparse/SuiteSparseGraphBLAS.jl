@@ -117,7 +117,7 @@ function Base.:*(
 end
 
 
-function Base.:*(⊕::Function, ⊗::Function)
+function Base.:*((⊕)::Function, (⊗)::Function)
     return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
         mul(A, B, (⊕, ⊗); mask, accum, desc)
     end

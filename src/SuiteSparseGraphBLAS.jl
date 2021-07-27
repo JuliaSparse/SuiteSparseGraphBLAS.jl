@@ -7,6 +7,7 @@ using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
+using SpecialFunctions: lgamma, gamma, erf, erfc
 include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
@@ -135,4 +136,5 @@ function __init__()
 end
 
 include("operators/ztypes.jl")
+include("operators/oplist.jl")
 end #end of module

@@ -95,13 +95,15 @@ function Base.map(
     return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-Base.:+(x::valid_union, u::GBArray) = map(BinaryOps.PLUS, x, u)
-Base.:+(u::GBArray, x::valid_union) = map(BinaryOps.PLUS, u, x)
+Base.:+(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(BinaryOps.PLUS, x, u; mask, accum, desc)
+Base.:+(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
+    map(BinaryOps.PLUS, u, x; mask, accum, desc)
 
-Base.:-(x::valid_union, u::GBArray) = map(BinaryOps.MINUS, x, u)
-Base.:-(u::GBArray, x::valid_union) = map(BinaryOps.MINUS, u, x)
-
-
+Base.:-(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(BinaryOps.MINUS, x, u; mask, accum, desc)
+Base.:-(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
+    map(BinaryOps.MINUS, u, x; mask, accum, desc)
 
 """
     map(op::UnaryOp, A::GBArray; kwargs...)::GBArray
