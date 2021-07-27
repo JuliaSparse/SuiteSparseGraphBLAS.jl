@@ -115,3 +115,16 @@ function Base.:*(
 )
     mul(A, B, Semirings.PLUS_TIMES; mask, accum, desc)
 end
+
+
+function Base.:*(⊕::Function, ⊗::Function)
+    return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
+        mul(A, B, (⊕, ⊗); mask, accum, desc)
+    end
+end
+
+function Base.:*(rig::AbstractSemiring)
+    return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
+        mul(A, B, rig; mask, accum, desc)
+    end
+end

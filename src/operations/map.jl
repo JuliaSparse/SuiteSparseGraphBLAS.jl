@@ -95,40 +95,13 @@ function Base.map(
     return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-function Base.broadcasted(::typeof(+), u::GBArray, x::valid_union)
-    map(BinaryOps.PLUS, u, x)
-end
-function Base.broadcasted(::typeof(+), x::valid_union, u::GBArray)
-    map(BinaryOps.PLUS, x, u)
-end
+Base.:+(x::valid_union, u::GBArray) = map(BinaryOps.PLUS, x, u)
+Base.:+(u::GBArray, x::valid_union) = map(BinaryOps.PLUS, u, x)
 
-function Base.broadcasted(::typeof(-), u::GBArray, x::valid_union)
-    map(BinaryOps.MINUS, u, x)
-end
-function Base.broadcasted(::typeof(-), x::valid_union, u::GBArray)
-    map(BinaryOps.MINUS, x, u)
-end
+Base.:-(x::valid_union, u::GBArray) = map(BinaryOps.MINUS, x, u)
+Base.:-(u::GBArray, x::valid_union) = map(BinaryOps.MINUS, u, x)
 
-function Base.broadcasted(::typeof(*), u::GBArray, x::valid_union)
-    map(BinaryOps.TIMES, u, x)
-end
-function Base.broadcasted(::typeof(*), x::valid_union, u::GBArray)
-    map(BinaryOps.TIMES, x, u)
-end
 
-function Base.broadcasted(::typeof(/), u::GBArray, x::valid_union)
-    map(BinaryOps.DIV, u, x)
-end
-function Base.broadcasted(::typeof(/), x::valid_union, u::GBArray)
-    map(BinaryOps.DIV, x, u;)
-end
-
-function Base.broadcasted(::typeof(^), u::GBArray, x::valid_union)
-    map(BinaryOps.POW, u, x)
-end
-function Base.broadcasted(::typeof(^), x::valid_union, u::GBArray)
-    map(BinaryOps.POW, x, u)
-end
 
 """
     map(op::UnaryOp, A::GBArray; kwargs...)::GBArray

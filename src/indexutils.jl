@@ -21,9 +21,11 @@ function idx(I)
     elseif I isa Vector
         return Vector{libgb.GrB_Index}(I), length(I) #Assume ni = length(I) otherwise
     elseif I isa Integer
-        return UInt64(I), 1
+        return [UInt64(I)], 1
+    elseif I isa CartesianIndex{1}
+        return [UInt64(I[1])], 1
     else
-        throw(TypeError(idx, "Invalid index type",
+        throw(TypeError(:idx,
             Union{UnitRange, StepRange, Vector, Integer}, typeof(I)))
     end
 end
