@@ -16,6 +16,7 @@ SSGraphBLAS_jll = "7ed9a814-9cab-54e9-8e9e-d9e95b4d61b1"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
+BugReporting = "0.1"
 CEnum = "0.4"
 ChainRulesCore = "0.10"
 FiniteDifferences = "0.12"
