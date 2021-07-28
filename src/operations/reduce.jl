@@ -59,7 +59,7 @@ function Base.reduce(
     end
 end
 
-function reduce(
+function Base.reduce(
     op::Function, A::GBMatOrTranspose;
     dims = :, typeout = nothing, init = nothing, mask = nothing, accum = nothing, desc = nothing
 )
@@ -92,7 +92,7 @@ function Base.reduce(
     return c[]
 end
 
-function reduce(
+function Base.reduce(
     op::Function, v::GBVector;
     typeout = nothing, init = nothing, accum = nothing, desc = nothing
 )

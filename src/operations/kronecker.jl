@@ -7,7 +7,7 @@ function LinearAlgebra.kron!(
     C::GBMatOrTranspose,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = BinaryOps.TIMES;
+    op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -26,7 +26,21 @@ function LinearAlgebra.kron!(
     else
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
+    return C
 end
+
+function LinearAlgebra.kron!(
+    C::GBMatOrTranspose,
+    A::GBMatOrTranspose,
+    B::GBMatOrTranspose,
+    op::Function;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return kron!(C, A, B, BinaryOp(op); mask, accum, desc)
+end
+
 """
    kron(A::GBMatrix, B::GBMatrix, op = BinaryOps.TIMES; kwargs...)::GBMatrix
 
@@ -48,7 +62,7 @@ Does not support `GBVector`s at this time.
 function LinearAlgebra.kron(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = BinaryOps.TIMES;
+    op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -57,4 +71,15 @@ function LinearAlgebra.kron(
     C = GBMatrix{t}(size(A,1) * size(B, 1), size(A, 2) * size(B, 2))
     kron!(C, A, B, op; mask, accum, desc)
     return C
+end
+
+function LinearAlgebra.kron(
+    A::GBMatOrTranspose,
+    B::GBMatOrTranspose,
+    op::Function;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return kron(A, B, BinaryOp(op); mask, accum, desc)
 end

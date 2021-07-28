@@ -55,7 +55,7 @@ function emul!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op::BinaryUnion = BinaryOps.TIMES;
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -83,7 +83,7 @@ end
 function emul(
     u::GBVector,
     v::GBVector,
-    op::BinaryUnion = BinaryOps.TIMES;
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -97,7 +97,7 @@ function emul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::BinaryUnion = BinaryOps.TIMES;
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -126,7 +126,7 @@ end
 function emul(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::BinaryUnion = BinaryOps.TIMES;
+    op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -193,7 +193,7 @@ function eadd!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op::BinaryUnion = BinaryOps.PLUS;
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -221,7 +221,7 @@ end
 function eadd(
     u::GBVector,
     v::GBVector,
-    op::BinaryUnion = BinaryOps.PLUS;
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -235,7 +235,7 @@ function eadd!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::BinaryUnion = BinaryOps.PLUS;
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -264,7 +264,7 @@ end
 function eadd(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op::BinaryUnion = BinaryOps.PLUS;
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing

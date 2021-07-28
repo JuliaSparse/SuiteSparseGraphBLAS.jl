@@ -10,7 +10,7 @@
         #emul correctness
         @test emul(m, n, BinaryOps.POW)[3, 2] == m[3,2] ^ n[3,2]
         #check that the (*) op is being picked up from the semiring
-        @test emul(m, n, Semirings.MAX_PLUS) == emul(m, n, BinaryOps.PLUS)
+        @test emul(m, n, ) == emul(m, n, BinaryOps.PLUS)
         @test eltype(m .== n) == Bool
     end
     @testset "kron" begin
