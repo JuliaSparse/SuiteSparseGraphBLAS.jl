@@ -115,8 +115,7 @@ include("chainrules/selectrules.jl")
 #include("random.jl")
 include("misc.jl")
 export libgb
-#Removed since these should not be in the public interface.
-#export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
+export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
 export xtype, ytype, ztype, validtypes #Determine input/output types of operators
