@@ -78,8 +78,8 @@ end
 
 load_global(str, type) = load_global(str, Ptr{type})
 
-isGxB(name) = name[1:3] == "GxB"
-isGrB(name) = name[1:3] == "GrB"
+isGxB(name) = occursin("GxB", name)
+isGrB(name) = occursin("GrB", name)
 
 function splitconstant(str)
     return String.(split(str, "_"))

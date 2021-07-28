@@ -36,6 +36,13 @@ _createmonoids()
 _createsemirings()
 include("indexutils.jl")
 
+export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
+export frexpe, frexpx, positioni, positionj #UnaryOps not found in Julia/stdlibs.
+#BinaryOps not found in Julia/stdlibs.
+export second, rminus, pair, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, fmod, firsti,
+    firstj, secondi, secondj
+
+
 
 const GBVecOrMat{T} = Union{GBVector{T}, GBMatrix{T}}
 const GBMatOrTranspose{T} = Union{GBMatrix{T}, Transpose{<:Any, GBMatrix{T}}}

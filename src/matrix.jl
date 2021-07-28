@@ -353,6 +353,8 @@ function subassign!(
         A = GBMatrix(A)
     end
     if A isa GBVector
+        length(I) == 1 && (I = I[1]) # If it's a length 1 vector we just want the scalar.
+        length(J) == 1 && (J = J[1]) # If it's a length 1 vector we just want the scalar.
         if (I isa Number) && (J isa Vector || J == ALL)
             libgb.GxB_Row_subassign(C, mask, getoperator(accum, eltype(C)), A, I, J, nj, desc)
         elseif (J isa Number) && (I isa Vector || I == ALL)
@@ -452,8 +454,8 @@ function Base.setindex!(
     subassign!(C, A, I, J; mask, accum, desc)
 end
 
-function Base.setindex(
-    C::GBMatrix, A, I::AbstractVector;
+function Base.setindex!(
+    ::GBMatrix, A, ::AbstractVector;
     mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
 )
     throw("Not implemented")

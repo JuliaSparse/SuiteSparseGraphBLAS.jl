@@ -25,6 +25,12 @@ module UnaryOps
         @eval($constquote)
         return getproperty(UnaryOps, simplifiedname)
     end
+
+    struct GenericUnaryOp <: AbstractUnaryOp
+        typedops::Dict{DataType, TypedUnaryOperator}
+        name::String
+        GenericUnaryOp(name) = new(Dict{DataType, TypedUnaryOperator}(), name)
+    end
 end
 
 const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
@@ -103,18 +109,30 @@ end
 
 #UnaryOp constructors
 #####################
-function UnaryOps.UnaryOp(name::String, fn::Function, ztype, xtype)
-    op = UnaryOps.UnaryOp(name)
+function UnaryOps.UnaryOp(name::String, fn::Function, ztype, xtype; keep=false)
+    @warn "Use built-in functions where possible, user defined functions are less performant."
+    length(name) == 0 && (name = string(fn))
+    if keep
+        op = UnaryOps.UnaryOp(name)
+    else
+        op = UnaryOps.GenericUnaryOp(name)
+    end
     _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
     return op
 end
 #Same xtype, ztype.
-function UnaryOps.UnaryOp(name::String, fn::Function, type)
-    return UnaryOps.UnaryOp(name, fn, type, type)
+function UnaryOps.UnaryOp(name::String, fn::Function, type; keep=false)
+    return UnaryOps.UnaryOp(name, fn, type, type; keep)
 end
 #Vector of xtypes and ztypes, add a GrB_UnaryOp for each.
-function UnaryOps.UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType})
-    op = UnaryOps.UnaryOp(name)
+function UnaryOps.UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType}; keep=false)
+    @warn "Use built-in functions where possible, user defined functions are less performant."
+    length(name) == 0 && (name = string(fn))
+    if keep
+        op = UnaryOps.UnaryOp(name)
+    else
+        op = UnaryOps.GenericUnaryOp(name)
+    end
     length(ztype) == length(xtype) || throw(DimensionMismatch("Lengths of ztype and xtype must match."))
     for i ∈ 1:length(ztype)
         _addunaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]))
@@ -122,12 +140,16 @@ function UnaryOps.UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, x
     return op
 end
 #Vector but same ztype xtype.
-function UnaryOps.UnaryOp(name::String, fn::Function, type::Vector{DataType})
-    return UnaryOps.UnaryOp(name, fn, type, type)
+function UnaryOps.UnaryOp(name::String, fn::Function, type::Vector{DataType}; keep=false)
+    return UnaryOps.UnaryOp(name, fn, type, type; keep)
 end
 #Construct it using all the built in primitives.
-function UnaryOps.UnaryOp(name::String, fn::Function)
-    return UnaryOps.UnaryOp(name, fn, valid_vec)
+function UnaryOps.UnaryOp(name::String, fn::Function; keep=false)
+    return UnaryOps.UnaryOp(name, fn, valid_vec; keep)
+end
+
+function UnaryOps.UnaryOp(fn::Function; keep=false)
+    return UnaryOps.UnaryOp("", fn; keep)
 end
 
 function _load(unaryop::AbstractUnaryOp)

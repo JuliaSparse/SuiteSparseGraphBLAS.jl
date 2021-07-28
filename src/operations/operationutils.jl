@@ -18,11 +18,11 @@ end
 
 optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
 
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractOp) where {T, U}
+function inferoutputtype(::GBArray{T}, ::GBArray{U}, op) where {T, U}
     t = optype(T, U)
     return ztype(op, t)
 end
-function inferoutputtype(::GBArray{T}, op::AbstractOp) where {T}
+function inferoutputtype(::GBArray{T}, op) where {T}
     return ztype(op, T)
 end
 function inferoutputtype(::GBArray{T}, ::AbstractTypedOp{Z}) where {T, Z}
@@ -55,3 +55,5 @@ function ytype end
 Determine type of the output of a typed operator.
 """
 function ztype end
+
+ztype(fn::Function, t::DataType) = ztype(UnaryOp(fn), t)

@@ -25,6 +25,13 @@ module BinaryOps
         @eval($constquote) #eval actual op into BinaryOps submodule
         return getproperty(BinaryOps, exportedname)
     end
+
+    struct GenericBinaryOp <: AbstractBinaryOp
+        typedops::Dict{DataType, TypedBinaryOperator}
+        name::String
+        GenericBinaryOp(name) = new(Dict{DataType, TypedBinaryOperator}(), name)
+    end
+
 end
 const BinaryUnion = Union{AbstractBinaryOp, TypedBinaryOperator}
 
@@ -111,15 +118,20 @@ end
 #BinaryOp constructors
 ######################
 
-function BinaryOps.BinaryOp(name::String, fn::Function, ztype, xtype, ytype)
-    op = BinaryOps.BinaryOp(name)
+function BinaryOps.BinaryOp(name::String, fn::Function, ztype, xtype, ytype; keep = false)
+    length(name) == 0 && (name = string(fn))
+    if keep
+        op = BinaryOps.BinaryOp(name)
+    else
+        op = UnaryOps.GenericUnaryOp(name)
+    end
     _addbinaryop(op, fn, toGBType(ztype), toGBType(xtype), toGBType(ytype))
     return op
 end
 
 #xtype == ytype == ztype
-function BinaryOps.BinaryOp(name::String, fn::Function, type::DataType)
-    return BinaryOps.BinaryOp(name, fn, type, type, type)
+function BinaryOps.BinaryOp(name::String, fn::Function, type::DataType; keep = false)
+    return BinaryOps.BinaryOp(name, fn, type, type, type; keep)
 end
 
 #Vectors of _type, add one function for each triple.
@@ -128,9 +140,15 @@ function BinaryOps.BinaryOp(
     fn::Function,
     ztype::Vector{DataType},
     xtype::Vector{DataType},
-    ytype::Vector{DataType}
+    ytype::Vector{DataType};
+    keep = false
 )
-    op = BinaryOps.BinaryOp(name)
+    length(name) == 0 && (name = string(fn))
+    if keep
+        op = BinaryOps.BinaryOp(name)
+    else
+        op = BinaryOps.GenericBinaryOp(name)
+    end
     length(ztype) == length(xtype) == length(ytype) ||
         throw(DimensionMismatch("Lengths of ztype, xtype, and ytype must match"))
     for i ∈ 1:length(ztype)
@@ -140,13 +158,17 @@ function BinaryOps.BinaryOp(
 end
 
 #Vector of type, xtype == ytype == ztype
-function BinaryOps.BinaryOp(name::String, fn::Function, type::Vector{DataType})
-    return BinaryOps.BinaryOp(name, fn, type, type, type)
+function BinaryOps.BinaryOp(name::String, fn::Function, type::Vector{DataType}; keep = false)
+    return BinaryOps.BinaryOp(name, fn, type, type, type; keep)
 end
 
 #Use the built-in primitives.
-function BinaryOps.BinaryOp(name::String, fn::Function)
-    return BinaryOps.BinaryOp(name, fn, valid_vec)
+function BinaryOps.BinaryOp(name::String, fn::Function; keep = false)
+    return BinaryOps.BinaryOp(name, fn, valid_vec; keep)
+end
+
+function BinaryOps.BinaryOp(fn::Function; keep = false)
+    return BinaryOps.BinaryOp("", fn; keep)
 end
 function _load(binary::AbstractBinaryOp)
     booleans = [
@@ -357,208 +379,3 @@ end
 ztype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = Z
 xtype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = X
 ytype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = Y
-
-"""
-First argument: `f(x::T,y::T)::T = x`
-"""
-BinaryOps.FIRST
-"""
-Second argument: `f(x::T,y::T)::T = y`
-"""
-BinaryOps.SECOND
-"""
-Power: `f(x::T,y::T)::T = xʸ`
-"""
-BinaryOps.POW
-"""
-Addition: `f(x::T,y::T)::T = x + y`
-"""
-BinaryOps.PLUS
-"""
-Subtraction: `f(x::T,y::T)::T = x - y`
-"""
-BinaryOps.MINUS
-"""
-Multiplication: `f(x::T,y::T)::T = xy`
-"""
-BinaryOps.TIMES
-"""
-Division: `f(x::T,y::T)::T = x / y`
-"""
-BinaryOps.DIV
-"""
-Reverse Subtraction: `f(x::T,y::T)::T = y - x`
-"""
-BinaryOps.RMINUS
-"""
-Reverse Division: `f(x::T,y::T)::T = y / x`
-"""
-BinaryOps.RDIV
-"""
-One when both x and y exist: `f(x::T,y::T)::T = 1`
-"""
-BinaryOps.PAIR
-"""
-Pick x or y arbitrarily: `f(x::T,y::T)::T = x or y`
-"""
-BinaryOps.ANY
-"""
-Equal: `f(x::T,y::T)::T = x == y``
-"""
-BinaryOps.ISEQ
-"""
-Not Equal: `f(x::T,y::T)::T = x ≠ y`
-"""
-BinaryOps.ISNE
-"""
-Greater Than: `f(x::ℝ,y::ℝ)::ℝ = x > y`
-"""
-BinaryOps.ISGT
-"""
-Less Than: `f(x::ℝ,y::ℝ)::ℝ = x < y`
-"""
-BinaryOps.ISLT
-"""
-Greater Than or Equal: `f(x::ℝ,y::ℝ)::ℝ = x ≥ y`
-"""
-BinaryOps.ISGE
-"""
-Less Than or Equal: `f(x::ℝ,y::ℝ)::ℝ = x ≤ y`
-"""
-BinaryOps.ISLE
-"""
-Minimum: `f(x::ℝ,y::ℝ)::ℝ = min(x, y)`
-"""
-BinaryOps.MIN
-"""
-Maximum: `f(x::ℝ,y::ℝ)::ℝ = max(x, y)`
-"""
-BinaryOps.MAX
-"""
-Logical OR: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ∨ (y ≠ 0)`
-"""
-BinaryOps.LOR
-"""
-Logical AND: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ∧ (y ≠ 0)`
-"""
-BinaryOps.LAND
-"""
-Logical AND: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ⊻ (y ≠ 0)`
-"""
-BinaryOps.LXOR
-"""
-4-Quadrant Arc Tangent: `f(x::F, y::F)::F = tan⁻¹(y/x)`
-"""
-BinaryOps.ATAN2
-"""
-Hypotenuse: `f(x::F, y::F)::F = √(x² + y²)`
-"""
-BinaryOps.HYPOT
-"""
-Float remainder of x / y rounded towards zero.
-"""
-BinaryOps.FMOD
-"""
-Float remainder of x / y rounded towards nearest integral value.
-"""
-BinaryOps.REMAINDER
-"""
-LDEXP: `f(x::F, y::F)::F = x × 2ⁿ`
-"""
-BinaryOps.LDEXP
-"""
-Copysign: Value with magnitude of x and sign of y.
-"""
-BinaryOps.COPYSIGN
-"""
-Bitwise OR: `f(x::ℤ, y::ℤ)::ℤ = x | y`
-"""
-BinaryOps.BOR
-"""
-Bitwise AND: `f(x::ℤ, y::ℤ)::ℤ = x & y`
-"""
-BinaryOps.BAND
-"""
-Bitwise XOR: `f(x::ℤ, y::ℤ)::ℤ = x ^ y`
-"""
-BinaryOps.BXOR
-"""
-Bitwise XNOR: : `f(x::ℤ, y::ℤ)::ℤ = ~(x ^ y)`
-"""
-BinaryOps.BXNOR
-"""
-BGET: `f(x::ℤ, y::ℤ)::ℤ = get bit y of x.`
-"""
-BinaryOps.BGET
-"""
-BSET: `f(x::ℤ, y::ℤ)::ℤ = set bit y of x.`
-"""
-BinaryOps.BSET
-"""
-BCLR: `f(x::ℤ, y::ℤ)::ℤ = clear bit y of x.`
-"""
-BinaryOps.BCLR
-"""
-BSHIFT: `f(x::ℤ, y::Int8)::ℤ = bitshift(x, y)`
-"""
-BinaryOps.BSHIFT
-"""
-Equals: `f(x::T, y::T)::Bool = x == y`
-"""
-BinaryOps.EQ
-"""
-Not Equals: `f(x::T, y::T)::Bool = x ≠ y`
-"""
-BinaryOps.NE
-"""
-Greater Than: `f(x::T, y::T)::Bool = x > y`
-"""
-BinaryOps.GT
-"""
-Less Than: `f(x::T, y::T)::Bool = x < y`
-"""
-BinaryOps.LT
-"""
-Greater Than or Equal: `f(x::T, y::T)::Bool = x ≥ y`
-"""
-BinaryOps.GE
-"""
-Less Than or Equal: `f(x::T, y::T)::Bool = x ≤ y`
-"""
-BinaryOps.LE
-"""
-Complex: `f(x::F, y::F)::Complex = x + y × i`
-"""
-BinaryOps.CMPLX
-"""
-0-Based row index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = i`
-"""
-BinaryOps.FIRSTI
-"""
-1-Based row index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = i + 1`
-"""
-BinaryOps.FIRSTI1
-"""
-0-Based column index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = j`
-"""
-BinaryOps.FIRSTJ
-"""
-1-Based column index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = j + 1`
-"""
-BinaryOps.FIRSTJ1
-"""
-0-Based row index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = k`
-"""
-BinaryOps.SECONDI
-"""
-0-Based row index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = k + 1`
-"""
-BinaryOps.SECONDI1
-"""
-0-Based column index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = l`
-"""
-BinaryOps.SECONDJ
-"""
-1-Based column index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = l + 1`
-"""
-BinaryOps.SECONDJ1

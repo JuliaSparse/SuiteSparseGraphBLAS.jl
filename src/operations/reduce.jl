@@ -11,6 +11,14 @@ function reduce!(
     return w
 end
 
+function reduce!(
+    op::Function, w::GBVector, A::GBMatOrTranspose;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    #try to find an existing monoid, if not error:
+    return reduce!(Monoids.Monoid(op), w, A; mask, accum, desc)
+end
+
 function Base.reduce(
     op::MonoidUnion,
     A::GBMatOrTranspose;
@@ -51,6 +59,14 @@ function Base.reduce(
     end
 end
 
+function reduce(
+    op::Function, A::GBMatOrTranspose;
+    dims = :, typeout = nothing, init = nothing, mask = nothing, accum = nothing, desc = nothing
+)
+    #try to find an existing monoid, if not error:
+    return reduce(Monoids.Monoid(op), A; mask, accum, desc, dims, typeout, init)
+end
+
 function Base.reduce(
     op::MonoidUnion,
     v::GBVector;
@@ -59,7 +75,7 @@ function Base.reduce(
     accum = nothing,
     desc = nothing
 )
-    accum = _handlenothings(accum, desc)
+    accum, desc = _handlenothings(accum, desc)
     if typeout === nothing
         typeout = eltype(v)
     end
@@ -74,6 +90,14 @@ function Base.reduce(
     accum = getoperator(accum, typec)
     libgb.scalarvecreduce[typeout](c, accum, op, v, desc)
     return c[]
+end
+
+function reduce(
+    op::Function, v::GBVector;
+    typeout = nothing, init = nothing, accum = nothing, desc = nothing
+)
+    #try to find an existing monoid, if not error:
+    return reduce(Monoids.Monoid(op), v; accum, desc, typeout, init)
 end
 
 function Base.reduce(

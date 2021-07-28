@@ -16,12 +16,19 @@ function Base.map!(
     end
     return C
 end
+
+Base.map!(op::Function, C::GBArray, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map!(UnaryOp(op), C, A; mask, accum, desc)
+
 function Base.map!(
     op::UnaryUnion, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     return map!(op, A, A; mask, accum, desc)
 end
+
+Base.map!(op::Function, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map!(UnaryOp(op), A; mask, accum, desc)
 
 function Base.map(
     op::UnaryUnion, A::GBArray;
@@ -30,6 +37,8 @@ function Base.map(
     t = inferoutputtype(A, op)
     return map!(op, similar(A, t), A; mask, accum, desc)
 end
+Base.map(op::Function, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(UnaryOp(op), A; mask, accum, desc)
 
 function Base.map!(
     op::BinaryUnion, C::GBArray, x, A::GBArray;
@@ -49,10 +58,24 @@ function Base.map!(
 end
 
 function Base.map!(
+    op::Function, C::GBArray, x, A::GBArray;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    map!(BinaryOps.BinaryOp(op), C, x, A; mask, accum, desc)
+end
+
+function Base.map!(
     op::BinaryUnion, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     return map!(op, A, x, A; mask, accum, desc)
+end
+
+function Base.map!(
+    op::Function, x, A::GBArray;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    map!(BinaryOps.BinaryOp(op), x, A; mask, accum, desc)
 end
 
 function Base.map(
@@ -61,6 +84,13 @@ function Base.map(
 )
     t = inferoutputtype(A, op)
     return map!(op, similar(A, t), x, A; mask, accum, desc)
+end
+
+function Base.map(
+    op::Function, x, A::GBArray;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    map(BinaryOps.BinaryOp(op), x, A; mask, accum, desc)
 end
 
 function Base.map!(
@@ -81,10 +111,24 @@ function Base.map!(
 end
 
 function Base.map!(
+    op::Function, C::GBArray, A::GBArray, x;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    map!(BinaryOps.BinaryOp(op), C, A, x; mask, accum, desc)
+end
+
+function Base.map!(
     op::BinaryUnion, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
     return map!(op, A, A, x; mask, accum, desc)
+end
+
+function Base.map!(
+    op::Function, A::GBArray, x;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    map!(BinaryOps.BinaryOp(op), A, A, x; mask, accum, desc)
 end
 
 function Base.map(
@@ -93,6 +137,13 @@ function Base.map(
 )
     t = inferoutputtype(A, op)
     return map!(op, similar(A, t), A, x; mask, accum, desc)
+end
+
+function Base.map(
+    op::Function, A::GBArray, x;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    map(BinaryOps.BinaryOp(op), A, x; mask, accum, desc)
 end
 
 Base.:+(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
