@@ -55,7 +55,7 @@ function emul!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op = BinaryOps.TIMES;
+    op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -83,7 +83,7 @@ end
 function emul(
     u::GBVector,
     v::GBVector,
-    op = BinaryOps.TIMES;
+    op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -97,7 +97,7 @@ function emul!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = BinaryOps.TIMES;
+    op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -126,7 +126,7 @@ end
 function emul(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = BinaryOps.TIMES;
+    op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -193,7 +193,7 @@ function eadd!(
     w::GBVector,
     u::GBVector,
     v::GBVector,
-    op = BinaryOps.PLUS;
+    op::BinaryUnion = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -221,7 +221,7 @@ end
 function eadd(
     u::GBVector,
     v::GBVector,
-    op = BinaryOps.PLUS;
+    op::BinaryUnion = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -235,7 +235,7 @@ function eadd!(
     C::GBMatrix,
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = BinaryOps.PLUS;
+    op::BinaryUnion = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -264,7 +264,7 @@ end
 function eadd(
     A::GBMatOrTranspose,
     B::GBMatOrTranspose,
-    op = BinaryOps.PLUS;
+    op::BinaryUnion = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -274,6 +274,22 @@ function eadd(
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
+function emul!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+    emul!(C, A, B, BinaryOp(op); mask, accum, desc)
+end
+
+function emul(A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+    emul(A, B, BinaryOp(op); mask, accum, desc)
+end
+
+function eadd!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+    eadd!(C, A, B, BinaryOp(op); mask, accum, desc)
+end
+
+function eadd(A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+    eadd(A, B, BinaryOp(op); mask, accum, desc)
+end
+
 function Base.:+(A::GBArray, B::GBArray)
     eadd(A, B, BinaryOps.PLUS)
 end
@@ -281,3 +297,14 @@ end
 function Base.:-(A::GBArray, B::GBArray)
     eadd(A, B, BinaryOps.MINUS)
 end
+
+⊕(A, B, op; mask = nothing, accum = nothing, desc = nothing) =
+    eadd(A, B, op; mask, accum, desc)
+⊗(A, B, op; mask = nothing, accum = nothing, desc = nothing) =
+    emul(A, B, op; mask, accum, desc)
+
+⊕(f::Union{Function, BinaryUnion}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
+    eadd(A, B, f; mask, accum, desc)
+
+⊗(f::Union{Function, BinaryUnion}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
+    emul(A, B, f; mask, accum, desc)
