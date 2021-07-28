@@ -722,3 +722,34 @@ Bitwise XNOR monoid: `f(x::ℤ, y::ℤ)::ℤ = ~(x^y)`
 Monoids.BXNOR_MONOID
 op(::typeof(Monoids.BXNOR_MONOID)) = BinaryOps.BXNOR
 Monoids.Monoid(::typeof(!⊻)) = Monoids.BXNOR_MONOID
+
+for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any, "ANY")]
+    for otimes ∈ [
+        (:div, "DIV"),
+        (:firsti, "FIRSTI1"),
+        (:firstj, "FIRSTJ1"),
+        (:iseq, "ISEQ"),
+        (:isge, "ISGE"),
+        (:isgt, "ISGT"),
+        (:isle, "ISLE"),
+        (:islt, "ISLT"),
+        (:isne, "ISNE"),
+        (:∧, "LAND"),
+        (:∨, "LOR"),
+        (:lxor, "LXOR"),
+        (:max, "MAX"),
+        (:min, "MIN"),
+        (:-, "MINUS"),
+        (:rminus, "RMINUS"),
+        (:second, "SECOND"),
+        (:secondi, "SECONDI1"),
+        (:secondj, "SECONDJ1"),
+        (:*, "TIMES")
+    ]
+        rig = Symbol(oplus[2], "_", otimes[2])
+        funcquote = quote
+            Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+        end
+        @eval($funcquote)
+    end
+end

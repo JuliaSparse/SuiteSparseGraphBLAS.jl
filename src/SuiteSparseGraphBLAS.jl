@@ -34,6 +34,7 @@ _createunaryops()
 _createbinaryops()
 _createmonoids()
 _createsemirings()
+include("operators/oplist.jl")
 include("indexutils.jl")
 
 export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
@@ -114,7 +115,8 @@ include("chainrules/selectrules.jl")
 #include("random.jl")
 include("misc.jl")
 export libgb
-export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
+#Removed since these should not be in the public interface.
+#export UnaryOps, BinaryOps, Monoids, Semirings, SelectOps, Descriptors #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
 export xtype, ytype, ztype, validtypes #Determine input/output types of operators
@@ -143,5 +145,4 @@ function __init__()
 end
 
 include("operators/ztypes.jl")
-include("operators/oplist.jl")
 end #end of module
