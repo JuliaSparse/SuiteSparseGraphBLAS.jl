@@ -725,7 +725,8 @@ Monoids.Monoid(::typeof(!⊻)) = Monoids.BXNOR_MONOID
 
 for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any, "ANY")]
     for otimes ∈ [
-        (:div, "DIV"),
+        (:/, "DIV"),
+        (:\, "RDIV"),
         (:firsti, "FIRSTI1"),
         (:firstj, "FIRSTJ1"),
         (:iseq, "ISEQ"),
@@ -744,7 +745,8 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
         (:second, "SECOND"),
         (:secondi, "SECONDI1"),
         (:secondj, "SECONDJ1"),
-        (:*, "TIMES")
+        (:*, "TIMES"),
+        (:+, "PLUS")
     ]
         rig = Symbol(oplus[2], "_", otimes[2])
         funcquote = quote
