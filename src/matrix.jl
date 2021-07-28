@@ -26,6 +26,7 @@ function GBMatrix(
     return A
 end
 
+#iso constructors
 """
     GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J))
 
@@ -40,18 +41,27 @@ function GBMatrix(I::AbstractVector, J::AbstractVector, x::T;
     return A
 end
 
-function build(A::GBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
-nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
-length(I) == length(J) || DimensionMismatch("I, J and X must have the same length")
-x = GBScalar(x)
 
-libgb.GxB_Matrix_build_Scalar(
-    A,
-    Vector{libgb.GrB_Index}(I),
-    Vector{libgb.GrB_Index}(J),
-    x,
-    length(I)
-)
+function GBMatrix(dims::Dims{2}, x::T) where {T}
+    A = GBMatrix{T}(dims)
+    A[:, :] = x
+    return A
+end
+GBMatrix(nrows, ncols, x::T) where {T} = GBMatrix((nrows, ncols), x)
+
+function build(A::GBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
+    nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
+    length(I) == length(J) || DimensionMismatch("I, J and X must have the same length")
+    x = GBScalar(x)
+
+    libgb.GxB_Matrix_build_Scalar(
+        A,
+        Vector{libgb.GrB_Index}(I),
+        Vector{libgb.GrB_Index}(J),
+        x,
+        length(I)
+    )
+    return A
 end
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################

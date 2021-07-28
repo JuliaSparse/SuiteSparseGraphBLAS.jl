@@ -14,36 +14,38 @@ GBVector{T}(dims::Dims{1}) where {T} = GBVector{T}(dims...)
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
-function GBVector(I::AbstractVector, X::AbstractVector{T}; dup = BinaryOps.PLUS, nrows = maximum(I)) where {T}
-    x = GBVector{T}(nrows)
+function GBVector(I::AbstractVector, X::AbstractVector{T}; dup = BinaryOps.PLUS, n = maximum(I)) where {T}
+    x = GBVector{T}(n)
     build(x, I, X, dup = dup)
     return x
 end
 
+#iso valued constructors.
 """
     GBVector(I, x; nrows = maximum(I))
 
-Create an nrows length GBVector v such that M[I[k]] = x.
+Create an `n` length GBVector `v` such that `M[I[k]] = x`.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
 function GBVector(I::AbstractVector, x::T;
-    nrows = maximum(I)) where {T}
-    A = GBVector{T}(nrows)
+    n = maximum(I)) where {T}
+    A = GBVector{T}(n)
     build(A, I, x)
     return A
 end
 
-function build(A::GBVector{T}, I::AbstractVector, x::T) where {T}
-nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
-x = GBScalar(x)
+"""
+    GBVector(n, x)
 
-libgb.GxB_Vector_build_Scalar(
-    A,
-    Vector{libgb.GrB_Index}(I),
-    x,
-    length(I)
-)
+Create an `n` length dense GBVector `v` such that M[I[k]] = x.
+The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
+each index.
+"""
+function GBVector(n::Integer, x::T) where {T}
+    v = GBVector{T}(n)
+    v[:] = x
+    return v
 end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
@@ -138,7 +140,16 @@ for T ∈ valid_vec
     end
 end
 
-
+function build(v::GBVector{T}, I::Vector, x::T) where {T}
+    nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
+    x = GBScalar(x)
+    return libgb.GxB_Vector_build_Scalar(
+            v,
+            Vector{libgb.GrB_Index}(I),
+            x,
+            length(I)
+        )
+end
 
 # Indexing functions:
 #####################
