@@ -4,7 +4,7 @@
 A fast, general sparse linear algebra and graph computation package, based on SuiteSparse:GraphBLAS.
 
 ## v1.0
-v1.0 is currently planned to release on Monday August 2nd. Check back then for benchmarks, a more Julian interface, and better integrations with the wider ecosystem!
+v1.0 is currently planned to release in early August, after the entire GraphBLAS interface is available and stable. Check back then for more benchmarks, a more Julian interface, automatic differentiation support with ChainRules.jl and better integration with the wider ecosystem!
 
 ### Installation
 ```julia
@@ -15,6 +15,7 @@ Pkg.add("SuiteSparseGraphBLAS")
 ## Benchmarks
 
 ```julia
+# Standard arithmetic semiring (+, *) matrix multiplication
 julia> s = sprand(Float64, 100000, 100000, 0.05);
 julia> v = sprand(Float64, 100000, 1000, 0.1);
 julia> @btime s * v
@@ -29,6 +30,14 @@ julia> @btime s * v
 # 16 threads
 julia> @btime s * v
   64.622 s (26 allocations: 1.54 GiB)
+
+# Indexing
+julia> s = sprand(Float64, 100000, 100000, 0.05);
+julia> @btime s[1:10:end, end:-10:1]
+  947.438 ms (11 allocations: 76.34 MiB)
+julia> s = GBMatrix(s); GC.gc();
+julia> @btime s[1:10:end, end:-10:1]
+  626.943 ms (33 allocations: 1.14 KiB)
 ```
 
 ## Acknowledgements
