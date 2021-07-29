@@ -18,7 +18,7 @@ GBMatrixStyle(::Val{N}) where N = Broadcast.DefaultArrayStyle{N}()
 Broadcast.BroadcastStyle(::GBMatrixStyle, ::GBVectorStyle) = GBMatrixStyle()
 
 #Elementwise Broadcasts
-######################
+#####################
 function Base.broadcasted(::typeof(*), A::GBArray, B::GBArray)
     emul(A, B, BinaryOps.TIMES)
 end
