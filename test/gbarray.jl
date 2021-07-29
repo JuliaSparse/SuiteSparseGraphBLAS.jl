@@ -16,7 +16,7 @@
             #Indexing tests
             x = sprand(Int64, 100, 100, 0.05)
             m = GBMatrix(x)
-            @test m[1, 2] == zero(eltype(m))
+            @test m[1, 2] === nothing
             @test m[:, 2] == GBMatrix(x[:, 2])
             @test m[2, :] == copy(GBMatrix(x[2, :])')
             @test m[:, :] == m
@@ -59,7 +59,7 @@
         mask = GBMatrix([[true, true, false] [false, true, true] [true, false,true]])
         m[8:10, 8:10, mask = mask, accum = BinaryOps.TIMES, desc = R] =
             fill(10, 3, 3)
-        @test m[9, 10] == zero(eltype(m))
+        @test m[9, 10] === nothing
         @test m[10, 10] == 90
 
         #vectors

@@ -98,8 +98,8 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
         f = libgb.GrB_INP0
     elseif s == :input2
         f = libgb.GrB_INP1
-    elseif s == :nthreads
-        f = libgb.GxB_DESCRIPTOR_NTHREADS
+    #elseif s == :nthreads
+        #f = libgb.GxB_DESCRIPTOR_NTHREADS
     #elseif s == :chunk
         #f = libgb.GxB_DESCRIPTOR_CHUNK
     #elseif s == :axb_method
@@ -149,7 +149,7 @@ function Base.propertynames(::Descriptor)
     :mask,
     :input1,
     :input2,
-    :nthreads,
+    #:nthreads,
     #:chunk,
     #:axb_method,
     #:sort,
