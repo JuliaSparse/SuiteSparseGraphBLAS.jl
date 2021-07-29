@@ -826,7 +826,7 @@ for T ∈ valid_vec
             if result == GrB_SUCCESS
                 return x[]
             elseif result == GrB_NO_VALUE
-                return zero($T)
+                return nothing
             else
                 throw(ErrorException("Invalid extractElement return value."))
             end
@@ -971,7 +971,7 @@ for T ∈ valid_vec
             if result == GrB_SUCCESS
                 return x[]
             elseif result == GrB_NO_VALUE
-                zero($T)
+                nothing
             else
                 throw(ErrorException("Invalid return from Matrix_extractElement"))
             end
@@ -2348,6 +2348,8 @@ function GxB_Global_Option_get(field)
         T = UInt32
     elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
         T = Cint
+    elseif field ∈ [GxB_BURBLE]
+        T = Bool
     end
     v = Ref{T}()
     ccall(
@@ -2385,7 +2387,7 @@ function GxB_Global_Option_set(field, value)
             field,
             value
         )
-    elseif field ∈ [GxB_PRINT_1BASED]
+    elseif field ∈ [GxB_PRINT_1BASED, GxB_BURBLE]
         ccall(
             (:GxB_Global_Option_set, libgraphblas),
             Cvoid,
@@ -2492,6 +2494,19 @@ function GxB_Vector_Option_set(A, field, value)
             Cvoid,
             (GrB_Vector, UInt32, Cint),
             A,
+            field,
+            value
+        )
+    end
+end
+
+function GxB_Desc_set(d, field, value)
+    if field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_DESCRIPTOR_NTHREADS]
+        ccall(
+            (:GxB_Desc_set, libgraphblas),
+            Cvoid,
+            (GrB_Descriptor, UInt32, Int64),
+            d,
             field,
             value
         )

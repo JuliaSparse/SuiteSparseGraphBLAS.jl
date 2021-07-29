@@ -38,6 +38,8 @@ end
     SPARSITY_STATUS = 33
     SPARSITY_CONTROL = 32
     BASE1 = 104
+    NTHREADS = 5
+    BURBLE = 99
 end
 
 @cenum GBFormat::Int32 begin
