@@ -4,7 +4,10 @@
 A fast, general sparse linear algebra and graph computation package, based on SuiteSparse:GraphBLAS.
 
 ## v1.0
-v1.0 is currently planned to release in early August, after the entire GraphBLAS interface is available and stable. Check back then for more benchmarks, a more Julian interface, automatic differentiation support with ChainRules.jl and better integration with the wider ecosystem!
+v1.0 is currently planned to release in early August, after the entire GraphBLAS interface is available and some memory pressure issues have been sorted out. Check back then for more benchmarks, a more Julian interface, automatic differentiation support with ChainRules.jl and better integration with the wider ecosystem!
+
+If you're fine with sharp edges then give v0.4 a try, and let me know of any issues you find.
+The docs should provide enough information to run virtually the entire set of GraphBLAS functions.
 
 ### Installation
 ```julia
