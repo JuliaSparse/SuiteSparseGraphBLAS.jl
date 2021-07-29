@@ -30,7 +30,7 @@ julia> @btime s * v
 # 2 threads
 julia> @btime s * v
   126.153 s (26 allocations: 1.50 GiB)
-# 16 threads
+# 4 threads
 julia> @btime s * v
   64.622 s (26 allocations: 1.54 GiB)
 
