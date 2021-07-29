@@ -43,6 +43,8 @@ julia> @btime s[1:10:end, end:-10:1]
   626.943 ms (33 allocations: 1.14 KiB)
 ```
 
+* Note the calls to `GC.gc()` are to ensure a level playing field. v1.0 should solve memory pressure issues that are preventing Julia from freeing in response to pressure from SuiteSparse:GraphBLAS.
+
 ## Acknowledgements
 Original author: Abhinav Mehndiratta
 
