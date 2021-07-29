@@ -9,8 +9,8 @@ using Pkg
 Pkg.add("SuiteSparseGraphBLAS")
 ```
 Note: This package supports Julia 1.6+
-### v1.0
-For functionality still in-progres for v1 mid-late July see the issues and projects tabs.
+## v1.0
+v1.0 is currently planned to release on Monday August 2nd. Check back then for benchmarks, a more Julian interface, and better integrations with the wider ecosystem!
 
 ## Acknowledgements
 Original author: Abhinav Mehndiratta
