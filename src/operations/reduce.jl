@@ -133,3 +133,9 @@ Reduce `A` along dimensions of A with monoid `op`.
 - `desc = nothing`
 """
 reduce
+
+Base.maximum(A::GBArray) = reduce(max, A)
+Base.maximum(f::Function, A::GBArray) = reduce(max, map(f, A))
+
+Base.minimum(A::GBArray) = reduce(min, A)
+Base.minimum(f::Function, A::GBArray) = reduce(min, map(f, A))

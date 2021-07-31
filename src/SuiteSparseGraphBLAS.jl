@@ -8,6 +8,7 @@ using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
 using SpecialFunctions: lgamma, gamma, erf, erfc
+using Base.Broadcast
 include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")

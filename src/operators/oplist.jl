@@ -613,6 +613,32 @@ function secondj end
 juliaop(::typeof(BinaryOps.SECONDJ1)) = secondj
 BinaryOps.BinaryOp(::typeof(secondj)) = BinaryOps.SECONDJ1
 
+defaultadd(f) = nothing
+# Default to eadd
+for op ∈ [
+    :^,
+    :+,
+    :-,
+    :rminus,
+]
+    funcquote = quote
+        defaultadd(::typeof($op)) = eadd
+    end
+    @eval($funcquote)
+end
+
+# Default to emul
+for op ∈ [
+    :*,
+    :/,
+    :\
+]
+    funcquote = quote
+        defaultadd(::typeof($op)) = emul
+    end
+    @eval($funcquote)
+end
+
 #Monoid operators
 """
 Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
@@ -799,7 +825,8 @@ Select all entries in A with nonzero value.
 NONZERO
 SelectOp(::typeof(nonzeros)) = NONZERO
 
-# I don't believe these should be exported. Instead select(==, A, 0) will find EQ_ZERO internally.
+# I don't believe these should have Julia equivalents.
+# Instead select(==, A, 0) will find EQ_ZERO internally.
 """
     select(EQ_ZERO, A)
 

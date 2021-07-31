@@ -10,6 +10,8 @@ function GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX) w
 end
 
 GBMatrix{T}(dims::Dims{2}) where {T} = GBMatrix{T}(dims...)
+GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}) where {T} =
+    GBMatrix{T}(size[1].stop, size[2].stop)
 
 """
     GBMatrix(I, J, X; dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J))
