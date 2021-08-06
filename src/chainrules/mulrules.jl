@@ -18,12 +18,6 @@ function frule(
     ∂Ω = mul(ΔA, B, Semirings.PLUS_TIMES) + mul(A, ΔB, Semirings.PLUS_TIMES)
     return Ω, ∂Ω
 end
-# Tests will not pass for this. For two reasons.
-# First is #25, the output inference is not type stable.
-# That's it's own issue.
-
-# Second, to_vec currently works by mapping materialized values back and forth, ie. it knows nothing about nothings.
-# This means they give different answers. FiniteDifferences is probably "incorrect", but I have no proof.
 
 function rrule(
     ::typeof(mul),
@@ -52,6 +46,7 @@ end
 
 
 # PLUS_DIV:
+# Missing frule here.
 function rrule(
     ::typeof(mul),
     A::GBMatOrTranspose,
