@@ -2,16 +2,16 @@
 function frule(
     (_, ΔA, ΔB),
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose
+    A::GBArray,
+    B::GBArray
 )
     frule((nothing, ΔA, ΔB, nothing), mul, A, B, Semirings.PLUS_TIMES)
 end
 function frule(
     (_, ΔA, ΔB, _),
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_TIMES)
 )
     Ω = mul(A, B, Semirings.PLUS_TIMES)
@@ -27,8 +27,8 @@ end
 
 function rrule(
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_TIMES)
 )
     function mulpullback(ΔΩ)
@@ -42,8 +42,8 @@ end
 
 function rrule(
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose
+    A::GBArray,
+    B::GBArray
 )
     Ω, mulpullback = rrule(mul, A, B, Semirings.PLUS_TIMES)
     pullback(ΔΩ) = mulpullback(ΔΩ)[1:3]
@@ -54,8 +54,8 @@ end
 # PLUS_DIV:
 function rrule(
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_DIV)
 )
     function mulpullback(ΔΩ)
@@ -70,8 +70,8 @@ end
 function frule(
     (_, ΔA, ΔB, _),
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_PLUS)
 )
     Ω = mul(A, B, Semirings.PLUS_PLUS)
@@ -81,8 +81,8 @@ end
 
 function rrule(
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_PLUS)
 )
     function mulpullback(ΔΩ)
@@ -97,8 +97,8 @@ end
 function frule(
     (_, ΔA, ΔB, _),
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_MINUS)
 )
     Ω = mul(A, B, Semirings.PLUS_MINUS)
@@ -108,8 +108,8 @@ end
 
 function rrule(
     ::typeof(mul),
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     ::typeof(Semirings.PLUS_MINUS)
 )
     function mulpullback(ΔΩ)
@@ -119,3 +119,7 @@ function rrule(
     end
     return mul(A, B, Semirings.PLUS_MINUS), mulpullback
 end
+
+#FIRST/SECOND rules:
+
+# Tropical rules:

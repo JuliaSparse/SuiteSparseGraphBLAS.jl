@@ -613,13 +613,15 @@ function secondj end
 juliaop(::typeof(BinaryOps.SECONDJ1)) = secondj
 BinaryOps.BinaryOp(::typeof(secondj)) = BinaryOps.SECONDJ1
 
-defaultadd(f) = nothing
-# Default to eadd
+#All binary ops will default to emul
+defaultadd(f) = emul
+# Default to eadd. This list is somewhat annoying. May require iteration.
 for op ∈ [
-    :^,
     :+,
-    :-,
-    :rminus,
+    :∨,
+    :min,
+    :max,
+    :any,
 ]
     funcquote = quote
         defaultadd(::typeof($op)) = eadd
@@ -627,17 +629,6 @@ for op ∈ [
     @eval($funcquote)
 end
 
-# Default to emul
-for op ∈ [
-    :*,
-    :/,
-    :\
-]
-    funcquote = quote
-        defaultadd(::typeof($op)) = emul
-    end
-    @eval($funcquote)
-end
 
 #Monoid operators
 """
@@ -753,6 +744,7 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
     for otimes ∈ [
         (:/, "DIV"),
         (:\, "RDIV"),
+        (:first, "FIRST"),
         (:firsti, "FIRSTI1"),
         (:firstj, "FIRSTJ1"),
         (:iseq, "ISEQ"),
@@ -772,7 +764,7 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
         (:secondi, "SECONDI1"),
         (:secondj, "SECONDJ1"),
         (:*, "TIMES"),
-        (:+, "PLUS")
+        (:+, "PLUS"),
     ]
         rig = Symbol(oplus[2], "_", otimes[2])
         funcquote = quote

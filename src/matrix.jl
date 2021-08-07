@@ -49,7 +49,17 @@ function GBMatrix(dims::Dims{2}, x::T) where {T}
     A[:, :] = x
     return A
 end
+
 GBMatrix(nrows, ncols, x::T) where {T} = GBMatrix((nrows, ncols), x)
+
+function GBMatrix(v::GBVector)
+    A = GBMatrix{eltype(v)}(size(v, 1), size(v, 2))
+    nz = findnz(v)
+    for i ∈ 1:length(nz[1])
+        A[nz[1][i], 1] = nz[2][i]
+    end
+    return A
+end
 
 function build(A::GBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
     nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
@@ -109,6 +119,10 @@ end
 # This does not conform to the normal definition with a lazy wrapper.
 function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
     return GBMatrix{eltype(v)}(libgb.GxB_Matrix_diag(v, k, desc))
+end
+
+function LinearAlgebra.diagm(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
+    return Diagonal(v, k; desc)
 end
 
 # Type dependent functions build, setindex, getindex, and findnz:

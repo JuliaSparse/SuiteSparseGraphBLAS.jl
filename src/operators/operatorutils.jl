@@ -1,4 +1,7 @@
 function getoperator(op, t)
+    if op isa Tuple
+        op = Semiring(op...)
+    end
     #Default Semiring should be LOR_LAND for boolean
     if op == Semirings.PLUS_TIMES
         if t == Bool

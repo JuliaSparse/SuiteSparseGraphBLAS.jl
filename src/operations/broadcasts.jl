@@ -24,6 +24,11 @@ function Base.similar(
     return GBMatrix{ElType}(axes(bc))
 end
 
+#Find the modifying version of a function.
+modifying(::typeof(mul)) = mul!
+modifying(::typeof(eadd)) = eadd!
+modifying(::typeof(emul)) = emul!
+
 @inline function Base.copy(bc::Broadcast.Broadcasted{GBMatrixStyle})
     f = bc.f
     l = length(bc.args)
@@ -39,10 +44,8 @@ end
             right = copy(right)
         end
         if left isa GBArray && right isa GBArray
+
             add = defaultadd(f)
-            if add === nothing
-                error("No broadcast available for this function currently. Try eadd or emul.")
-            end
             return add(left, right, f)
         else
             return map(f, left, right)

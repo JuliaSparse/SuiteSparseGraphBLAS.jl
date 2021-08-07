@@ -128,3 +128,6 @@ end
 LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
 
 LinearAlgebra.adjoint(v::GBVector) = transpose(v)
+
+#arrrrgh, type piracy.
+LinearAlgebra.transpose(::Nothing) = nothing
