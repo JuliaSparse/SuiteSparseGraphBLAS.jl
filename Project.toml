@@ -18,7 +18,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
 CEnum = "0.4"
-ChainRulesCore = "0.10"
+ChainRulesCore = "0.10, 1"
 FiniteDifferences = "0.12"
 MacroTools = "0.5"
 SSGraphBLAS_jll = "5.1"
