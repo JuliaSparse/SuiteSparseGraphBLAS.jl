@@ -126,7 +126,7 @@ export clear!, extract, extract!, subassign!, assign! #array functions
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!
 # Reexports.
-export diag, Diagonal, mul!, kron, kron!, transpose, reduce
+export diag, Diagonal, mul!, kron, kron!, transpose, reduce, tril, triu
 export nnz, sprand, findnz, nonzeros
 function __init__()
     _load_globaltypes()
