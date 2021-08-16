@@ -765,6 +765,7 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
         (:secondj, "SECONDJ1"),
         (:*, "TIMES"),
         (:+, "PLUS"),
+        (:pair, "PAIR")
     ]
         rig = Symbol(oplus[2], "_", otimes[2])
         funcquote = quote

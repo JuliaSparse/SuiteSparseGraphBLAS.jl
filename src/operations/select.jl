@@ -24,6 +24,17 @@ function select!(
     return C
 end
 
+function select!(
+    op::Function,
+    C::GBVecOrMat,
+    A::GBArray,
+    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return select!(SelectOp(op), C, A, thunk; mask, accum, desc)
+end
 """
     select(op::SelectUnion, A::GBArray; kwargs...)::GBArray
     select(op::SelectUnion, A::GBArray, thunk; kwargs...)::GBArray
@@ -61,6 +72,17 @@ function select(
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C
+end
+
+function select(
+    op::Function,
+    A::GBArray,
+    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return select(SelectOp(op), A, thunk; mask, accum, desc)
 end
 
 LinearAlgebra.tril(A::GBArray, k::Integer = 0) = select(tril, A, k)
