@@ -36,6 +36,10 @@ function getoperator(op, t)
     end
 end
 
+getaccum(::Nothing, t) = C_NULL
+getaccum(op::Function, t) = getoperator(BinaryOp(op), t)
+getaccum(op, t) = getoperator(op, t)
+
 _isloaded(op::AbstractOp) = !isempty(getfield(op, :typedops))
 _isloaded(op::Union{AbstractSelectOp, AbstractDescriptor}) = getfield(op, :p) != C_NULL
 """

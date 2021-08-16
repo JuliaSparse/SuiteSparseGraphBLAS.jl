@@ -7,7 +7,7 @@ function Base.map!(
     mask, accum = _handlenothings(mask, accum)
     desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, eltype(A))
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     A, desc = _handletranspose(A, desc)
     if C isa GBVector && A isa GBVector
         libgb.GrB_Vector_apply(C, mask, accum, op, A, desc)
@@ -47,7 +47,7 @@ function Base.map!(
     mask, accum = _handlenothings(mask, accum)
     desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, optype(eltype(A), typeof(x)))
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     _, desc, A = _handletranspose(nothing, desc, A)
     if C isa GBVector && A isa GBVector
         libgb.scalarvecapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
@@ -100,7 +100,7 @@ function Base.map!(
     mask, accum = _handlenothings(mask, accum)
     desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, optype(eltype(A), typeof(x)))
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     A, desc, _ = _handletranspose(A, desc)
     if C isa GBVector && A isa GBVector
         libgb.scalarvecapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)

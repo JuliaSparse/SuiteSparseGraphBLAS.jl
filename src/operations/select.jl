@@ -12,7 +12,7 @@ function select!(
     desc === nothing && (desc = DEFAULTDESC)
     thunk === nothing && (thunk = C_NULL)
     A, desc, _ = _handletranspose(A, desc)
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     if thunk isa Number
         thunk = GBScalar(thunk)
     end

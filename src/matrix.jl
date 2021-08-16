@@ -230,33 +230,33 @@ Extract a submatrix from `A` into `C`.
 """
 function extract!(
     C::GBMatrix, A::GBMatrix, I, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     J, nj = idx(J)
     I isa Number && (I = UInt64[I])
     J isa Number && (J = UInt64[J])
-    libgb.GrB_Matrix_extract(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
+    libgb.GrB_Matrix_extract(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     return C
 end
 
 function extract!(
     C::GBMatrix, A::GBMatrix, ::Colon, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract!(C, A, ALL, J; mask, accum, desc)
 end
 
 function extract!(
     C::GBMatrix, A::GBMatrix, I, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract!(C, A, I, ALL; mask, accum, desc)
 end
 
 function extract!(
     C::GBMatrix, A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract!(C, A, ALL, ALL; mask, accum, desc)
 end
@@ -285,7 +285,7 @@ Extract a submatrix from `A`.
 """
 function extract(
     A::GBMatrix, I, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
@@ -294,47 +294,47 @@ end
 
 function extract(
     A::GBMatrix, ::Colon, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, ALL, J; mask, accum, desc)
 end
 
 function extract(
     A::GBMatrix, I, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, I, ALL; mask, accum, desc)
 end
 
 function extract(
     A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, ALL, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
     A::GBMatrix, ::Colon, j;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, ALL, j; mask, accum, desc)
 end
 function Base.getindex(
     A::GBMatrix, i, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, i, ALL; mask, accum, desc)
 end
 function Base.getindex(
     A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, ALL, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
     A::GBMatrix, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     return extract(A, i, j; mask, accum, desc)
 end
@@ -368,7 +368,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
 """
 function subassign!(
     C::GBMatrix, A, I, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -382,16 +382,16 @@ function subassign!(
         length(I) == 1 && (I = I[1]) # If it's a length 1 vector we just want the scalar.
         length(J) == 1 && (J = J[1]) # If it's a length 1 vector we just want the scalar.
         if (I isa Number) && (J isa Vector || J == ALL)
-            libgb.GxB_Row_subassign(C, mask, getoperator(accum, eltype(C)), A, I, J, nj, desc)
+            libgb.GxB_Row_subassign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
         elseif (J isa Number) && (I isa Vector || I == ALL)
-            libgb.GxB_Col_subassign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, desc)
+            libgb.GxB_Col_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
         else
             throw(MethodError(subassign!, [C, A, I, J]))
         end
     elseif A isa GBMatrix
-        libgb.GxB_Matrix_subassign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
+        libgb.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     else
-        libgb.scalarmatsubassign[eltype(A)](C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
+        libgb.scalarmatsubassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
     return A # Not sure this is correct, but it's what Base seems to do.
 end
@@ -422,7 +422,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
 """
 function assign!(
     C::GBMatrix, A, I, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -434,16 +434,16 @@ function assign!(
     end
     if A isa GBVector
         if (I isa Number) && (J isa Vector || J == ALL)
-            libgb.GrB_Row_assign(C, mask, getoperator(accum, eltype(C)), A, I, J, nj, desc)
+            libgb.GrB_Row_assign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
         elseif (J isa Number) && (I isa Vector || I == ALL)
-            libgb.GrB_Col_assign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, desc)
+            libgb.GrB_Col_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
         else
             throw(MethodError(subassign!, [C, A, I, J]))
         end
     elseif A isa GBMatrix
-        libgb.GrB_Matrix_assign(C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
+        libgb.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     else
-        libgb.scalarmatassign[eltype(A)](C, mask, getoperator(accum, eltype(C)), A, I, ni, J, nj, desc)
+        libgb.scalarmatassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
     return A # Not sure this is correct, but it's what Base seems to do.
 end
@@ -451,19 +451,19 @@ end
 # setindex! uses subassign rather than assign. This behavior may change in the future.
 function Base.setindex!(
     C::GBMatrix, A, ::Colon, J;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     subassign!(C, A, ALL, J; mask, accum, desc)
 end
 function Base.setindex!(
     C::GBMatrix, A, I, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     subassign!(C, A, I, ALL; mask, accum, desc)
 end
 function Base.setindex!(
     C::GBMatrix, A, ::Colon, ::Colon;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     subassign!(C, A, ALL, ALL; mask, accum, desc)
 end
@@ -474,7 +474,7 @@ function Base.setindex!(
     I::Union{Vector, UnitRange, StepRange, Number},
     J::Union{Vector, UnitRange, StepRange, Number};
     mask = C_NULL,
-    accum = C_NULL,
+    accum = nothing,
     desc = DEFAULTDESC
 )
     subassign!(C, A, I, J; mask, accum, desc)
@@ -482,7 +482,7 @@ end
 
 function Base.setindex!(
     ::GBMatrix, A, ::AbstractVector;
-    mask = C_NULL, accum = C_NULL, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
 )
     throw("Not implemented")
 end
