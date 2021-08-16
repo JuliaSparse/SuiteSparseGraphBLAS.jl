@@ -6,6 +6,7 @@ struct GBVectorStyle <: Broadcast.AbstractArrayStyle{1} end
 struct GBMatrixStyle <: Broadcast.AbstractArrayStyle{2} end
 Base.BroadcastStyle(::Type{<:GBVector}) = GBVectorStyle()
 Base.BroadcastStyle(::Type{<:GBMatrix}) = GBMatrixStyle()
+Base.BroadcastStyle(::Type{<:Transpose{T, <:GBMatrix} where T}) = GBMatrixStyle()
 #
 GBVectorStyle(::Val{0}) = GBVectorStyle()
 GBVectorStyle(::Val{1}) = GBVectorStyle()
