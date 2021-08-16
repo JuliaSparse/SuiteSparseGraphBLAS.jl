@@ -24,6 +24,13 @@ function Base.similar(
     return GBMatrix{ElType}(axes(bc))
 end
 
+function Base.similar(
+    bc::Broadcast.Broadcasted{GBVectorStyle},
+    ::Type{ElType}
+) where {ElType}
+    return GBVector{ElType}(axes(bc))
+end
+
 #Find the modifying version of a function.
 modifying(::typeof(mul)) = mul!
 modifying(::typeof(eadd)) = eadd!
@@ -45,6 +52,29 @@ modifying(::typeof(emul)) = emul!
         end
         if left isa GBArray && right isa GBArray
 
+            add = defaultadd(f)
+            return add(left, right, f)
+        else
+            return map(f, left, right)
+        end
+    end
+end
+
+@inline function Base.copy(bc::Broadcast.Broadcasted{GBVectorStyle})
+    f = bc.f
+    l = length(bc.args)
+    if l == 1
+        return map(f, first(bc.args))
+    else
+        left = first(bc.args)
+        right = last(bc.args)
+        if left isa Broadcast.Broadcasted
+            left = copy(left)
+        end
+        if right isa Broadcast.Broadcasted
+            right = copy(right)
+        end
+        if left isa GBArray && right isa GBArray
             add = defaultadd(f)
             return add(left, right, f)
         else

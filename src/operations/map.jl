@@ -151,6 +151,11 @@ Base.:+(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = noth
 Base.:+(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
     map(BinaryOps.PLUS, u, x; mask, accum, desc)
 
+Base.:*(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(BinaryOps.TIMES, x, u; mask, accum, desc)
+Base.:*(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
+    map(BinaryOps.TIMES, u, x; mask, accum, desc)
+
 Base.:-(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
     map(BinaryOps.MINUS, x, u; mask, accum, desc)
 Base.:-(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =

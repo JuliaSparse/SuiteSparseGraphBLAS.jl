@@ -10,6 +10,7 @@ end
 GBVector{T}(dims::Dims{1}) where {T} = GBVector{T}(dims...)
 GBVector{T}(nrows::Base.OneTo) where {T} =
     GBVector{T}(nrows.stop)
+GBVector{T}(nrows::Tuple{Base.OneTo,}) where {T} = GBVector{T}(first(nrows))
 """
     GBVector(I::Vector, X::Vector{T})
 

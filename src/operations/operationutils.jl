@@ -32,6 +32,9 @@ function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractOp) where {T, U
     t = optype(T, U)
     return ztype(op, t)
 end
+function inferoutputtype(::GBArray{T}, op::AbstractOp) where {T}
+    return ztype(op, T)
+end
 function inferoutputtype(::GBArray{T}, op) where {T}
     return ztype(UnaryOp(op), T)
 end
