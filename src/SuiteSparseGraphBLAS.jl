@@ -137,7 +137,6 @@ function __init__()
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
     _loaddescriptors()
     _loadselectops()
-    gbset(FORMAT, BYCOL) #This may not always be performant. Should put in Preferences.jl
     gbset(BASE1, true)
     atexit() do
         libgb.GrB_finalize()
