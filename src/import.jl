@@ -19,11 +19,14 @@ function importcscmat(
     # Cannot directly pass Julia arrays to GraphBLAS, it expects malloc'd arrays.
     # Instead we'll malloc some memory for each of the three vectors, and unsafe_copyto!
     # into them.
-    col = Ptr{libgb.GrB_Index}(Libc.malloc(colsize))
+    #col = Ptr{libgb.GrB_Index}(Libc.malloc(colsize))
+    col = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), colsize)
     unsafe_copyto!(col, Ptr{UInt64}(pointer(colptr .- 1)), length(colptr))
-    row = Ptr{libgb.GrB_Index}(Libc.malloc(rowsize))
+    #row = Ptr{libgb.GrB_Index}(Libc.malloc(rowsize))
+    row = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), rowsize)
     unsafe_copyto!(row, Ptr{UInt64}(pointer(rowindices .- 1)), length(rowindices))
-    val = Ptr{T}(Libc.malloc(valsize))
+    #val = Ptr{T}(Libc.malloc(valsize))
+    val = ccall(:jl_malloc, Ptr{T}, (UInt, ), valsize)
     unsafe_copyto!(val, pointer(values), length(values))
     libgb.GxB_Matrix_import_CSC(
         A,
@@ -67,8 +70,8 @@ function importcscvec(
 
     indices = Ptr{libgb.GrB_Index}(Libc.malloc(vi_size))
     unsafe_copyto!(indices, Ptr{UInt64}(pointer(vi .- 1)), length(vi))
-
-    values = Ptr{T}(Libc.malloc(vx_size))
+    values = ccall(:jl_malloc, Ptr{T}, (UInt, ), vx_size)
+    #values = Ptr{T}(Libc.malloc(vx_size))
     unsafe_copyto!(values, pointer(vx), length(vx))
     libgb.GxB_Vector_import_CSC(
         v,
@@ -103,8 +106,8 @@ function importdensematrix(
     m = libgb.GrB_Index(m)
     n = libgb.GrB_Index(n)
     Asize = libgb.GrB_Index(sizeof(A))
-
-    Ax = Ptr{T}(Libc.malloc(Asize))
+    Ax = ccall(:jl_malloc, Ptr{T}, (UInt, ), Asize)
+    #Ax = Ptr{T}(Libc.malloc(Asize))
     unsafe_copyto!(Ax, pointer(A), length(A))
     libgb.GxB_Matrix_import_FullC(
         C,
@@ -135,8 +138,9 @@ function importdensevec(
     w = Ref{libgb.GrB_Vector}()
     n = libgb.GrB_Index(n)
     vsize = libgb.GrB_Index(sizeof(v))
-
-    vx = Ptr{T}(Libc.malloc(vsize))
+    # We have to do this instead of Libc.malloc because GraphBLAS will use :jl_free, not Libc.free
+    vx = ccall(:jl_malloc, Ptr{T}, (UInt, ), vsize)
+    #vx = Ptr{T}(Libc.malloc(vsize))
     unsafe_copyto!(vx, pointer(v), length(v))
     libgb.GxB_Vector_import_Full(
         w,
