@@ -76,6 +76,5 @@ function select(
     select(SelectOp(op), A, thunk; mask, accum, desc)
 end
 
-LinearAlgebra.tril(A::GBArray) = select(tril, A)
-LinearAlgebra.triu(A::GBArray) = select(triu, A)
-SparseArrays.dropzeros(A::GBArray) = select(nonzeros, A)
+LinearAlgebra.tril(A::GBArray) = select(TRIL, A)
+LinearAlgebra.triu(A::GBArray) = select(TRIU, A)
