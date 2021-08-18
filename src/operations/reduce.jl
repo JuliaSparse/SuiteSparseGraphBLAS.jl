@@ -6,7 +6,7 @@ function reduce!(
     desc === nothing && (desc = DEFAULTDESC)
     A, desc, _ = _handletranspose(A, desc, nothing)
     op = getoperator(op, eltype(w))
-    accum = getoperator(accum, eltype(w))
+    accum = getaccum(accum, eltype(w))
     libgb.GrB_Matrix_reduce_Monoid(w, mask, accum, op, A, desc)
     return w
 end
@@ -53,7 +53,7 @@ function Base.reduce(
         end
         op = getoperator(op, typec)
         A, desc, _ = _handletranspose(A, desc, nothing)
-        accum = getoperator(accum, typec)
+        accum = getaccum(accum, typec)
         libgb.scalarmatreduce[typeout](c, accum, op, A, desc)
         return c[]
     end
@@ -87,7 +87,7 @@ function Base.reduce(
         typec = typeof(init)
     end
     op = getoperator(op, typec)
-    accum = getoperator(accum, typec)
+    accum = getaccum(accum, typec)
     libgb.scalarvecreduce[typeout](c, accum, op, v, desc)
     return c[]
 end
@@ -133,3 +133,9 @@ Reduce `A` along dimensions of A with monoid `op`.
 - `desc = nothing`
 """
 reduce
+
+Base.maximum(A::GBArray) = reduce(max, A)
+Base.maximum(f::Function, A::GBArray) = reduce(max, map(f, A))
+
+Base.minimum(A::GBArray) = reduce(min, A)
+Base.minimum(f::Function, A::GBArray) = reduce(min, map(f, A))

@@ -8,6 +8,7 @@ using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using CEnum
 using SpecialFunctions: lgamma, gamma, erf, erfc
+using Base.Broadcast
 include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
@@ -125,7 +126,7 @@ export clear!, extract, extract!, subassign!, assign! #array functions
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!
 # Reexports.
-export diag, Diagonal, mul!, kron, kron!, transpose, reduce
+export diag, Diagonal, mul!, kron, kron!, transpose, reduce, tril, triu
 export nnz, sprand, findnz, nonzeros
 function __init__()
     _load_globaltypes()
@@ -136,7 +137,6 @@ function __init__()
     libgb.GrB_init(libgb.GrB_NONBLOCKING)
     _loaddescriptors()
     _loadselectops()
-    gbset(FORMAT, BYCOL) #This may not always be performant. Should put in Preferences.jl
     gbset(BASE1, true)
     atexit() do
         libgb.GrB_finalize()

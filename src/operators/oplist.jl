@@ -613,6 +613,23 @@ function secondj end
 juliaop(::typeof(BinaryOps.SECONDJ1)) = secondj
 BinaryOps.BinaryOp(::typeof(secondj)) = BinaryOps.SECONDJ1
 
+#All binary ops will default to emul
+defaultadd(f) = emul
+# Default to eadd. This list is somewhat annoying. May require iteration.
+for op ∈ [
+    :+,
+    :∨,
+    :min,
+    :max,
+    :any,
+]
+    funcquote = quote
+        defaultadd(::typeof($op)) = eadd
+    end
+    @eval($funcquote)
+end
+
+
 #Monoid operators
 """
 Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
@@ -727,6 +744,7 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
     for otimes ∈ [
         (:/, "DIV"),
         (:\, "RDIV"),
+        (:first, "FIRST"),
         (:firsti, "FIRSTI1"),
         (:firstj, "FIRSTJ1"),
         (:iseq, "ISEQ"),
@@ -746,7 +764,8 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
         (:secondi, "SECONDI1"),
         (:secondj, "SECONDJ1"),
         (:*, "TIMES"),
-        (:+, "PLUS")
+        (:+, "PLUS"),
+        (:pair, "PAIR")
     ]
         rig = Symbol(oplus[2], "_", otimes[2])
         funcquote = quote
@@ -799,7 +818,8 @@ Select all entries in A with nonzero value.
 NONZERO
 SelectOp(::typeof(nonzeros)) = NONZERO
 
-# I don't believe these should be exported. Instead select(==, A, 0) will find EQ_ZERO internally.
+# I don't believe these should have Julia equivalents.
+# Instead select(==, A, 0) will find EQ_ZERO internally.
 """
     select(EQ_ZERO, A)
 

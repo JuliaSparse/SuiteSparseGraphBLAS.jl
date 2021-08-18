@@ -16,7 +16,7 @@ function LinearAlgebra.kron!(
     desc === nothing && (desc = DEFAULTDESC)
     op = getoperator(op, optype(A, B))
     A, desc, B = _handletranspose(A, desc, B)
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         libgb.GxB_kron(C, mask, accum, op, A, B, desc)
     elseif op isa TypedMonoid

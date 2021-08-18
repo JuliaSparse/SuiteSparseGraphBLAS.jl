@@ -64,7 +64,7 @@ function emul!(
     desc === nothing && (desc = DEFAULTDESC)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
-    accum = getoperator(accum, eltype(w))
+    accum = getaccum(accum, eltype(w))
     if op isa TypedSemiring
         libgb.GrB_Vector_eWiseMult_Semiring(w, mask, accum, op, u, v, desc)
         return w
@@ -107,7 +107,7 @@ function emul!(
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     if op isa TypedSemiring
         libgb.GrB_Matrix_eWiseMult_Semiring(C, mask, accum, op, A, B, desc)
         return C
@@ -202,7 +202,7 @@ function eadd!(
     desc === nothing && (desc = DEFAULTDESC)
     size(w) == size(u) == size(v) || throw(DimensionMismatch())
     op = getoperator(op, optype(u, v))
-    accum = getoperator(accum, eltype(w))
+    accum = getaccum(accum, eltype(w))
     if op isa TypedSemiring
         libgb.GrB_Vector_eWiseAdd_Semiring(w, mask, accum, op, u, v, desc)
         return w
@@ -245,7 +245,7 @@ function eadd!(
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
     A, desc, B = _handletranspose(A, desc, B)
     op = getoperator(op, optype(A, B))
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     if op isa TypedSemiring
         libgb.GrB_Matrix_eWiseAdd_Semiring(C, mask, accum, op, A, B, desc)
         return C

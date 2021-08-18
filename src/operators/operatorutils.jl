@@ -1,4 +1,7 @@
 function getoperator(op, t)
+    if op isa Tuple
+        op = Semiring(op...)
+    end
     #Default Semiring should be LOR_LAND for boolean
     if op == Semirings.PLUS_TIMES
         if t == Bool
@@ -32,6 +35,10 @@ function getoperator(op, t)
         return op
     end
 end
+
+getaccum(::Nothing, t) = C_NULL
+getaccum(op::Function, t) = getoperator(BinaryOp(op), t)
+getaccum(op, t) = getoperator(op, t)
 
 _isloaded(op::AbstractOp) = !isempty(getfield(op, :typedops))
 _isloaded(op::Union{AbstractSelectOp, AbstractDescriptor}) = getfield(op, :p) != C_NULL

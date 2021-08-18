@@ -12,7 +12,7 @@ function select!(
     desc === nothing && (desc = DEFAULTDESC)
     thunk === nothing && (thunk = C_NULL)
     A, desc, _ = _handletranspose(A, desc)
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
@@ -25,12 +25,16 @@ function select!(
 end
 
 function select!(
-    op::Function, C::GBVecOrMat, A::GBArray, thunk;
-    mask = nothing, accum = nothing, desc = nothing
+    op::Function,
+    C::GBVecOrMat,
+    A::GBArray,
+    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
 )
-    select!(SelectOp(op), C, A, thunk; mask, accum, desc)
+    return select!(SelectOp(op), C, A, thunk; mask, accum, desc)
 end
-
 """
     select(op::SelectUnion, A::GBArray; kwargs...)::GBArray
     select(op::SelectUnion, A::GBArray, thunk; kwargs...)::GBArray
@@ -76,6 +80,17 @@ function select(
     select(SelectOp(op), A, thunk; mask, accum, desc)
 end
 
-LinearAlgebra.tril(A::GBArray) = select(tril, A)
-LinearAlgebra.triu(A::GBArray) = select(triu, A)
+function select(
+    op::Function,
+    A::GBArray,
+    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return select(SelectOp(op), A, thunk; mask, accum, desc)
+end
+
+LinearAlgebra.tril(A::GBArray, k::Integer = 0) = select(tril, A, k)
+LinearAlgebra.triu(A::GBArray, k::Integer = 0) = select(triu, A, k)
 SparseArrays.dropzeros(A::GBArray) = select(nonzeros, A)

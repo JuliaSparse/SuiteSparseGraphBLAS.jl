@@ -26,7 +26,7 @@ function gbtranspose!(
         A = A.parent
         desc = desc + T0
     end
-    accum = getoperator(accum, eltype(C))
+    accum = getaccum(accum, eltype(C))
     libgb.GrB_transpose(C, mask, accum, A, desc)
     return C
 end
@@ -47,7 +47,7 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 """
 function gbtranspose(
     A::GBMatOrTranspose;
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc::Descriptor = DEFAULTDESC
 )
     C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
@@ -70,7 +70,7 @@ end
 
 function Base.copy!(
     C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = C_NULL
+    mask = C_NULL, accum = nothing, desc::Descriptor = C_NULL
 )
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
@@ -100,7 +100,7 @@ end
 
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
-    mask = C_NULL, accum = C_NULL, desc::Descriptor = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc::Descriptor = DEFAULTDESC
 )
     return gbtranspose(A.parent; mask, accum, desc)
 end
@@ -128,3 +128,6 @@ end
 LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
 
 LinearAlgebra.adjoint(v::GBVector) = transpose(v)
+
+#arrrrgh, type piracy.
+LinearAlgebra.transpose(::Nothing) = nothing
