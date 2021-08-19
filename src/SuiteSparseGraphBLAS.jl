@@ -137,6 +137,7 @@ function __init__()
     #libgb.GrB_init(libgb.GrB_NONBLOCKING)
     _loaddescriptors()
     _loadselectops()
+    gbset(FORMAT, BYCOL)
     gbset(BASE1, true)
     atexit() do
         libgb.GrB_finalize()
