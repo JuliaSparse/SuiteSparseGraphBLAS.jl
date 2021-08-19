@@ -68,7 +68,8 @@ function importcscvec(
     vi_size = libgb.GrB_Index(sizeof(vi))
     vx_size = libgb.GrB_Index(sizeof(vx))
 
-    indices = Ptr{libgb.GrB_Index}(Libc.malloc(vi_size))
+    #indices = Ptr{libgb.GrB_Index}(Libc.malloc(vi_size))
+    indices = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), vi_size)
     unsafe_copyto!(indices, Ptr{UInt64}(pointer(vi .- 1)), length(vi))
     values = ccall(:jl_malloc, Ptr{T}, (UInt, ), vx_size)
     #values = Ptr{T}(Libc.malloc(vx_size))
