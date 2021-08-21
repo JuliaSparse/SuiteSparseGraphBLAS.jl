@@ -19,7 +19,7 @@ function exportdensematrix!(
     )
     C = Matrix{T}(undef, nrows[], ncols[])
     unsafe_copyto!(pointer(C), Ptr{T}(values[]), length(C))
-    Libc.free(values[])
+    ccall(:jl_free, Cvoid, (Ptr{T},), values[])
     return C
 end
 function exportdensematrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
@@ -75,9 +75,9 @@ function exportcscmatrix!(
     unsafe_copyto!(pointer(outvalues), Ptr{T}(values[]), length(outvalues))
     unsafe_copyto!(pointer(col), Ptr{libgb.GrB_Index}(colptr), length(col))
     unsafe_copyto!(pointer(row), Ptr{libgb.GrB_Index}(rowidx), length(row))
-    Libc.free(colptr)
-    Libc.free(rowidx)
-    Libc.free(values[])
+    ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), colptr)
+    ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), rowidx)
+    ccall(:jl_free, Cvoid, (Ptr{T},), values[])
     return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, outvalues)
 end
 
@@ -107,7 +107,7 @@ function exportdensevec!(
     )
     v = Vector{T}(undef, n[])
     unsafe_copyto!(pointer(v), Ptr{T}(values[]), length(v))
-    Libc.free(values[])
+    ccall(:jl_free, Cvoid, (Ptr{T},), values[])
     return v
 end
 
