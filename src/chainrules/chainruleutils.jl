@@ -44,3 +44,15 @@ end
 FiniteDifferences.rand_tangent(::AbstractRNG, ::AbstractOp) = NoTangent()
 # LinearAlgebra.norm doesn't like the nothings.
 LinearAlgebra.norm(A::GBArray, p::Real=2) = norm(nonzeros(A), p)
+
+# Broadcast b into the rows of A. WARNING: THIS DOES NOT MATCH JULIA.
+function broadcast_emul!(C, A, b, op; mask = nothing, accum = nothing, desc = nothing)
+    B = diagm(b)
+    mul!(C, A, B, (any, op); mask, accum, desc)
+    return C
+end
+
+function broadcast_emul(A, b, op; mask = nothing, accum = nothing, desc = nothing)
+    B = diagm(b)
+    mul(A, B, (any, op); mask, accum, desc)
+end
