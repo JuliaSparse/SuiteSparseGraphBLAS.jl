@@ -615,13 +615,10 @@ BinaryOps.BinaryOp(::typeof(secondj)) = BinaryOps.SECONDJ1
 
 #All binary ops will default to emul
 defaultadd(f) = emul
-# Default to eadd. This list is somewhat annoying. May require iteration.
+# Default to eadd. We're limiting this to + and OR for now to enable easy graph unions.
 for op ∈ [
     :+,
     :∨,
-    :min,
-    :max,
-    :any,
 ]
     funcquote = quote
         defaultadd(::typeof($op)) = eadd
