@@ -1037,7 +1037,7 @@ function GxB_Matrix_concat(C, Tiles, m, n, desc)
 end
 
 function GxB_Matrix_split(Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
-@wraperror ccall((:GxB_Matrix_split, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Matrix, GrB_Descriptor), Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
+    @wraperror ccall((:GxB_Matrix_split, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Matrix, GrB_Descriptor), Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
 end
 
 function GxB_Matrix_diag(C, v, k, desc)

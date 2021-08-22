@@ -14,7 +14,6 @@ include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
 using .libgb
 
-
 include("operators/libgbops.jl")
 include("types.jl")
 include("gbtypes.jl")
@@ -95,7 +94,7 @@ include("operations/map.jl")
 include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
-
+include("operations/concat.jl")
 
 include("print.jl")
 include("import.jl")
@@ -118,7 +117,7 @@ export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
 export xtype, ytype, ztype, validtypes #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix #arrays
-export clear!, extract, extract!, subassign!, assign! #array functions
+export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!

@@ -125,6 +125,7 @@ function LinearAlgebra.diagm(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
     return Diagonal(v, k; desc)
 end
 
+
 # Type dependent functions build, setindex, getindex, and findnz:
 for T ∈ valid_vec
     if T ∈ gxb_vec

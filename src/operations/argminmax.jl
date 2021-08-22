@@ -12,7 +12,6 @@ function argminmax(A::GBMatOrTranspose{T}, minmax, dim) where {T}
         rig = Semirings.MAX_FIRST
     end
     dim == 2 ? desc = nothing : desc = T0
-    print(desc)
     x = mul(A, y, rig; desc=desc) # x = [min|max](A)
     D = Diagonal(x)
     if dim == 1

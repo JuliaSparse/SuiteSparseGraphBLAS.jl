@@ -56,3 +56,8 @@ function broadcast_emul(A, b, op; mask = nothing, accum = nothing, desc = nothin
     B = diagm(b)
     mul(A, B, (any, op); mask, accum, desc)
 end
+
+function find_k(A, B::GBVector, op, minmax; mask = nothing, accum = nothing, desc = nothing)
+    intermediate = broadcast_emul(A, B, op; mask, accum, desc)
+    return argminmax(intermediate, minmax, 2)
+end
