@@ -45,6 +45,7 @@ function importcscmat(
     )
     return GBMatrix{T}(A[])
 end
+
 """
     GBMatrix(S::SparseMatrixCSC)
 
@@ -98,6 +99,54 @@ Create a GBVector from SparseArrays sparse vector `v`.
 function GBVector(v::SparseVector)
     return importcscvec(v.n, v.nzind, v.nzval)
 end
+
+function importcsrmat(
+    m::Integer,
+    n::Integer,
+    rowptr,
+    colindices,
+    values::Vector{T};
+    jumbled::Bool = false,
+    desc::Descriptor = DEFAULTDESC,
+    iso = false
+) where {T}
+    A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
+    m = libgb.GrB_Index(m) #nrows
+    n = libgb.GrB_Index(n) #ncols
+    rowsize = libgb.GrB_Index(sizeof(rowptr)) #Size of colptr vector
+    colsize = libgb.GrB_Index(sizeof(colindices)) #Size of rowindex vector
+    valsize = libgb.GrB_Index(sizeof(values)) #Size of nzval vector
+
+    # This section comes after some chatting with Keno Fisher.
+    # Cannot directly pass Julia arrays to GraphBLAS, it expects malloc'd arrays.
+    # Instead we'll malloc some memory for each of the three vectors, and unsafe_copyto!
+    # into them.
+    #NOTE: The use of `:jl_malloc` instead of `Libc.malloc` is because *GraphBLAS* will free
+    # this memory using `:jl_free`. These functions have to match.
+    row = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), rowsize)
+    unsafe_copyto!(row, Ptr{UInt64}(pointer(colptr .- 1)), length(rowptr))
+    col = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), colsize)
+    unsafe_copyto!(col, Ptr{UInt64}(pointer(rowindices .- 1)), length(colindices))
+    val = ccall(:jl_malloc, Ptr{T}, (UInt, ), valsize)
+    unsafe_copyto!(val, pointer(values), length(values))
+    libgb.GxB_Matrix_import_CSR(
+        A,
+        toGBType(T),
+        m,
+        n,
+        Ref{Ptr{libgb.GrB_Index}}(row),
+        Ref{Ptr{libgb.GrB_Index}}(col),
+        Ref{Ptr{Cvoid}}(val),
+        rowsize,
+        colsize,
+        valsize,
+        iso,
+        jumbled,
+        desc
+    )
+    return GBMatrix{T}(A[])
+end
+
 
 function importdensematrix(
     m::Integer, n::Integer, A::VecOrMat{T};

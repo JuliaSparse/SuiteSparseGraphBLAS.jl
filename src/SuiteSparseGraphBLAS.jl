@@ -43,8 +43,8 @@ export frexpe, frexpx, positioni, positionj #UnaryOps not found in Julia/stdlibs
 #BinaryOps not found in Julia/stdlibs.
 export second, rminus, pair, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, fmod, firsti,
     firstj, secondi, secondj
-
-
+#SelectOps not found in Julia/stdlibs
+export offdiag
 
 const GBVecOrMat{T} = Union{GBVector{T}, GBMatrix{T}}
 const GBMatOrTranspose{T} = Union{GBMatrix{T}, Transpose{<:Any, GBMatrix{T}}}
@@ -82,9 +82,6 @@ const OperatorUnion = Union{
 
 export T1, T0, T0T1, C, CT1, CT0, CT0T1, S, ST1, ST0, ST0T1, SC, SCT1, SCT0, SCT0T1, R, RT1,
     RT0, RT0T1, RC, RCT1, RCT0, RCT0T1, RS, RST1, RST0, RST0T1, RSC, RSCT1, RSCT0, RSCT0T1
-
-export TRIL, TRIU, DIAG, OFFDIAG, NONZERO, EQ_ZERO, GT_ZERO, GE_ZERO, LT_ZERO, LE_ZERO, NE,
-    EQ, GT, GE, LT, LE
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
