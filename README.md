@@ -44,9 +44,10 @@ julia> @btime s[1:10:end, end:-10:1]
 ```
 
 ## Acknowledgements
-Original author: Abhinav Mehndiratta
+This work was funded as part of Google Summer of Code for 3 consecutive summers.
 
 Current maintainer: William Kimmerer
+Original author: Abhinav Mehndiratta
 
 SuiteSparse author: Tim Davis
 
