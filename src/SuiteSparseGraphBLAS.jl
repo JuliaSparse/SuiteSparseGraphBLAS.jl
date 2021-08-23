@@ -95,6 +95,7 @@ include("operations/select.jl")
 include("operations/reduce.jl")
 include("operations/kronecker.jl")
 include("operations/concat.jl")
+include("operations/resize.jl")
 
 include("print.jl")
 include("import.jl")
