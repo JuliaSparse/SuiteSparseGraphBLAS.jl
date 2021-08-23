@@ -1,9 +1,4 @@
 function hvcat!(C, Tiles)
-    @show(C)
-    @show(size(C))
-    @show(Tiles)
-    @show(size(Tiles,1))
-    @show(size(Tiles,2))
     libgb.GxB_Matrix_concat(C, Tiles, size(Tiles,1), size(Tiles,2), C_NULL)
     return C
 end
