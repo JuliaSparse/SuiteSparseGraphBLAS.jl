@@ -1,4 +1,5 @@
-function exportdensematrix!(
+
+function _exportdensematrix!(
     A::GBMatrix{T};
     desc::Descriptor = DEFAULTDESC
 ) where {T}
@@ -17,19 +18,23 @@ function exportdensematrix!(
         isuniform,
         desc
     )
-    C = Matrix{T}(undef, nrows[], ncols[])
-    unsafe_copyto!(pointer(C), Ptr{T}(values[]), length(C))
+    A.p = C_NULL
+    finalize(A)
+    return nrows[], ncols[], values[]
+
+end
+function _exportdensematrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
+    return _exportdensematrix!(copy(A); desc)
+end
+function Matrix(A::GBMatrix{T}) where {T}
+    nrows, ncols, values = _exportdensematrix(A)
+    C = Matrix{T}(undef, nrows, ncols)
+    unsafe_copyto!(pointer(C), Ptr{T}(values), length(C))
     ccall(:jl_free, Cvoid, (Ptr{T},), values[])
-    return C
-end
-function exportdensematrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
-    exportdensematrix!(copy(A); desc)
-end
-function Matrix(A::GBMatrix)
-    return exportdensematrix(A)
+    return
 end
 
-function exportcscmatrix!(
+function _exportcscmatrix!(
     A::GBMatrix{T};
     desc::Descriptor = DEFAULTDESC
     ) where {T}
@@ -61,7 +66,7 @@ function exportcscmatrix!(
         desc
     )
     A.p = C_NULL
-    t = t[]
+    finalize(A)
     nrows = nrows[]
     ncols = ncols[]
     colptr = colptr[]
@@ -69,26 +74,31 @@ function exportcscmatrix!(
     colptrsize = colptrsize[]
     rowidxsize = rowidxsize[]
     Axsize = Axsize[]
-    outvalues = Vector{T}(undef, Axsize ÷ sizeof(T))
+    val = values[]
+    return nrows, ncols, colptr, rowidx, colptrsize, rowidxsize, val, Axsize
+
+
+end
+
+function _exportcscmatrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
+    return _exportcscmatrix!(copy(A); desc)
+end
+
+function SparseArrays.SparseMatrixCSC(A::GBMatrix{T}; desc::Descriptor = DEFAULTDESC) where {T}
+    nrows, ncols, colptr, rowidx, colptrsize, rowidxsize, val, valsize = _exportcscmatrix(A; desc)
+    outvalues = Vector{T}(undef, valsize ÷ sizeof(T))
     col = Vector{libgb.GrB_Index}(undef, Int(colptrsize ÷ sizeof(libgb.GrB_Index)))
     row = Vector{libgb.GrB_Index}(undef, Int(rowidxsize ÷ sizeof(libgb.GrB_Index)))
-    unsafe_copyto!(pointer(outvalues), Ptr{T}(values[]), length(outvalues))
+    unsafe_copyto!(pointer(outvalues), Ptr{T}(val), length(outvalues))
     unsafe_copyto!(pointer(col), Ptr{libgb.GrB_Index}(colptr), length(col))
     unsafe_copyto!(pointer(row), Ptr{libgb.GrB_Index}(rowidx), length(row))
     ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), colptr)
     ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), rowidx)
-    ccall(:jl_free, Cvoid, (Ptr{T},), values[])
-    return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+ 1, row .+ 1, outvalues)
+    ccall(:jl_free, Cvoid, (Ptr{T},), val)
+    return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+= 1, row .+= 1, outvalues)
 end
 
-function exportcscmatrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
-    return exportcscmatrix!(copy(A); desc)
-end
-
-function SparseArrays.SparseMatrixCSC(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
-    return exportcscmatrix(A; desc)
-end
-function exportdensevec!(
+function _exportdensevec!(
     v::GBVector{T};
     desc::Descriptor = DEFAULTDESC
     ) where {T}
@@ -105,17 +115,17 @@ function exportdensevec!(
         isuniform,
         desc
     )
-    v = Vector{T}(undef, n[])
-    unsafe_copyto!(pointer(v), Ptr{T}(values[]), length(v))
-    ccall(:jl_free, Cvoid, (Ptr{T},), values[])
+    return n[], values[]
+end
+
+function _exportdensevec(v::GBVector; desc::Descriptor = DEFAULTDESC)
+    return _exportdensevec!(copy(v); desc)
+end
+
+function Vector(v::GBVector{T}) where {T}
+    n, vals = _exportdensevec(v)
+    v = Vector{T}(undef, n)
+    unsafe_copyto!(pointer(v), Ptr{T}(vals), length(v))
+    ccall(:jl_free, Cvoid, (Ptr{T},), vals)
     return v
-end
-
-function exportdensevec(v::GBVector; desc::Descriptor = DEFAULTDESC)
-    v = copy(v)
-    return exportdensevec!(v; desc)
-end
-
-function Vector(v::GBVector)
-    return exportdensevec(v)
 end

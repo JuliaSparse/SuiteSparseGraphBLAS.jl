@@ -67,9 +67,9 @@
     end
     @testset "select" begin
         m = GBMatrix([[1,2,3] [4,5,6] [7,8,9]])
-        s = select(TRIL, m)
+        s = select(tril, m)
         @test s[1,2] === nothing && s[3,1] == 3
-        s = select(LT, m, 6)
+        s = select(<, m, 6)
         @test s[2,2] == 5 && s[3,3] === nothing
     end
     @testset "transpose" begin
