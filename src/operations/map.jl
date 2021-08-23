@@ -189,3 +189,26 @@ function Base.map(
     mask = nothing, accum = nothing, desc = nothing
 )
 end
+
+"""
+    mask!(C::GBArray, A::GBArray, mask::GBArray)
+
+Apply a mask to matrix `A`, storing the results in C.
+
+"""
+function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
+    desc = DEFAULTDESC
+    structural && (desc = desc + S)
+    complement && (desc = desc + C)
+    map!(identity, C, A; mask, desc)
+    return C
+end
+
+"""
+    mask(A::GBArray, mask::GBArray)
+
+Apply a mask to matrix `A`.
+"""
+function mask(A::GBArray, mask::GBArray; structural = false, complement = false)
+    return mask!(similar(A), A, mask; structural, complement)
+end

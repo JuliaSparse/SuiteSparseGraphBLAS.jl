@@ -18,4 +18,6 @@ println("Testing SuiteSparseGraphBLAS.jl")
     include_test("operations.jl")
     include_test("chainrules/chainrulesutils.jl")
     include_test("chainrules/mulrules.jl")
+    include_test("chainrules/ewiserules.jl")
+    include_test("chainrules/selectrules.jl")
 end

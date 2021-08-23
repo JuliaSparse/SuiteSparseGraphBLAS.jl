@@ -75,28 +75,7 @@ function Base.copy!(
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
 
-"""
-    mask!(C::GBArray, A::GBArray, mask::GBArray)
 
-Apply a mask to matrix `A`, storing the results in C.
-
-"""
-function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
-    desc = T0
-    structural && (desc = desc + S)
-    complement && (desc = desc + C)
-    gbtranspose!(C, A; mask, desc)
-    return C
-end
-
-"""
-    mask(A::GBArray, mask::GBArray)
-
-Apply a mask to matrix `A`.
-"""
-function mask(A::GBArray, mask::GBArray; structural = false, complement = false)
-    return mask!(similar(A), A, mask; structural, complement)
-end
 
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
