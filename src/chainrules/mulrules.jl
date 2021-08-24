@@ -1,4 +1,5 @@
-# Standard arithmetic mul:
+#PLUS REDUCERS:
+###############
 function frule(
     (_, ΔA, ΔB),
     ::typeof(mul),
@@ -115,6 +116,13 @@ function rrule(
     return mul(A, B, Semirings.PLUS_MINUS), mulpullback
 end
 
+# PLUS_FIRST:
+
+# PLUS_SECOND:
+
+
 #FIRST/SECOND rules:
 
-# Tropical rules:
+# TROPICAL REDUCERS:
+
+# MAX_PLUS:

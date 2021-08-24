@@ -26,12 +26,12 @@ end
 function _exportdensematrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
     return _exportdensematrix!(copy(A); desc)
 end
-function Matrix(A::GBMatrix{T}) where {T}
+function Base.Matrix(A::GBMatrix{T}) where {T}
     nrows, ncols, values = _exportdensematrix(A)
     C = Matrix{T}(undef, nrows, ncols)
     unsafe_copyto!(pointer(C), Ptr{T}(values), length(C))
-    ccall(:jl_free, Cvoid, (Ptr{T},), values[])
-    return
+    ccall(:jl_free, Cvoid, (Ptr{T},), values)
+    return C
 end
 
 function _exportcscmatrix!(

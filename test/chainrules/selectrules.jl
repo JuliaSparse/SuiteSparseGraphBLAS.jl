@@ -1,7 +1,7 @@
 @testset "Select" begin
     @testset "Dense" begin
         #dense first
-        X = GBMatrix(rand(-10.0:0.05:10.0, 10))
+        X = GBMatrix(rand(-10.0:0.05:10.0, 10, 10))
         test_frule(select, diag, X)
         test_rrule(select, diag, X)
         test_frule(select, offdiag, X)
