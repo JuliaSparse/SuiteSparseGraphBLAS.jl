@@ -27,6 +27,11 @@ function _exportdensematrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
     return _exportdensematrix!(copy(A); desc)
 end
 function Base.Matrix(A::GBMatrix{T}) where {T}
+    if gbget(A, SPARSITY_STATUS) != GBDENSE
+        X = similar(A)
+        X[:] = zero(A)
+        A = eadd(X, A)
+    end
     nrows, ncols, values = _exportdensematrix(A)
     C = Matrix{T}(undef, nrows, ncols)
     unsafe_copyto!(pointer(C), Ptr{T}(values), length(C))
