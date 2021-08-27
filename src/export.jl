@@ -29,7 +29,7 @@ end
 function Base.Matrix(A::GBMatrix{T}) where {T}
     if gbget(A, SPARSITY_STATUS) != GBDENSE
         X = similar(A)
-        X[:] = zero(A)
+        X[:, :] = zero(T)
         A = eadd(X, A)
     end
     nrows, ncols, values = _exportdensematrix(A)
@@ -128,6 +128,11 @@ function _exportdensevec(v::GBVector; desc::Descriptor = DEFAULTDESC)
 end
 
 function Vector(v::GBVector{T}) where {T}
+    if gbget(v, SPARSITY_STATUS) != GBDENSE
+        X = similar(v)
+        X[:] = zero(T)
+        v = eadd(X, v)
+    end
     n, vals = _exportdensevec(v)
     v = Vector{T}(undef, n)
     unsafe_copyto!(pointer(v), Ptr{T}(vals), length(v))

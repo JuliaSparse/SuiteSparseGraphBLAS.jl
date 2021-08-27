@@ -237,7 +237,8 @@ function _importdensevec(
         iso,
         desc
     )
-    return GBVector{T}(w[])
+    wout = GBVector{T}(w[])
+    return wout
 end
 
 function _importdensevec(
@@ -248,10 +249,8 @@ function _importdensevec(
     vsize = libgb.GrB_Index(sizeof(v))
     # We have to do this instead of Libc.malloc because GraphBLAS will use :jl_free, not Libc.free
     vx = ccall(:jl_malloc, Ptr{T}, (UInt, ), vsize)
-    #vx = Ptr{T}(Libc.malloc(vsize))
     unsafe_copyto!(vx, pointer(v), length(v))
     return _importdensevec(n, vx, vsize; desc, iso)
-
 end
 
 """

@@ -380,10 +380,6 @@ function GxB_Monoid_terminal_new_UINT32(monoid, op, identity, terminal)
 end
 monoidtermnew[UInt32] = GxB_Monoid_terminal_new_UINT32
 function GxB_Monoid_terminal_new_INT64(monoid, op, identity, terminal)
-    println(monoid)
-    println(op)
-    println(terminal)
-    println(identity)
     @wraperror ccall((:GxB_Monoid_terminal_new_INT64, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Int64, Int64), monoid, op, identity, terminal)
 end
 monoidtermnew[Int64] = GxB_Monoid_terminal_new_INT64
@@ -430,7 +426,6 @@ function GxB_Monoid_terminal(T, monoid)
     terminal = Ref{T}()
     ccall((:GxB_Monoid_terminal, libgraphblas), GrB_Info, (Ptr{Bool}, Ptr{Cvoid}, GrB_Monoid), has_terminal, terminal, monoid)
     has_terminal = has_terminal[]
-    println(has_terminal)
     if has_terminal
         return terminal[]
     else
@@ -1193,8 +1188,6 @@ end
 
 function GrB_Matrix_error(A)
     p = Vector{String}()
-    println("HI")
-
     @wraperror ccall((:GrB_Matrix_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Matrix), p, A)
     return unsafe_string(pointer(p))
 end
@@ -1693,6 +1686,8 @@ function GrB_Matrix_assign_UDT(C, Mask, accum, x, I, ni, J, nj, desc)
 end
 
 function GrB_Vector_apply(w, mask, accum, op, u, desc)
+    GrB_Vector_wait(Ref(w.p))
+    GrB_Vector_wait(Ref(w.p))
     @wraperror ccall((:GrB_Vector_apply, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_UnaryOp, GrB_Vector, GrB_Descriptor), w, mask, accum, op, u, desc)
 end
 

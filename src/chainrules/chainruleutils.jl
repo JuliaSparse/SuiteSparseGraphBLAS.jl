@@ -6,17 +6,19 @@ const RealOrComplex = Union{Real, Complex}
 
 #Required for ChainRulesTestUtils
 function FiniteDifferences.to_vec(M::GBMatrix)
-    I, J, X = findnz(M)
+    x, back = FiniteDifferences.to_vec(Matrix(M))
     function backtomat(xvec)
-        return GBMatrix(I, J, xvec; nrows = size(M, 1), ncols = size(M, 2))
+        M2 = GBMatrix(back(xvec))
+        return mask(M2, M; structural=true)
     end
-    return X, backtomat
+    return x, backtomat
 end
 
 function FiniteDifferences.to_vec(v::GBVector)
-    i, x = findnz(v)
+    x, back = FiniteDifferences.to_vec(Vector(v))
     function backtovec(xvec)
-        return GBVector(i, xvec; nrows=size(v, 1))
+        v2 = GBVector(back(xvec))
+        return mask(v2, v; structural=true)
     end
     return x, backtovec
 end
