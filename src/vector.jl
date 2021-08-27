@@ -16,7 +16,7 @@ GBVector{T}(nrows::Tuple{Base.OneTo,}) where {T} = GBVector{T}(first(nrows))
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
-function GBVector(I::AbstractVector, X::AbstractVector{T}; dup = BinaryOps.PLUS, nrows = maximum(I)) where {T}
+function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; dup = BinaryOps.PLUS, nrows = maximum(I)) where {U<:Integer, T}
     x = GBVector{T}(nrows)
     build(x, I, X, dup = dup)
     return x
@@ -30,8 +30,8 @@ Create an `n` length GBVector `v` such that `M[I[k]] = x`.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
-function GBVector(I::AbstractVector, x::T;
-    nrows = maximum(I)) where {T}
+function GBVector(I::AbstractVector{U}, x::T;
+    nrows = maximum(I)) where {U<:Integer, T}
     A = GBVector{T}(nrows)
     build(A, I, x)
     return A

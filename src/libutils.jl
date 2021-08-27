@@ -68,7 +68,7 @@ end
 function load_global(str, type::Type{Ptr{T}} = Ptr{Nothing}) where {T}
     x =
     try
-        dlsym(SSGraphBLAS_jll.libgraphblas_handle, str)
+        dlsym(libgraphblas_handle[], str)
     catch e
         @warn "Symbol not available " * str
         return type(C_NULL)

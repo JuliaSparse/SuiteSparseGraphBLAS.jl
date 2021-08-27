@@ -1,7 +1,15 @@
 module SuiteSparseGraphBLAS
 __precompile__(true)
-using Libdl: dlsym
-using SSGraphBLAS_jll
+using Libdl: dlsym, dlopen, dlclose
+using Preferences
+include("find_binary.jl")
+const libgraphblas_handle = Ref{Ptr{Nothing}}()
+@static if artifact_or_path == "default"
+    using SSGraphBLAS_jll
+    const libgraphblas = SSGraphBLAS_jll.libgraphblas
+else
+    const libgraphblas = artifact_or_path
+end
 using SparseArrays
 using MacroTools
 using LinearAlgebra
@@ -127,8 +135,12 @@ export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, g
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
 export nnz, sprand, findnz, nonzeros
 function __init__()
+    @static if artifact_or_path != "default"
+        libgraphblas_handle[] = dlopen(libgraphblas)
+    else
+        libgraphblas_handle[] = SSGraphBLAS_jll.libgraphblas_handle
+    end
     _load_globaltypes()
-
     # I would like to do below, it's what the docs ask for. But it *seems* to work
     # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
     libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
@@ -139,6 +151,9 @@ function __init__()
     gbset(BASE1, true)
     atexit() do
         libgb.GrB_finalize()
+        @static if artifact_or_path != "default"
+            dlclose(libgraphblas_handle[])
+        end
     end
 end
 

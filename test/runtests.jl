@@ -3,6 +3,7 @@ using SparseArrays
 using Test
 using Random
 using ChainRulesTestUtils
+using ChainRulesCore
 using FiniteDifferences
 Random.seed!(1)
 

@@ -6,7 +6,7 @@ function frule(
     A::GBArray
 )
     Ω = select(op, A)
-    ∂Ω = select(op, ΔA)
+    ∂Ω = mask(ΔA, Ω, structural = true)
     return Ω, ∂Ω
 end
 
@@ -19,7 +19,7 @@ function frule(
     thunk::Union{GBScalar, Nothing, valid_union}
 )
     Ω = select(op, A, thunk)
-    ∂Ω = select(op, ΔA, thunk)
+    ∂Ω = mask(ΔA, Ω, structural = true)
     return Ω, ∂Ω
 end
 

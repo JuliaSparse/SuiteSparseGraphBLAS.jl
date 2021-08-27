@@ -5,3 +5,4 @@ docs/build/
 docs/site/
 .vscode
 Manifest.toml
+LocalPreferences.toml
