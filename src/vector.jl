@@ -116,28 +116,55 @@ for T ∈ valid_vec
         function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = BinaryOps.PLUS)
             nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-            libgb.$func(v, Vector{libgb.GrB_Index}(I), X, length(X), dup[$T])
+            libgb.$func(v, Vector{libgb.GrB_Index}(I) .- 1, X, length(X), dup[$T])
         end
     end
     # Setindex functions
     func = Symbol(prefix, :_Vector_setElement_, suffix(T))
     @eval begin
         function Base.setindex!(v::GBVector{$T}, x::$T, i::Integer)
-            return libgb.$func(v, x, libgb.GrB_Index(i))
+            return libgb.$func(v, x, libgb.GrB_Index(i) - 1)
         end
     end
     # Getindex functions
     func = Symbol(prefix, :_Vector_extractElement_, suffix(T))
     @eval begin
         function Base.getindex(v::GBVector{$T}, i::Integer)
-            return libgb.$func(v, libgb.GrB_Index(i))
+            x = Ref{$T}()
+            result = libgb.$func(x, v, libgb.GrB_Index(i) - 1)
+            if result == libgb.GrB_SUCCESS
+                return x[]
+            elseif result == libgb.GrB_NO_VALUE
+                return nothing
+            else
+                throw(ErrorException("Invalid extractElement return value."))
+            end
         end
     end
     # findnz functions
     func = Symbol(prefix, :_Vector_extractTuples_, suffix(T))
     @eval begin
         function SparseArrays.findnz(v::GBVector{$T})
-            return libgb.$func(v)
+            nvals = Ref{libgb.GrB_Index}(nnz(v))
+            I = Vector{libgb.GrB_Index}(undef, nvals[])
+            X = Vector{$T}(undef, nvals[])
+            libgb.$func(I, X, nvals, v)
+            nvals[] == length(I) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
+            return I .+ 1, X
+        end
+        function SparseArrays.nonzeros(v::GBVector{$T})
+            nvals = Ref{libgb.GrB_Index}(nnz(v))
+            X = Vector{$T}(undef, nvals[])
+            libgb.$func(C_NULL, X, nvals, v)
+            nvals[] == length(X) || throw(DimensionMismatch(""))
+            return X
+        end
+        function SparseArrays.nonzeroinds(v::GBVector{$T})
+            nvals = Ref{libgb.GrB_Index}(nnz(v))
+            I = Vector{libgb.GrB_Index}(undef, nvals[])
+            libgb.$func(I, C_NULL, nvals, v)
+            nvals[] == length(I) || throw(DimensionMismatch(""))
+            return I
         end
     end
 end
