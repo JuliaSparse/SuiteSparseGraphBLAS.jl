@@ -1,9 +1,26 @@
-#TODO:
-# This is actually kind of hard. sprand works best for now, but it has problems:
-# 1. It involves creating a SparseMatrixCSC -> GBMatrix which is slowish
-# 2. It doesn't support the elements from a collection like 1:10.
-# 3. It only supports a proportion rather than nvals, boon or bane I'm not sure.
+"""
+    gbrand(typeorrange, nrows, ncols, density; kwargs...)::GBMatrix
+    gbrand(rng::AbstractRNG, typeorrange, nrows, ncols, density; kwargs...)::GBMatrix
 
+Construct a random `GBMatrix`, analogous to `sprand` from SparseArrays
+
+# Arguments
+- `rng::AbstractRNG`: Random number generator for both values and indices.
+- `typeorrange`: Either a type such as `Float64`, or a range such as `1:10`.
+Any input which supports `eltype(typeorrange)`.
+- `nrows::Integer`, `ncols::Integer`: Dimensions of the result.
+- `density::AbstractFloat`: The approximate density of result.
+
+# Keywords
+- `symmetric::Bool`: The result matrix is symmetric, Aᵀ = A.
+- `pattern::Bool`: The result matrix consists solely of `one(eltype(typeorrange))`.
+- `skewsymmetric::Bool`: The result matrix is skew-symmetric, Aᵀ = -A.
+- `hermitian::Bool`: The result matrix is hermitian, aᵢⱼ = āⱼᵢ.
+- `nodiagonal::Bool`: The result matrix has no values on the diagonal.
+
+# Returns
+- `GBMatrix`
+"""
 function gbrand(
     rng::AbstractRNG, typeorrange, nrows::Integer, ncols::Integer, density::AbstractFloat;
     symmetric=false, pattern=false, skewsymmetric=false, hermitian=false, nodiagonal=false

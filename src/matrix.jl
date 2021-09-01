@@ -205,6 +205,7 @@ function _outlength(A, I, J)
     end
     return Ilen, Jlen
 end
+
 """
     extract!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 
