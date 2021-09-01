@@ -130,7 +130,8 @@ export GBScalar, GBVector, GBMatrix #arrays
 export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
-export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!
+export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!,
+gbrand
 # Reexports.
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
 export nnz, sprand, findnz, nonzeros
@@ -138,18 +139,23 @@ function __init__()
     @static if artifact_or_path != "default"
         libgraphblas_handle[] = dlopen(libgraphblas)
     else
+        #The artifact does dlopen for us.
         libgraphblas_handle[] = SSGraphBLAS_jll.libgraphblas_handle
     end
     _load_globaltypes()
-    # I would like to do below, it's what the docs ask for. But it *seems* to work
-    # without doing it, and I get segfaults on GC.gc() if I use the cglobals...
+    # We initialize GraphBLAS by giving it Julia's GC wrapped memory management functions.
+    # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
+    # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
-    #libgb.GrB_init(libgb.GrB_NONBLOCKING)
     _loaddescriptors()
     _loadselectops()
+    # Set the default orientation to column, to match Julia.
+    # TODO: REMOVE.
     gbset(FORMAT, BYCOL)
+    # Set printing to base-1 rather than base-0.
     gbset(BASE1, true)
     atexit() do
+        # Finalize the lib. Frees a small internal memory pool.
         libgb.GrB_finalize()
         @static if artifact_or_path != "default"
             dlclose(libgraphblas_handle[])
