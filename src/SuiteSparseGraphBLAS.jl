@@ -151,7 +151,7 @@ function __init__()
     _loadselectops()
     # Set the default orientation to column, to match Julia.
     # TODO: REMOVE.
-    gbset(FORMAT, BYCOL)
+    #gbset(FORMAT, BYCOL)
     # Set printing to base-1 rather than base-0.
     gbset(BASE1, true)
     atexit() do
