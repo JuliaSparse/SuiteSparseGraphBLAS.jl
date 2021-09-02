@@ -134,7 +134,7 @@ export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, g
 gbrand
 # Reexports.
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
-export nnz, sprand, findnz, nonzeros
+export nnz, sprand, findnz, nonzeros, SparseArrays.nonzeroinds
 function __init__()
     @static if artifact_or_path != "default"
         libgraphblas_handle[] = dlopen(libgraphblas)
@@ -149,9 +149,6 @@ function __init__()
     libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
     _loaddescriptors()
     _loadselectops()
-    # Set the default orientation to column, to match Julia.
-    # TODO: REMOVE.
-    #gbset(FORMAT, BYCOL)
     # Set printing to base-1 rather than base-0.
     gbset(BASE1, true)
     atexit() do

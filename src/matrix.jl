@@ -145,8 +145,8 @@ for T ∈ valid_vec
                 DimensionMismatch("I, J and X must have the same length")
             libgb.$func(
                 A,
-                Vector{libgb.GrB_Index}(I),
-                Vector{libgb.GrB_Index}(J),
+                Vector{libgb.GrB_Index}(I) .- 1,
+                Vector{libgb.GrB_Index}(J) .- 1,
                 X,
                 length(X),
                 dup
@@ -157,22 +157,51 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_setElement_, suffix(T))
     @eval begin
         function Base.setindex!(A::GBMatrix{$T}, x, i::Integer, j::Integer)
-            x = convert($T, x)
-            return libgb.$func(A, x, libgb.GrB_Index(i), libgb.GrB_Index(j))
+            #x = convert($T, x)
+            return libgb.$func(A, x, libgb.GrB_Index(i) - 1, libgb.GrB_Index(j) - 1)
         end
     end
     # Getindex functions
     func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
     @eval begin
         function Base.getindex(A::GBMatrix{$T}, i::Integer, j::Integer)
-            return libgb.$func(A, libgb.GrB_Index(i), libgb.GrB_Index(j))
+            x = Ref{$T}()
+            result = $func(x, A, i - 1, j - 1)
+            if result == GrB_SUCCESS
+                return x[]
+            elseif result == GrB_NO_VALUE
+                return nothing
+            else
+                throw(ErrorException("Invalid  extractElement return value"))
+            end
         end
     end
     # findnz functions
     func = Symbol(prefix, :_Matrix_extractTuples_, suffix(T))
     @eval begin
         function SparseArrays.findnz(A::GBMatrix{$T})
-            return libgb.$func(A)
+            nvals = Ref{libgb.GrB_Index}(nnz(A))
+            I = Vector{libgb.GrB_Index}(undef, nvals[])
+            J = Vector{libgb.GrB_Index}(undef, nvals[])
+            X = Vector{$T}(undef, nvals[])
+            libgb.$func(I, J, X, nvals, A)
+            nvals[] == length(I) == length(J) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
+            return I .+= 1, J .+= 1, X
+        end
+        function SparseArrays.nonzeros(A::GBMatrix{$T})
+            nvals = Ref{libgb.GrB_Index}(nnz(A))
+            X = Vector{$T}(undef, nvals[])
+            libgb.$func(C_NULL, C_NULL, X, nvals, A)
+            nvals[] == length(X) || throw(DimensionMismatch(""))
+            return X
+        end
+        function SparseArrays.nonzeroinds(A::GBMatrix{$T})
+            nvals = Ref{libgb.GrB_Index}(nnz(A))
+            I = Vector{libgb.GrB_Index}(undef, nvals[])
+            J = Vector{libgb.GrB_Index}(undef, nvals[])
+            libgb.$func(I, J, C_NULL, nvals, A)
+            nvals[] == length(I) == length(J) || throw(DimensionMismatch(""))
+            return I .+= 1, J .+= 1
         end
     end
 end

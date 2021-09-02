@@ -150,7 +150,7 @@ for T ∈ valid_vec
             X = Vector{$T}(undef, nvals[])
             libgb.$func(I, X, nvals, v)
             nvals[] == length(I) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
-            return I .+ 1, X
+            return I .+= 1, X
         end
         function SparseArrays.nonzeros(v::GBVector{$T})
             nvals = Ref{libgb.GrB_Index}(nnz(v))
@@ -164,7 +164,7 @@ for T ∈ valid_vec
             I = Vector{libgb.GrB_Index}(undef, nvals[])
             libgb.$func(I, C_NULL, nvals, v)
             nvals[] == length(I) || throw(DimensionMismatch(""))
-            return I
+            return I .+= 1
         end
     end
 end
