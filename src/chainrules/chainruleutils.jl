@@ -1,4 +1,4 @@
-import FiniteDifferences
+using FiniteDifferences
 import LinearAlgebra
 import ChainRulesCore: frule, rrule
 using ChainRulesCore
@@ -23,27 +23,6 @@ function FiniteDifferences.to_vec(v::GBVector)
     return x, backtovec
 end
 
-function FiniteDifferences.rand_tangent(
-    rng::AbstractRNG,
-    x::GBMatrix{T}
-) where {T <: Union{AbstractFloat, Complex}}
-    n = nnz(x)
-    v = rand(rng, -9:0.01:9, n)
-    I, J, _ = findnz(x)
-    return GBMatrix(I, J, v; nrows = size(x, 1), ncols = size(x, 2))
-end
-
-function FiniteDifferences.rand_tangent(
-    rng::AbstractRNG,
-    x::GBVector{T}
-) where {T <: Union{AbstractFloat, Complex}}
-    n = nnz(x)
-    v = rand(rng, -9:0.01:9, n)
-    I, _ = findnz(x)
-    return GBVector(I, v; nrows = size(x, 1))
-end
-
-FiniteDifferences.rand_tangent(::AbstractRNG, ::AbstractOp) = NoTangent()
 # LinearAlgebra.norm doesn't like the nothings.
 LinearAlgebra.norm(A::GBArray, p::Real=2) = norm(nonzeros(A), p)
 

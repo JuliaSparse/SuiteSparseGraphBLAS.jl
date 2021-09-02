@@ -16,7 +16,7 @@ function frule(
     ::typeof(Semirings.PLUS_TIMES)
 )
     Ω = mul(A, B, Semirings.PLUS_TIMES)
-    ∂Ω = mul(ΔA, B, Semirings.PLUS_TIMES) + mul(A, ΔB, Semirings.PLUS_TIMES)
+    ∂Ω = mul(unthunk(ΔA), B, Semirings.PLUS_TIMES) + mul(A, unthunk(ΔB), Semirings.PLUS_TIMES)
     return Ω, ∂Ω
 end
 
@@ -27,8 +27,8 @@ function rrule(
     ::typeof(Semirings.PLUS_TIMES)
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, B', Semirings.PLUS_TIMES; mask=A)
-        ∂B = mul(A', ΔΩ, Semirings.PLUS_TIMES; mask=B)
+        ∂A = mul(unthunk(ΔΩ), B', Semirings.PLUS_TIMES; mask=A)
+        ∂B = mul(A', unthunk(ΔΩ), Semirings.PLUS_TIMES; mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return mul(A, B), mulpullback
@@ -55,8 +55,8 @@ function rrule(
     ::typeof(Semirings.PLUS_DIV)
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, one(eltype(A)) ./ B', Semirings.PLUS_TIMES; mask=A)
-        ∂B = (zero(eltype(A)) .- mul(A', ΔΩ; mask=B)) ./ (B .^ 2.)
+        ∂A = mul(unthunk(ΔΩ), one(eltype(A)) ./ B', Semirings.PLUS_TIMES; mask=A)
+        ∂B = (zero(eltype(A)) .- mul(A', unthunk(ΔΩ); mask=B)) ./ (B .^ 2.)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return mul(A, B, Semirings.PLUS_DIV), mulpullback
@@ -71,7 +71,7 @@ function frule(
     ::typeof(Semirings.PLUS_PLUS)
 )
     Ω = mul(A, B, Semirings.PLUS_PLUS)
-    ∂Ω = mul(ΔA, ΔB, Semirings.PLUS_PLUS)
+    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), Semirings.PLUS_PLUS)
     return Ω, ∂Ω
 end
 
@@ -82,8 +82,8 @@ function rrule(
     ::typeof(Semirings.PLUS_PLUS)
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, B', Semirings.PLUS_FIRST; mask=A)
-        ∂B = mul(A', ΔΩ, Semirings.PLUS_SECOND; mask=B)
+        ∂A = mul(unthunk(ΔΩ), B', Semirings.PLUS_FIRST; mask=A)
+        ∂B = mul(A', unthunk(ΔΩ), Semirings.PLUS_SECOND; mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return mul(A, B, Semirings.PLUS_PLUS), mulpullback
@@ -98,7 +98,7 @@ function frule(
     ::typeof(Semirings.PLUS_MINUS)
 )
     Ω = mul(A, B, Semirings.PLUS_MINUS)
-    ∂Ω = mul(ΔA, ΔB, Semirings.PLUS_MINUS)
+    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), Semirings.PLUS_MINUS)
     return Ω, ∂Ω
 end
 
@@ -109,8 +109,8 @@ function rrule(
     ::typeof(Semirings.PLUS_MINUS)
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(ΔΩ, B', Semirings.PLUS_FIRST; mask=A)
-        ∂B = mul(A', zero(eltype(ΔΩ)) .- ΔΩ, Semirings.PLUS_SECOND; mask=B)
+        ∂A = mul(unthunk(ΔΩ), B', Semirings.PLUS_FIRST; mask=A)
+        ∂B = mul(A', zero(eltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), Semirings.PLUS_SECOND; mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return mul(A, B, Semirings.PLUS_MINUS), mulpullback

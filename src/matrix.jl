@@ -157,7 +157,7 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_setElement_, suffix(T))
     @eval begin
         function Base.setindex!(A::GBMatrix{$T}, x, i::Integer, j::Integer)
-            #x = convert($T, x)
+            x = convert($T, x)
             return libgb.$func(A, x, libgb.GrB_Index(i) - 1, libgb.GrB_Index(j) - 1)
         end
     end
@@ -166,10 +166,10 @@ for T ∈ valid_vec
     @eval begin
         function Base.getindex(A::GBMatrix{$T}, i::Integer, j::Integer)
             x = Ref{$T}()
-            result = $func(x, A, i - 1, j - 1)
-            if result == GrB_SUCCESS
+            result = libgb.$func(x, A, i - 1, j - 1)
+            if result == libgb.GrB_SUCCESS
                 return x[]
-            elseif result == GrB_NO_VALUE
+            elseif result == libgb.GrB_NO_VALUE
                 return nothing
             else
                 throw(ErrorException("Invalid  extractElement return value"))
@@ -186,7 +186,7 @@ for T ∈ valid_vec
             X = Vector{$T}(undef, nvals[])
             libgb.$func(I, J, X, nvals, A)
             nvals[] == length(I) == length(J) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
-            return I .+= 1, J .+= 1, X
+            return I .+ 1, J .+ 1, X
         end
         function SparseArrays.nonzeros(A::GBMatrix{$T})
             nvals = Ref{libgb.GrB_Index}(nnz(A))
@@ -201,7 +201,7 @@ for T ∈ valid_vec
             J = Vector{libgb.GrB_Index}(undef, nvals[])
             libgb.$func(I, J, C_NULL, nvals, A)
             nvals[] == length(I) == length(J) || throw(DimensionMismatch(""))
-            return I .+= 1, J .+= 1
+            return I .+ 1, J .+ 1
         end
     end
 end

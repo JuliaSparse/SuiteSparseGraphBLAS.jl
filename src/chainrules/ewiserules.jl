@@ -7,7 +7,7 @@ function frule(
     ::typeof(BinaryOps.TIMES)
 )
     Ω = emul(A, B, BinaryOps.TIMES)
-    ∂Ω = emul(ΔA, B, BinaryOps.TIMES) + emul(ΔB, A, BinaryOps.TIMES)
+    ∂Ω = emul(unthunk(ΔA), B, BinaryOps.TIMES) + emul(unthunk(ΔB), A, BinaryOps.TIMES)
     return Ω, ∂Ω
 end
 function frule((_, ΔA, ΔB), ::typeof(emul), A::GBArray, B::GBArray)
@@ -16,8 +16,8 @@ end
 
 function rrule(::typeof(emul), A::GBArray, B::GBArray, ::typeof(BinaryOps.TIMES))
     function timespullback(ΔΩ)
-        ∂A = emul(ΔΩ, B)
-        ∂B = emul(ΔΩ, A)
+        ∂A = emul(unthunk(ΔΩ), B)
+        ∂B = emul(unthunk(ΔΩ), A)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return emul(A, B, BinaryOps.TIMES), timespullback
@@ -44,7 +44,7 @@ function frule(
     ::typeof(BinaryOps.PLUS)
 )
     Ω = eadd(A, B, BinaryOps.PLUS)
-    ∂Ω = eadd(ΔA, ΔB, BinaryOps.PLUS)
+    ∂Ω = eadd(unthunk(ΔA), unthunk(ΔB), BinaryOps.PLUS)
     return Ω, ∂Ω
 end
 function frule((_, ΔA, ΔB), ::typeof(eadd), A::GBArray, B::GBArray)
@@ -55,15 +55,14 @@ function rrule(::typeof(eadd), A::GBArray, B::GBArray, ::typeof(BinaryOps.PLUS))
     function pluspullback(ΔΩ)
         return (
             NoTangent(),
-            mask(ΔΩ, A; structural = true),
-            mask(ΔΩ, B; structural = true),
+            mask(unthunk(ΔΩ), A; structural = true),
+            mask(unthunk(ΔΩ), B; structural = true),
             NoTangent()
         )
     end
     return eadd(A, B, BinaryOps.PLUS), pluspullback
 end
 
-# Do I have to duplicate this? I get 4 tangents instead of 3 if I call the previous rule.
 function rrule(::typeof(eadd), A::GBArray, B::GBArray)
     Ω, fullpb = rrule(eadd, A, B, BinaryOps.PLUS)
     eaddpb(ΔΩ) = fullpb(ΔΩ)[1:3]

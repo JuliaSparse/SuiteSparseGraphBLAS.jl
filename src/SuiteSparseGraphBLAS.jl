@@ -11,6 +11,7 @@ else
     const libgraphblas = artifact_or_path
 end
 using SparseArrays
+using SparseArrays: nonzeroinds
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
@@ -134,7 +135,7 @@ export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, g
 gbrand
 # Reexports.
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
-export nnz, sprand, findnz, nonzeros, SparseArrays.nonzeroinds
+export nnz, sprand, findnz, nonzeros, nonzeroinds
 function __init__()
     @static if artifact_or_path != "default"
         libgraphblas_handle[] = dlopen(libgraphblas)

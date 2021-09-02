@@ -4,12 +4,12 @@ function frule(
     ::Type{<:GBVector},
     v::Vector{T}
 ) where {T}
-    return GBVector(v), GBVector(Δv)
+    return GBVector(v), GBVector(unthunk(Δv))
 end
 
 function rrule(::Type{<:GBVector}, v::Vector{T}) where {T}
     function vecpullback(ΔΩ)
-        return NoTangent(), Vector(ΔΩ)
+        return NoTangent(), Vector(unthunk(ΔΩ))
     end
     return GBVector(v), vecpullback
 end
@@ -20,12 +20,12 @@ function frule(
     ::Type{<:GBMatrix},
     A::Matrix{T}
 ) where {T}
-    return GBMatrix(A), GBMatrix(ΔA)
+    return GBMatrix(A), GBMatrix(unthunk(ΔA))
 end
 
 function rrule(::Type{<:GBMatrix}, A::Matrix{T}) where {T}
     function vecpullback(ΔΩ)
-        return NoTangent(), Matrix(ΔΩ)
+        return NoTangent(), Matrix(unthunk(ΔΩ))
     end
     return GBMatrix(A), vecpullback
 end
@@ -36,13 +36,13 @@ function frule(
     ::Type{<:GBMatrix},
     A::Vector{T}
 ) where {T}
-    return GBMatrix(A), GBMatrix(ΔA)
+    return GBMatrix(A), GBMatrix(unthunk(ΔA))
 end
 
 function rrule(::Type{<:GBMatrix}, A::Vector{T}) where {T}
     sz = size(A)
     function vecpullback(ΔΩ)
-        return NoTangent(), reshape(Matrix(ΔΩ), sz)
+        return NoTangent(), reshape(Matrix(unthunk(ΔΩ)), sz)
     end
     return GBMatrix(A), vecpullback
 end
@@ -55,12 +55,12 @@ function frule(
     I::AbstractVector{U},
     v::Vector{T}
 ) where {U<:Integer, T}
-    return GBVector(I, v), GBVector(I, Δv)
+    return GBVector(I, v), GBVector(I, unthunk(Δv))
 end
 
 function rrule(::Type{<:GBVector}, I::AbstractVector{U}, v::Vector{T}) where {U<:Integer, T}
     function vecpullback(ΔΩ)
-        return NoTangent(), NoTangent(), nonzeros(ΔΩ)
+        return NoTangent(), NoTangent(), nonzeros(unthunk(ΔΩ))
     end
     return GBVector(I, v), vecpullback
 end
@@ -84,7 +84,7 @@ function rrule(
     v::Vector{T}
 ) where {U<:Integer, T}
     function vecpullback(ΔΩ)
-        return NoTangent(), NoTangent(), NoTangent(), nonzeros(ΔΩ)
+        return NoTangent(), NoTangent(), NoTangent(), nonzeros(unthunk(ΔΩ))
     end
     return GBMatrix(I, J, v), vecpullback
 end
