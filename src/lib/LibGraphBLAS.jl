@@ -1331,6 +1331,7 @@ function GxB_Vector_diag(A, k, desc)
     else
         s = 0
     end
+    println(s)
     v = GrB_Vector_new(GxB_Matrix_type(A), s)
     GxB_Vector_diag(v, A, k, desc)
     return v

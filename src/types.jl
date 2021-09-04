@@ -82,11 +82,11 @@ compressed sparse vector.
 See also: [`GBMatrix`](@ref).
 """
 mutable struct GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
-    p::libgb.GrB_Vector
-    function GBVector{T}(p::libgb.GrB_Vector) where {T}
+    p::libgb.GrB_Matrix
+    function GBVector{T}(p::libgb.GrB_Matrix) where {T}
         v = new(p)
         function f(vector)
-            libgb.GrB_Vector_free(Ref(vector.p))
+            libgb.GrB_Matrix_free(Ref(vector.p))
         end
         return finalizer(f, v)
     end
