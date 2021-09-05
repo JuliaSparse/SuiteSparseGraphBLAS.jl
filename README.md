@@ -18,6 +18,7 @@ Pkg.add("SuiteSparseGraphBLAS")
 ## Benchmarks
 
 ```julia
+julia> using SuiteSparseGraphBLAS
 # Standard arithmetic semiring (+, *) matrix multiplication
 julia> s = sprand(Float64, 100000, 100000, 0.05);
 julia> v = sprand(Float64, 100000, 1000, 0.1);
@@ -47,6 +48,7 @@ julia> @btime s[1:10:end, end:-10:1]
 This work was funded as part of Google Summer of Code over 3 summers, 2 of which were for Abhinav Mehndiratta and the last of which was for William Kimmerer.
 
 Current maintainer: William Kimmerer
+
 Original author: Abhinav Mehndiratta
 
 SuiteSparse author: Tim Davis
