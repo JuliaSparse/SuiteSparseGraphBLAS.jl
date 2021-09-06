@@ -118,7 +118,11 @@ function Base.resize!(A::GBMatrix, nrows_new, ncols_new)
 end
 # This does not conform to the normal definition with a lazy wrapper.
 function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
-    return GBMatrix{eltype(v)}(libgb.GxB_Matrix_diag(v, k, desc))
+    s = size(v, 1)
+    C = GBMatrix{eltype(v)}(s, s)
+    @show C
+    libgb.GxB_Matrix_diag(C, Ptr{libgb.GrB_Vector}(v.p), k, desc)
+    return C
 end
 
 function LinearAlgebra.diagm(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
@@ -136,10 +140,16 @@ for T ∈ valid_vec
     # Build functions
     func = Symbol(prefix, :_Matrix_build_, suffix(T))
     @eval begin
-        function build(A::GBMatrix{$T}, I::Vector, J::Vector, X::Vector{$T};
+        function build(A::GBMatrix{$T}, I::AbstractVector, J::AbstractVector, X::Vector{$T};
                 dup = BinaryOps.PLUS
             )
             dup = getoperator(dup, $T)
+            if !(I isa Vector)
+                I = Vector(I)
+            end
+            if !(J isa Vector)
+                J = Vector(J)
+            end
             nnz(A) == 0 || throw(libgb.OutputNotEmptyError("Cannot build matrix with existing elements"))
             length(X) == length(I) == length(J) ||
                 DimensionMismatch("I, J and X must have the same length")
@@ -409,17 +419,17 @@ function subassign!(
     elseif A isa AbstractMatrix
         A = GBMatrix(A)
     end
-    if A isa GBVector
-        length(I) == 1 && (I = I[1]) # If it's a length 1 vector we just want the scalar.
-        length(J) == 1 && (J = J[1]) # If it's a length 1 vector we just want the scalar.
-        if (I isa Number) && (J isa Vector || J == ALL)
-            libgb.GxB_Row_subassign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
-        elseif (J isa Number) && (I isa Vector || I == ALL)
-            libgb.GxB_Col_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
-        else
-            throw(MethodError(subassign!, [C, A, I, J]))
-        end
-    elseif A isa GBMatrix
+    #if A isa GBVector
+    #    length(I) == 1 && (I = I[1]) # If it's a length 1 vector we just want the scalar.
+    #    length(J) == 1 && (J = J[1]) # If it's a length 1 vector we just want the scalar.
+    #    if (I isa Number) && (J isa Vector || J == ALL)
+    #        libgb.GxB_Row_subassign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
+    #    elseif (J isa Number) && (I isa Vector || I == ALL)
+    #        libgb.GxB_Col_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
+    #    else
+    #        throw(MethodError(subassign!, [C, A, I, J]))
+    #    end
+    if A isa GBMatrix || A isa GBVector
         libgb.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     else
         libgb.scalarmatsubassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
@@ -463,15 +473,15 @@ function assign!(
     elseif A isa AbstractMatrix
         A = GBMatrix(A)
     end
-    if A isa GBVector
-        if (I isa Number) && (J isa Vector || J == ALL)
-            libgb.GrB_Row_assign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
-        elseif (J isa Number) && (I isa Vector || I == ALL)
-            libgb.GrB_Col_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
-        else
-            throw(MethodError(subassign!, [C, A, I, J]))
-        end
-    elseif A isa GBMatrix
+    #if A isa GBVector
+    #    if (I isa Number) && (J isa Vector || J == ALL)
+    #        libgb.GrB_Row_assign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
+    #    elseif (J isa Number) && (I isa Vector || I == ALL)
+    #        libgb.GrB_Col_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
+    #    else
+    #        throw(MethodError(subassign!, [C, A, I, J]))
+    #    end
+    if A isa GBMatrix || A isa GBVector
         libgb.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     else
         libgb.scalarmatassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)

@@ -29,7 +29,7 @@
             x = sprand(Int32, 1000, 1000, 0.001)
             m = GBMatrix(x)
             @test nnz(x) == nnz(m)
-            mnz = findnz(m) #This has occasional "GrB_INSUFFICIENT_SPACE" errors...
+            mnz = findnz(m)
             xnz = findnz(x)
             @test mnz == xnz
 

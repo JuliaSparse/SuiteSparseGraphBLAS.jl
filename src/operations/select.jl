@@ -16,11 +16,7 @@ function select!(
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
-    if A isa GBVector && C isa GBVector
-        libgb.GxB_Vector_select(C, mask, accum, op, A, thunk, desc)
-    elseif A isa GBMatrix && C isa GBMatrix
-        libgb.GxB_Matrix_select(C, mask, accum, op, A, thunk, desc)
-    end
+    libgb.GxB_Matrix_select(C, mask, accum, op, A, thunk, desc)
     return C
 end
 

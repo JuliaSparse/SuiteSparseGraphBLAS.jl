@@ -1312,12 +1312,7 @@ end
 function GxB_Matrix_diag(C, v, k, desc)
     @wraperror ccall((:GxB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64, GrB_Descriptor), C, v, k, desc)
 end
-function GxB_Matrix_diag(v, k, desc)
-    s = GrB_Vector_size(v)
-    C = GrB_Matrix_new(GxB_Vector_type(v), s + abs(k), s + abs(k))
-    GxB_Matrix_diag(C, v, k, desc)
-    return C
-end
+
 function GxB_Vector_diag(v, A, k, desc)
     @wraperror ccall((:GxB_Vector_diag, libgraphblas), GrB_Info, (GrB_Vector, GrB_Matrix, Int64, GrB_Descriptor), v, A, k, desc)
 end

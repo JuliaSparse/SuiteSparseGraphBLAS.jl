@@ -17,12 +17,12 @@ function gbget(A::GBMatrix, field)
 end
 
 function gbset(A::GBVector, field, value)
-    libgb.GxB_Vector_Option_set(A, field, value)
+    libgb.GxB_Matrix_Option_set(A, field, value)
     return nothing
 end
 
 function gbget(A::GBVector, field)
-    return libgb.GxB_Vector_Option_get(A, field)
+    return libgb.GxB_Matrix_Option_get(A, field)
 end
 
 function format(A::GBVecOrMat)

@@ -29,7 +29,7 @@ function _importcscmat(
         jumbled,
         desc
     )
-    return GBMatrix{T}(A[])
+    return A[]
 end
 
 function _importcscmat(
@@ -64,12 +64,21 @@ end
 Create a GBMatrix from SparseArrays sparse matrix `S`.
 """
 function GBMatrix(S::SparseMatrixCSC)
-    return _importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval)
+    return GBMatrix{eltype(S)}(_importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval))
 end
 
 function GBMatrix(v::SparseVector)
     S = SparseMatrixCSC(v)
     return GBMatrix(S)
+end
+
+"""
+    GBVector(v::SparseVector)
+
+Create a GBVector from SparseArrays sparse vector `v`.
+"""
+function GBVector(v::SparseVector)
+    return GBVector{eltype(v)}(_importcscmat(v.n, 1, [1, length(v.nzind) + 1], v.nzind, v.nzval));
 end
 
 function _importcscvec(
@@ -105,15 +114,6 @@ function _importcscvec(
     values = ccall(:jl_malloc, Ptr{T}, (UInt, ), vx_size)
     unsafe_copyto!(values, pointer(vx), length(vx))
     return _importcscvec(n, indices, vi_size, values, vx_size, nnz; jumbled, desc, iso)
-end
-
-"""
-    GBVector(v::SparseVector)
-
-Create a GBVector from SparseArrays sparse vector `v`.
-"""
-function GBVector(v::SparseVector)
-    return _importcscvec(size(v, 1), v.nzind, v.nzval, nnz(v))
 end
 
 function _importcsrmat(
@@ -197,7 +197,7 @@ function _importdensematrix(
         iso,
         desc
     )
-    return GBMatrix{T}(C[])
+    return C[]
 end
 
 function _importdensematrix(
@@ -208,7 +208,6 @@ function _importdensematrix(
     n = libgb.GrB_Index(n)
     Asize = libgb.GrB_Index(sizeof(A))
     Ax = ccall(:jl_malloc, Ptr{T}, (UInt, ), Asize)
-    #Ax = Ptr{T}(Libc.malloc(Asize))
     unsafe_copyto!(Ax, pointer(A), length(A))
     return _importdensematrix(m, n, Ax, Asize; desc, iso)
 end
@@ -218,8 +217,26 @@ end
 
 Create a GBMatrix from a Julia dense matrix.
 """
-function GBMatrix(M::VecOrMat)
-    return _importdensematrix(size(M, 1), size(M, 2), M)
+function GBMatrix(M::Union{AbstractVector, AbstractMatrix})
+    #if M isa AbstractVector && !(M isa Vector)
+    #    M = Vector(M)
+    #end
+    #if M isa AbstractMatrix && !(M isa Matrix)
+    #    M = Matrix(M)
+    #end
+    return GBMatrix{eltype(M)}(_importdensematrix(size(M, 1), size(M, 2), M))
+end
+
+"""
+    GBVector(v::SparseVector)
+
+Create a GBVector from a Julia dense vector.
+"""
+function GBVector(v::AbstractVector)
+    if !(v isa Vector)
+        v = Vector(v)
+    end
+    return GBVector{eltype(v)}(_importdensematrix(size(v, 1), 1, v))
 end
 
 function _importdensevec(
@@ -251,13 +268,4 @@ function _importdensevec(
     vx = ccall(:jl_malloc, Ptr{T}, (UInt, ), vsize)
     unsafe_copyto!(vx, pointer(v), length(v))
     return _importdensevec(n, vx, vsize; desc, iso)
-end
-
-"""
-    GBVector(v::SparseVector)
-
-Create a GBVector from a Julia dense vector.
-"""
-function GBVector(v::Vector)
-    return _importdensevec(size(v)..., v)
 end

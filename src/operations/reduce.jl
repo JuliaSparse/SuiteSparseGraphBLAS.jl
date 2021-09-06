@@ -7,7 +7,7 @@ function reduce!(
     A, desc, _ = _handletranspose(A, desc, nothing)
     op = getoperator(op, eltype(w))
     accum = getaccum(accum, eltype(w))
-    libgb.GrB_Matrix_reduce_Monoid(w, mask, accum, op, A, desc)
+    libgb.GrB_Matrix_reduce_Monoid(Ptr{libgb.GrB_Vector}(w.p), mask, accum, op, A, desc)
     return w
 end
 
@@ -21,7 +21,7 @@ end
 
 function Base.reduce(
     op::MonoidUnion,
-    A::GBMatOrTranspose;
+    A::GBArray;
     dims = :,
     typeout = nothing,
     init = nothing,
@@ -34,16 +34,17 @@ function Base.reduce(
     if typeout === nothing
         typeout = eltype(A)
     end
-    if dims == 2
+
+    if dims == 2 && !(A isa GBVecOrTranspose)
         w = GBVector{typeout}(size(A, 1))
         reduce!(op, w, A; desc, accum, mask)
         return w
-    elseif dims == 1
+    elseif dims == 1 && !(A isa GBVecOrTranspose)
         desc = desc + T0
         w = GBVector{typeout}(size(A, 2))
         reduce!(op, w, A; desc, accum, mask)
         return w
-    elseif dims == (1,2) || dims == Colon()
+    elseif dims == (1,2) || dims == Colon() || A isa GBVecOrTranspose
         if init === nothing
             c = Ref{typeout}()
             typec = typeout
@@ -60,44 +61,11 @@ function Base.reduce(
 end
 
 function Base.reduce(
-    op::Function, A::GBMatOrTranspose;
+    op::Function, A::GBArray;
     dims = :, typeout = nothing, init = nothing, mask = nothing, accum = nothing, desc = nothing
 )
     #try to find an existing monoid, if not error:
     return reduce(Monoids.Monoid(op), A; mask, accum, desc, dims, typeout, init)
-end
-
-function Base.reduce(
-    op::MonoidUnion,
-    v::GBVector;
-    typeout = nothing,
-    init = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    accum, desc = _handlenothings(accum, desc)
-    if typeout === nothing
-        typeout = eltype(v)
-    end
-    if init === nothing
-        c = Ref{typeout}()
-        typec = typeout
-    else
-        c = Ref(init)
-        typec = typeof(init)
-    end
-    op = getoperator(op, typec)
-    accum = getaccum(accum, typec)
-    libgb.scalarvecreduce[typeout](c, accum, op, v, desc)
-    return c[]
-end
-
-function Base.reduce(
-    op::Function, v::GBVector;
-    typeout = nothing, init = nothing, accum = nothing, desc = nothing
-)
-    #try to find an existing monoid, if not error:
-    return reduce(Monoids.Monoid(op), v; accum, desc, typeout, init)
 end
 
 function Base.reduce(

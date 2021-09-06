@@ -11,10 +11,11 @@ function Base.hvcat(Tiles)
     for type ∈ types[2:end]
         t = promote_type(t, type)
     end
-    if Tiles isa AbstractArray{<:GBVector}
-        Tiles = GBMatrix.(Tiles)
+    if Tiles isa AbstractArray{<:GBVector} && ncols == 1
+        C = GBVector{t}(nrows)
+    else
+        C = GBMatrix{t}(nrows,ncols)
     end
-    C = GBMatrix{t}(nrows,ncols)
     return hvcat!(C, Tiles)
 end
 

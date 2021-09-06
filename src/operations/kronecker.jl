@@ -4,9 +4,9 @@
 In-place version of [kron](@ref).
 """
 function LinearAlgebra.kron!(
-    C::GBMatOrTranspose,
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    C::GBArray,
+    A::GBArray,
+    B::GBArray,
     op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
@@ -30,9 +30,9 @@ function LinearAlgebra.kron!(
 end
 
 function LinearAlgebra.kron!(
-    C::GBMatOrTranspose,
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    C::GBArray,
+    A::GBArray,
+    B::GBArray,
     op::Function;
     mask = nothing,
     accum = nothing,
@@ -60,8 +60,8 @@ Does not support `GBVector`s at this time.
 - `desc = nothing`
 """
 function LinearAlgebra.kron(
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     op::BinaryUnion = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
@@ -74,8 +74,8 @@ function LinearAlgebra.kron(
 end
 
 function LinearAlgebra.kron(
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     op::Function;
     mask = nothing,
     accum = nothing,

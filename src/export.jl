@@ -1,6 +1,6 @@
 
 function _exportdensematrix!(
-    A::GBMatrix{T};
+    A::GBVecOrMat{T};
     desc::Descriptor = DEFAULTDESC
 ) where {T}
     nrows = Ref{libgb.GrB_Index}(size(A,1))
@@ -37,6 +37,19 @@ function Base.Matrix(A::GBMatrix{T}) where {T}
     unsafe_copyto!(pointer(C), Ptr{T}(values), length(C))
     ccall(:jl_free, Cvoid, (Ptr{T},), values)
     return C
+end
+
+function Vector(v::GBVector{T}) where {T}
+    if gbget(v, SPARSITY_STATUS) != GBDENSE
+        X = similar(v)
+        X[:] = zero(T)
+        v = eadd(X, v)
+    end
+    nrows, _, vals = _exportdensematrix!(copy(v))
+    v = Vector{T}(undef, nrows)
+    unsafe_copyto!(pointer(v), Ptr{T}(vals), length(v))
+    ccall(:jl_free, Cvoid, (Ptr{T},), vals)
+    return v
 end
 
 function _exportcscmatrix!(
@@ -125,17 +138,4 @@ end
 
 function _exportdensevec(v::GBVector; desc::Descriptor = DEFAULTDESC)
     return _exportdensevec!(copy(v); desc)
-end
-
-function Vector(v::GBVector{T}) where {T}
-    if gbget(v, SPARSITY_STATUS) != GBDENSE
-        X = similar(v)
-        X[:] = zero(T)
-        v = eadd(X, v)
-    end
-    n, vals = _exportdensevec(v)
-    v = Vector{T}(undef, n)
-    unsafe_copyto!(pointer(v), Ptr{T}(vals), length(v))
-    ccall(:jl_free, Cvoid, (Ptr{T},), vals)
-    return v
 end

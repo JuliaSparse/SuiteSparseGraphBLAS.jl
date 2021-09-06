@@ -1,7 +1,7 @@
 function LinearAlgebra.mul!(
-    C::GBMatrix,
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    C::GBVecOrMat,
+    A::GBArray,
+    B::GBArray,
     op = Semirings.PLUS_TIMES;
     mask = nothing,
     accum = nothing,
@@ -18,48 +18,6 @@ function LinearAlgebra.mul!(
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_mxm(C, mask, accum, op, A, B, desc)
     return C
-end
-
-function LinearAlgebra.mul!(
-    w::GBVector,
-    u::GBVector,
-    A::GBMatOrTranspose,
-    op = Semirings.PLUS_TIMES;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
-    size(u, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(u)"))
-    size(w, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(w)"))
-    op = getoperator(op, optype(u, A))
-    accum = getaccum(accum, eltype(w))
-    u, desc, A = _handletranspose(u, desc, A)
-    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    libgb.GrB_vxm(w, mask, accum, op, u, A, desc)
-    return w
-end
-
-function LinearAlgebra.mul!(
-    w::GBVector,
-    A::GBMatOrTranspose,
-    u::GBVector,
-    op = Semirings.PLUS_TIMES;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
-    size(u, 1) == size(A, 2) || throw(DimensionMismatch("size(A, 2) != size(u)"))
-    size(w, 1) == size(A, 1) || throw(DimensionMismatch("size(A, 1) != size(w"))
-    op = getoperator(op, optype(A, u))
-    accum = getaccum(accum, eltype(w))
-    A, desc, u = _handletranspose(A, desc, u)
-    op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    libgb.GrB_mxv(w, mask, accum, op, A, u, desc)
-    return w
 end
 
 """
@@ -95,11 +53,20 @@ function mul(
     desc = nothing
 )
     t = inferoutputtype(A, B, op)
-    if A isa GBVector && B isa GBMatOrTranspose
-        C = GBVector{t}(size(B, 2))
-    elseif A isa GBMatOrTranspose && B isa GBVector
+    #if A isa GBVector && B isa GBMatOrTranspose
+    #    C = GBVector{t}(size(B, 2))
+    #elseif A isa GBMatOrTranspose && B isa GBVector
+    #    C = GBVector{t}(size(A, 1))
+    #elseif A isa GBMatOrTranspose && B isa GBMatOrTranspose
+    #
+    #end
+    if A isa GBMatOrTranspose && B isa GBVector
         C = GBVector{t}(size(A, 1))
-    elseif A isa GBMatOrTranspose && B isa GBMatOrTranspose
+    elseif A isa GBVector && B isa GBMatOrTranspose
+        C = GBVector{t}(size(B, 2))
+    elseif A isa Transpose{<:Any, <:GBVector} && B isa GBVector
+        C = GBVector{t}(1)
+    else
         C = GBMatrix{t}(size(A, 1), size(B, 2))
     end
     mul!(C, A, B, op; mask, accum, desc)
@@ -113,7 +80,7 @@ function Base.:*(
     accum = nothing,
     desc = nothing
 )
-    mul(A, B, Semirings.PLUS_TIMES; mask, accum, desc)
+    return mul(A, B, Semirings.PLUS_TIMES; mask, accum, desc)
 end
 
 
