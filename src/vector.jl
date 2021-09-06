@@ -75,6 +75,13 @@ function Base.similar(
     return GBVector{TNew}(dims...)
 end
 
+function Base.similar(
+    ::GBVector{T}, ::Type{TNew},
+    dims::Dims{2}
+) where {T, TNew}
+    return GBMatrix{TNew}(dims...)
+end
+
 function Base.deleteat!(v::GBVector, i)
     libgb.GrB_Matrix_removeElement(v, i, 1)
     return v

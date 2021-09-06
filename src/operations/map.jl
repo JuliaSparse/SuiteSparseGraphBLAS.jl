@@ -9,11 +9,7 @@ function Base.map!(
     op = getoperator(op, eltype(A))
     accum = getaccum(accum, eltype(C))
     A, desc = _handletranspose(A, desc)
-    if C isa GBVector && A isa GBVector
-        libgb.GrB_Vector_apply(C, mask, accum, op, A, desc)
-    elseif C isa GBMatrix && A isa GBMatrix
-        libgb.GrB_Matrix_apply(C, mask, accum, op, A, desc)
-    end
+    libgb.GrB_Matrix_apply(C, mask, accum, op, A, desc)
     return C
 end
 
@@ -49,11 +45,7 @@ function Base.map!(
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getaccum(accum, eltype(C))
     _, desc, A = _handletranspose(nothing, desc, A)
-    if C isa GBVector && A isa GBVector
-        libgb.scalarvecapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
-    elseif C isa GBMatrix && A isa GBMatrix
-        libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
-    end
+    libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
     return C
 end
 
@@ -102,11 +94,7 @@ function Base.map!(
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getaccum(accum, eltype(C))
     A, desc, _ = _handletranspose(A, desc)
-    if C isa GBVector && A isa GBVector
-        libgb.scalarvecapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)
-    elseif C isa GBMatrix && A isa GBMatrix
-        libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)
-    end
+    libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)
     return C
 end
 

@@ -51,52 +51,52 @@ union equivalent see [`eadd`](@ref).
 """
 emul
 
-function emul!(
-    w::GBVector,
-    u::GBVector,
-    v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
-    size(w) == size(u) == size(v) || throw(DimensionMismatch())
-    op = getoperator(op, optype(u, v))
-    accum = getaccum(accum, eltype(w))
-    if op isa TypedSemiring
-        libgb.GrB_Vector_eWiseMult_Semiring(w, mask, accum, op, u, v, desc)
-        return w
-    elseif op isa TypedMonoid
-        libgb.GrB_Vector_eWiseMult_Monoid(w, mask, accum, op, u, v, desc)
-        return w
-    elseif op isa TypedBinaryOperator
-        libgb.GrB_Vector_eWiseMult_BinaryOp(w, mask, accum, op, u, v, desc)
-        return w
-    else
-        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
-    end
-    return w
-end
+#function emul!(
+#    w::GBVector,
+#    u::GBVector,
+#    v::GBVector,
+#    op::MonoidBinaryOrRig = BinaryOps.TIMES;
+#    mask = nothing,
+#    accum = nothing,
+#    desc = nothing
+#)
+#    mask, accum = _handlenothings(mask, accum)
+#    desc === nothing && (desc = DEFAULTDESC)
+#    size(w) == size(u) == size(v) || throw(DimensionMismatch())
+#    op = getoperator(op, optype(u, v))
+#    accum = getaccum(accum, eltype(w))
+#    if op isa TypedSemiring
+#        libgb.GrB_Vector_eWiseMult_Semiring(w, mask, accum, op, u, v, desc)
+#        return w
+#    elseif op isa TypedMonoid
+#        libgb.GrB_Vector_eWiseMult_Monoid(w, mask, accum, op, u, v, desc)
+#        return w
+#    elseif op isa TypedBinaryOperator
+#        libgb.GrB_Vector_eWiseMult_BinaryOp(w, mask, accum, op, u, v, desc)
+#        return w
+#    else
+#        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
+#    end
+#    return w
+#end
 
-function emul(
-    u::GBVector,
-    v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    t = inferoutputtype(u, v, op)
-    w = GBVector{t}(size(u))
-    return emul!(w, u, v, op; mask , accum, desc)
-end
+#function emul(
+#    u::GBVector,
+#    v::GBVector,
+#    op::MonoidBinaryOrRig = BinaryOps.TIMES;
+#    mask = nothing,
+#    accum = nothing,
+#    desc = nothing
+#)
+#    t = inferoutputtype(u, v, op)
+#    w = GBVector{t}(size(u))
+#    return emul!(w, u, v, op; mask , accum, desc)
+#end
 
 function emul!(
-    C::GBMatrix,
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    C::GBVecOrMat,
+    A::GBArray,
+    B::GBArray,
     op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
@@ -124,15 +124,19 @@ function emul!(
 end
 
 function emul(
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     op::MonoidBinaryOrRig = BinaryOps.TIMES;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
     t = inferoutputtype(A, B, op)
-    C = GBMatrix{t}(size(A))
+    if A isa GBVector && B isa GBVector
+        C = GBVector{t}(size(A))
+    else
+        C = GBMatrix{t}(size(A))
+    end
     return emul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -189,52 +193,52 @@ intersection equivalent see [`emul`](@ref).
 """
 eadd
 
-function eadd!(
-    w::GBVector,
-    u::GBVector,
-    v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
-    size(w) == size(u) == size(v) || throw(DimensionMismatch())
-    op = getoperator(op, optype(u, v))
-    accum = getaccum(accum, eltype(w))
-    if op isa TypedSemiring
-        libgb.GrB_Vector_eWiseAdd_Semiring(w, mask, accum, op, u, v, desc)
-        return w
-    elseif op isa TypedMonoid
-        libgb.GrB_Vector_eWiseAdd_Monoid(w, mask, accum, op, u, v, desc)
-        return w
-    elseif op isa TypedBinaryOperator
-        libgb.GrB_Vector_eWiseAdd_BinaryOp(w, mask, accum, op, u, v, desc)
-        return w
-    else
-        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
-    end
-    return w
-end
+#function eadd!(
+#    w::GBVector,
+#    u::GBVector,
+#    v::GBVector,
+#    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+#    mask = nothing,
+#    accum = nothing,
+#    desc = nothing
+#)
+#    mask, accum = _handlenothings(mask, accum)
+#    desc === nothing && (desc = DEFAULTDESC)
+#    size(w) == size(u) == size(v) || throw(DimensionMismatch())
+#    op = getoperator(op, optype(u, v))
+#    accum = getaccum(accum, eltype(w))
+#    if op isa TypedSemiring
+#        libgb.GrB_Vector_eWiseAdd_Semiring(w, mask, accum, op, u, v, desc)
+#        return w
+#    elseif op isa TypedMonoid
+#        libgb.GrB_Vector_eWiseAdd_Monoid(w, mask, accum, op, u, v, desc)
+#        return w
+#    elseif op isa TypedBinaryOperator
+#        libgb.GrB_Vector_eWiseAdd_BinaryOp(w, mask, accum, op, u, v, desc)
+#        return w
+#    else
+#        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
+#    end
+#    return w
+#end
+#
+#function eadd(
+#    u::GBVector,
+#    v::GBVector,
+#    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+#    mask = nothing,
+#    accum = nothing,
+#    desc = nothing
+#)
+#    t = inferoutputtype(u, v, op)
+#    w = GBVector{t}(size(u))
+#    return eadd!(w, u, v, op; mask, accum, desc)
+#end
 
-function eadd(
-    u::GBVector,
-    v::GBVector,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    t = inferoutputtype(u, v, op)
-    w = GBVector{t}(size(u))
-    return eadd!(w, u, v, op; mask, accum, desc)
-end
-
 function eadd!(
-    C::GBMatrix,
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    C::GBVecOrMat,
+    A::GBArray,
+    B::GBArray,
     op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
@@ -262,15 +266,19 @@ function eadd!(
 end
 
 function eadd(
-    A::GBMatOrTranspose,
-    B::GBMatOrTranspose,
+    A::GBArray,
+    B::GBArray,
     op::MonoidBinaryOrRig = BinaryOps.PLUS;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
     t = inferoutputtype(A, B, op)
-    C = GBMatrix{t}(size(A))
+    if A isa GBVector && B isa GBVector
+        C = GBVector{t}(size(A))
+    else
+        C = GBMatrix{t}(size(A))
+    end
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 

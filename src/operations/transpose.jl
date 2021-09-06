@@ -15,7 +15,7 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `desc::Descriptor = DEFAULTDESC`
 """
 function gbtranspose!(
-    C::GBMatrix, A::GBMatOrTranspose;
+    C::GBVecOrMat, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
@@ -46,7 +46,7 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 - `C::GBMatrix`: output matrix.
 """
 function gbtranspose(
-    A::GBMatOrTranspose;
+    A::GBArray;
     mask = C_NULL, accum = nothing, desc::Descriptor = DEFAULTDESC
 )
     C = similar(A, size(A,2), size(A, 1))
@@ -54,22 +54,12 @@ function gbtranspose(
     return C
 end
 
-function LinearAlgebra.transpose(A::GBMatrix)
+function LinearAlgebra.transpose(A::GBArray)
     return Transpose(A)
 end
 
-#TODO: This should be lazy
-function LinearAlgebra.transpose(v::GBVector)
-    A = GBMatrix{eltype(v)}(size(v, 2), size(v, 1))
-    nz = findnz(v)
-    for i ∈ 1:length(nz[1])
-        A[1, nz[1][i]] = nz[2][i]
-    end
-    return A
-end
-
 function Base.copy!(
-    C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
+    C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBArray};
     mask = C_NULL, accum = nothing, desc::Descriptor = C_NULL
 )
     return gbtranspose!(C, A.parent; mask, accum, desc)
@@ -78,7 +68,7 @@ end
 
 
 function Base.copy(
-    A::LinearAlgebra.Transpose{<:Any, <:GBMatrix};
+    A::LinearAlgebra.Transpose{<:Any, <:GBArray};
     mask = C_NULL, accum = nothing, desc::Descriptor = DEFAULTDESC
 )
     return gbtranspose(A.parent; mask, accum, desc)

@@ -55,8 +55,9 @@ export second, rminus, pair, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor,
 export offdiag
 
 const GBVecOrMat{T} = Union{GBVector{T}, GBMatrix{T}}
-const GBMatOrTranspose{T} = Union{GBMatrix{T}, Transpose{<:Any, GBMatrix{T}}}
-const GBArray{T} = Union{GBVector{T}, GBMatOrTranspose{T}}
+const GBMatOrTranspose{T} = Union{GBMatrix{T}, Transpose{T, GBMatrix{T}}}
+const GBVecOrTranspose{T} = Union{GBVector{T}, Transpose{T, GBVector{T}}}
+const GBArray{T} = Union{GBVecOrTranspose{T}, GBMatOrTranspose{T}}
 const ptrtogbtype = Dict{Ptr, AbstractGBType}()
 
 const GrBOp = Union{
