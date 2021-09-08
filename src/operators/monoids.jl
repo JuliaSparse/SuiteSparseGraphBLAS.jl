@@ -72,7 +72,7 @@ function _addmonoid(op::AbstractMonoid, binop::BinaryUnion, id::T, terminal = no
     end
     monref = Ref{libgb.GrB_Monoid}()
     if T <: valid_union
-        if terminal === C_NULL
+        if terminal == C_NULL
             libgb.monoididnew[T](monref, binop, id)
         else
             libgb.monoidtermnew[T](monref, binop, id, terminal)

@@ -22,7 +22,6 @@ include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
 using .libgb
-const DEFAULTDESC = C_NULL
 include("operators/libgbops.jl")
 include("types.jl")
 include("gbtypes.jl")

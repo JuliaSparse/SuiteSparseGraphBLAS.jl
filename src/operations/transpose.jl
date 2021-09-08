@@ -9,10 +9,10 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `A::GBMatrix`: input matrix.
 
 # Keywords
-- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
-- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Union{Ptr{Nothing}, Descriptor} = DEFAULTDESC`
+- `desc::Union{Nothing, Descriptor} = DEFAULTDESC`
 """
 function gbtranspose!(
     C::GBVecOrMat, A::GBArray;
@@ -31,17 +31,17 @@ end
 Eagerly evaluated matrix transpose which returns the transposed matrix.
 
 # Keywords
-- `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
-- `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
+- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Union{Ptr{Nothing}, Descriptor} = DEFAULTDESC`
+- `desc::Union{Nothing, Descriptor} = nothing`
 
 # Returns
 - `C::GBMatrix`: output matrix.
 """
 function gbtranspose(
     A::GBArray;
-    mask = C_NULL, accum = nothing, desc = nothing
+    mask = nothing, accum = nothing, desc = nothing
 )
     C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
@@ -54,7 +54,7 @@ end
 
 function Base.copy!(
     C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBArray};
-    mask = C_NULL, accum = nothing, desc = C_NULL
+    mask = nothing, accum = nothing, desc = nothing
 )
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
@@ -63,7 +63,7 @@ end
 
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBArray};
-    mask = C_NULL, accum = nothing, desc = nothing
+    mask = nothing, accum = nothing, desc = nothing
 )
     return gbtranspose(parent(A); mask, accum, desc)
 end
