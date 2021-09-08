@@ -1,8 +1,9 @@
 
 function _exportdensematrix!(
     A::GBVecOrMat{T};
-    desc::Descriptor = DEFAULTDESC
+    desc = nothing
 ) where {T}
+desc = _handledescriptor(desc)
     nrows = Ref{libgb.GrB_Index}(size(A,1))
     ncols = Ref{libgb.GrB_Index}(size(A,2))
     Csize = Ref{libgb.GrB_Index}(length(A) * sizeof(T))
@@ -23,7 +24,7 @@ function _exportdensematrix!(
     return nrows[], ncols[], values[]
 
 end
-function _exportdensematrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
+function _exportdensematrix(A::GBMatrix; desc = nothing)
     return _exportdensematrix!(copy(A); desc)
 end
 function Base.Matrix(A::GBMatrix{T}) where {T}
@@ -54,8 +55,9 @@ end
 
 function _exportcscmatrix!(
     A::GBMatrix{T};
-    desc::Descriptor = DEFAULTDESC
+    desc = nothing
     ) where {T}
+    desc = _handledescriptor(desc)
     nrows = Ref{libgb.GrB_Index}(size(A, 1))
     ncols = Ref{libgb.GrB_Index}(size(A, 2))
     t = Ref{libgb.GrB_Type}(toGBType(T).p)
@@ -98,11 +100,11 @@ function _exportcscmatrix!(
 
 end
 
-function _exportcscmatrix(A::GBMatrix; desc::Descriptor = DEFAULTDESC)
+function _exportcscmatrix(A::GBMatrix; desc = nothing)
     return _exportcscmatrix!(copy(A); desc)
 end
 
-function SparseArrays.SparseMatrixCSC(A::GBMatrix{T}; desc::Descriptor = DEFAULTDESC) where {T}
+function SparseArrays.SparseMatrixCSC(A::GBMatrix{T}; desc = nothing) where {T}
     nrows, ncols, colptr, rowidx, colptrsize, rowidxsize, val, valsize = _exportcscmatrix(A; desc)
     outvalues = Vector{T}(undef, valsize ÷ sizeof(T))
     col = Vector{libgb.GrB_Index}(undef, Int(colptrsize ÷ sizeof(libgb.GrB_Index)))
@@ -118,8 +120,9 @@ end
 
 function _exportdensevec!(
     v::GBVector{T};
-    desc::Descriptor = DEFAULTDESC
+    desc = nothing
     ) where {T}
+    desc = _handledescriptor(desc)
     n = Ref{libgb.GrB_Index}(size(v,1))
     vsize = Ref{libgb.GrB_Index}(length(v) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
@@ -136,6 +139,6 @@ function _exportdensevec!(
     return n[], values[]
 end
 
-function _exportdensevec(v::GBVector; desc::Descriptor = DEFAULTDESC)
+function _exportdensevec(v::GBVector; desc = nothing)
     return _exportdensevec!(copy(v); desc)
 end

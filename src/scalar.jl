@@ -1,17 +1,7 @@
 # Constructors:
 ###############
-"""
-    GBScalar{T}()
-
-Create an unassigned GBScalar of type T.
-"""
 GBScalar{T}() where {T} = GBScalar{T}(libgb.GxB_Scalar_new(toGBType(T)))
 
-"""
-    GBScalar(v::T)
-
-Create a GBScalar of type `T` and assign `v` to it.
-"""
 function GBScalar(v::T) where {T <: valid_union}
     x = GBScalar{T}()
     x[] = v

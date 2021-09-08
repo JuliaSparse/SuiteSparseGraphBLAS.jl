@@ -91,13 +91,13 @@ end
 Clear all the entries from the GBArray.
 Does not modify the type or dimensions.
 """
-clear!(A::GBMatrix) = libgb.GrB_Matrix_clear(A)
+clear!(A::GBArray) = libgb.GrB_Matrix_clear(parent(A))
 
 function Base.size(A::GBMatrix)
     return (Int64(libgb.GrB_Matrix_nrows(A)), Int64(libgb.GrB_Matrix_ncols(A)))
 end
 
-SparseArrays.nnz(v::GBMatrix) = Int64(libgb.GrB_Matrix_nvals(v))
+SparseArrays.nnz(A::GBArray) = Int64(libgb.GrB_Matrix_nvals(parent(A)))
 Base.eltype(::Type{GBMatrix{T}}) where{T} = T
 
 function Base.similar(
@@ -117,15 +117,15 @@ function Base.resize!(A::GBMatrix, nrows_new, ncols_new)
     return A
 end
 # This does not conform to the normal definition with a lazy wrapper.
-function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
+function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = nothing)
     s = size(v, 1)
     C = GBMatrix{eltype(v)}(s, s)
-    @show C
+    desc = _handledescriptor(desc)
     libgb.GxB_Matrix_diag(C, Ptr{libgb.GrB_Vector}(v.p), k, desc)
     return C
 end
 
-function LinearAlgebra.diagm(v::GBVector, k::Integer=0; desc = DEFAULTDESC)
+function LinearAlgebra.diagm(v::GBVector, k::Integer=0; desc = nothing)
     return Diagonal(v, k; desc)
 end
 
@@ -174,7 +174,7 @@ for T ∈ valid_vec
     # Getindex functions
     func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
     @eval begin
-        function Base.getindex(A::GBMatrix{$T}, i::Integer, j::Integer)
+        function Base.getindex(A::GBMatrix{$T}, i::Int, j::Int)
             x = Ref{$T}()
             result = libgb.$func(x, A, i - 1, j - 1)
             if result == libgb.GrB_SUCCESS
@@ -184,6 +184,10 @@ for T ∈ valid_vec
             else
                 throw(ErrorException("Invalid  extractElement return value"))
             end
+        end
+        # Fix ambiguity
+        function Base.getindex(A::Transpose{$T, GBMatrix{$T}}, i::Int, j::Int)
+            return getindex(parent(A), j, i)
         end
     end
     # findnz functions
@@ -261,7 +265,7 @@ Extract a submatrix from `A` into `C`.
     `size(M) == (max(I), max(J))`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = DEFAULTDESC`
+- `desc::Descriptor = nothing`
 
 # Returns
 - `GBMatrix`: the modified matrix `C`, now containing the submatrix `A[I, J]`.
@@ -270,34 +274,35 @@ Extract a submatrix from `A` into `C`.
 - `GrB_DIMENSION_MISMATCH`: If `size(C) != (max(I), max(J))` or `size(C) != size(mask)`.
 """
 function extract!(
-    C::GBMatrix, A::GBMatrix, I, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    C::GBMatrix, A::GBMatOrTranspose, I, J;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
     J, nj = idx(J)
     I isa Number && (I = UInt64[I])
     J isa Number && (J = UInt64[J])
-    libgb.GrB_Matrix_extract(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+    desc = _handledescriptor(desc; in1 = A)
+    libgb.GrB_Matrix_extract(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     return C
 end
 
 function extract!(
-    C::GBMatrix, A::GBMatrix, ::Colon, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    C::GBMatrix, A::GBMatOrTranspose, ::Colon, J;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract!(C, A, ALL, J; mask, accum, desc)
 end
 
 function extract!(
-    C::GBMatrix, A::GBMatrix, I, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    C::GBMatrix, A::GBMatOrTranspose, I, ::Colon;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract!(C, A, I, ALL; mask, accum, desc)
 end
 
 function extract!(
-    C::GBMatrix, A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    C::GBMatrix, A::GBMatOrTranspose, ::Colon, ::Colon;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract!(C, A, ALL, ALL; mask, accum, desc)
 end
@@ -316,7 +321,7 @@ Extract a submatrix from `A`.
     `size(M) == (max(I), max(J))`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied. `C` is, however, empty.
-- `desc::Descriptor = DEFAULTDESC`
+- `desc::Descriptor = nothing`
 
 # Returns
 - `GBMatrix`: the submatrix `A[I, J]`.
@@ -325,8 +330,8 @@ Extract a submatrix from `A`.
 - `GrB_DIMENSION_MISMATCH`: If `(max(I), max(J)) != size(mask)`.
 """
 function extract(
-    A::GBMatrix, I, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, I, J;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
@@ -334,53 +339,61 @@ function extract(
 end
 
 function extract(
-    A::GBMatrix, ::Colon, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, ::Colon, J;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, ALL, J; mask, accum, desc)
 end
 
 function extract(
-    A::GBMatrix, I, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, I, ::Colon;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, I, ALL; mask, accum, desc)
 end
 
 function extract(
-    A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, ::Colon, ::Colon;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, ALL, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
-    A::GBMatrix, ::Colon, j;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, ::Colon, j;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, ALL, j; mask, accum, desc)
 end
 function Base.getindex(
-    A::GBMatrix, i, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, i, ::Colon;
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, i, ALL; mask, accum, desc)
 end
 function Base.getindex(
     A::GBMatrix, ::Colon, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, ALL, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
-    A::GBMatrix, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    A::GBMatOrTranspose, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(A, i, j; mask, accum, desc)
 end
 
-function Base.getindex(A::GBMatrix, v::AbstractVector)
+# Fix ambiguity with LinearAlgebra
+#function Base.getindex(
+#    A::Transpose{T, GBMatrix{T}}, i::Int, j::Int;
+#    mask = C_NULL, accum = nothing, desc = nothing
+#) where {T}
+#    return extract(A, i, j; mask, accum, desc)
+#end
+
+function Base.getindex(A::GBMatOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end
 """
@@ -399,7 +412,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
     `size(M) == size(A)`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = DEFAULTDESC`
+- `desc::Descriptor = nothing`
 
 # Returns
 - `GBMatrix`: The input matrix A.
@@ -409,7 +422,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
 """
 function subassign!(
     C::GBMatrix, A, I, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -419,22 +432,14 @@ function subassign!(
     elseif A isa AbstractMatrix
         A = GBMatrix(A)
     end
-    #if A isa GBVector
-    #    length(I) == 1 && (I = I[1]) # If it's a length 1 vector we just want the scalar.
-    #    length(J) == 1 && (J = J[1]) # If it's a length 1 vector we just want the scalar.
-    #    if (I isa Number) && (J isa Vector || J == ALL)
-    #        libgb.GxB_Row_subassign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
-    #    elseif (J isa Number) && (I isa Vector || I == ALL)
-    #        libgb.GxB_Col_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
-    #    else
-    #        throw(MethodError(subassign!, [C, A, I, J]))
-    #    end
-    if A isa GBMatrix || A isa GBVector
-        libgb.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+    if A isa GBArray
+        desc = _handledescriptor(desc; in1 = A)
+        libgb.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     else
+        desc = _handledescriptor(desc)
         libgb.scalarmatsubassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
-    return A # Not sure this is correct, but it's what Base seems to do.
+    return A
 end
 
 """
@@ -453,7 +458,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
     `size(M) == size(C)`.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = DEFAULTDESC`
+- `desc::Descriptor = nothing`
 
 # Returns
 - `GBMatrix`: The input matrix A.
@@ -463,7 +468,7 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
 """
 function assign!(
     C::GBMatrix, A, I, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
     J, nj = idx(J)
@@ -473,38 +478,32 @@ function assign!(
     elseif A isa AbstractMatrix
         A = GBMatrix(A)
     end
-    #if A isa GBVector
-    #    if (I isa Number) && (J isa Vector || J == ALL)
-    #        libgb.GrB_Row_assign(C, mask, getaccum(accum, eltype(C)), A, I, J, nj, desc)
-    #    elseif (J isa Number) && (I isa Vector || I == ALL)
-    #        libgb.GrB_Col_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, desc)
-    #    else
-    #        throw(MethodError(subassign!, [C, A, I, J]))
-    #    end
-    if A isa GBMatrix || A isa GBVector
-        libgb.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+    if A isa GBArray
+        desc = _handledescriptor(desc; in1 = A)
+        libgb.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     else
+        desc = _handledescriptor(desc)
         libgb.scalarmatassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
-    return A # Not sure this is correct, but it's what Base seems to do.
+    return A
 end
 
-# setindex! uses subassign rather than assign. This behavior may change in the future.
+# setindex! uses subassign rather than assign.
 function Base.setindex!(
     C::GBMatrix, A, ::Colon, J;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     subassign!(C, A, ALL, J; mask, accum, desc)
 end
 function Base.setindex!(
     C::GBMatrix, A, I, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     subassign!(C, A, I, ALL; mask, accum, desc)
 end
 function Base.setindex!(
     C::GBMatrix, A, ::Colon, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     subassign!(C, A, ALL, ALL; mask, accum, desc)
 end
@@ -516,14 +515,14 @@ function Base.setindex!(
     J::Union{Vector, UnitRange, StepRange, Number};
     mask = C_NULL,
     accum = nothing,
-    desc = DEFAULTDESC
+    desc = nothing
 )
     subassign!(C, A, I, J; mask, accum, desc)
 end
 
 function Base.setindex!(
     ::GBMatrix, A, ::AbstractVector;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     throw("Not implemented")
 end

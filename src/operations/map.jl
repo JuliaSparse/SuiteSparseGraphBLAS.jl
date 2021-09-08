@@ -5,11 +5,10 @@ function Base.map!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
+    desc = _handledescriptor(desc; in1=A)
     op = getoperator(op, eltype(A))
     accum = getaccum(accum, eltype(C))
-    A, desc = _handletranspose(A, desc)
-    libgb.GrB_Matrix_apply(C, mask, accum, op, A, desc)
+    libgb.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
     return C
 end
 
@@ -33,6 +32,7 @@ function Base.map(
     t = inferoutputtype(A, op)
     return map!(op, similar(A, t), A; mask, accum, desc)
 end
+
 Base.map(op::Function, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
     map(UnaryOp(op), A; mask, accum, desc)
 
@@ -41,11 +41,10 @@ function Base.map!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
+    desc = _handledescriptor(desc; in2=A)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getaccum(accum, eltype(C))
-    _, desc, A = _handletranspose(nothing, desc, A)
-    libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, A, desc)
+    libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, parent(A), desc)
     return C
 end
 
@@ -90,11 +89,10 @@ function Base.map!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
+    desc = _handledescriptor(desc; in1=A)
     op = getoperator(op, optype(eltype(A), typeof(x)))
     accum = getaccum(accum, eltype(C))
-    A, desc, _ = _handletranspose(A, desc)
-    libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, A, x, desc)
+    libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, parent(A), x, desc)
     return C
 end
 
@@ -185,9 +183,9 @@ Apply a mask to matrix `A`, storing the results in C.
 
 """
 function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
-    desc = DEFAULTDESC
-    structural && (desc = desc + S)
-    complement && (desc = desc + C)
+    desc = Descriptor()
+    structural && (desc.structural_mask=true)
+    complement && (desc.complement_mask=true)
     map!(identity, C, A; mask, desc)
     return C
 end

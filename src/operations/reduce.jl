@@ -3,11 +3,10 @@ function reduce!(
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
-    A, desc, _ = _handletranspose(A, desc, nothing)
+    desc = _handledescriptor(desc; in1=A)
     op = getoperator(op, eltype(w))
     accum = getaccum(accum, eltype(w))
-    libgb.GrB_Matrix_reduce_Monoid(Ptr{libgb.GrB_Vector}(w.p), mask, accum, op, A, desc)
+    libgb.GrB_Matrix_reduce_Monoid(Ptr{libgb.GrB_Vector}(w.p), mask, accum, op, parent(A), desc)
     return w
 end
 
@@ -30,7 +29,6 @@ function Base.reduce(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
     if typeout === nothing
         typeout = eltype(A)
     end
@@ -40,7 +38,7 @@ function Base.reduce(
         reduce!(op, w, A; desc, accum, mask)
         return w
     elseif dims == 1 && !(A isa GBVecOrTranspose)
-        desc = desc + T0
+        desc.transpose_input1 = true
         w = GBVector{typeout}(size(A, 2))
         reduce!(op, w, A; desc, accum, mask)
         return w
@@ -53,9 +51,9 @@ function Base.reduce(
             typec = typeof(init)
         end
         op = getoperator(op, typec)
-        A, desc, _ = _handletranspose(A, desc, nothing)
+        desc = _handledescriptor(desc; in1=A)
         accum = getaccum(accum, typec)
-        libgb.scalarmatreduce[typeout](c, accum, op, A, desc)
+        libgb.scalarmatreduce[typeout](c, accum, op, parent(A), desc)
         return c[]
     end
 end

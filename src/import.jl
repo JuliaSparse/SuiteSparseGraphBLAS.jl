@@ -8,12 +8,13 @@ function _importcscmat(
     values::Ptr{T},
     valsize;
     jumbled::Bool = false,
-    desc::Descriptor = DEFAULTDESC,
+    desc = nothing,
     iso = false
 ) where {T}
     A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
     m = libgb.GrB_Index(m) #nrows
     n = libgb.GrB_Index(n) #ncols
+    desc = _handledescriptor(desc)
     libgb.GxB_Matrix_import_CSC(
         A,
         toGBType(T),
@@ -39,7 +40,7 @@ function _importcscmat(
     rowindices::Vector{U},
     values::Vector{T};
     jumbled::Bool = false,
-    desc::Descriptor = DEFAULTDESC,
+    desc = nothing,
     iso = false
 ) where {U, T}
     # This section comes after some chatting with Keno Fisher.
@@ -83,10 +84,11 @@ end
 
 function _importcscvec(
     n::Integer, vi::Ptr{UInt64}, vi_size, vx::Ptr{T}, vx_size, nnz;
-    jumbled::Bool = false, desc::Descriptor = DEFAULTDESC, iso = false
+    jumbled::Bool = false, desc = nothing, iso = false
 ) where {T}
     v = Ref{libgb.GrB_Vector}()
     n = libgb.GrB_Index(n)
+    desc = _handledescriptor(desc)
     libgb.GxB_Vector_import_CSC(
         v,
         toGBType(T),
@@ -105,7 +107,7 @@ end
 
 function _importcscvec(
     n::Integer, vi::Vector{U}, vx::Vector{T}, nnz;
-    jumbled::Bool = false, desc::Descriptor = DEFAULTDESC, iso = false
+    jumbled::Bool = false, desc = nothing, iso = false
 ) where {U,T}
     vi_size = libgb.GrB_Index(sizeof(vi))
     vx_size = libgb.GrB_Index(sizeof(vx))
@@ -126,12 +128,13 @@ function _importcsrmat(
     values::Ptr{T},
     valsize;
     jumbled::Bool = false,
-    desc::Descriptor = DEFAULTDESC,
+    desc = nothing,
     iso = false
 ) where {U, T}
     A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
     m = libgb.GrB_Index(m) #nrows
     n = libgb.GrB_Index(n) #ncols
+    desc = _handledescriptor(desc)
     libgb.GxB_Matrix_import_CSR(
         A,
         toGBType(T),
@@ -157,7 +160,7 @@ function _importcsrmat(
     colindices,
     values::Vector{T};
     jumbled::Bool = false,
-    desc::Descriptor = DEFAULTDESC,
+    desc = nothing,
     iso = false
 ) where {T}
     rowsize = libgb.GrB_Index(sizeof(rowptr)) #Size of colptr vector
@@ -182,11 +185,12 @@ end
 
 function _importdensematrix(
     m::Integer, n::Integer, A::Ptr{T}, Asize;
-    desc::Descriptor = DEFAULTDESC, iso = false
+    desc = nothing, iso = false
 ) where {T}
     C = Ref{libgb.GrB_Matrix}()
     m = libgb.GrB_Index(m)
     n = libgb.GrB_Index(n)
+    desc = _handledescriptor(desc)
     libgb.GxB_Matrix_import_FullC(
         C,
         toGBType(T),
@@ -202,7 +206,7 @@ end
 
 function _importdensematrix(
     m::Integer, n::Integer, A::VecOrMat{T};
-    desc::Descriptor = DEFAULTDESC, iso = false
+    desc = nothing, iso = false
 ) where {T}
     m = libgb.GrB_Index(m)
     n = libgb.GrB_Index(n)
@@ -241,10 +245,11 @@ end
 
 function _importdensevec(
     n::Integer, v::Ptr{T}, vsize;
-    desc::Descriptor = DEFAULTDESC, iso = false
+    desc = nothing, iso = false
 ) where {T}
     w = Ref{libgb.GrB_Vector}()
     n = libgb.GrB_Index(n)
+    desc = _handledescriptor(desc)
     libgb.GxB_Vector_import_Full(
         w,
         toGBType(T),
@@ -260,7 +265,7 @@ end
 
 function _importdensevec(
     n::Integer, v::Vector{T};
-    desc::Descriptor = DEFAULTDESC, iso = false
+    desc = nothing, iso = false
 ) where {T}
     n = libgb.GrB_Index(n)
     vsize = libgb.GrB_Index(sizeof(v))

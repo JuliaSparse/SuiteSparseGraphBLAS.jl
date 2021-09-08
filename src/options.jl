@@ -31,22 +31,18 @@ function format(A::GBVecOrMat)
     return (GBSparsity(t), GBFormat(f))
 end
 
-@cenum GBOption::Int32 begin
-    HYPER_SWITCH = 0
-    BITMAP_SWITCH = 34
-    FORMAT = 1
-    SPARSITY_STATUS = 33
-    SPARSITY_CONTROL = 32
-    BASE1 = 104
-    NTHREADS = 5
-    BURBLE = 99
-end
+const HYPER_SWITCH = libgb.GxB_HYPER_SWITCH
+const BITMAP_SWITCH = libgb.GxB_BITMAP_SWITCH
+const FORMAT = libgb.GxB_FORMAT
+const SPARSITY_STATUS = libgb.GxB_SPARSITY_STATUS
+const SPARSITY_CONTROL = libgb.GxB_SPARSITY_CONTROL
+const BASE1 = libgb.GxB_PRINT_1BASED
+const NTHREADS = libgb.GxB_GLOBAL_NTHREADS
+const BURBLE = libgb.GxB_BURBLE
 
-@cenum GBFormat::Int32 begin
-    BYROW = 0 #libgb.GxB_BY_ROW
-    BYCOL = 1 #libgb.GxB_BY_COL
-    NOFORMAT = -1 #libgb.GxB_NO_FORMAT
-end
+const BYROW = libgb.GxB_BY_ROW
+const BYCOL = libgb.GxB_BY_COL
+
 
 """
 Sparsity options for GraphBLAS. values can be summed to produce additional options.

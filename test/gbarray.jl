@@ -57,7 +57,7 @@
 
         #range, range, accum, and mask
         mask = GBMatrix([[true, true, false] [false, true, true] [true, false,true]])
-        m[8:10, 8:10, mask = mask, accum = BinaryOps.TIMES, desc = R] =
+        m[8:10, 8:10, mask = mask, accum = BinaryOps.TIMES, desc = Descriptor(replace_output=true)] =
             fill(10, 3, 3)
         @test m[9, 10] === nothing
         @test m[10, 10] == 90

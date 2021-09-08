@@ -22,7 +22,7 @@ include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
 using .libgb
-
+const DEFAULTDESC = C_NULL
 include("operators/libgbops.jl")
 include("types.jl")
 include("gbtypes.jl")
@@ -88,9 +88,6 @@ const OperatorUnion = Union{
     AbstractOp,
     GrBOp
 }
-
-export T1, T0, T0T1, C, CT1, CT0, CT0T1, S, ST1, ST0, ST0T1, SC, SCT1, SCT0, SCT0T1, R, RT1,
-    RT0, RT0T1, RC, RCT1, RCT0, RCT0T1, RS, RST1, RST0, RST0T1, RSC, RSCT1, RSCT0, RSCT0T1
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
@@ -149,10 +146,9 @@ function __init__()
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
-    _loaddescriptors()
     _loadselectops()
     # Set printing to base-1 rather than base-0.
-    gbset(BASE1, true)
+    gbset(BASE1, 1)
     atexit() do
         # Finalize the lib. Frees a small internal memory pool.
         libgb.GrB_finalize()

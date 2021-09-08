@@ -8,15 +8,14 @@ function LinearAlgebra.mul!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
+    desc = _handledescriptor(desc; in1=A, in2=B)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
     op = getoperator(op, optype(A, B))
     accum = getaccum(accum, eltype(C))
-    A, desc, B = _handletranspose(A, desc, B)
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    libgb.GrB_mxm(C, mask, accum, op, A, B, desc)
+    libgb.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
 
@@ -53,13 +52,6 @@ function mul(
     desc = nothing
 )
     t = inferoutputtype(A, B, op)
-    #if A isa GBVector && B isa GBMatOrTranspose
-    #    C = GBVector{t}(size(B, 2))
-    #elseif A isa GBMatOrTranspose && B isa GBVector
-    #    C = GBVector{t}(size(A, 1))
-    #elseif A isa GBMatOrTranspose && B isa GBMatOrTranspose
-    #
-    #end
     if A isa GBMatOrTranspose && B isa GBVector
         C = GBVector{t}(size(A, 1))
     elseif A isa GBVector && B isa GBMatOrTranspose

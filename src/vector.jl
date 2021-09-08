@@ -4,7 +4,9 @@
     GBVector{T}(n = libgb.GxB_INDEX_MAX)
 """
 function GBVector{T}(n = libgb.GxB_INDEX_MAX) where {T}
-    return GBVector{T}(libgb.GrB_Matrix_new(toGBType(T),n, 1))
+    v = GBVector{T}(libgb.GrB_Matrix_new(toGBType(T),n, 1))
+    gbset(v, FORMAT, BYCOL)
+    return v
 end
 
 GBVector{T}(dims::Dims{1}) where {T} = GBVector{T}(dims...)
@@ -58,14 +60,10 @@ function Base.copy(v::GBVector{T}) where {T}
     return GBVector{T}(libgb.GrB_Matrix_dup(v))
 end
 
-
-clear!(v::GBVector) = libgb.GrB_Matrix_clear(v)
-
 function Base.size(v::GBVector)
     return (Int64(libgb.GrB_Matrix_nrows(v)),)
 end
 
-SparseArrays.nnz(v::GBVector) = Int64(libgb.GrB_Matrix_nvals(v))
 Base.eltype(::Type{GBVector{T}}) where{T} = T
 
 function Base.similar(
@@ -93,8 +91,19 @@ function Base.resize!(v::GBVector, n)
 end
 
 # TODO: NEEDS REWRITE TO GrB_MATRIX INTERNALS
-function LinearAlgebra.diag(A::GBMatrix{T}, k::Integer = 0; desc = C_NULL) where {T}
-    return GBVector{T}(libgb.GxB_Vector_diag(A, k, desc))
+function LinearAlgebra.diag(A::GBMatOrTranspose{T}, k::Integer = 0; desc = nothing) where {T}
+    m, n = size(A)
+    if !(k in -m:n)
+        s = 0
+    elseif k >= 0
+        s = min(m, n - k)
+    else
+        s = min(m + k, n)
+    end
+    v = GBVector{T}(s)
+    desc = _handledescriptor(desc; in1=A)
+    GBVector{T}(libgb.GxB_Vector_diag(libgb.GrB_Vector(v.p), parent(A), k, desc))
+    return v
 end
 
 #We need these until I can get a SparseArrays.nonzeros implementation
@@ -208,16 +217,17 @@ Extract a subvector from `u` into the output vector `w`. Equivalent to the matri
 """
 function extract!(
     w::GBVector, u::GBVector, I;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
+    desc = _handledescriptor(desc)
     libgb.GrB_Matrix_extract(w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
     return w
 end
 
 function extract!(
     w::GBVector, u::GBVector, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract!(w, u, ALL; mask, accum, desc)
 end
@@ -229,31 +239,31 @@ Extract a subvector from `u` and return it. Equivalent to the matrix definition.
 """
 function extract(
     u::GBVector, I;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     wlen = _outlength(u, I)
     w = similar(u, wlen)
     return extract!(w, u, I; mask, accum, desc)
 end
 
-function extract(u::GBVector, ::Colon; mask = C_NULL, accum = nothing, desc=DEFAULTDESC)
+function extract(u::GBVector, ::Colon; mask = C_NULL, accum = nothing, desc = nothing)
     extract(u, ALL; mask, accum, desc)
 end
 
 function Base.getindex(
     u::GBVector, I;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(u, I; mask, accum, desc)
 end
 
-function Base.getindex(u::GBVector, ::Colon; mask = C_NULL, accum = nothing, desc = DEFAULTDESC)
+function Base.getindex(u::GBVector, ::Colon; mask = C_NULL, accum = nothing, desc = nothing)
     return extract(u, :)
 end
 
 function Base.getindex(
     u::GBVector, i::Union{Vector, UnitRange, StepRange};
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     return extract(u, i; mask, accum, desc)
 end
@@ -264,8 +274,9 @@ Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definitio
 """
 function subassign!(
     w::GBVector, u, I;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
+    desc = _handledescriptor(desc)
     I, ni = idx(I)
     u isa Vector && (u = GBVector(u))
     if u isa GBVector
@@ -283,8 +294,9 @@ Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definitio
 """
 function assign!(
     w::GBVector, u, I;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
+    desc = _handledescriptor(desc)
     I, ni = idx(I)
     u isa Vector && (u = GBVector(u))
     if u isa GBVector
@@ -297,14 +309,14 @@ end
 
 function Base.setindex!(
     u::GBVector, x, ::Colon;
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     subassign!(u, x, ALL; mask, accum, desc)
     return nothing
 end
 function Base.setindex!(
     u::GBVector, x, I::Union{Vector, UnitRange, StepRange};
-    mask = C_NULL, accum = nothing, desc = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     subassign!(u, x, I; mask, accum, desc)
     return nothing

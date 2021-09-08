@@ -12,22 +12,16 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = DEFAULTDESC`
+- `desc::Union{Ptr{Nothing}, Descriptor} = DEFAULTDESC`
 """
 function gbtranspose!(
     C::GBVecOrMat, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
-    if A isa Transpose && desc.input1 == TRANSPOSE
-        throw(ArgumentError("Cannot have A isa Transpose and desc.input1 = TRANSPOSE."))
-    elseif A isa Transpose
-        A = A.parent
-        desc = desc + T0
-    end
+    desc = _handledescriptor(desc; in1=A)
     accum = getaccum(accum, eltype(C))
-    libgb.GrB_transpose(C, mask, accum, A, desc)
+    libgb.GrB_transpose(C, mask, accum, parent(A), desc)
     return C
 end
 
@@ -40,14 +34,14 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 - `mask::Union{Ptr{Nothing}, GBMatrix} = C_NULL`: optional mask.
 - `accum::Union{Ptr{Nothing}, AbstractBinaryOp} = C_NULL`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = DEFAULTDESC`
+- `desc::Union{Ptr{Nothing}, Descriptor} = DEFAULTDESC`
 
 # Returns
 - `C::GBMatrix`: output matrix.
 """
 function gbtranspose(
     A::GBArray;
-    mask = C_NULL, accum = nothing, desc::Descriptor = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
     C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
@@ -60,7 +54,7 @@ end
 
 function Base.copy!(
     C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBArray};
-    mask = C_NULL, accum = nothing, desc::Descriptor = C_NULL
+    mask = C_NULL, accum = nothing, desc = C_NULL
 )
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
@@ -69,28 +63,9 @@ end
 
 function Base.copy(
     A::LinearAlgebra.Transpose{<:Any, <:GBArray};
-    mask = C_NULL, accum = nothing, desc::Descriptor = DEFAULTDESC
+    mask = C_NULL, accum = nothing, desc = nothing
 )
-    return gbtranspose(A.parent; mask, accum, desc)
-end
-
-function _handletranspose(
-    A::Union{GBArray, Nothing} = nothing,
-    desc::Union{Descriptor, Nothing, Ptr{Nothing}} = nothing,
-    B::Union{GBArray, Nothing} = nothing
-)
-    if desc == C_NULL
-        desc = DEFAULTDESC
-    end
-    if A isa Transpose
-        desc = desc + T0
-        A = A.parent
-    end
-    if B isa Transpose
-        desc = desc + T1
-        B = B.parent
-    end
-    return A, desc, B
+    return gbtranspose(parent(A); mask, accum, desc)
 end
 
 #This is ok per the GraphBLAS Slack channel. Should change its effect on Complex input.

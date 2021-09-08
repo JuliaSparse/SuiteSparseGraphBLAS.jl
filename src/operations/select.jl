@@ -9,14 +9,13 @@ function select!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
+    desc = _handledescriptor(desc; in1=A)
     thunk === nothing && (thunk = C_NULL)
-    A, desc, _ = _handletranspose(A, desc)
     accum = getaccum(accum, eltype(C))
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
-    libgb.GxB_Matrix_select(C, mask, accum, op, A, thunk, desc)
+    libgb.GxB_Matrix_select(C, mask, accum, op, parent(A), thunk, desc)
     return C
 end
 
@@ -64,7 +63,6 @@ function select(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C

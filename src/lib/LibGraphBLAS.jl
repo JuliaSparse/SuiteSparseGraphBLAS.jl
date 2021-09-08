@@ -70,7 +70,7 @@ end
 const valid_vec = [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32,
 Int64, UInt64, Float32, Float64, ComplexF32, ComplexF64]
 
-@cenum GrB_Info::UInt32 begin
+@enum GrB_Info::UInt32 begin
     GrB_SUCCESS = 0
     GrB_NO_VALUE = 1
     GrB_UNINITIALIZED_OBJECT = 2
@@ -87,7 +87,7 @@ Int64, UInt64, Float32, Float64, ComplexF32, ComplexF64]
     GrB_PANIC = 13
 end
 
-@cenum GrB_Mode::UInt32 begin
+@enum GrB_Mode::UInt32 begin
     GrB_NONBLOCKING = 0
     GrB_BLOCKING = 1
 end
@@ -113,7 +113,7 @@ function GrB_getVersion(version=Ref{Cuint}(0), subversion=Ref{Cuint}(0))
     return version[], subversion[]
 end
 
-@cenum GrB_Desc_Field::UInt32 begin
+@enum GrB_Desc_Field::UInt32 begin
     GrB_OUTP = 0
     GrB_MASK = 1
     GrB_INP0 = 2
@@ -126,7 +126,7 @@ end
     GxB_SORT = 35
 end
 
-@cenum GrB_Desc_Value::UInt32 begin
+@enum GrB_Desc_Value::UInt32 begin
     GxB_DEFAULT = 0
     GrB_REPLACE = 1
     GrB_COMP = 2
@@ -1316,21 +1316,8 @@ end
 function GxB_Vector_diag(v, A, k, desc)
     @wraperror ccall((:GxB_Vector_diag, libgraphblas), GrB_Info, (GrB_Vector, GrB_Matrix, Int64, GrB_Descriptor), v, A, k, desc)
 end
-function GxB_Vector_diag(A, k, desc)
-    m = GrB_Matrix_nrows(A)
-    n = GrB_Matrix_ncols(A)
-    if 0 <= k <= n - 1
-        s = min(m, n - k)
-    elseif -m + 1 <= k <= -1
-        s = min(m+k, n)
-    else
-        s = 0
-    end
-    v = GrB_Vector_new(GxB_Matrix_type(A), s)
-    GxB_Vector_diag(v, A, k, desc)
-    return v
-end
-@cenum GxB_Option_Field::UInt32 begin
+
+@enum GxB_Option_Field::UInt32 begin
     GxB_HYPER_SWITCH = 0
     GxB_BITMAP_SWITCH = 34
     GxB_FORMAT = 1
@@ -1361,7 +1348,7 @@ end
     GxB_GLOBAL_GPU_CHUNK = 22
 end
 
-@cenum GxB_Format_Value::Int32 begin
+@enum GxB_Format_Value::Int32 begin
     GxB_BY_ROW = 0
     GxB_BY_COL = 1
     GxB_NO_FORMAT = -1
@@ -2456,7 +2443,7 @@ function GxB_Vector_resize(w, nrows_new)
     @wraperror ccall((:GxB_Vector_resize, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), w, nrows_new)
 end
 
-@cenum GxB_Print_Level::UInt32 begin
+@enum GxB_Print_Level::UInt32 begin
     GxB_SILENT = 0
     GxB_SUMMARY = 1
     GxB_SHORT = 2
@@ -2605,6 +2592,59 @@ function GxB_cuda_free(p)
     ccall((:GxB_cuda_free, libgraphblas), Cvoid, (Ptr{Cvoid},), p)
 end
 
+function GxB_Desc_get(desc, field)
+    if field ∈ [GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1]
+        T = GrB_Desc_Value
+    elseif field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT]
+        T = Cint
+    elseif field ∈ [GxB_DESCRIPTOR_CHUNK]
+        T = Cdouble
+    else
+        error("Not a valid Descriptor option.")
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Desc_get, libgraphblas),
+        GrB_Info,
+        (GrB_Descriptor, UInt32, Ptr{Cvoid}),
+        desc,
+        field,
+        v
+    )
+    return v[]
+end
+
+function GxB_Desc_set(d, field, value)
+    if field ∈ [GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1]
+        ccall(
+            (:GxB_Desc_set, libgraphblas),
+            GrB_Info,
+            (GrB_Descriptor, GrB_Desc_Field, GrB_Desc_Value),
+            d,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT]
+        ccall(
+            (:GxB_Desc_set, libgraphblas),
+            GrB_Info,
+            (GrB_Descriptor, GrB_Desc_Field, Cint),
+            d,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_DESCRIPTOR_CHUNK]
+        ccall(
+            (:GxB_Desc_set, libgraphblas),
+            GrB_Info,
+            (GrB_Descriptor, GrB_Desc_Field, Cdouble),
+            d,
+            field,
+            value
+        )
+    end
+end
+
 function GxB_Global_Option_get(field)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
         T = Cdouble
@@ -2627,7 +2667,7 @@ function GxB_Global_Option_get(field)
 end
 
 function GxB_Global_Option_set(field, value)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH, GxB_GLOBAL_CHUNK]
         ccall(
             (:GxB_Global_Option_set, libgraphblas),
             Cvoid,
@@ -2635,27 +2675,11 @@ function GxB_Global_Option_set(field, value)
             field,
             value
         )
-    elseif field ∈ [GxB_FORMAT]
-        ccall(
-            (:GxB_Global_Option_set, libgraphblas),
-            Cvoid,
-            (UInt32, UInt32),
-            field,
-            value
-        )
-    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
+    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT]
         ccall(
             (:GxB_Global_Option_set, libgraphblas),
             Cvoid,
             (UInt32, Cint),
-            field,
-            value
-        )
-    elseif field ∈ [GxB_PRINT_1BASED, GxB_BURBLE]
-        ccall(
-            (:GxB_Global_Option_set, libgraphblas),
-            Cvoid,
-            (UInt32, Bool),
             field,
             value
         )
@@ -2665,9 +2689,7 @@ end
 function GxB_Matrix_Option_get(A, field)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
         T = Cdouble
-    elseif field ∈ [GxB_FORMAT]
-        T = UInt32
-    elseif field ∈ [GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
+    elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
         T = Cint
     end
     v = Ref{T}()
@@ -2692,20 +2714,11 @@ function GxB_Matrix_Option_set(A, field, value)
             field,
             value
         )
-    elseif field ∈ [GxB_FORMAT]
+    elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_CONTROL]
         ccall(
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
             (GrB_Matrix, UInt32, UInt32),
-            A,
-            field,
-            value
-        )
-    elseif field ∈ [GxB_SPARSITY_CONTROL]
-        ccall(
-            (:GxB_Matrix_Option_set, libgraphblas),
-            Cvoid,
-            (GrB_Matrix, UInt32, Cint),
             A,
             field,
             value
@@ -2764,18 +2777,6 @@ function GxB_Vector_Option_set(A, field, value)
     end
 end
 
-function GxB_Desc_set(d, field, value)
-    if field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_DESCRIPTOR_NTHREADS]
-        ccall(
-            (:GxB_Desc_set, libgraphblas),
-            Cvoid,
-            (GrB_Descriptor, UInt32, Int64),
-            d,
-            field,
-            value
-        )
-    end
-end
 
 # Skipping MacroDefinition: GB_PUBLIC extern
 

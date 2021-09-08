@@ -13,16 +13,15 @@ function LinearAlgebra.kron!(
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc === nothing && (desc = DEFAULTDESC)
+    desc = _handledescriptor(desc; in1=A, in2=B)
     op = getoperator(op, optype(A, B))
-    A, desc, B = _handletranspose(A, desc, B)
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
-        libgb.GxB_kron(C, mask, accum, op, A, B, desc)
+        libgb.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
     elseif op isa TypedMonoid
-        libgb.GrB_Matrix_kronecker_Monoid(C, mask, accum, op, A, B, desc)
+        libgb.GrB_Matrix_kronecker_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
     elseif op isa TypedSemiring
-        libgb.GrB_Matrix_kronecker_Semiring(C, mask, accum, op, A, B, desc)
+        libgb.GrB_Matrix_kronecker_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
     else
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
