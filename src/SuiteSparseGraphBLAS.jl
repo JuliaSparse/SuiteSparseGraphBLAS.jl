@@ -1,6 +1,9 @@
 module SuiteSparseGraphBLAS
 __precompile__(true)
+
 using Libdl: dlsym, dlopen, dlclose
+
+# Allow users to specify a non-Artifact shared lib.
 using Preferences
 include("find_binary.jl")
 const libgraphblas_handle = Ref{Ptr{Nothing}}()
@@ -10,6 +13,7 @@ const libgraphblas_handle = Ref{Ptr{Nothing}}()
 else
     const libgraphblas = artifact_or_path
 end
+
 using SparseArrays
 using SparseArrays: nonzeroinds
 using MacroTools
@@ -38,55 +42,19 @@ using .UnaryOps
 using .BinaryOps
 using .Monoids
 using .Semirings
+
+# Create typed operators
 _createunaryops()
 _createbinaryops()
 _createmonoids()
 _createsemirings()
+
 include("operators/oplist.jl")
 include("indexutils.jl")
 
-export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
-export frexpe, frexpx, positioni, positionj #UnaryOps not found in Julia/stdlibs.
-#BinaryOps not found in Julia/stdlibs.
-export second, rminus, pair, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, fmod, firsti,
-    firstj, secondi, secondj
-#SelectOps not found in Julia/stdlibs
-export offdiag
+# Globals
+include("constants.jl")
 
-const GBVecOrMat{T} = Union{GBVector{T}, GBMatrix{T}}
-const GBMatOrTranspose{T} = Union{GBMatrix{T}, Transpose{T, GBMatrix{T}}}
-const GBVecOrTranspose{T} = Union{GBVector{T}, Transpose{T, GBVector{T}}}
-const GBArray{T} = Union{GBVecOrTranspose{T}, GBMatOrTranspose{T}}
-const ptrtogbtype = Dict{Ptr, AbstractGBType}()
-
-const GrBOp = Union{
-    libgb.GrB_Monoid,
-    libgb.GrB_UnaryOp,
-    libgb.GrB_Semiring,
-    libgb.GrB_BinaryOp,
-    libgb.GxB_SelectOp
-}
-
-const TypedOp = Union{
-    TypedUnaryOperator,
-    TypedBinaryOperator,
-    TypedMonoid,
-    TypedSemiring
-}
-
-const MonoidBinaryOrRig = Union{
-    TypedMonoid,
-    TypedSemiring,
-    TypedBinaryOperator,
-    AbstractSemiring,
-    AbstractBinaryOp,
-    AbstractMonoid
-}
-
-const OperatorUnion = Union{
-    AbstractOp,
-    GrBOp
-}
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
@@ -125,14 +93,28 @@ export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
 export xtype, ytype, ztype, validtypes #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix #arrays
+export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
+
+# Function arguments not found elsewhere in Julia
+#UnaryOps not found in Julia/stdlibs.
+export frexpe, frexpx, positioni, positionj
+#BinaryOps not found in Julia/stdlibs.
+export second, rminus, pair, ∨, ∧, lxor, fmod, firsti,
+    firstj, secondi, secondj
+#SelectOps not found in Julia/stdlibs
+export offdiag
+
 export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!,
 gbrand
-# Reexports.
+# Reexports from LinAlg
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
+
+# Reexports from SparseArrays
 export nnz, sprand, findnz, nonzeros, nonzeroinds
+
 function __init__()
     @static if artifact_or_path != "default"
         libgraphblas_handle[] = dlopen(libgraphblas)
@@ -145,11 +127,12 @@ function __init__()
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
+    # Eagerly load selectops constants.
     _loadselectops()
-    # Set printing to base-1 rather than base-0.
+    # Set printing done by SuiteSparse:GraphBLAS to base-1 rather than base-0.
     gbset(BASE1, 1)
     atexit() do
-        # Finalize the lib. Frees a small internal memory pool.
+        # Finalize the lib, for now only frees a small internal memory pool.
         libgb.GrB_finalize()
         @static if artifact_or_path != "default"
             dlclose(libgraphblas_handle[])
