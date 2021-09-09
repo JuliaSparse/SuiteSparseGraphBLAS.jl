@@ -90,7 +90,6 @@ function Base.resize!(v::GBVector, n)
     return v
 end
 
-# TODO: NEEDS REWRITE TO GrB_MATRIX INTERNALS
 function LinearAlgebra.diag(A::GBMatOrTranspose{T}, k::Integer = 0; desc = nothing) where {T}
     m, n = size(A)
     if !(k in -m:n)
@@ -102,6 +101,9 @@ function LinearAlgebra.diag(A::GBMatOrTranspose{T}, k::Integer = 0; desc = nothi
     end
     v = GBVector{T}(s)
     desc = _handledescriptor(desc; in1=A)
+    if A isa Transpose
+        k = -k
+    end
     GBVector{T}(libgb.GxB_Vector_diag(libgb.GrB_Vector(v.p), parent(A), k, desc))
     return v
 end
