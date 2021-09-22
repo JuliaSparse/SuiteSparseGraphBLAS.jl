@@ -40,6 +40,16 @@ macro scalarmaprule(func, derivative)
     end
 end
 
+function ChainRulesCore.frule(
+    (_,_,ΔA),
+    ::typeof(map),
+    ::typeof(sqrt),
+    A::Array
+)
+    Ω = map(sqrt, A)
+    return Ω, inv.(2 .* Ω)
+end
+
 #Trig
 @scalarmaprule UnaryOps.SIN cos.(A)
 @scalarmaprule UnaryOps.COS -sin.(A)
@@ -50,27 +60,25 @@ end
 @scalarmaprule UnaryOps.COSH sinh.(A)
 @scalarmaprule UnaryOps.TANH @. 1 - (Ω ^ 2)
 
-#Inverse Trig
-@scalarmaprule UnaryOps.ASIN @. inv(sqrt.(1 - A ^ 2))
-@scalarmaprule UnaryOps.ACOS @. inv(sqrt.(1 - A ^ 2))
-@scalarmaprule UnaryOps.ATAN @. inv(1 + A ^ 2)
+@scalarmaprule UnaryOps.MINV -(Ω .^ 2)
+@scalarmaprule UnaryOps.EXP Ω
 
-#function frule(
-#    (_, _, ΔA),
-#    ::typeof(map),
-#    ::typeof(UnaryOps.SIN),
-#    A::GBArray
-#)
-#    Ω = map(UnaryOps.SIN, A)
-#    return Ω, map(UnaryOps.COS, A) .* ΔA
-#end
+@scalarmaprule UnaryOps.ABS sign.(A)
+#Anything that uses MINV fails the isapprox tests :().
+# Since in the immortal words of Miha - "FiniteDiff is smarter than you", these shouldn't be enabled.
+#@scalarmaprule UnaryOps.ASIN @. inv(sqrt.(1 - A ^ 2))
+#@scalarmaprule UnaryOps.ACOS @. inv(sqrt.(1 - A ^ 2))
+#@scalarmaprule UnaryOps.ATAN @. inv(1 + A ^ 2)
+#@scalarmaprule UnaryOps.SQRT inv.(2 .* Ω)
 
-#function frule(
-#    (,),
-#    ::typeof(map),
-#    op::Union{Function, SelectUnion},
-#    A::GBArray
-#)
-#    Ω = map(op, A)
-#    ∂Ω =
-#end
+function frule(
+    (_, _, ΔA),
+    ::typeof(map),
+    ::typeof(UnaryOps.IDENTITY),
+    A::GBArray
+)
+    return (A, ΔA)
+end
+function rrule(::typeof(map), ::typeof(UnaryOps.IDENTITY), A::GBArray)
+    return A, (ΔΩ) -> (NoTangent(), NoTangent(), ΔΩ)
+end
