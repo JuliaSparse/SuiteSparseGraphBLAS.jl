@@ -25,8 +25,8 @@ UnaryOps.UnaryOp(::typeof(!)) = UnaryOps.LNOT
 Multiplicative Inverse: `z=1/x`
 """
 UnaryOps.MINV
-juliaop(::typeof(UnaryOps.MINV)) = /
-UnaryOps.UnaryOp(::typeof(/)) = UnaryOps.MINV
+juliaop(::typeof(UnaryOps.MINV)) = inv
+UnaryOps.UnaryOp(::typeof(inv)) = UnaryOps.MINV
 """
 One: `z=one(x)`
 """

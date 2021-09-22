@@ -1,6 +1,7 @@
 #Broadcasting machinery
 #######################
 
+valunwrap(::Val{x}) where x = x
 #This is directly from the Broadcasting interface docs
 struct GBVectorStyle <: Broadcast.AbstractArrayStyle{1} end
 struct GBMatrixStyle <: Broadcast.AbstractArrayStyle{2} end
@@ -41,10 +42,19 @@ modifying(::typeof(emul)) = emul!
     f = bc.f
     l = length(bc.args)
     if l == 1
-        return map(f, first(bc.args))
+        x = first(bc.args)
+        if x isa Broadcast.Broadcasted
+            x = copy(x)
+        end
+        return map(f, x)
     else
         left = first(bc.args)
         right = last(bc.args)
+        if left isa Base.RefValue{typeof(^)}
+            f = ^
+            left = bc.args[2]
+            right = valunwrap(right[])
+        end
         if left isa Broadcast.Broadcasted
             left = copy(left)
         end
@@ -52,7 +62,6 @@ modifying(::typeof(emul)) = emul!
             right = copy(right)
         end
         if left isa GBArray && right isa GBArray
-
             add = defaultadd(f)
             return add(left, right, f)
         else
@@ -65,10 +74,19 @@ end
     f = bc.f
     l = length(bc.args)
     if l == 1
-        return map(f, first(bc.args))
+        x = first(bc.args)
+        if x isa Broadcast.Broadcasted
+            x = copy(x)
+        end
+        return map(f, x)
     else
         left = first(bc.args)
         right = last(bc.args)
+        if left isa Base.RefValue{typeof(^)}
+            f = ^
+            left = bc.args[2]
+            right = valunwrap(right[])
+        end
         if left isa Broadcast.Broadcasted
             left = copy(left)
         end

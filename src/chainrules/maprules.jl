@@ -15,3 +15,62 @@
 #    end
 #    return ys, map_pullback
 #end
+macro scalarmaprule(func, derivative)
+    return ChainRulesCore.@strip_linenos quote
+        function ChainRulesCore.frule(
+            (_, _, $(esc(:ΔA))),
+            ::typeof(Base.map),
+            ::typeof($(func)),
+            $(esc(:A))::GBArray
+        )
+            $(esc(:Ω)) = map($(esc(func)), $(esc(:A)))
+            return $(esc(:Ω)), $(esc(derivative)) .* unthunk($(esc(:ΔA)))
+        end
+        function ChainRulesCore.rrule(
+            ::typeof(Base.map),
+            ::typeof($(func)),
+            $(esc(:A))::GBArray
+        )
+            $(esc(:Ω)) = map($(esc(func)), $(esc(:A)))
+            function mapback($(esc(:ΔA)))
+                NoTangent(), NoTangent(), $(esc(derivative)) .* $(esc(:ΔA))
+            end
+            return $(esc(:Ω)), mapback
+        end
+    end
+end
+
+#Trig
+@scalarmaprule UnaryOps.SIN cos.(A)
+@scalarmaprule UnaryOps.COS -sin.(A)
+@scalarmaprule UnaryOps.TAN @. 1 + (Ω ^ 2)
+
+#Hyperbolic Trig
+@scalarmaprule UnaryOps.SINH cosh.(A)
+@scalarmaprule UnaryOps.COSH sinh.(A)
+@scalarmaprule UnaryOps.TANH @. 1 - (Ω ^ 2)
+
+#Inverse Trig
+@scalarmaprule UnaryOps.ASIN @. inv(sqrt.(1 - A ^ 2))
+@scalarmaprule UnaryOps.ACOS @. inv(sqrt.(1 - A ^ 2))
+@scalarmaprule UnaryOps.ATAN @. inv(1 + A ^ 2)
+
+#function frule(
+#    (_, _, ΔA),
+#    ::typeof(map),
+#    ::typeof(UnaryOps.SIN),
+#    A::GBArray
+#)
+#    Ω = map(UnaryOps.SIN, A)
+#    return Ω, map(UnaryOps.COS, A) .* ΔA
+#end
+
+#function frule(
+#    (,),
+#    ::typeof(map),
+#    op::Union{Function, SelectUnion},
+#    A::GBArray
+#)
+#    Ω = map(op, A)
+#    ∂Ω =
+#end

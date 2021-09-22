@@ -147,6 +147,7 @@ Base.:-(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = noth
 Base.:-(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
     map(BinaryOps.MINUS, u, x; mask, accum, desc)
 
+Base.:-(u::GBArray) = map(UnaryOps.AINV, u)
 """
     map(op::UnaryOp, A::GBArray; kwargs...)::GBArray
     map(op::BinaryOp, A::GBArray, x; kwargs...)::GBArray
