@@ -90,6 +90,26 @@ function rrule(
 end
 
 function frule(
+    (_,_,Δv),
+    ::Type{<:GBMatrix},
+    I::AbstractVector{U},
+    v::Vector{T}
+) where {U<:Integer, T}
+    return GBMatrix(I, v), GBMatrix(I, Δv)
+end
+
+function rrule(
+    ::Type{<:GBVector},
+    I::AbstractVector{U},
+    v::Vector{T}
+) where {U<:Integer, T}
+    function vecpullback(ΔΩ)
+        return NoTangent(),  NoTangent(), nonzeros(unthunk(ΔΩ))
+    end
+    return GBMatrix(I, v), vecpullback
+end
+
+function frule(
     (_,ΔS),
     ::Type{GBMatrix},
     S::SparseMatrixCSC{T}

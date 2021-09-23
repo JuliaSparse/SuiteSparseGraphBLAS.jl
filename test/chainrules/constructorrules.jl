@@ -20,7 +20,7 @@
         end
         @testset "Sparse Matrix and Vector" begin
             test_frule(GBMatrix, [1, 3, 5] ⊢ NoTangent(), [1, 3, 4] ⊢ NoTangent(), rand(-10.0:0.05:10.0, 3))
-            test_frule(GBMatrix, [1, 3, 5] ⊢ NoTangent(),  rand(-10.0:0.05:10.0, 3))
+            #test_frule(GBMatrix, [1, 3, 5] ⊢ NoTangent(),  rand(-10.0:0.05:10.0, 3))
         end
     end
 end
