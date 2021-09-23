@@ -33,17 +33,44 @@ function ChainRulesTestUtils.rand_tangent(
     return GBVector(I, v; nrows = size(x, 1))
 end
 
+# Inefficient, but doesn't matter, only doing small matrices
+function FiniteDifferences.to_vec(M::SparseMatrixCSC)
+    x, back = FiniteDifferences.to_vec(Matrix(M))
+    function backtomat(xvec)
+        M2 = back(xvec)
+        M_out = copy(M)
+        nz = findnz(M_out)
+        for j ∈ nz[1], i ∈ nz[2]
+            M_out[i,j] = M2[i, j]
+        end
+        return M_out
+    end
+    return x, backtomat
+end
+function FiniteDifferences.to_vec(M::SparseVector)
+    x, back = FiniteDifferences.to_vec(Vector(M))
+    function backtovec(xvec)
+        M2 = back(xvec)
+        M_out = copy(M)
+        nz = findnz(M_out)
+        for i ∈ nz[1]
+            M_out[i] = M2[i]
+        end
+        return M_out
+    end
+    return x, backtovec
+end
 ChainRulesTestUtils.rand_tangent(::AbstractRNG, ::SuiteSparseGraphBLAS.AbstractOp) = NoTangent()
 
 println("Testing SuiteSparseGraphBLAS.jl")
 @testset "SuiteSparseGraphBLAS" begin
 
-    #include_test("gbarray.jl")
-    #include_test("operations.jl")
-    #include_test("chainrules/chainrulesutils.jl")
-    #include_test("chainrules/mulrules.jl")
-    #include_test("chainrules/ewiserules.jl")
-    #include_test("chainrules/selectrules.jl")
-    #include_test("chainrules/constructorrules.jl")
+    include_test("gbarray.jl")
+    include_test("operations.jl")
+    include_test("chainrules/chainrulesutils.jl")
+    include_test("chainrules/mulrules.jl")
+    include_test("chainrules/ewiserules.jl")
+    include_test("chainrules/selectrules.jl")
+    include_test("chainrules/constructorrules.jl")
     include_test("chainrules/maprules.jl")
 end

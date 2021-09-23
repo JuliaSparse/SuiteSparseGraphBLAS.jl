@@ -117,6 +117,13 @@ function SparseArrays.SparseMatrixCSC(A::GBMatrix{T}; desc = nothing) where {T}
     ccall(:jl_free, Cvoid, (Ptr{T},), val)
     return SparseArrays.SparseMatrixCSC(nrows, ncols, col .+= 1, row .+= 1, outvalues)
 end
+function SparseArrays.SparseVector(A::GBMatrix{T}; desc = nothing) where {T}
+    SparseVector(SparseMatrixCSC(A; desc))
+end
+
+function SparseArrays.SparseVector(v::GBVector{T}; desc = nothing) where {T}
+    SparseVector(SparseMatrixCSC(GBMatrix(v); desc))
+end
 
 function _exportdensevec!(
     v::GBVector{T};

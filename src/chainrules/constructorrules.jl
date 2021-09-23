@@ -88,3 +88,40 @@ function rrule(
     end
     return GBMatrix(I, J, v), vecpullback
 end
+
+function frule(
+    (_,ΔS),
+    ::Type{GBMatrix},
+    S::SparseMatrixCSC{T}
+) where {T}
+    return GBMatrix(S), GBMatrix(ΔS)
+end
+
+function rrule(
+    ::Type{GBMatrix},
+    S::SparseMatrixCSC{T}
+) where {T}
+    function vecpullback(ΔΩ)
+        back = unthunk(ΔΩ)
+        return NoTangent(), SparseMatrixCSC(back)
+    end
+    return GBMatrix(S), vecpullback
+end
+
+function frule(
+    (_,ΔS),
+    ::Type{GBMatrix},
+    S::SparseVector{T}
+) where {T}
+    return GBMatrix(S), GBMatrix(ΔS)
+end
+
+function rrule(
+    ::Type{GBMatrix},
+    S::SparseVector{T}
+) where {T}
+    function vecpullback(ΔΩ)
+        return NoTangent(), SparseVector(unthunk(ΔΩ))
+    end
+    return GBMatrix(S), vecpullback
+end
