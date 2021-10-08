@@ -86,6 +86,7 @@ include("chainrules/reducerules.jl")
 include("chainrules/selectrules.jl")
 include("chainrules/constructorrules.jl")
 #include("random.jl")
+include("sparsemat.jl")
 include("misc.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
