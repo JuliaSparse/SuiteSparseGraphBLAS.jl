@@ -65,7 +65,6 @@ function rrule(::Type{<:GBVector}, I::AbstractVector{U}, v::Vector{T}) where {U<
     return GBVector(I, v), vecpullback
 end
 
-
 # Sparse Matrix
 function frule(
     (_,_,_,Δv),
@@ -78,7 +77,7 @@ function frule(
 end
 
 function rrule(
-    ::Type{<:GBVector},
+    ::Type{<:GBMatrix},
     I::AbstractVector{U},
     J::AbstractVector{U},
     v::Vector{T}
