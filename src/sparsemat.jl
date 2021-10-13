@@ -12,6 +12,9 @@ SparseMatrixCSC compatible wrapper over GBMatrix.
 struct SparseMatrixGB{Tv} <: SparseArrays.AbstractSparseMatrix{Tv, Int64}
     gbmat::GBMatrix{Tv}
     fillvalue::Tv
+    function SparseMatrixGB{Tv}(gbmat::GBMatrix{Tv}, fillval::Fv) where {Tv, Fv}
+        return new(gbmat, promote_type(Tv, Fv)(fillval))
+    end
 end
 
 function SparseMatrixGB(
@@ -69,7 +72,7 @@ end
 ######
 Base.:+(A::SparseMatrixGB, B::SparseMatrixGB) = SparseMatrixGB(A.gbmat + B.gbmat, A.fillvalue + B.fillvalue)
 
-# This will, naturally, totally ignore fill values and use zero(T).
+# This will totally ignore fill values and use zero(T).
 # I have no idea what to put as the new fill value, so use the default
 Base.:*(A::SparseMatrixGB, B::SparseMatrixGB) = SparseMatrixGB(A.gbmat * B.gbmat)
 
@@ -108,7 +111,7 @@ function SuiteSparseGraphBLAS.emul!(C::SparseMatrixGB, A::SparseMatrixGB, B::Spa
     C.fillvalue = op(A.fillvalue, B.fillvalue)
 end
 function SuiteSparseGraphBLAS.emul(A::SparseMatrixGB, B::SparseMatrixGB, op::Function) 
-    return SparseMatrixGB(mul(A.gbmat, B.gbmat, op), op(A.fillvalue, B.fillvalue))
+    return SparseMatrixGB(emul(A.gbmat, B.gbmat, op), op(A.fillvalue, B.fillvalue))
 end
 
 # Broadcasting
@@ -133,6 +136,7 @@ function Base.similar(
 end
 
 @inline function Base.copy(bc::Broadcast.Broadcasted{SparseMatGBStyle})
+    println("Using moi")
     f = bc.f
     l = length(bc.args)
     if l == 1
@@ -156,7 +160,9 @@ end
             right = copy(right)
         end
         if left isa SparseMatrixGB && right isa SparseMatrixGB
+            println(typeof(f))
             add = SuiteSparseGraphBLAS.defaultadd(f)
+            println(typeof(add))
             return add(left, right, f)
         else
             return map(f, left, right)
