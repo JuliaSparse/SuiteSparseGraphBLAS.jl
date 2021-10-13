@@ -1,13 +1,12 @@
 module SparseArrayCompat
 import SparseArrays
-using ..SuiteSparseGraphBLAS
-
+using ..SuiteSparseGraphBLAS: GBMatrix
 """
 SparseMatrixCSC compatible wrapper over GBMatrix.
 """
-struct SparseMatrixGB{Tv, Fv} <: SparseArrays.AbstractSparseMatrix{Tv}
+struct SparseMatrixGB{Tv} <: SparseArrays.AbstractSparseMatrix{Tv, Int64}
     gbmat::GBMatrix{Tv}
-    fillvalue::Fv
+    fillvalue::Tv
 end
 
 function SparseMatrixGB(
@@ -29,6 +28,33 @@ SparseMatrixGB(
     m = maximum(I), n = maximum(J)
 ) where {T} =
     SparseMatrixGB(GBMatrix(I, J, X, nrows=m, ncols=n), fill)
+SparseMatrixGB(
+    I::AbstractVector, J::AbstractVector, x::T, fill=zero(T);
+    m = maximum(I), n = maximum(J)
+) where {T} = 
+    SparseMatrixGB(GBMatrix(I, J, x; nrows=m, ncols=n), fill)
+SparseMatrixGB(A::GBMatrix{T}) where {T} = SparseMatrixGB{T}(A, zero(T))
 
+Base.copy(A::SparseMatrixGB{Tv}) where {Tv} = SparseMatrixGB(copy(A.gbmat), copy(A.fillvalue))
+Base.size(A::SparseMatrixGB) = size(A.gbmat)
+SparseArrays.nnz(A::SparseMatrixGB) = nnz(A.gbmat)
+Base.eltype(::Type{SparseMatrixGB{Tv}}) where{Tv} = Tv
+
+function Base.similar(A::SparseMatrixGB{Tv}, ::Type{TNew}, dims::Union{Dims{1}, Dims{2}}) where {Tv, TNew}
+    return SparseMatrixGB{TNew}(similar(A.gbmat, TNew, dims), A.fillvalue)
+end
+
+Base.setindex!(A::SparseMatrixGB, x, i, j) = setindex!(A.gbmat, x, i, j)
+
+function Base.getindex(A::SparseMatrixGB, i, j)
+    x = A.gbmat[i,j]
+    x === nothing ? (return A.fillvalue) : (return x)
+end
+
+SparseArrays.findnz(A::SparseMatrixGB) = SparseArrays.findnz(A.gbmat)
+SparseArrays.nonzeros(A::SparseMatrixGB) = SparseArrays.nonzeros(A.gbmat)
+SparseArrays.nonzeroinds(A::SparseMatrixGB) = SparseArrays.nonzeroinds(A.gbmat)
+
+Base.show(io::IO, ::MIME"text/plain", A::SparseMatrixGB) = show(io, MIME"text/plain"(), A.gbmat)
 
 end
