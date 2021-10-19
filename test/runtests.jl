@@ -73,4 +73,5 @@ println("Testing SuiteSparseGraphBLAS.jl")
     include_test("chainrules/selectrules.jl")
     include_test("chainrules/constructorrules.jl")
     include_test("chainrules/maprules.jl")
+    include_test("sparsemat.jl")
 end

@@ -4,12 +4,14 @@ using ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: GBMatrix
 using LinearAlgebra
 using Base.Broadcast
+
+export SparseMatrixGB
 # Basic struct, Base, and SparseArrays definitions:
 ###################################################
 """
 SparseMatrixCSC compatible wrapper over GBMatrix.
 """
-struct SparseMatrixGB{Tv} <: SparseArrays.AbstractSparseMatrix{Tv, Int64}
+mutable struct SparseMatrixGB{Tv} <: SparseArrays.AbstractSparseMatrix{Tv, Int64}
     gbmat::GBMatrix{Tv}
     fillvalue::Tv
     function SparseMatrixGB{Tv}(gbmat::GBMatrix{Tv}, fillval::Fv) where {Tv, Fv}
@@ -39,7 +41,7 @@ SparseMatrixGB(
 SparseMatrixGB(
     I::AbstractVector, J::AbstractVector, x::T, fill=zero(T);
     m = maximum(I), n = maximum(J)
-) where {T} = 
+) where {T} =
     SparseMatrixGB(GBMatrix(I, J, x; nrows=m, ncols=n), fill)
 SparseMatrixGB(A::GBMatrix{T}, fill=zero(T)) where {T} = SparseMatrixGB{T}(A, fill)
 SparseMatrixGB(A::SparseArrays.SparseMatrixCSC{T}, fill=zero(T)) where{T} =
@@ -64,7 +66,7 @@ SparseArrays.findnz(A::SparseMatrixGB) = SparseArrays.findnz(A.gbmat)
 SparseArrays.nonzeros(A::SparseMatrixGB) = SparseArrays.nonzeros(A.gbmat)
 SparseArrays.nonzeroinds(A::SparseMatrixGB) = SparseArrays.nonzeroinds(A.gbmat)
 
-function Base.show(io::IO, ::MIME"text/plain", A::SparseMatrixGB) 
+function Base.show(io::IO, ::MIME"text/plain", A::SparseMatrixGB)
     SuiteSparseGraphBLAS.gxbprint(io, A.gbmat, "fill value: $(A.fillvalue)")
 end
 
@@ -77,7 +79,7 @@ Base.:+(A::SparseMatrixGB, B::SparseMatrixGB) = SparseMatrixGB(A.gbmat + B.gbmat
 Base.:*(A::SparseMatrixGB, B::SparseMatrixGB) = SparseMatrixGB(A.gbmat * B.gbmat)
 
 # Mapping
-function Base.map!(op, A::SparseMatrixGB) 
+function Base.map!(op, A::SparseMatrixGB)
     map!(op, A.gbmat)
     A.fillvalue = op(A.fillvalue)
 end
@@ -98,19 +100,19 @@ end
 Base.map(op, A::SparseMatrixGB) = SparseMatrixGB(map(op, A.gbmat), op(A.fillvalue))
 Base.map(op, A::SparseMatrixGB, x) = SparseMatrixGB(map(op, A.gbmat, x), op(A.fillvalue, x))
 
-function SuiteSparseGraphBLAS.eadd!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function) 
+function SuiteSparseGraphBLAS.eadd!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
     eadd!(C.gbmat, A.gbmat, B.gbmat)
     C.fillvalue = op(A.fillvalue, B.fillvalue)
 end
-function SuiteSparseGraphBLAS.eadd(A::SparseMatrixGB, B::SparseMatrixGB, op::Function) 
+function SuiteSparseGraphBLAS.eadd(A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
     return SparseMatrixGB(eadd(A.gbmat, B.gbmat, op), op(A.fillvalue, B.fillvalue))
 end
 
-function SuiteSparseGraphBLAS.emul!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function) 
+function SuiteSparseGraphBLAS.emul!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
     emul!(C.gbmat, A.gbmat, B.gbmat)
     C.fillvalue = op(A.fillvalue, B.fillvalue)
 end
-function SuiteSparseGraphBLAS.emul(A::SparseMatrixGB, B::SparseMatrixGB, op::Function) 
+function SuiteSparseGraphBLAS.emul(A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
     return SparseMatrixGB(emul(A.gbmat, B.gbmat, op), op(A.fillvalue, B.fillvalue))
 end
 
@@ -136,7 +138,6 @@ function Base.similar(
 end
 
 @inline function Base.copy(bc::Broadcast.Broadcasted{SparseMatGBStyle})
-    println("Using moi")
     f = bc.f
     l = length(bc.args)
     if l == 1
@@ -160,14 +161,19 @@ end
             right = copy(right)
         end
         if left isa SparseMatrixGB && right isa SparseMatrixGB
-            println(typeof(f))
             add = SuiteSparseGraphBLAS.defaultadd(f)
-            println(typeof(add))
             return add(left, right, f)
         else
             return map(f, left, right)
         end
     end
+end
+
+function Base.broadcasted(::typeof(-), A::SparseMatrixGB, B::SparseMatrixGB)
+    map!(-, B)
+    C = eadd(A, B, +)
+    map!(-, B)
+    return C
 end
 
 end
