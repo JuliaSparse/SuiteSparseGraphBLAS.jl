@@ -14,6 +14,8 @@ using SuiteSparseGraphBLAS.SparseArrayCompat
 
     # map tests
     @test map(one, A) == map(one, B)
-    @test map(sin, A) == map(sin, B)
+    @test map(sin, A) ≈ map(sin, B)
     @test map(identity, A) == map(identity, B)
+    @test map(cos, A) ≈ map(cos, B)
+
 end
