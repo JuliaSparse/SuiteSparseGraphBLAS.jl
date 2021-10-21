@@ -99,7 +99,7 @@ function frule(
 end
 
 function rrule(
-    ::Type{<:GBVector},
+    ::Type{<:GBMatrix},
     I::AbstractVector{U},
     v::Vector{T}
 ) where {U<:Integer, T}
