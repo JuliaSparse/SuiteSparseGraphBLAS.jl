@@ -8,7 +8,6 @@ using BenchmarkTools
 using DelimitedFiles
 using SparseArrays
 using LinearAlgebra
-SuiteSparseGraphBLAS.gbset(SuiteSparseGraphBLAS.NTHREADS, 8)
 function benchmark(minsize, maxsize)
     println("SuiteSparseGraphBLAS Threads: $(SuiteSparseGraphBLAS.gbget(SuiteSparseGraphBLAS.NTHREADS))")
     ssmc = ssmc_db()
@@ -57,8 +56,8 @@ function singlebench(file)
 end
 
 if length(ARGS) != 0
-    tryparse(Int64, ARGS[1])
-    if ARGS[1] === nothing #assume it's a path if not an integer
+    x = tryparse(Int64, ARGS[1])
+    if x === nothing #assume it's a path if not an integer
         singlebench(ARGS[1])
     else
         (ARGS[1] isa Integer && ARGS[2] isa Integer && benchmark(ARGS[1], ARGS[2])) || benchmark(1000, 100000)
