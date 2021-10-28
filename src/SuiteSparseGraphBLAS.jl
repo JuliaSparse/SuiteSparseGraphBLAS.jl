@@ -91,6 +91,7 @@ export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
+export gbset, gbget
 export xtype, ytype, ztype, validtypes #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix #arrays
 export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.

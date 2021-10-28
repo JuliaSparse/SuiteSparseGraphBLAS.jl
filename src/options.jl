@@ -1,28 +1,51 @@
-function gbset(field, value)
-    libgb.GxB_Global_Option_set(field, value)
+"""
+    gbset(A::GBArray, option, value)
+    gbset(option, value)
+
+Set an option either for a specific GBArray, or globally. The commonly used options are:
+    - `:format = [:byrow | :bycol]`: The global default or array specific
+    column major or row major ordering.
+    - `:nthreads = [Integer]`: The global number of OpenMP threads to use.
+    - `:burble = [Bool]`: Print diagnostic output.
+    - `:sparsity_control = [:full | :bitmap | :sparse | :hypersparse]`: Set the sparsity of a
+    single GBArray.
+"""
+gbset
+
+function gbset(option, value)
+    option = option_toconst(option)
+    value = option_toconst(value)
+    libgb.GxB_Global_Option_set(option, value)
     return nothing
 end
 
-function gbget(field)
-    return libgb.GxB_Global_Option_get(field)
+function gbget(option)
+    option = option_toconst(option)
+    return libgb.GxB_Global_Option_get(option)
 end
 
-function gbset(A::GBMatrix, field, value)
-    libgb.GxB_Matrix_Option_set(A, field, value)
+function gbset(A::GBMatrix, option, value)
+    option = option_toconst(option)
+    value = option_toconst(value)
+    libgb.GxB_Matrix_Option_set(A, option, value)
     return nothing
 end
 
-function gbget(A::GBMatrix, field)
-    return libgb.GxB_Matrix_Option_get(A, field)
+function gbget(A::GBMatrix, option)
+    option = option_toconst(option)
+    return libgb.GxB_Matrix_Option_get(A, option)
 end
 
-function gbset(A::GBVector, field, value)
-    libgb.GxB_Matrix_Option_set(A, field, value)
+function gbset(A::GBVector, option, value)
+    option = option_toconst(option)
+    value = option_toconst(value)
+    libgb.GxB_Matrix_Option_set(A, option, value)
     return nothing
 end
 
-function gbget(A::GBVector, field)
-    return libgb.GxB_Matrix_Option_get(A, field)
+function gbget(A::GBVector, option)
+    option = option_toconst(option)
+    return libgb.GxB_Matrix_Option_get(A, option)
 end
 
 function format(A::GBVecOrMat)
@@ -42,6 +65,22 @@ const BURBLE = libgb.GxB_BURBLE
 
 const BYROW = libgb.GxB_BY_ROW
 const BYCOL = libgb.GxB_BY_COL
+
+#only translate if it's a symbol
+option_toconst(option) = option
+function option_toconst(sym::Symbol)
+    sym === :format && return FORMAT
+    sym === :nthreads && return NTHREADS
+    sym === :burble && return BURBLE
+    sym === :byrow && return BYROW
+    sym === :bycol && return BYCOL
+    sym === :sparsity_status && return SPARSITY_STATUS
+    sym === :sparsity_control && return SPARSITY_CONTROL
+    sym === :full && return GBDENSE
+    sym === :bitmap && return GBBITMAP
+    sym === :sparse && return GBSPARSE
+    sym === :hypersparse && return GBHYPER
+end
 
 
 """
