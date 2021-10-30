@@ -3,28 +3,6 @@
 SuiteSparseGraphBLAS.jl is a package for sparse linear algebra on arbitrary semirings, with a particular focus on graph computations.
 It aims to provide a Julian wrapper over Tim Davis' SuiteSparse reference implementation of the GraphBLAS C specification.
 
-# Roadmap
-
-!!! note
-    This library is still a WIP, if you are missing any functionality, find any incorrectly implemented functions, or need further/better documentation please open an issue, PR, or ask in the [#GraphBLAS channel on the Julia Zulip](https://julialang.zulipchat.com/#narrow/stream/289264-GraphBLAS) (preferred) or the [#graphblas channel on the Julia Slack](https://julialang.slack.com/archives/C023B0WGMHR)!
-
-While the core library is mostly complete, and all GraphBLAS functionality is present, there are still quite a few features being worked on for v1.0:
-
-1. ChainRules.jl integration for AD.
-2. Complete SparseArrays and ArrayInterface interfaces.
-3. Fancy printing
-4. User-defined types.
-5. Alternative syntax for GraphBLAS ops (currently must use `BinaryOps.PLUS` instead of `+`).
-
-Once these are completed there will be a v1.0 release, with the goal being JuliaCon 2021.
-
-Post 1.0 goals include:
-
-1. LightGraphs integration.
-2. GeometricFlux or other graph machine learning framework integration.
-3. More efficient import and export between Julia and GraphBLAS
-4. Support for other GraphBLAS implementations in a follow-up GraphBLAS.jl
-
 # Installation
 
 Install using the Julia package manager in the REPL:
@@ -58,7 +36,7 @@ The three primary components of GraphBLAS are: matrices, operators, and operatio
 
 ## GBArrays
 
-SuiteSparseGraphBLAS.jl provides `GBVector` and `GBMatrix` array types which are subtypes of `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively. Both can be constructed with no arguments to use the maximum size.
+SuiteSparseGraphBLAS.jl provides `GBVector` and `GBMatrix` array types which are subtypes of `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively.
 
 ```@setup intro
 using SuiteSparseGraphBLAS
@@ -66,16 +44,20 @@ using SparseArrays
 ```
 
 ```@repl intro
-GBVector{Float64}()
+GBVector{Float64}(13)
 
-GBMatrix{ComplexF64}()
+GBMatrix{ComplexF64}(1000, 1000)
 ```
 
 GraphBLAS array types are opaque to the user in order to allow the library author to choose the best storage format.
 SuiteSparse:GraphBLAS takes advantage of this by storing matrices in one of four formats: dense, bitmap, sparse-compressed, or hypersparse-compressed; and in either row or column major orientation.
-SuiteSparseGraphBLAS.jl sets the default to column major to ensure fast imports and exports.
 
-A complete list of construction methods can be found in [Construction](@ref), but the matrix and vector above can be constructed as follows:
+!!! warning "Default Orientation"
+    The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays, for speed
+    in certain operations. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
+    `Matrix` will be stored by-column. This can be changed using `gbset(A, :format, :byrow)`.
+
+The matrix and vector in the graphic above can be constructed as follows:
 
 ```@repl intro
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
@@ -87,46 +69,51 @@ v = GBVector([4], [10])
 The complete documentation of supported operations can be found in [Operations](@ref).
 GraphBLAS operations are, where possible, methods of existing Julia functions  listed in the third column.
 
-| GraphBLAS           | Operation                                                        | Julia                                   |
-|:--------------------|:----------------------------------------:                        |----------:                              |
-|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul[!]`                                 |
-|`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``               |`emul[!]`                                |
-|`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``               |`eadd[!]`                                |
-|`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex`                 |
-|`subassign`          |``\bf C (I,J) \langle M \rangle = C(I,J) \odot A``                |`subassign[!]`, `setindex!`              |
-|`assign`             |``\bf C \langle M \rangle (I,J) = C(I,J) \odot A``                |`assign[!]`                              |
-|`apply`              |``{\bf C \langle M \rangle = C \odot} f{\bf (A)}``                |`map[!]`                                 |
-|                     |``{\bf C \langle M \rangle = C \odot} f({\bf A},y)``              |                                         |
-|                     |``{\bf C \langle M \rangle = C \odot} f(x,{\bf A})``              |                                         |
-|`select`             |``{\bf C \langle M \rangle = C \odot} f({\bf A},k)``              |`select[!]`                              |
-|`reduce`             |``{\bf w \langle m \rangle = w \odot} [{\oplus}_j {\bf A}(:,j)]`` |`reduce[!]`                              |
-|                     |``s = s \odot [{\oplus}_{ij}  {\bf A}(i,j)]``                     |                                         |
-|`transpose`          |``\bf C \langle M \rangle = C \odot A^{\sf T}``                   |`gbtranspose[!]`, lazy: `transpose`, `'` |
-|`kronecker`          |``\bf C \langle M \rangle = C \odot \text{kron}(A, B)``           |`kron[!]`                                |
+| GraphBLAS           | Operation                                                        | Julia                                      |
+|:--------------------|:----------------------------------------:                        |----------:                                 |
+|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul[!]` or `*`                             |
+|`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``               |`emul[!]` or `.` broadcasting               |
+|`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``               |`eadd[!]`                                   |
+|`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex` or `A[i...]`       |
+|`subassign`          |``\bf C (I,J) \langle M \rangle = C(I,J) \odot A``                |`subassign[!]`, `setindex!` or `A[i...]=3.5`|
+|`assign`             |``\bf C \langle M \rangle (I,J) = C(I,J) \odot A``                |`assign[!]`                                 |
+|`apply`              |``{\bf C \langle M \rangle = C \odot} f{\bf (A)}``                |`map[!]` or `.` broadcasting                |
+|                     |``{\bf C \langle M \rangle = C \odot} f({\bf A},y)``              |                                            |
+|                     |``{\bf C \langle M \rangle = C \odot} f(x,{\bf A})``              |                                            |
+|`select`             |``{\bf C \langle M \rangle = C \odot} f({\bf A},k)``              |`select[!]`                                 |
+|`reduce`             |``{\bf w \langle m \rangle = w \odot} [{\oplus}_j {\bf A}(:,j)]`` |`reduce[!]`                                 |
+|                     |``s = s \odot [{\oplus}_{ij}  {\bf A}(i,j)]``                     |                                            |
+|`transpose`          |``\bf C \langle M \rangle = C \odot A^{\sf T}``                   |`gbtranspose[!]`, lazy: `transpose`, `'`    |
+|`kronecker`          |``\bf C \langle M \rangle = C \odot \text{kron}(A, B)``           |`kron[!]`                                   |
 
 where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumulating into ``\bf C``, and ``\otimes`` and ``\oplus`` are a binary operation and commutative monoid respectively. 
 
 ## GraphBLAS Operators
 
-GraphBLAS operators are one of the following:
+A GraphBLAS operator is a unary or binary function, the commutative monoid form of a binary function,
+or a semiring, made up of a binary op and a commutative monoid.
+SuiteSparse:GraphBLAS ships with many of the common unary and binary operators as built-ins,
+along with monoids and semirings built commonly used in graph algorithms. 
+In most cases these operators can be used with familiar Julia syntax, which then map to
+objects found in the submodules below:
 
 - `UnaryOps` such as `SIN`, `SQRT`, `ABS`, ...
 - `BinaryOps` such as `GE`, `MAX`, `POW`, `FIRSTJ`, ...
 - `Monoids` such as `PLUS_MONOID`, `LXOR_MONOID`, ...
 - `Semirings` such as `PLUS_TIMES` (the arithmetic semiring), `MAX_PLUS` (a tropical semiring), `PLUS_PLUS`, ...
 
-Built-in operators can be found in exported submodules:
+A user may choose to call a function in multiple different forms: `A .+ B`, `eadd(A, B, +)`,
+or `eadd(A, B, BinaryOps.PLUS)`. 
 
-```julia
-julia> BinaryOps.\TAB
+Functions which only accept monoids like `reduce` will automatically find the correct monoid,
+so a call to `reduce(+, A)`, will lower to `reduce(Monoids.PLUS_MONOID, A)`.
 
-ANY       BSET       DIV        FIRSTJ1    ISGE       LDEXP      MIN        RDIV       SECONDJ
-ATAN2     BSHIFT     EQ         FMOD       ISGT       LE         MINUS      REMAINDER  SECONDJ1
-BAND      BXNOR      FIRST      GE         ISLE       LOR        NE         RMINUS     TIMES
-BCLR      BXOR       FIRSTI     GT         ISLT       LT         PAIR       SECOND
-BGET      CMPLX      FIRSTI1    HYPOT      ISNE       LXOR       PLUS       SECONDI
-BOR       COPYSIGN   FIRSTJ     ISEQ       LAND       MAX        POW        SECONDI1
-```
+Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)`,
+`mul(A, B, (max, +))`, or `mul(A, B, Semirings.MAX_PLUS)`. 
+
+For operators which are not already built-in are automatically constructed when called. 
+Note, however, that their performance is significantly degraded compared to built-in operators,
+and where possible user code should avoid this capability.
 
 ## Example
 
