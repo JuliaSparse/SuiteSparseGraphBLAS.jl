@@ -11,19 +11,7 @@ using LinearAlgebra
 
 ##A is the input matrix, Output: Triangle Count
 function cohen(A)
-
-    #extracting lower matrix from input matrix
-    L = tril(A)
-
-
-    #extracting upper matrix from input matrix
-    U = triu(A')
-
-    B = mul(L, U, Semirings.PLUS_TIMES)
-    C = emul(B, A,  BinaryOps.TIMES)
-    result = reduce(Monoids.PLUS_MONOID[Float64], C, dims=:)
-    result = result /2
-
-    return result
-
+    U = select(TRIU, A)
+    L = select(TRIL, A)
+    return reduce(+, mul(L, U, (+, pair); mask=A)) ÷ 2
 end

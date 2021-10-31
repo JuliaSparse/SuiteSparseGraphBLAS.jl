@@ -15,13 +15,11 @@ function floydwarshall(A, n)
     D = A
     result = GBMatrix{Int64}(n, n)
 
-
     for i = 1:n
-            partial = mul(D[:,i], D[i,:], Semirings.MIN_PLUS)
-            D = emul(D, partial,  BinaryOps.MIN)
+            partial = mul(D[:,i], D[i,:], (min, +))
+            D = emul(D, partial,  min)
             result = partial
     end
-
     return result
 
 end

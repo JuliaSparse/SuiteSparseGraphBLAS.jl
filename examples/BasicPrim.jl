@@ -36,7 +36,7 @@ function b_prim(A, n, m)
         u = argmin(m'+d)
         m[u[2]] = Inf
         weight = weight + d[u[2]]
-        d = emul(d, A[u[1],:],  BinaryOps.MIN)
+        d = min.(d, A[u[1],:])
     end
 
     return weight

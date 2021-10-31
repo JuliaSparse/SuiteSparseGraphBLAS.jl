@@ -68,15 +68,13 @@ function cdlp(A, n, t)
     end
 
     for k = 1:t
-            F = mul(A, lab, Semirings.PLUS_TIMES)
+            F = A * lab
             for i = 1:n
             r = F[i,:]
             r = sort(r, dims=2)
             lab[i, i] = minMode(r)
         end
-
     end
-
     return lab
 
 end

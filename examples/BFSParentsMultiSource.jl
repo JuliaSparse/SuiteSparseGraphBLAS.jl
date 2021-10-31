@@ -12,7 +12,7 @@ using LinearAlgebra
 function insert(P, R, s, n)
     for i = 1:s
         for j = 1:n
-            if(P[i, j]!=nothing && R[i, j]==nothing) #*
+            if(P[i, j] !== nothing && R[i, j] === nothing) #*
                 R[i, j] = P[i, j]
             end
         end
@@ -51,10 +51,8 @@ function ms_bfsp(A, S, n, s)
             end
         end
     end
-
-
-    for i = 1:n-1
-            F = mul(F, A, Semirings.MIN_FIRST, mask=P, desc=Descriptors.RC)
+    for _ ∈ 1:n-1
+            F = mul(F, A, (min, first), mask=P, desc=Descriptors.RC)
             P = F[:, :, mask=F, desc=Descriptors.S]
             F = index[:, :, mask=F, desc=Descriptors.S]
             R = insert(P, R, s, n)
