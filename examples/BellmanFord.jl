@@ -18,8 +18,8 @@ function bellmanford(A, s, n)
         end
 
     d[s]=0.0
-    for i = 1:n
-           d = mul(d, A, Semirings.MIN_PLUS, mask=d, desc=Descriptors.S)
+    for _ ∈ 1:n
+           d = mul(d, A, (min, +), mask=d, desc=Descriptors.S)
     end
 
     return d

@@ -13,12 +13,11 @@ using LinearAlgebra
 function ktruss(A, k, n)
 
     C = A
-    for i = 1:n-1
+    for _ ∈ 1:n-1
        C = mul(C, C, Semirings.PLUS_LAND, mask=C)
-       C = select(SelectOps.GE, C, k-2)
+       C = select(>=, C, k-2)
        print(C)
     end
-
     return C
 
 end
