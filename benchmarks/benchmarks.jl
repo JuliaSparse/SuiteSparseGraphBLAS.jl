@@ -111,7 +111,7 @@ Please open an issue or message me for further functions to add here.
 =#
 
 # run with these nthread settings, add or remove to/from vector.
-const threadlist = [4,]
+const threadlist = [1, 4, 8, Sys.CPU_THREADS]
 
 function singlebench(pathornum)
     x = tryparse(Int64, pathornum)
