@@ -109,7 +109,7 @@ function GrB_finalize()
 end
 
 function GrB_getVersion(version=Ref{Cuint}(0), subversion=Ref{Cuint}(0))
-    @wraperror ccall((:GrB_getVersion, libgraphblas), GrB_Info, (Ptr{Cuint}, Ptr{Cuint}), version, subversion)
+    ccall((:GrB_getVersion, libgraphblas), GrB_Info, (Ptr{Cuint}, Ptr{Cuint}), version, subversion)
     return version[], subversion[]
 end
 
