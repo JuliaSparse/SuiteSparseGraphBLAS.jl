@@ -5,55 +5,124 @@ using SuiteSparseMatrixCollection
 using MatrixMarket
 using SuiteSparseGraphBLAS
 using BenchmarkTools
-using DelimitedFiles
 using SparseArrays
 using LinearAlgebra
-function benchmark(minsize, maxsize)
-    println("Using SuiteSparse:GraphBLAS shared library at: $(SuiteSparseGraphBLAS.artifact_or_path)")
-    println("SuiteSparseGraphBLAS Threads: $(SuiteSparseGraphBLAS.gbget(SuiteSparseGraphBLAS.NTHREADS))")
-    ssmc = ssmc_db()
-    matrices = filter(row ->  (minsize <= row.nnz <= maxsize) && row.real==true, ssmc)
-    # THIS WILL DOWNLOAD THESE MATRICES. BE WARNED.
-    paths = fetch_ssmc(matrices, format="MM")
-    for i ∈ 1:length(paths)
-        name = matrices[i, :name]
-        println("$i/$(length(paths)) Matrix $name: ")
-        singlebench(joinpath(paths[i], "$name.mtx"))
+
+BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
+const suite = BenchmarkGroup()
+const ssmc = ssmc_db()
+
+function sptimesfull(S, G)
+    printstyled("\nSparse * Full\n", color=:green)
+    GC.gc()
+    m = rand(size(S, 2), 1000)
+    m2 = GBMatrix(m)
+
+    printstyled("\nSparseMatrixCSC:\n", bold=true)
+    A = @benchmark $S * $m
+    show(stdout, MIME("text/plain"), A)
+
+    printstyled("\nGBMatrix:\n", bold=true)
+    gbset(:burble, true)
+    G * m2
+    gbset(:burble, false)
+
+    B = @benchmark $G * $m2
+    show(stdout, MIME("text/plain"), B)
+
+    tratio = ratio(median(A), median(B))
+    color = tratio.time >= 1.0 ? :green : :red
+    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
+end
+
+function sptimestranspose(S, G)
+    printstyled("\nSparse * Sparse'\n", color=:green)
+    GC.gc()
+
+    printstyled("\nSparseMatrixCSC:\n", bold=true)
+    A = @benchmark $S * ($S)'
+    show(stdout, MIME("text/plain"), A)
+
+    printstyled("\nGBMatrix:\n", bold=true)
+    gbset(:burble, true)
+    G * G'
+    gbset(:burble, false)
+    B = @benchmark $G * ($G)'
+    show(stdout, MIME("text/plain"), B)
+
+    tratio = ratio(median(A), median(B))
+    color = tratio.time >= 1.0 ? :green : :red
+    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
+end
+
+function sptimesfullwithaccum(S, G)
+    printstyled("\nFull += Sparse * Full\n", color=:green)
+    GC.gc()
+    m = rand(size(S, 2), 1000)
+    m2 = GBMatrix(m)
+
+    printstyled("\nSparseMatrixCSC:\n", bold=true)
+    A = @benchmark $S * $m
+    show(stdout, MIME("text/plain"), A)
+
+    C = GBMatrix(size(G, 1), size(m2, 2), 0.0)
+    gbset(C, :sparsity_control, :full)
+
+    printstyled("\nGBMatrix:\n", bold=true)
+    gbset(:burble, true)
+    mul!(C, G, m2; accum=+)
+    gbset(:burble, false)
+    B = @benchmark mul!($C, $G, $m2; accum=+)
+    show(stdout, MIME("text/plain"), B)
+
+    tratio = ratio(median(A), median(B))
+    color = tratio.time >= 1.0 ? :green : :red
+    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
+end
+
+# SETTINGS:
+# run these functions for benchmarking:
+const functorun = [sptimesfull, sptimesfullwithaccum]
+
+# run with these nthread settings.
+const threadlist = [2]
+
+function singlebench(pathornum)
+    x = tryparse(Int64, pathornum)
+    if x !== nothing
+        ssmc[x, :real] == true || throw(ArgumentError("SSMC ID must be for a matrix with real values"))
+        path = joinpath(fetch_ssmc(ssmc[x, :group], ssmc[x, :name]), "$(ssmc[x, :name]).mtx")
+    elseif isfile(pathornum)
+        path = pathornum
+    else
+        throw(ErrorException("Argument is not a path or SuiteSparseMatrixCollection ID number"))
+    end
+    name = basename(path)
+    S = convert(SparseMatrixCSC{Float64}, MatrixMarket.mmread(path))
+    G = GBMatrix(S)
+    gbset(G, :format, :byrow)
+    diag(G)
+    printstyled("Benchmarking $(ssmc[x, :name]):\n"; bold=true, color=:green)
+    for nthreads ∈ threadlist
+        printstyled("\nBenchmarking with $nthreads GraphBLAS threads\n"; bold=true, color=:blue)
+        gbset(:nthreads, nthreads)
+        for f ∈ functorun
+            f(S, G)
+        end
     end
 end
 
-function singlebench(file)
-    GC.gc() #GC to be absolutely sure nothing is hanging around from last loop
-    S = convert(SparseMatrixCSC{Float64}, MatrixMarket.mmread(file))
-    G = GBMatrix(S)
-    # Set to row, this will likely be default in the future, and is the most performant.
-    SuiteSparseGraphBLAS.gbset(G, SuiteSparseGraphBLAS.FORMAT, SuiteSparseGraphBLAS.BYROW)
-    # Not sure if gbset is FORMAT is lazy, so to be sure.
-    diag(G)
-    # Fairly wide dense matrix for rhs.
-    m = rand(size(S, 2), 1000)
-    m2 = GBMatrix(m)
-    SuiteSparseGraphBLAS.gbset(SuiteSparseGraphBLAS.BURBLE, true)
-    #println("--------------")
-    #println("A * A':")
-    #println("-------")
-    #selfmultimes1 = @belapsed $S * ($S)' samples=1 evals=3
-    #selfmultimes2 = @belapsed $G * ($G)' samples=1 evals=3
-    #selfmultimesspeedup = selfmultimes1/selfmultimes2
-    println("\nSparseArrays=$selfmultimes1\t GraphBLAS=$selfmultimes2\t SA/GB=$selfmultimesspeedup\n")
-    println("A * Full:")
-    println("---------")
-    densemattimessparse = @belapsed $S * $m samples=1 evals=3
-    densemattimesgb = @belapsed $G * $m2 samples=1 evals=3
-    println("\nSparseArrays=$densemattimessparse\t GraphBLAS=$densemattimesgb\t SA/GB=$(densemattimessparse/densemattimesgb)\n")
-    SuiteSparseGraphBLAS.gbset(SuiteSparseGraphBLAS.BURBLE, false)
-end
-
 if length(ARGS) != 0
-    x = tryparse(Int64, ARGS[1])
-    if x === nothing #assume it's a path if not an integer
+    if isfile(ARGS[1])
+        if splitext(ARGS[1])[2] == ".mtx"
+            singlebench(ARGS[1])
+        else
+            singlebench.(readlines(ARGS[1]))
+        end
+    elseif tryparse(Int64, ARGS[1]) !== nothing
         singlebench(ARGS[1])
     else
-        (ARGS[1] isa Integer && ARGS[2] isa Integer && benchmark(ARGS[1], ARGS[2])) || benchmark(1000, 100000)
+        throw(ArgumentError("The first argument must a file with a list of SuiteSparse ID numbers or paths to MatrixMarket files"))
     end
 end
