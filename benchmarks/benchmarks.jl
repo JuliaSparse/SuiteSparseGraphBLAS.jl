@@ -9,22 +9,17 @@ using DelimitedFiles
 using SparseArrays
 using LinearAlgebra
 function benchmark(minsize, maxsize)
+    println("Using SuiteSparse:GraphBLAS shared library at: $(SuiteSparseGraphBLAS.artifact_or_path)")
     println("SuiteSparseGraphBLAS Threads: $(SuiteSparseGraphBLAS.gbget(SuiteSparseGraphBLAS.NTHREADS))")
     ssmc = ssmc_db()
     matrices = filter(row ->  (minsize <= row.nnz <= maxsize) && row.real==true, ssmc)
     # THIS WILL DOWNLOAD THESE MATRICES. BE WARNED.
     paths = fetch_ssmc(matrices, format="MM")
-    avgspeedupselfmultimes = 0
-    avgspeedupdensemattimes = 0
     for i ∈ 1:length(paths)
         name = matrices[i, :name]
         println("$i/$(length(paths)) Matrix $name: ")
         singlebench(joinpath(paths[i], "$name.mtx"))
     end
-    x = avgspeedupselfmultimes
-    y = avgspeedupdensemattimes
-    println("Speedup of A * A': $(x / length(paths))")
-    println("Speedup of A * Full: $(y / length(paths))")
 end
 
 function singlebench(file)
@@ -39,19 +34,18 @@ function singlebench(file)
     m = rand(size(S, 2), 1000)
     m2 = GBMatrix(m)
     SuiteSparseGraphBLAS.gbset(SuiteSparseGraphBLAS.BURBLE, true)
-    println("--------------")
-    println("A * A':")
-    println("-------")
-    selfmultimes1 = @belapsed $S * ($S)' samples=1 evals=3
-    selfmultimes2 = @belapsed $G * ($G)' samples=1 evals=3
-    selfmultimesspeedup = selfmultimes1/selfmultimes2
+    #println("--------------")
+    #println("A * A':")
+    #println("-------")
+    #selfmultimes1 = @belapsed $S * ($S)' samples=1 evals=3
+    #selfmultimes2 = @belapsed $G * ($G)' samples=1 evals=3
+    #selfmultimesspeedup = selfmultimes1/selfmultimes2
     println("\nSparseArrays=$selfmultimes1\t GraphBLAS=$selfmultimes2\t SA/GB=$selfmultimesspeedup\n")
     println("A * Full:")
     println("---------")
-    densemattimes1 = @belapsed $S * $m samples=1 evals=3
-    densemattimes2 = @belapsed $G * $m2 samples=1 evals=3
-    densemattimesspeedup = densemattimes1/densemattimes2
-    println("\nSparseArrays=$densemattimes1\t GraphBLAS=$densemattimes2\t SA/GB=$(densemattimes1/densemattimes2)\n")
+    densemattimessparse = @belapsed $S * $m samples=1 evals=3
+    densemattimesgb = @belapsed $G * $m2 samples=1 evals=3
+    println("\nSparseArrays=$densemattimessparse\t GraphBLAS=$densemattimesgb\t SA/GB=$(densemattimessparse/densemattimesgb)\n")
     SuiteSparseGraphBLAS.gbset(SuiteSparseGraphBLAS.BURBLE, false)
 end
 
