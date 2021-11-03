@@ -101,7 +101,14 @@ end
 
 # SETTINGS:
 # run these functions for benchmarking:
-const functorun = [sptimesfullwithaccum]
+const functorun = [sptimesfull, sptimesfullwithaccum]
+#= The choices are:
+sptimesfull - S' * F
+sptimesfullwithaccum - F += S' * F
+sptimestranspose - S' * S
+
+Please open an issue or message me for further functions to add here.
+=#
 
 # run with these nthread settings, add or remove to/from vector.
 const threadlist = [4,]
