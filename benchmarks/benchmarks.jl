@@ -1,3 +1,21 @@
+# INSTRUCTIONS:
+
+# Running this file is fairly straightforward:
+# From the terminal call julia with this file as the first argument, as well as one of three other arguments:
+# 1. A number, corresponding to the ID of a SuiteSparse: Matrix Collection matrix.
+# 2. The path to an .mtx file.
+# 3. The path to a file containing either of the above options on each line.
+
+# This would look something like
+# >julia benchmarks.jl 1375
+# or
+# >julia benchmarks.jl ~/mymtx.mtx
+
+# CHANGING THE SHARED LIBRARY.
+# Further instructions on changing the shared library programmatically can be found in the docs.
+# However, simply changing the LocalPreferences.toml file will suffice for this benchmark script.
+
+# Some options can be found further down under SETTINGS
 using Pkg
 Pkg.activate(".")
 Pkg.instantiate()
@@ -83,10 +101,10 @@ end
 
 # SETTINGS:
 # run these functions for benchmarking:
-const functorun = [sptimesfull, sptimesfullwithaccum]
+const functorun = [sptimesfullwithaccum]
 
-# run with these nthread settings.
-const threadlist = [2]
+# run with these nthread settings, add or remove to/from vector.
+const threadlist = [4,]
 
 function singlebench(pathornum)
     x = tryparse(Int64, pathornum)
@@ -103,7 +121,7 @@ function singlebench(pathornum)
     G = GBMatrix(S)
     gbset(G, :format, :byrow)
     diag(G)
-    printstyled("Benchmarking $(ssmc[x, :name]):\n"; bold=true, color=:green)
+    printstyled("Benchmarking $name:\n"; bold=true, color=:green)
     for nthreads ∈ threadlist
         printstyled("\nBenchmarking with $nthreads GraphBLAS threads\n"; bold=true, color=:blue)
         gbset(:nthreads, nthreads)

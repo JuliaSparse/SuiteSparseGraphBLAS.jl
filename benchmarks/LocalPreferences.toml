@@ -1,0 +1,4 @@
+[SuiteSparseGraphBLAS]
+#replace "default" with the path to `libgraphblas.so`, including the file to switch the 
+#shared library being used
+shared_lib = "default"
