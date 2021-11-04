@@ -1,38 +1,94 @@
 module UnaryOps
-    using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp
-    using ..libgb
-    export UnaryOp
-    function UnaryOp(name)
-        if isGxB(name) || isGrB(name) #If it's a GrB/GxB op we don't want the prefix
-            simplifiedname = name[5:end]
-        else
-            simplifiedname = name
-        end
-        tname = Symbol(simplifiedname * "_T")
-        simplifiedname = Symbol(simplifiedname)
-        structquote = quote
-            struct $tname <: AbstractUnaryOp
-                typedops::Dict{DataType, TypedUnaryOperator}
-                name::String
-                $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
-            end
-        end
-        @eval($structquote) #Eval the struct into the Types submodule to avoid clutter.
-        constquote = quote
-            const $simplifiedname = $tname()
-            export $simplifiedname
-        end
-        @eval($constquote)
-        return getproperty(UnaryOps, simplifiedname)
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp, GBType, 
+    valid_vec, juliaop, toGBType
+import ..SuiteSparseGraphBLAS: juliaop
+using ..libgb
+export UnaryOp
+function UnaryOp(name)
+    if isGxB(name) || isGrB(name) #If it's a GrB/GxB op we don't want the prefix
+        simplifiedname = name[5:end]
+    else
+        simplifiedname = name
     end
-
-    struct GenericUnaryOp <: AbstractUnaryOp
-        typedops::Dict{DataType, TypedUnaryOperator}
-        name::String
-        GenericUnaryOp(name) = new(Dict{DataType, TypedUnaryOperator}(), name)
+    tname = Symbol(simplifiedname * "_T")
+    simplifiedname = Symbol(simplifiedname)
+    structquote = quote
+        struct $tname <: AbstractUnaryOp
+            typedops::Dict{DataType, TypedUnaryOperator}
+            name::String
+            $tname() = new(Dict{DataType, TypedUnaryOperator}(), $name)
+        end
     end
+    @eval($structquote)
+    constquote = quote
+        const $simplifiedname = $tname()
+        export $simplifiedname
+    end
+    @eval($constquote)
+    return getproperty(UnaryOps, simplifiedname)
+end
+struct GenericUnaryOp <: AbstractUnaryOp
+    typedops::Dict{DataType, TypedUnaryOperator}
+    name::String
+    GenericUnaryOp(name) = new(Dict{DataType, TypedUnaryOperator}(), name)
+end
+function UnaryOp(fn::Function; keep=true)
+    @warn "Use built-in functions where possible, user defined functions are less performant.
+        \nSee the documentation for a list of available built-in functions."
+    name = string(fn)
+    if keep
+        op = UnaryOp(name)
+        funcquote = quote
+            UnaryOp(::typeof($fn)) = $op
+            juliaop(::typeof($op)) = $fn
+        end
+        @eval($funcquote)
+    else
+        op = GenericUnaryOp(name)
+    end
+    return op
+end
+function UnaryOp(fn::Function, ztype, xtype; keep=true)
+    op = UnaryOp(fn; keep)
+    _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
+    return op
+end
+#Same xtype, ztype.
+function UnaryOp(fn::Function, type; keep=true)
+    return UnaryOp(fn, type, type; keep)
+end
+#Vector of xtypes and ztypes, add a GrB_UnaryOp for each.
+function UnaryOp(fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType}; keep=true)
+    op = UnaryOp(fn; keep)
+    length(ztype) == length(xtype) || throw(DimensionMismatch("Lengths of ztype and xtype must match."))
+    for i ∈ 1:length(ztype)
+        _addunaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]))
+    end
+    return op
+end
+#Vector but same ztype xtype.
+function UnaryOp(fn::Function, type::Vector{DataType}; keep=true)
+    return UnaryOp(fn, type, type; keep)
 end
 
+#This is adapted from the fork by cvdlab.
+#Add a new GrB_UnaryOp to an AbstractUnaryOp.
+function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype::GBType{U}) where {T, U}
+    function unaryopfn(z, x)
+        unsafe_store!(z, fn(x))
+        return nothing
+    end
+    opref = Ref{libgb.GrB_UnaryOp}()
+    unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{T}, Ref{U}))
+    libgb.GB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
+    op.typedops[U] = TypedUnaryOperator{xtype, ztype}(opref[])
+    return nothing
+end
+
+function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype, xtype)
+    return _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
+end
+end
 const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
 
 #TODO: Rewrite
@@ -91,65 +147,6 @@ function _createunaryops()
     for name ∈ builtins
         UnaryOps.UnaryOp(name)
     end
-end
-
-#This is adapted from the fork by cvdlab.
-#Add a new GrB_UnaryOp to an AbstractUnaryOp.
-function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype::GBType{U}) where {T, U}
-    function unaryopfn(z, x)
-        unsafe_store!(z, fn(x))
-        return nothing
-    end
-    opref = Ref{libgb.GrB_UnaryOp}()
-    unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{T}, Ref{U}))
-    libgb.GB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
-    op.typedops[U] = TypedUnaryOperator{xtype, ztype}(opref[])
-    return nothing
-end
-
-#UnaryOp constructors
-#####################
-function UnaryOps.UnaryOp(name::String, fn::Function, ztype, xtype; keep=false)
-    @warn "Use built-in functions where possible, user defined functions are less performant."
-    length(name) == 0 && (name = string(fn))
-    if keep
-        op = UnaryOps.UnaryOp(name)
-    else
-        op = UnaryOps.GenericUnaryOp(name)
-    end
-    _addunaryop(op, fn, toGBType(ztype), toGBType(xtype))
-    return op
-end
-#Same xtype, ztype.
-function UnaryOps.UnaryOp(name::String, fn::Function, type; keep=false)
-    return UnaryOps.UnaryOp(name, fn, type, type; keep)
-end
-#Vector of xtypes and ztypes, add a GrB_UnaryOp for each.
-function UnaryOps.UnaryOp(name::String, fn::Function, ztype::Vector{DataType}, xtype::Vector{DataType}; keep=false)
-    @warn "Use built-in functions where possible, user defined functions are less performant."
-    length(name) == 0 && (name = string(fn))
-    if keep
-        op = UnaryOps.UnaryOp(name)
-    else
-        op = UnaryOps.GenericUnaryOp(name)
-    end
-    length(ztype) == length(xtype) || throw(DimensionMismatch("Lengths of ztype and xtype must match."))
-    for i ∈ 1:length(ztype)
-        _addunaryop(op, fn, toGBType(ztype[i]), toGBType(xtype[i]))
-    end
-    return op
-end
-#Vector but same ztype xtype.
-function UnaryOps.UnaryOp(name::String, fn::Function, type::Vector{DataType}; keep=false)
-    return UnaryOps.UnaryOp(name, fn, type, type; keep)
-end
-#Construct it using all the built in primitives.
-function UnaryOps.UnaryOp(name::String, fn::Function; keep=false)
-    return UnaryOps.UnaryOp(name, fn, valid_vec; keep)
-end
-
-function UnaryOps.UnaryOp(fn::Function; keep=false)
-    return UnaryOps.UnaryOp("", fn; keep)
 end
 
 function _load(unaryop::AbstractUnaryOp)

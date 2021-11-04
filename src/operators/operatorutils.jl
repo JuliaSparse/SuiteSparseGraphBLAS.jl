@@ -65,12 +65,24 @@ function Base.getindex(o::AbstractOp, t::DataType)
     if Any ∈ keys(o.typedops)
         getindex(o.typedops, Any)
     else
+        if !haskey(o.typedops, t)
+            addtoop(o, t)
+        end
         getindex(o.typedops, t)
     end
+end
+
+function addtoop(op::AbstractUnaryOp, type)
+    f = juliaop(op)
+    resulttypes = Base.return_types(f, (type,))
+    if length(resulttypes) != 1
+        throw(ArgumentError("Inferred more than one result type for function $(string(f)) on type $type."))
+    end
+    UnaryOps._addunaryop(op, f, resulttypes[1], type)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
     print(io, o.name, ": ", validtypes(o))
 end
 
-juliaop(op...) = nothing
+function juliaop end
