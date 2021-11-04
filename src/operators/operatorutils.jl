@@ -72,6 +72,24 @@ function Base.getindex(o::AbstractOp, t::DataType)
     end
 end
 
+function Base.getindex(o::AbstractBinaryOp, t1::DataType, t2::DataType)
+    _isloaded(o) || _load(o)
+    if (Any, Any) ∈ keys(o.typedops)
+        getindex(o.typedops, (Any, Any))
+    else
+        if !haskey(o.typedops, (t1, t2))
+            addtoop(o, (t1, t2))
+        end
+        getindex(o.typedops, (t1, t2))
+    end
+end
+Base.getindex(o::AbstractBinaryOp, tup::Tuple{DataType, DataType}) = o[tup...]
+Base.getindex(o::AbstractBinaryOp, t::DataType) = o[t, t]
+
+Base.setindex!(o::AbstractBinaryOp, x, tup::Tuple{DataType, DataType}) = setindex!(o.typedops, x, tup)
+Base.setindex!(o::AbstractBinaryOp, x, t1::DataType, t2::DataType) = setindex!(o, x, (t1, t2))
+Base.setindex!(o::AbstractBinaryOp, x, t::DataType) = setindex!(o, x, (t, t))
+
 function addtoop(op::AbstractUnaryOp, type)
     f = juliaop(op)
     resulttypes = Base.return_types(f, (type,))
@@ -80,6 +98,16 @@ function addtoop(op::AbstractUnaryOp, type)
     end
     UnaryOps._addunaryop(op, f, resulttypes[1], type)
 end
+
+function addtoop(op::AbstractBinaryOp, type1, type2)
+    f = juliaop(op)
+    resulttypes = Base.return_types(f, (type, type2))
+    if length(resulttypes) != 1
+        throw(ArgumentError("Inferred more than one result type for function $(string(f)) on type $type."))
+    end
+    BinaryOps._addbinaryop(op, f, resulttypes[1], type1, type2)
+end
+addtoop(op::AbstractBinaryOp, type) = addtoop(op, type, type)
 
 function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
     print(io, o.name, ": ", validtypes(o))
