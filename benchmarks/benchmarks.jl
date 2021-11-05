@@ -136,7 +136,7 @@ function csctimesfullwithaccum(S, G)
     printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
 end
 
-# SETTINGS:
+# OPTIONS SET 2:
 # run these functions for benchmarking:
 const functorun = [csctimesfull, csctimesfullwithaccum]
 #= The choices are:
