@@ -123,7 +123,8 @@ function csctimesfullwithaccum(S, G)
 
     C = GBMatrix(size(G, 1), size(m2, 2), 0.0)
     gbset(C, :sparsity_control, :full)
-
+    gbset(C, :format, :bycol)
+    
     printstyled("\nGBMatrix:\n", bold=true)
     gbset(:burble, true)
     mul!(C, G, m2; accum=+)
