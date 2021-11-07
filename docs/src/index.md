@@ -94,13 +94,15 @@ A GraphBLAS operator is a unary or binary function, the commutative monoid form 
 or a semiring, made up of a binary op and a commutative monoid.
 SuiteSparse:GraphBLAS ships with many of the common unary and binary operators as built-ins,
 along with monoids and semirings built commonly used in graph algorithms. 
-In most cases these operators can be used with familiar Julia syntax, which then map to
+In most cases these operators can be used with familiar Julia syntax and functions, which then map to
 objects found in the submodules below:
 
-- `UnaryOps` such as `SIN`, `SQRT`, `ABS`, ...
-- `BinaryOps` such as `GE`, `MAX`, `POW`, `FIRSTJ`, ...
-- `Monoids` such as `PLUS_MONOID`, `LXOR_MONOID`, ...
+- `UnaryOps` such as `SIN`, `SQRT`, `ABS`
+- `BinaryOps` such as `GE`, `MAX`, `POW`, `FIRSTJ`
+- `Monoids` such as `PLUS_MONOID`, `LXOR_MONOID`
 - `Semirings` such as `PLUS_TIMES` (the arithmetic semiring), `MAX_PLUS` (a tropical semiring), `PLUS_PLUS`, ...
+
+The above objects should, in almost all cases, be used by instead passing the equivalent functions, `sin` for `SIN`, `+` for `PLUS_MONOID` etc.
 
 A user may choose to call a function in multiple different forms: `A .+ B`, `eadd(A, B, +)`,
 or `eadd(A, B, BinaryOps.PLUS)`. 
@@ -111,9 +113,10 @@ so a call to `reduce(+, A)`, will lower to `reduce(Monoids.PLUS_MONOID, A)`.
 Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)`,
 `mul(A, B, (max, +))`, or `mul(A, B, Semirings.MAX_PLUS)`. 
 
-For operators which are not already built-in are automatically constructed when called. 
-Note, however, that their performance is significantly degraded compared to built-in operators,
-and where possible user code should avoid this capability.
+!!! warning "Performance of User Defined Functions"
+    Operators which are not already built-in are automatically constructed using function pointers when called. 
+    Note, however, that their performance is significantly degraded compared to built-in operators,
+    and where possible user code should avoid this capability.
 
 ## Example
 
@@ -125,17 +128,17 @@ We'll test it using the matrix from the GBArray section above, which has two tri
 
 ```@repl intro
 function cohen(A)
-  U = select(TRIU, A)
-  L = select(TRIL, A)
-  return reduce(Monoids.PLUS_MONOID[Int64], mul(L, U, Semirings.PLUS_PAIR; mask=A)) ÷ 2
+  U = select(triu, A)
+  L = select(tril, A)
+  return reduce(+, mul(L, U, (+, pair); mask=A)) ÷ 2
 end
 
 function sandia(A)
-  L = select(TRIL, A)
-  return reduce(Monoids.PLUS_MONOID[Int64], mul(L, L, Semirings.PLUS_PAIR; mask=L))
+  L = select(tril, A)
+  return reduce(+, mul(L, L, (+, pair); mask=L))
 end
 
-M = eadd(A, A', BinaryOps.PLUS) #Make undirected/symmetric
+M = eadd(A, A', +) #Make undirected/symmetric
 cohen(M)
 sandia(M)
 ```
