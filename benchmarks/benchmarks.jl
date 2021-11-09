@@ -57,13 +57,13 @@ function AxB_allbycol(S, G, nthreads, sizerhs)
     show(stdout, MIME("text/plain"), A)
 
     printstyled("\nGBMatrix:\n", bold=true)
-    #print burble for checking
-    gbset(:burble, true)
-    mul!(C, G, m2)
-    gbset(:burble, false)
     for n ∈ nthreads
         printstyled("\nC = S * F with $n threads: \n", bold=true, color=:green)
         gbset(:nthreads, n)
+        #print burble for checking
+        gbset(:burble, true)
+        mul!(C, G, m2)
+        gbset(:burble, false)
         B = @benchmark mul!($C, $G, $m2)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
@@ -88,13 +88,13 @@ function AxB_allbyrow(S, G, nthreads, sizerhs)
     show(stdout, MIME("text/plain"), A)
 
     printstyled("\nGBMatrix:\n", bold=true)
-    #print burble for checking
-    gbset(:burble, true)
-    mul(G, m2)
-    gbset(:burble, false)
     for n ∈ nthreads
         printstyled("\nC' = S' * F' with $n threads: \n", bold=true, color=:green)
         gbset(:nthreads, n)
+        #print burble for checking
+        gbset(:burble, true)
+        mul(G, m2)
+        gbset(:burble, false)
         B = @benchmark mul($G, $m2)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
@@ -118,13 +118,14 @@ function AxB_ColxRow(S, G, nthreads, sizerhs)
     show(stdout, MIME("text/plain"), A)
 
     printstyled("\nGBMatrix:\n", bold=true)
-    #print burble for checking
-    gbset(:burble, true)
-    mul(G, m2)
-    gbset(:burble, false)
+
     for n ∈ nthreads
         printstyled("\nC' = S * F' with $n threads: \n", bold=true, color=:green)
         gbset(:nthreads, n)
+        #print burble for checking
+        gbset(:burble, true)
+        mul(G, m2)
+        gbset(:burble, false)
         B = @benchmark mul($G, $m2)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
@@ -154,12 +155,13 @@ function CaccumAxB_allbycol(S, G, nthreads, sizerhs)
 
     printstyled("\nGBMatrix:\n", bold=true)
     #print burble for checking
-    gbset(:burble, true)
-    mul!(C, G, m2; accum=+)
-    gbset(:burble, false)
+
     for n ∈ nthreads
         printstyled("\nF += S * F with $n threads: \n", bold=true, color=:green)
         gbset(:nthreads, n)
+        gbset(:burble, true)
+        mul!(C, G, m2; accum=+)
+        gbset(:burble, false)
         B = @benchmark mul!($C, $G, $m2; accum=+)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
@@ -182,19 +184,20 @@ function CaccumAxB_allbyrow(S, G, nthreads, sizerhs)
     printstyled("\nSparseMatrixCSC:\n", bold=true)
     A = @benchmark $S * $m
     show(stdout, MIME("text/plain"), A)
-
+    gbset(:burble, true)
     C = GBMatrix(size(G, 1), size(m2, 2), 0.0)
     gbset(C, :sparsity_control, :full)
     gbset(C, :format, :byrow)
 
     printstyled("\nGBMatrix:\n", bold=true)
     #print burble for checking
-    gbset(:burble, true)
-    mul!(C, G, m2; accum=+)
     gbset(:burble, false)
     for n ∈ nthreads
         printstyled("\nF' += S' * F' with $n threads: \n", bold=true, color=:green)
         gbset(:nthreads, n)
+        gbset(:burble, true)
+        mul!(C, G, m2; accum=+)
+        gbset(:burble, false)
         B = @benchmark mul!($C, $G, $m2; accum=+)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
