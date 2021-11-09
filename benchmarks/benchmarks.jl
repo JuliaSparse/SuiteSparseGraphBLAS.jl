@@ -33,7 +33,7 @@ BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
 BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
 
 # Change this to change the size of the dense RHS of csrtimesfull and csctimesfull
-const sizefullrhs = [1,2, 10]
+const sizefullrhs = [1,2,20]
 
 
 const suite = BenchmarkGroup()
@@ -208,7 +208,7 @@ end
 
 # OPTIONS SET 2:
 # run these functions for benchmarking:
-const functorun = [AxB_allbycol, CaccumAxB_allbycol]
+const functorun = [AxB_allbycol, AxB_ColxRow, CaccumAxB_allbycol, CaccumAxB_allbyrow]
 #= The choices are:
 AxB_allbycol - S * F
 AxB_ColxRow - S' * F
@@ -218,7 +218,7 @@ Please open an issue or message me for further functions to add here.
 =#
 
 # run with these nthread settings, add or remove to/from vector.
-const threadlist = [1, 4, 8, Sys.CPU_THREADS]
+const threadlist = [1, 4, 8, 20]
 
 function singlebench(pathornum)
     x = tryparse(Int64, pathornum)
