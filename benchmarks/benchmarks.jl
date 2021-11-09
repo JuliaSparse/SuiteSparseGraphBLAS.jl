@@ -33,15 +33,16 @@ BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
 BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
 
 # Change this to change the size of the dense RHS of csrtimesfull and csctimesfull
-const sizefullrhs = 2
+const sizefullrhs = [1,2, 10]
+
 
 const suite = BenchmarkGroup()
 const ssmc = ssmc_db()
 
-function AxB_allbycol(S, G, nthreads)
+function AxB_allbycol(S, G, nthreads, sizerhs)
     printstyled("\nCSC = CSC * Full\n", color=:green)
     GC.gc()
-    m = rand(size(S, 2), sizefullrhs)
+    m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
 
@@ -72,10 +73,10 @@ function AxB_allbycol(S, G, nthreads)
     gbset(G, :format, :byrow) #set back to CSR
 end
 
-function AxB_allbyrow(S, G, nthreads)
+function AxB_allbyrow(S, G, nthreads, sizerhs)
     printstyled("\nCSR = CSR * Full\n", color=:green)
     GC.gc()
-    m = rand(size(S, 2), sizefullrhs)
+    m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
 
@@ -102,10 +103,10 @@ function AxB_allbyrow(S, G, nthreads)
     end
 end
 
-function AxB_ColxRow(S, G, nthreads)
+function AxB_ColxRow(S, G, nthreads, sizerhs)
     printstyled("\nByRow = CSC * Full_byrow\n", color=:green)
     GC.gc()
-    m = rand(size(S, 2), sizefullrhs)
+    m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
 
@@ -133,10 +134,10 @@ function AxB_ColxRow(S, G, nthreads)
     gbset(G, :format, :byrow) #set back to CSR
 end
 
-function CaccumAxB_allbycol(S, G, nthreads)
+function CaccumAxB_allbycol(S, G, nthreads, sizerhs)
     printstyled("\nFull += CSC * Full\n", color=:green)
     GC.gc()
-    m = rand(size(S, 2), sizefullrhs)
+    m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
 
@@ -168,10 +169,10 @@ function CaccumAxB_allbycol(S, G, nthreads)
     gbset(G, :format, :byrow) #set back to CSR
 end
 
-function CaccumAxB_allbyrow(S, G, nthreads)
+function CaccumAxB_allbyrow(S, G, nthreads, sizerhs)
     printstyled("\nFull_byrow += CSR * Full_byrow\n", color=:green)
     GC.gc()
-    m = rand(size(S, 2), sizefullrhs)
+    m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
 
@@ -227,13 +228,17 @@ function singlebench(pathornum)
         throw(ErrorException("Argument is not a path or SuiteSparseMatrixCollection ID number"))
     end
     name = basename(path)
-    S = convert(SparseMatrixCSC{Float64}, MatrixMarket.mmread(path))
+    mmpath = @time MatrixMarket.mmread(path)
+    S = convert(SparseMatrixCSC{Float64}, mmpath)
     G = GBMatrix(S)
     gbset(G, :format, :byrow)
     diag(G)
     printstyled("Benchmarking $name:\n"; bold=true, color=:green)
-    for f ∈ functorun
-        f(S, G, threadlist)
+    for i ∈ sizefullrhs
+        printstyled("\nUsing a size $i B matrix"; bold=true, color=:red)
+        for f ∈ functorun
+            f(S, G, threadlist, i)
+        end
     end
 end
 
