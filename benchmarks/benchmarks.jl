@@ -38,85 +38,111 @@ const sizefullrhs = 2
 const suite = BenchmarkGroup()
 const ssmc = ssmc_db()
 
-function csrtimesfull(S, G)
-    printstyled("\nCSR * Full by Col\n", color=:green)
+function AxB_allbycol(S, G, nthreads)
+    printstyled("\nCSC = CSC * Full\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizefullrhs)
     m2 = GBMatrix(m)
-
     println("Size of dense matrix is $(size(m))")
+
+    gbset(m2, :format, :bycol)
+    gbset(G, :format, :bycol) #set to CSC
+
+    C = GBMatrix{eltype(G)}(size(G, 1), size(m2, 2))
+    gbset(C, :format, :bycol)
+
     printstyled("\nSparseMatrixCSC:\n", bold=true)
     A = @benchmark $S * $m
     show(stdout, MIME("text/plain"), A)
 
     printstyled("\nGBMatrix:\n", bold=true)
+    #print burble for checking
     gbset(:burble, true)
-    G * m2
+    mul!(C, G, m2)
     gbset(:burble, false)
-
-    B = @benchmark $G * $m2
-    show(stdout, MIME("text/plain"), B)
-
-    tratio = ratio(median(A), median(B))
-    color = tratio.time >= 1.0 ? :green : :red
-    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
+    for n ∈ nthreads
+        printstyled("\nC = S * F with $n threads: \n", bold=true, color=:green)
+        gbset(:nthreads, n)
+        B = @benchmark mul!($C, $G, $m2)
+        show(stdout, MIME("text/plain"), B)
+        tratio = ratio(median(A), median(B))
+        color = tratio.time >= 1.0 ? :green : :red
+        printstyled("\nMedian speedup over SparseArrays using $n threads is: $(string(tratio))\n"; bold=true, color)
+    end
+    gbset(G, :format, :byrow) #set back to CSR
 end
 
-function csctimesfull(S, G)
-    printstyled("\nCSC* Full by Col\n", color=:green)
+function AxB_allbyrow(S, G, nthreads)
+    printstyled("\nCSR = CSR * Full\n", color=:green)
     GC.gc()
-    #switch to CSC
-    gbset(G, :format, :bycol)
-
-    m = rand(size(S, 2), sizefullrhs) # This determines the size of the RHS
+    m = rand(size(S, 2), sizefullrhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
+
+    gbset(m2, :format, :byrow)
+    gbset(G, :format, :byrow)
+
     printstyled("\nSparseMatrixCSC:\n", bold=true)
     A = @benchmark $S * $m
     show(stdout, MIME("text/plain"), A)
 
     printstyled("\nGBMatrix:\n", bold=true)
+    #print burble for checking
     gbset(:burble, true)
-    G * m2
+    mul(G, m2)
     gbset(:burble, false)
-
-    B = @benchmark $G * $m2
-    show(stdout, MIME("text/plain"), B)
-
-    tratio = ratio(median(A), median(B))
-    color = tratio.time >= 1.0 ? :green : :red
-    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
-    gbset(G, :format, :byrow) #switch back to byrow
+    for n ∈ nthreads
+        printstyled("\nC' = S' * F' with $n threads: \n", bold=true, color=:green)
+        gbset(:nthreads, n)
+        B = @benchmark mul($G, $m2)
+        show(stdout, MIME("text/plain"), B)
+        tratio = ratio(median(A), median(B))
+        color = tratio.time >= 1.0 ? :green : :red
+        printstyled("\nMedian speedup over SparseArrays using $n threads is: $(string(tratio))\n"; bold=true, color)
+    end
 end
 
-function sptimestranspose(S, G)
-    printstyled("\nSparse * Sparse'\n", color=:green)
+function AxB_ColxRow(S, G, nthreads)
+    printstyled("\nByRow = CSC * Full_byrow\n", color=:green)
     GC.gc()
+    m = rand(size(S, 2), sizefullrhs)
+    m2 = GBMatrix(m)
+    println("Size of dense matrix is $(size(m))")
+
+    gbset(m2, :format, :byrow)
+    gbset(G, :format, :bycol)
 
     printstyled("\nSparseMatrixCSC:\n", bold=true)
-    A = @benchmark $S * ($S)'
+    A = @benchmark $S * $m
     show(stdout, MIME("text/plain"), A)
 
     printstyled("\nGBMatrix:\n", bold=true)
+    #print burble for checking
     gbset(:burble, true)
-    G * G'
+    mul(G, m2)
     gbset(:burble, false)
-    B = @benchmark $G * ($G)'
-    show(stdout, MIME("text/plain"), B)
-
-    tratio = ratio(median(A), median(B))
-    color = tratio.time >= 1.0 ? :green : :red
-    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
+    for n ∈ nthreads
+        printstyled("\nC' = S * F' with $n threads: \n", bold=true, color=:green)
+        gbset(:nthreads, n)
+        B = @benchmark mul($G, $m2)
+        show(stdout, MIME("text/plain"), B)
+        tratio = ratio(median(A), median(B))
+        color = tratio.time >= 1.0 ? :green : :red
+        printstyled("\nMedian speedup over SparseArrays using $n threads is: $(string(tratio))\n"; bold=true, color)
+    end
+    gbset(G, :format, :byrow) #set back to CSR
 end
 
-function csctimesfullwithaccum(S, G)
+function CaccumAxB_allbycol(S, G, nthreads)
     printstyled("\nFull += CSC * Full\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizefullrhs)
     m2 = GBMatrix(m)
     println("Size of dense matrix is $(size(m))")
 
+    gbset(m2, :format, :bycol)
     gbset(G, :format, :bycol) #set to CSC
+
     printstyled("\nSparseMatrixCSC:\n", bold=true)
     A = @benchmark $S * $m
     show(stdout, MIME("text/plain"), A)
@@ -124,28 +150,66 @@ function csctimesfullwithaccum(S, G)
     C = GBMatrix(size(G, 1), size(m2, 2), 0.0)
     gbset(C, :sparsity_control, :full)
     gbset(C, :format, :bycol)
-    
+
     printstyled("\nGBMatrix:\n", bold=true)
+    #print burble for checking
     gbset(:burble, true)
     mul!(C, G, m2; accum=+)
     gbset(:burble, false)
-    B = @benchmark mul!($C, $G, $m2; accum=+)
-    show(stdout, MIME("text/plain"), B)
+    for n ∈ nthreads
+        printstyled("\nF += S * F with $n threads: \n", bold=true, color=:green)
+        gbset(:nthreads, n)
+        B = @benchmark mul!($C, $G, $m2; accum=+)
+        show(stdout, MIME("text/plain"), B)
+        tratio = ratio(median(A), median(B))
+        color = tratio.time >= 1.0 ? :green : :red
+        printstyled("\nMedian speedup over SparseArrays using $n threads is: $(string(tratio))\n"; bold=true, color)
+    end
     gbset(G, :format, :byrow) #set back to CSR
-    tratio = ratio(median(A), median(B))
-    color = tratio.time >= 1.0 ? :green : :red
-    printstyled("\nMedian speedup over SparseArrays using $(gbget(:nthreads)) threads is: $(string(tratio))\n"; bold=true, color)
+end
+
+function CaccumAxB_allbyrow(S, G, nthreads)
+    printstyled("\nFull_byrow += CSR * Full_byrow\n", color=:green)
+    GC.gc()
+    m = rand(size(S, 2), sizefullrhs)
+    m2 = GBMatrix(m)
+    println("Size of dense matrix is $(size(m))")
+
+    gbset(m2, :format, :byrow)
+    gbset(G, :format, :byrow)
+
+    printstyled("\nSparseMatrixCSC:\n", bold=true)
+    A = @benchmark $S * $m
+    show(stdout, MIME("text/plain"), A)
+
+    C = GBMatrix(size(G, 1), size(m2, 2), 0.0)
+    gbset(C, :sparsity_control, :full)
+    gbset(C, :format, :byrow)
+
+    printstyled("\nGBMatrix:\n", bold=true)
+    #print burble for checking
+    gbset(:burble, true)
+    mul!(C, G, m2; accum=+)
+    gbset(:burble, false)
+    for n ∈ nthreads
+        printstyled("\nF' += S' * F' with $n threads: \n", bold=true, color=:green)
+        gbset(:nthreads, n)
+        B = @benchmark mul!($C, $G, $m2; accum=+)
+        show(stdout, MIME("text/plain"), B)
+        tratio = ratio(median(A), median(B))
+        color = tratio.time >= 1.0 ? :green : :red
+        printstyled("\nMedian speedup over SparseArrays using $n threads is: $(string(tratio))\n"; bold=true, color)
+    end
 end
 
 # OPTIONS SET 2:
 # run these functions for benchmarking:
-const functorun = [csctimesfull, csctimesfullwithaccum]
+const functorun = [AxB_allbycol, CaccumAxB_allbycol]
 #= The choices are:
-csctimesfull - S * F
-csrtimesfull S' * F
-csctimesfullwithaccum - F += S * F
-sptimestranspose - S' * S
-
+AxB_allbycol - S * F
+AxB_ColxRow - S' * F
+CaccumAxB_allbycol - F += S * F
+CaccumAxB_allbyrow - F' += S' * F'
 Please open an issue or message me for further functions to add here.
 =#
 
@@ -168,12 +232,8 @@ function singlebench(pathornum)
     gbset(G, :format, :byrow)
     diag(G)
     printstyled("Benchmarking $name:\n"; bold=true, color=:green)
-    for nthreads ∈ threadlist
-        printstyled("\nBenchmarking with $nthreads GraphBLAS threads\n"; bold=true, color=:blue)
-        gbset(:nthreads, nthreads)
-        for f ∈ functorun
-            f(S, G)
-        end
+    for f ∈ functorun
+        f(S, G, threadlist)
     end
 end
 
