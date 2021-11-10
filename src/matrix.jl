@@ -230,142 +230,7 @@ SparseArrays.nonzeros(A::GBArray) = findnz(A)[end]
 
 # Indexing functions
 ####################
-"""
-    _outlength(A, I, J)
-    _outlength(u, I)
-Determine the size of the output for an operation like extract or range-based indexing.
-"""
-function _outlength(A, I, J)
-    if I == ALL
-        Ilen = size(A, 1)
-    else
-        Ilen = length(I)
-    end
-    if J == ALL
-        Jlen = size(A, 2)
-    else
-        Jlen = length(J)
-    end
-    return Ilen, Jlen
-end
 
-"""
-    extract!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
-
-Extract a submatrix from `A` into `C`.
-
-# Arguments
-- `C::GBMatrix`: the submatrix extracted from `A`. It is a dimension mismatch if
-    `size(C) != (max(I), max(J))`.
-- `A::GBMatrix`: the array being indexed.
-- `I` and `J`: A colon, scalar, vector, or range indexing A.
-
-# Keywords
-- `mask::Union{Nothing, GBMatrix} = nothing`: mask where
-    `size(M) == (max(I), max(J))`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = nothing`
-
-# Returns
-- `GBMatrix`: the modified matrix `C`, now containing the submatrix `A[I, J]`.
-
-# Throws
-- `GrB_DIMENSION_MISMATCH`: If `size(C) != (max(I), max(J))` or `size(C) != size(mask)`.
-"""
-function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, I, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    I, ni = idx(I)
-    J, nj = idx(J)
-    I isa Number && (I = UInt64[I])
-    J isa Number && (J = UInt64[J])
-    mask === nothing && (mask = C_NULL)
-    desc = _handledescriptor(desc; in1 = A)
-    libgb.GrB_Matrix_extract(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
-    return C
-end
-
-function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, ::Colon, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(C, A, ALL, J; mask, accum, desc)
-end
-
-function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, I, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(C, A, I, ALL; mask, accum, desc)
-end
-
-function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, ::Colon, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(C, A, ALL, ALL; mask, accum, desc)
-end
-
-"""
-    extract(A::GBMatrix, I, J; kwargs...)::GBMatrix
-
-Extract a submatrix from `A`.
-
-# Arguments
-- `A::GBMatrix`: the array being indexed.
-- `I` and `J`: A colon, scalar, vector, or range indexing A.
-
-# Keywords
-- `mask::Union{Nothing, GBMatrix} = nothing`: mask where
-    `size(M) == (max(I), max(J))`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied. `C` is, however, empty.
-- `desc::Descriptor = nothing`
-
-# Returns
-- `GBMatrix`: the submatrix `A[I, J]`.
-
-# Throws
-- `GrB_DIMENSION_MISMATCH`: If `(max(I), max(J)) != size(mask)`.
-"""
-function extract(
-    A::GBMatOrTranspose, I, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    Ilen, Jlen = _outlength(A, I, J)
-    C = similar(A, Ilen, Jlen)
-    return extract!(C, A, I, J; mask, accum, desc)
-end
-
-function extract(
-    A::GBMatOrTranspose, ::Colon, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, J; mask, accum, desc)
-end
-
-function extract(
-    A::GBMatOrTranspose, I, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, I, ALL; mask, accum, desc)
-end
-
-function extract(
-    A::GBMatOrTranspose, ::Colon, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, ALL; mask, accum, desc)
-end
-
-function Base.getindex(
-    A::GBMatOrTranspose, ::Colon, j;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, j; mask, accum, desc)
-end
 function Base.getindex(
     A::GBMatOrTranspose, i, ::Colon;
     mask = nothing, accum = nothing, desc = nothing
@@ -392,7 +257,7 @@ end
 """
     subassign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 
-Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
+Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 `size(mask) == size(A)`, whereas `size(mask) == size(C)` in `assign!`.
 
 # Arguments
@@ -403,9 +268,9 @@ Assign a submatrix of `C` to `A`. Equivalent to [`assign!`](@ref) except that
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: mask where
     `size(M) == size(A)`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = nothing`
+- `desc::Union{Nothing, Descriptor} = nothing`
 
 # Returns
 - `GBMatrix`: The input matrix A.
@@ -439,7 +304,7 @@ end
 """
     assign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 
-Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
+Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 `size(mask) == size(C)`, whereas `size(mask) == size(A) in `subassign!`.
 
 # Arguments
@@ -450,9 +315,9 @@ Assign a submatrix of `C` to `A`. Equivalent to [`subassign!`](@ref) except that
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: mask where
     `size(M) == size(C)`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc::Descriptor = nothing`
+- `desc::Union{Nothing, Descriptor} = nothing`
 
 # Returns
 - `GBMatrix`: The input matrix A.

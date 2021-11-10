@@ -1,4 +1,4 @@
-# GBArrays
+# Array Types
 
 There are two primary datastructures in in `SuiteSparseGraphBLAS.jl`: the `GBVector` and `GBMatrix`.
 
@@ -41,9 +41,11 @@ SuiteSparseGraphBLAS.GBVector(::AbstractVector{<:Integer}, ::AbstractVector)
 Normal AbstractArray and SparseArray indexing should work here. Including indexing by scalars, vectors, and ranges.
 
 !!! danger "Indexing Structural Zeros"
-    When you index a `SparseMatrixCSC` from `SparseArrays` and hit a structural zero (a value within the dimensions of the matrix but not stored) you can expect a `zero(T)`.
+    When indexing a `SparseMatrixCSC` from `SparseArrays` a structural, or implicit, zero will be returned as `zero(T)` where `T` is the elemtn type of the matrix.
 
-    When you index a GBArray you will get `nothing` when you hit a structural zero. This is because the zero in GraphBLAS depends not just on the domain of the elements but also on what you are __doing__ with them. For instance with an element type of `Float64` you could want the zero to be `0.0`, `-∞` or `+∞`.
+    When indexing a GBArray a structural zero is instead returned as `nothing`. While this is a significant departure from the `SparseMatrixCSC` it more closely matches the GraphBLAS spec, and enables the consuming method to determine the value of implicit zeros. 
+    
+    For instance with an element type of `Float64` you may want the zero to be `0.0`, `-∞` or `+∞` depending on your algorithm. In addition, for graph algorithms there may be a distinction between an implicit zero, indicating the lack of an edge between two vertices in an adjacency matrix, and an explicit zero where the edge exists but has a `0` weight.
 
 ```@repl mat
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
@@ -57,14 +59,11 @@ A[:, 5]
 SparseMatrixCSC(A'[:,:]) #Transpose the first argument
 ```
 
-All of this same functionality exists for vectors in 1-dimension.
+The functionality illustrated above extends to `GBVector` as well.
 
 # Transpose
 The lazy Julia `transpose` is available, and the adjoint operator `'` is also
 overloaded to be equivalent.
-
-`x = A'` will create a `Transpose` wrapper.
-When an operation uses this argument it will cause the `desc` to set `INP<0|1> = T_<0|1>`. 
 
 # Utilities
 

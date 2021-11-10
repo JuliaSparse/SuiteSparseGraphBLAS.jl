@@ -55,6 +55,8 @@ include("indexutils.jl")
 # Globals
 include("constants.jl")
 
+
+include("operations/extract.jl")
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")

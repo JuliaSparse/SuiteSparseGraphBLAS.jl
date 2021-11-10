@@ -2,7 +2,7 @@ function LinearAlgebra.mul!(
     C::GBVecOrMat,
     A::GBArray,
     B::GBArray,
-    op = Semirings.PLUS_TIMES;
+    op = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -20,24 +20,24 @@ function LinearAlgebra.mul!(
 end
 
 """
-    mul(A::GBArray, B::GBArray; kwargs...)::GBArray
+    mul(A::GBArray, B::GBArray, op=(+,*); kwargs...)::GBArray
 
-Multiply two `GBArray`s `A` and `B` using a semiring provided in the `op` keyword argument.
-If either `A` or `B` is a `GBMatrix` it may be transposed either using the descriptor or
-by using `transpose(A)` or `A'`.
+Multiply two `GBArray`s `A` and `B` using a semiring, which defaults to the arithmetic semiring `+.*`.
 
-The default semiring is the `+.*` semiring.
+Either operand may be transposed using `'` or `transpose(A)` provided the dimensions match.
+
+The mutating form, `mul!(C, A, B, op; kwargs...)` is identical except it stores the result in `C::GBVecOrMat`.
+
+The operator syntax `A * B` can be used when the default semiring is desired, and `*(max, +)(A, B)` can be used otherwise.
 
 # Arguments
-- `A::GBArray`: GBVector or optionally transposed GBMatrix.
-- `B::GBArray`: GBVector or optionally transposed GBMatrix.
-
+- `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
+- `op::Union{Tuple{Function, Function}, AbstractSemiring}`: the semiring used for matrix multiplication. May be passed as a tuple of functions, or an `AbstractSemiring` found in the `Semirings` submodule.
 # Keywords
-- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask which determines the output
-    pattern.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: optional binary accumulator
-    operation where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc = nothing`
+- `mask::Union{Nothing, GBArray} = nothing`: optional mask which determines the output pattern.
+- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: optional binary accumulator
+    operation such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Union{Nothing, Descriptor}`
 
 # Returns
 - `GBArray`: The output matrix whose `eltype` is determined by `A` and `B` or the semiring
@@ -46,7 +46,7 @@ The default semiring is the `+.*` semiring.
 function mul(
     A::GBArray,
     B::GBArray,
-    op = Semirings.PLUS_TIMES;
+    op = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing

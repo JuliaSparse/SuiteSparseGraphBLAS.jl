@@ -133,9 +133,10 @@ for T ∈ valid_vec
     # Build functions
     func = Symbol(prefix, :_Matrix_build_, suffix(T))
     @eval begin
-        function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = BinaryOps.PLUS)
+        function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = +)
             nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
+            dup = BinaryOp(dup)
             libgb.$func(Ptr{libgb.GrB_Vector}(v.p), Vector{libgb.GrB_Index}(I) .- 1, zeros(libgb.GrB_Index, length(I)), X, length(X), dup[$T])
         end
     end
@@ -204,55 +205,6 @@ end
 
 # Indexing functions:
 #####################
-function _outlength(u, I)
-    if I == ALL
-        wlen = size(u)
-    else
-        wlen = length(I)
-    end
-    return wlen
-end
-
-"""
-    extract!(w::GBVector, u::GBVector, I; kwargs...)::GBVector
-
-Extract a subvector from `u` into the output vector `w`. Equivalent to the matrix definition.
-"""
-function extract!(
-    w::GBVector, u::GBVector, I;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    I, ni = idx(I)
-    desc = _handledescriptor(desc)
-    mask === nothing && (mask = C_NULL)
-    libgb.GrB_Matrix_extract(w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
-    return w
-end
-
-function extract!(
-    w::GBVector, u::GBVector, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(w, u, ALL; mask, accum, desc)
-end
-
-"""
-    extract(u::GBVector, I; kwargs...)::GBVector
-
-Extract a subvector from `u` and return it. Equivalent to the matrix definition.
-"""
-function extract(
-    u::GBVector, I;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    wlen = _outlength(u, I)
-    w = similar(u, wlen)
-    return extract!(w, u, I; mask, accum, desc)
-end
-
-function extract(u::GBVector, ::Colon; mask = nothing, accum = nothing, desc = nothing)
-    extract(u, ALL; mask, accum, desc)
-end
 
 function Base.getindex(
     u::GBVector, I;
@@ -271,6 +223,7 @@ function Base.getindex(
 )
     return extract(u, i; mask, accum, desc)
 end
+
 """
     subassign(w::GBVector, u::GBVector, I; kwargs...)::GBVector
 

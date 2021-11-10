@@ -26,6 +26,23 @@ where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumula
 !!! note "assign vs subassign"
     `subassign` is equivalent to `assign` except that the mask in `subassign` has the dimensions of ``\bf C(I,J)`` vs the dimensions of ``C`` for `assign`, and elements outside of the mask will never be modified by `subassign`. See the [GraphBLAS User Guide](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/GraphBLAS_UserGuide.pdf) for more details.
 
+### `mul`
+```@docs
+mul
+emul
+emul!
+eadd
+eadd!
+extract
+subassign!
+assign!
+Base.map
+select
+Base.reduce
+gbtranspose
+LinearAlgebra.kron
+```
+
 ## Common arguments
 
 The operations above have often accept most or all of the following arguments.
@@ -83,20 +100,4 @@ If `REPLACE` is set the option in step 3. is `nothing`, otherwise it is `C[i,j]`
 
 All non-mutating operations below support a mutating form by adding an output array as the first argument as well as the `!` function suffix. 
 
-### `mul`
-```@docs
-mul
-```
 
-```@docs
-emul
-eadd
-extract
-subassign!
-assign!
-Base.map
-select
-Base.reduce
-gbtranspose
-LinearAlgebra.kron
-```
