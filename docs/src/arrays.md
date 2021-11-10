@@ -32,21 +32,18 @@ v = GBVector(sprand(Bool, 100_000_000, 0.001))
 
 ```@docs
 GBVector
-SuiteSparseGraphBLAS.GBVector{T}()
-SuiteSparseGraphBLAS.GBVector(::Vector, ::Vector)
-SuiteSparseGraphBLAS.GBVector(::SparseVector)
+SuiteSparseGraphBLAS.GBVector(::Vector)
+SuiteSparseGraphBLAS.GBVector(::AbstractVector{<:Integer}, ::AbstractVector)
 ```
 
 # Indexing
 
-The usual AbstractArray and SparseArray indexing should work here. Including indexing by scalars, vectors, and ranges.
+Normal AbstractArray and SparseArray indexing should work here. Including indexing by scalars, vectors, and ranges.
 
 !!! danger "Indexing Structural Zeros"
     When you index a `SparseMatrixCSC` from `SparseArrays` and hit a structural zero (a value within the dimensions of the matrix but not stored) you can expect a `zero(T)`.
 
     When you index a GBArray you will get `nothing` when you hit a structural zero. This is because the zero in GraphBLAS depends not just on the domain of the elements but also on what you are __doing__ with them. For instance with an element type of `Float64` you could want the zero to be `0.0`, `-∞` or `+∞`.
-
-We'll use the small matrix from the Introduction to illustrate the indexing capabilities. We will also use `SparseArrays.SparseMatrixCSC` for the pretty printing functionality, which should be available in this package in `v1.0`.
 
 ```@repl mat
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
@@ -57,20 +54,17 @@ A[[1,3,5,7], :]
 A[1:2:7, :]
 A[:,:]
 A[:, 5]
-SparseMatrixCSC(A[:,:, desc=T0]) #Transpose the first argument
+SparseMatrixCSC(A'[:,:]) #Transpose the first argument
 ```
 
 All of this same functionality exists for vectors in 1-dimension.
 
 # Transpose
-The typical lazy Julia `transpose` is available as usual, and the adjoint operator `'` is also
+The lazy Julia `transpose` is available, and the adjoint operator `'` is also
 overloaded to be equivalent.
 
 `x = A'` will create a `Transpose` wrapper.
 When an operation uses this argument it will cause the `desc` to set `INP<0|1> = T_<0|1>`. 
-
-!!! warning
-    Vectors do not support transposition at this time. A matrix with the column or row size set to `1` may be a solution.
 
 # Utilities
 

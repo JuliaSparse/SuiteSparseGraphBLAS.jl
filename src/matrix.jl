@@ -14,14 +14,14 @@ GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}) where {T} =
     GBMatrix{T}(size[1].stop, size[2].stop)
 
 """
-    GBMatrix(I, J, X; dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J))
+    GBMatrix(I, J, X; dup = +, nrows = maximum(I), ncols = maximum(J))
 
 Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The dup function defaults
 to `|` for booleans and `+` for nonbooleans.
 """
 function GBMatrix(
     I::AbstractVector, J::AbstractVector, X::AbstractVector{T};
-    dup = BinaryOps.PLUS, nrows = maximum(I), ncols = maximum(J)
+    dup = +, nrows = maximum(I), ncols = maximum(J)
 ) where {T}
     A = GBMatrix{T}(nrows, ncols)
     build(A, I, J, X; dup)
@@ -141,9 +141,9 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_build_, suffix(T))
     @eval begin
         function build(A::GBMatrix{$T}, I::AbstractVector, J::AbstractVector, X::Vector{$T};
-                dup = BinaryOps.PLUS
+                dup = +
             )
-            dup = getoperator(dup, $T)
+            dup = getoperator(BinaryOp(dup), $T)
             if !(I isa Vector)
                 I = Vector(I)
             end
@@ -373,7 +373,7 @@ function Base.getindex(
     return extract(A, i, ALL; mask, accum, desc)
 end
 function Base.getindex(
-    A::GBMatrix, ::Colon, ::Colon;
+    A::GBMatOrTranspose, ::Colon, ::Colon;
     mask = nothing, accum = nothing, desc = nothing
 )
     return extract(A, ALL, ALL; mask, accum, desc)

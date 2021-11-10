@@ -13,12 +13,13 @@ GBVector{T}(dims::Dims{1}) where {T} = GBVector{T}(dims...)
 GBVector{T}(nrows::Base.OneTo) where {T} =
     GBVector{T}(nrows.stop)
 GBVector{T}(nrows::Tuple{Base.OneTo,}) where {T} = GBVector{T}(first(nrows))
+
 """
-    GBVector(I::Vector, X::Vector{T})
+    GBVector(I::AbstractVector, X::AbstractVector{T})
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
-function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; dup = BinaryOps.PLUS, nrows = maximum(I)) where {U<:Integer, T}
+function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; dup = +, nrows = maximum(I)) where {U<:Integer, T}
     x = GBVector{T}(nrows)
     build(x, I, X, dup = dup)
     return x
