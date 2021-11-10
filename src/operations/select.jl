@@ -30,18 +30,19 @@ function select!(
 )
     return select!(SelectOp(op), C, A, thunk; mask, accum, desc)
 end
+
 """
-    select(op::SelectUnion, A::GBArray; kwargs...)::GBArray
-    select(op::SelectUnion, A::GBArray, thunk; kwargs...)::GBArray
+    select(op::Union{Function, SelectUnion}, A::GBArray; kwargs...)::GBArray
+    select(op::Union{Function, SelectUnion}, A::GBArray, thunk; kwargs...)::GBArray
 
 Return a `GBArray` whose elements satisfy the predicate defined by `op`.
-Some SelectOps may require an additional argument `thunk`, for use in comparison operations
-such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which maps to
-`select(GT, A, thunk)`.
+Some SelectOps or functions may require an additional argument `thunk`, for use in 
+    comparison operations such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which is 
+    performed by `select(>, A, thunk)`.
 
 # Arguments
-- `op::SelectUnion`: A select operator from the SelectOps submodule.
-- `A::GBArray`: GBVector or optionally transposed GBMatrix.
+- `op::Union{Function, SelectUnion}`: A select operator from the SelectOps submodule.
+- `A::GBArray`
 - `thunk::Union{GBScalar, nothing, valid_union}`: Optional value used to evaluate `op`.
 
 # Keywords
@@ -52,7 +53,7 @@ such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which maps to
 - `desc = nothing`
 
 # Returns
-- `GBArray`: The output matrix whose `eltype` is determined by `A`.
+- `GBArray`: The output matrix whose `eltype` is determined by `A` and `op`.
 """
 function select(
     op::SelectUnion,

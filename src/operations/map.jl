@@ -77,6 +77,28 @@ function Base.map(
     return map!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
+"""
+    map(op::Union{Function, AbstractUnaryOp}, A::GBArray; kwargs...)::GBArray
+    map(op::Union{Function, AbstractBinaryOp}, A::GBArray, x; kwargs...)::GBArray
+    map(op::Union{Function, AbstractBinaryOp}, x, A::GBArray, kwargs...)::GBArray
+
+Transform a GBArray by applying `op` to each element.
+
+UnaryOps and single argument functions apply elementwise in the usual fashion.
+BinaryOps and two argument functions require the additional argument `x` which is 
+    substituted as the first or second operand of `op` depending on its position.
+
+# Arguments
+- `op::Union{Function, AbstractUnaryOp, AbstractBinaryOp}`
+- `A::GBArray`
+- `x`: Position dependent argument to binary operators.
+
+# Keywords
+- `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
+- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Union{Nothing, Descriptor} = nothing`
+"""
 function Base.map(
     op, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
@@ -148,34 +170,6 @@ Base.:-(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = noth
     map(BinaryOps.MINUS, u, x; mask, accum, desc)
 
 Base.:-(u::GBArray) = map(UnaryOps.AINV, u)
-"""
-    map(op::UnaryOp, A::GBArray; kwargs...)::GBArray
-    map(op::BinaryOp, A::GBArray, x; kwargs...)::GBArray
-    map(op::BinaryOp, x, A::GBArray, kwargs...)::GBArray
-
-Transform a GBArray by applying `op` to each element.
-
-UnaryOps apply elementwise in the usual fashion.
-BinaryOps require the additional argument `x` which is substituted as the first or second
-argument of `op` depending on its position.
-
-# Arguments
-- `op::MonoidBinaryOrRig = BinaryOps.PLUS`: the binary operation which is applied such that
-    `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and/or `B`.
-- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
-- `x`: Position dependent argument to binary operators.
-
-# Keywords
-- `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
-    where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
-- `desc = nothing`
-"""
-function Base.map(
-    op::AbstractOp, A::GBArray, x = nothing;
-    mask = nothing, accum = nothing, desc = nothing
-)
-end
 
 """
     mask!(C::GBArray, A::GBArray, mask::GBArray)
