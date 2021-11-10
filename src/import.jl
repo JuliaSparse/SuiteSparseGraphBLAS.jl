@@ -62,7 +62,10 @@ end
 """
     GBMatrix(S::SparseMatrixCSC)
 
-Create a GBMatrix from SparseArrays sparse matrix `S`.
+Create a GBMatrix from a SparseArrays.SparseMatrixCSC `S`.
+
+Note, that unlike other methods of construction, the resulting matrix will be held by column.
+Use `gbset(A, :format, :byrow)` to switch to row orientation.
 """
 function GBMatrix(S::SparseMatrixCSC)
     return GBMatrix{eltype(S)}(_importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval))

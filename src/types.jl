@@ -95,7 +95,7 @@ end
 """
     GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
 
-TWo-dimensional GraphBLAS array with elements of type T. Internal representation is
+Two-dimensional GraphBLAS array with elements of type T. Internal representation is
 specified as opaque, but in this implementation is stored as one of the following in either
 row or column orientation:
 

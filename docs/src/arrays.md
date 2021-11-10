@@ -1,14 +1,9 @@
 # GBArrays
 
-There are two datastructures in in `SuiteSparseGraphBLAS.jl`: the `GBVector` and `GBMatrix`.
+There are two primary datastructures in in `SuiteSparseGraphBLAS.jl`: the `GBVector` and `GBMatrix`.
 
 Both types currently implement most of the `AbstractArray` interface and part of the `SparseArrays`
 interface. 
-The goal is to cover the entirety of both (applicable) interfaces as well as `ArrayInterface.jl`
-with the `v1.0` release. 
-
-Most functions accept either type, which is represented by the union 
-`GBArray = {GBVector, GBMatrix, Transpose{<:Any, <:GBMatrix}}`. 
 
 ## Matrix Construction
 ```@setup mat

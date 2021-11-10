@@ -3,7 +3,7 @@
 """
     GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX)
 
-Create a GBMatrix with the max size.
+Create a GBMatrix of the specified size, defaulting to the maximum on each dimension, 2^60.
 """
 function GBMatrix{T}(nrows = libgb.GxB_INDEX_MAX, ncols = libgb.GxB_INDEX_MAX) where {T}
     GBMatrix{T}(libgb.GrB_Matrix_new(toGBType(T),nrows, ncols))

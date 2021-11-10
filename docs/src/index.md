@@ -53,7 +53,7 @@ GraphBLAS array types are opaque to the user in order to allow the library autho
 SuiteSparse:GraphBLAS takes advantage of this by storing matrices in one of four formats: dense, bitmap, sparse-compressed, or hypersparse-compressed; and in either row or column major orientation.
 
 !!! warning "Default Orientation"
-    The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays, for speed
+    The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays, for greater speed
     in certain operations. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
     `Matrix` will be stored by-column. This can be changed using `gbset(A, :format, :byrow)`.
 
