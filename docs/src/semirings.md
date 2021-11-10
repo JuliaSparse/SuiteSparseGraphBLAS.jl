@@ -30,10 +30,11 @@ cd("..")
 using SuiteSparseGraphBLAS
 using Latexify
 head = ["Semiring", "⊕", "⊗", "Types"]
-v1 = filter((x) -> x != "Semirings", string.(names(Semirings)))
+v1 = filter((x) -> eval(Semirings, :(typeof($x) <: AbstractSemiring)), names(Semirings))
 v2 = []
 v3 = []
 for rig in v1
+    rig = string(rig)
     rigsplit = split(rig, '_')
     monoidname = rigsplit[1] .* "_MONOID"
     push!(v2, "[" .* rigsplit[1] .* "_MONOID](https://juliasparse.github.io/SuiteSparseGraphBLAS.jl/dev/monoids/#SuiteSparseGraphBLAS.Monoids.$monoidname)")
@@ -41,11 +42,12 @@ for rig in v1
 end
 
 v4 = []
-v1 = "`" .* v1 .* "`"
-for op in names(Semirings)
+
+for op in v1
     op == :Semirings && continue
     op = getproperty(Semirings, op)
     push!(v4, SuiteSparseGraphBLAS.tolist(SuiteSparseGraphBLAS.validtypes(op)))
 end
+v1 = "`" .* string.(v1) .* "`"
 Latexify.mdtable(hcat(v1,v2,v3,v4); head, latex=false)
 ```
