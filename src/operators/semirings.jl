@@ -280,6 +280,8 @@ function Semirings.Semiring(name::String, add::AbstractMonoid, mul::AbstractBina
     tmul = validtypes(mul)
     trig = intersect(tadd, tmul)
     rig = Semirings.Semiring(name)
+    eval(:(addop(::typeof($rig)) = juliaop($(add))))
+    eval(:(mulop(::typeof($rig)) = juliaop($(mul))))
     for t ∈ trig
         _addsemiring(rig, add[t], mul[t])
     end

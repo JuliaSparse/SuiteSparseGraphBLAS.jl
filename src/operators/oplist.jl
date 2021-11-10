@@ -767,6 +767,8 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
         rig = Symbol(oplus[2], "_", otimes[2])
         funcquote = quote
             Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+            addop(::typeof($rig)) = $(oplus[1])
+            mulop(::typeof($rig)) = $(otimes[1])
         end
         @eval($funcquote)
     end
