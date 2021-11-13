@@ -14,12 +14,9 @@ ytype(monoid::libgb.GrB_Monoid) = ytype(operator(monoid))
 ztype(monoid::libgb.GrB_Monoid) = ztype(operator(monoid))
 Base.show(io::IO, ::MIME"text/plain", m::libgb.GrB_Monoid) = gxbprint(io, m)
 
-
-
-
-multiplyop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_multiply(rig)
+mulop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_multiply(rig)
 addop(rig::libgb.GrB_Semiring) = libgb.GxB_Semiring_add(rig)
-xtype(rig::libgb.GrB_Semiring) = xtype(multiplyop(rig))
-ytype(rig::libgb.GrB_Semiring) = ytype(multiplyop(rig))
+xtype(rig::libgb.GrB_Semiring) = xtype(mulop(rig))
+ytype(rig::libgb.GrB_Semiring) = ytype(mulop(rig))
 ztype(rig::libgb.GrB_Semiring) = ztype(addop(rig))
 Base.show(io::IO, ::MIME"text/plain", s::libgb.GrB_Semiring) = gxbprint(io, s)

@@ -13,7 +13,6 @@ function _semiringnames(name)
     exportedname = Symbol(simple)
     return containername, exportedname
 end
-
 function Semiring(name)
     containername, exportedname = _semiringnames(name)
     structquote = quote
@@ -36,7 +35,12 @@ end
 
 SemiringUnion = Union{AbstractSemiring, TypedSemiring}
 
-
+function _monoidfromrigname(name)
+    return split(name, "_")[2] * "_MONOID"
+end
+function _binopfromrigname(name)
+    return split(name, "_")[3]
+end
 
 #TODO: Rewrite
 function _createsemirings()
@@ -255,7 +259,11 @@ function _createsemirings()
     ]
 
     for name ∈ builtins
-        Semiring(name)
+        rig = Semiring(name)
+        monoid = getproperty(Monoids, Symbol(_monoidfromrigname(name)))
+        eval(:(monoid(::typeof($rig)) = $monoid))
+        binop = getproperty(BinaryOps, Symbol(_binopfromrigname(name)))
+        eval(:(binop(::typeof($rig)) = $binop))
     end
 end
 

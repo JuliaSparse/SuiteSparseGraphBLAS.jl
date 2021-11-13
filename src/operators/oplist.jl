@@ -737,6 +737,12 @@ Monoids.BXNOR_MONOID
 op(::typeof(Monoids.BXNOR_MONOID)) = BinaryOps.BXNOR
 Monoids.Monoid(::typeof(!⊻)) = Monoids.BXNOR_MONOID
 
+mulop(rig::AbstractSemiring) = nothing
+addop(rig::AbstractSemiring) = nothing
+
+# TODO:
+# The definitions below are less than ideal, these should likely be fields of the semiring
+# structs, not evaluated functions.
 for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any, "ANY")]
     for otimes ∈ [
         (:/, "DIV"),
@@ -764,13 +770,48 @@ for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any,
         (:+, "PLUS"),
         (:pair, "PAIR")
     ]
-        rig = Symbol(oplus[2], "_", otimes[2])
-        funcquote = quote
-            Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
-            addop(::typeof($rig)) = $(oplus[1])
-            mulop(::typeof($rig)) = $(otimes[1])
-        end
-        @eval($funcquote)
+    rig = Symbol(oplus[2], "_", otimes[2])
+    funcquote = quote
+        Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+        addop(::typeof($rig)) = $(oplus[1])
+        mulop(::typeof($rig)) = $(otimes[1])
+    end
+    @eval($funcquote)
+    end
+end
+
+for otimes ∈ [(:(==), "EQ"), (:(>=), "GE"), (:(>), "GT"), (:(<=), "LE"), (:(<), "LT"), (:(!=), "NE")]
+    oplus = (:any, "ANY")
+    rig = Symbol(oplus[2], "_", otimes[2])
+    funcquote = quote
+        Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+        addop(::typeof($rig)) = $(oplus[1])
+        mulop(::typeof($rig)) = $(otimes[1])
+    end
+    @eval($funcquote)
+end
+for oplus ∈ [(:(==), "EQ"), (:∧, "LAND"), (:∨, "LOR"), (:lxor, "LXOR")]
+    for otimes ∈ [
+        (:(==), "EQ"),
+        (:(>=), "GE"),
+        (:(>), "GT"),
+        (:(<=), "LE"),
+        (:(<), "LT"),
+        (:(!=), "NE"),
+        (:first, "FIRST"),
+        (:second, "SECOND"),
+        (:∧, "LAND"),
+        (:∨, "LOR"),
+        (:lxor, "LXOR"),
+        (:pair, "PAIR")
+    ]
+    rig = Symbol(oplus[2], "_", otimes[2])
+    funcquote = quote
+        Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+        addop(::typeof($rig)) = $(oplus[1])
+        mulop(::typeof($rig)) = $(otimes[1])
+    end
+    @eval($funcquote)
     end
 end
 
