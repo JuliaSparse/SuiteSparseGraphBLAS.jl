@@ -47,7 +47,7 @@ _isloaded(op::Union{AbstractSelectOp, AbstractDescriptor}) = getfield(op, :p) !=
     validtypes(operator::SelectOp)::Nothing
 
 Determine the types available as a domain for a particular operator.
-Each operator is defined on a specific set of types, for instance the [`LAND_LOR`](@ref)
+Each operator is defined on a specific set of types, for instance the [`Semirings.LAND_LOR`](@ref)
     semiring is only defined for `Boolean` arguments.
 
 When applied to an `AbstractSelectOp` this will return `nothing`.
@@ -114,3 +114,4 @@ function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
 end
 
 function juliaop end
+juliaop(op::AbstractMonoid) = juliaop(op(op))

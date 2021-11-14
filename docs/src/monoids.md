@@ -16,7 +16,19 @@ The documentation below uses `T` to refer to any of the valid primitive types li
 !!! note "Note"
     In the case of floating point numbers +∞ and -∞ have their typical meanings. However, for integer types they indicate `typemax` and `typemin` respectively.
 
-```@autodocs
-Modules = [SuiteSparseGraphBLAS]
-Pages   = ["monoids.jl"]
+```@docs
+SuiteSparseGraphBLAS.Monoids.MAX_MONOID
+SuiteSparseGraphBLAS.Monoids.MIN_MONOID
+SuiteSparseGraphBLAS.Monoids.PLUS_MONOID
+SuiteSparseGraphBLAS.Monoids.TIMES_MONOID
+SuiteSparseGraphBLAS.Monoids.ANY_MONOID
+SuiteSparseGraphBLAS.Monoids.BAND_MONOID
+SuiteSparseGraphBLAS.Monoids.BOR_MONOID
+SuiteSparseGraphBLAS.Monoids.BXNOR_MONOID
+SuiteSparseGraphBLAS.Monoids.BXOR_MONOID
+SuiteSparseGraphBLAS.Monoids.EQ_MONOID
+SuiteSparseGraphBLAS.Monoids.LAND_MONOID
+SuiteSparseGraphBLAS.Monoids.LOR_MONOID
+SuiteSparseGraphBLAS.Monoids.LXNOR_MONOID
+SuiteSparseGraphBLAS.Monoids.LXOR_MONOID
 ```
