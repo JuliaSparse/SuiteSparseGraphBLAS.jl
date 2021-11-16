@@ -33,14 +33,14 @@ BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
 BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
 
 # Change this to change the size of the dense RHS of csrtimesfull and csctimesfull
-const sizefullrhs = [1,2,20]
+const sizefullrhs = [1,2,4]
 
 
 const suite = BenchmarkGroup()
 const ssmc = ssmc_db()
 
 function AxB_allbycol(S, G, nthreads, sizerhs)
-    printstyled("\nCSC = CSC * Full\n", color=:green)
+    printstyled("\nMETHOD: CSC = CSC * Full\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
@@ -74,7 +74,7 @@ function AxB_allbycol(S, G, nthreads, sizerhs)
 end
 
 function AxB_allbyrow(S, G, nthreads, sizerhs)
-    printstyled("\nCSR = CSR * Full\n", color=:green)
+    printstyled("\nMETHOD: CSR = CSR * Full\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
@@ -104,7 +104,7 @@ function AxB_allbyrow(S, G, nthreads, sizerhs)
 end
 
 function AxB_ColxRow(S, G, nthreads, sizerhs)
-    printstyled("\nByRow = CSC * Full_byrow\n", color=:green)
+    printstyled("\nMETHOD: ByRow = CSC * Full_byrow\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
@@ -136,7 +136,7 @@ function AxB_ColxRow(S, G, nthreads, sizerhs)
 end
 
 function CaccumAxB_allbycol(S, G, nthreads, sizerhs)
-    printstyled("\nFull += CSC * Full\n", color=:green)
+    printstyled("\nMETHOD: Full += CSC * Full\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
@@ -172,7 +172,7 @@ function CaccumAxB_allbycol(S, G, nthreads, sizerhs)
 end
 
 function CaccumAxB_allbyrow(S, G, nthreads, sizerhs)
-    printstyled("\nFull_byrow += CSR * Full_byrow\n", color=:green)
+    printstyled("\nMETHOD: Full_byrow += CSR * Full_byrow\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
@@ -207,7 +207,7 @@ function CaccumAxB_allbyrow(S, G, nthreads, sizerhs)
 end
 
 function CaccumAxB_CRC(S, G, nthreads, sizerhs)
-    printstyled("\nFull_bycol += CSR * Full_bycol\n", color=:green)
+    printstyled("\nMETHOD: Full_bycol += CSR * Full_bycol\n", color=:green)
     GC.gc()
     m = rand(size(S, 2), sizerhs)
     m2 = GBMatrix(m)
@@ -272,9 +272,11 @@ function singlebench(pathornum)
     G = GBMatrix(S)
     gbset(G, :format, :byrow)
     diag(G)
+    printstyled("\n#################################################################################\n"; bold=true, color=:green)
     printstyled("Benchmarking $name:\n"; bold=true, color=:green)
+    printstyled("#################################################################################\n"; bold=true, color=:green)
     for i ∈ sizefullrhs
-        printstyled("\nUsing a size $i B matrix"; bold=true, color=:red)
+        printstyled("\n================================================================================= $name : Using a size $i B matrix"; bold=true, color=:green)
         for f ∈ functorun
             f(S, G, threadlist, i)
         end
