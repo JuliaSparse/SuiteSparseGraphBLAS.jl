@@ -3,13 +3,4 @@
 # FIXME: the paths would need to point somewhere else.
 # better yet, the sparse matrix IDs should be used so
 # they can be directly downloaded from sparse.tamu.edu.
-julia benchmarks.jl /home/faculty/d/davis/Freescale2.mtx
-julia benchmarks.jl /home/faculty/d/davis/indochina-2004.mtx
-julia benchmarks.jl /home/faculty/d/davis/nd24k.mtx
-julia benchmarks.jl /home/faculty/d/davis/nd6k.mtx
-julia benchmarks.jl /home/faculty/d/davis/roadNet-CA.mtx
-julia benchmarks.jl /raid/GAP/GAP-twitter/GAP-twitter.mtx
-julia benchmarks.jl /raid/GAP/GAP-road/GAP-road.mtx
-julia benchmarks.jl /raid/GAP/GAP-web/GAP-web.mtx
-julia benchmarks.jl /raid/GAP/GAP-urand/GAP-urand.mtx
-julia benchmarks.jl /raid/GAP/GAP-kron/GAP-kron.mtx
+julia benchmarks.jl mtx.txt

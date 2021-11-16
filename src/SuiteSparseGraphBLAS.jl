@@ -19,7 +19,6 @@ using SparseArrays: nonzeroinds
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
-using CEnum
 using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
 include("abstracts.jl")
@@ -76,6 +75,8 @@ include("operations/resize.jl")
 include("print.jl")
 include("import.jl")
 include("export.jl")
+include("pack.jl")
+include("unpack.jl")
 include("options.jl")
 #EXPERIMENTAL
 include("operations/argminmax.jl")
@@ -89,6 +90,7 @@ include("chainrules/selectrules.jl")
 include("chainrules/constructorrules.jl")
 #include("random.jl")
 include("misc.jl")
+include("asjulia.jl")
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
@@ -130,6 +132,7 @@ function __init__()
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
+    gbset(:nthreads, Sys.CPU_THREADS ÷ 2)
     # Eagerly load selectops constants.
     _loadselectops()
     # Set printing done by SuiteSparse:GraphBLAS to base-1 rather than base-0.

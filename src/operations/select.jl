@@ -31,13 +31,17 @@ function select!(
     return select!(SelectOp(op), C, A, thunk; mask, accum, desc)
 end
 
+function select!(op::Function, A::GBArray, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
+    return select!(op, A, A, thunk; mask, accum, desc)
+end
+
 """
     select(op::Union{Function, SelectUnion}, A::GBArray; kwargs...)::GBArray
     select(op::Union{Function, SelectUnion}, A::GBArray, thunk; kwargs...)::GBArray
 
 Return a `GBArray` whose elements satisfy the predicate defined by `op`.
-Some SelectOps or functions may require an additional argument `thunk`, for use in 
-    comparison operations such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which is 
+Some SelectOps or functions may require an additional argument `thunk`, for use in
+    comparison operations such as `C[i,j] = A[i,j] >= thunk ? A[i,j] : nothing`, which is
     performed by `select(>, A, thunk)`.
 
 # Arguments

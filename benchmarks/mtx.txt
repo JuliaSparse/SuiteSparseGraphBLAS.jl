@@ -1,0 +1,12 @@
+# You may provide paths or SuiteSparse ID numbers here.
+# A hashtag denotes a commented line.
+/home/faculty/d/davis/Freescale2.mtx
+/home/faculty/d/davis/indochina-2004.mtx
+/home/faculty/d/davis/nd24k.mtx
+/home/faculty/d/davis/nd6k.mtx
+/home/faculty/d/davis/roadNet-CA.mtx
+/raid/GAP/GAP-twitter/GAP-twitter.mtx
+/raid/GAP/GAP-road/GAP-road.mtx
+/raid/GAP/GAP-web/GAP-web.mtx
+/raid/GAP/GAP-urand/GAP-urand.mtx
+/raid/GAP/GAP-kron/GAP-kron.mtx

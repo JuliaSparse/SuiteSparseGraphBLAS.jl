@@ -1,3 +1,17 @@
+"""
+   Descriptor
+
+Context object which may be optionally passed to many SuiteSparse:GraphBLAS functions.
+
+See the SuiteSparse:GraphBLAS User Guide or the SuiteSparseGraphBLAS.jl docs for more information.
+
+# Options
+- `nthreads::Int = Sys.CPU_THREADS ÷ 2`: Specify the maximum number of threads to be used by
+a function, defaults to avoid hyperthreading, which is typically most performant.
+- `replace_output`: Clear the output array before assignment.
+- `structural_mask::Bool`: Utilize the structure of the mask argument, rather than its values.
+- `complement_mask::Bool`: Values which are true in the complement of the mask will be kept.
+"""
 mutable struct Descriptor <: AbstractDescriptor
     name::String
     p::libgb.GrB_Descriptor

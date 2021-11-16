@@ -4,7 +4,6 @@ authors = ["Will Kimmerer <wrkimmerer@outlook.com", "Abhinav Mehndiratta <abhina
 version = "0.4.0"
 
 [deps]
-CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 FiniteDifferences = "26cc04aa-876d-5657-8c51-4c34ba976000"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -15,9 +14,9 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SSGraphBLAS_jll = "7ed9a814-9cab-54e9-8e9e-d9e95b4d61b1"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [compat]
-CEnum = "0.4"
 MacroTools = "0.5"
 SSGraphBLAS_jll = "5.1"
 julia = "1.6"

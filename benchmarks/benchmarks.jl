@@ -26,11 +26,16 @@ using BenchmarkTools
 using SparseArrays
 using LinearAlgebra
 
+
 #OPTIONS SET 1:
 # Maximum number of samples taken for each benchmark
 BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
 # Total amount of time allowed for each benchmark, minimum of 1 sample taken.
 BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
+
+# Comment or uncomment this line to disable or enable MKLSparse respectively.
+# This will only work for SpMM and SpMV and only operates on CSC.
+using MKLSparse
 
 # Change this to change the size of the dense RHS of csrtimesfull and csctimesfull
 const sizefullrhs = [1,2,4]
@@ -288,6 +293,8 @@ if length(ARGS) != 0
         if splitext(ARGS[1])[2] == ".mtx"
             singlebench(ARGS[1])
         else
+            lines = readlines(ARGS[1])
+            filter!((x) -> !occursin("#", x), lines)
             singlebench.(readlines(ARGS[1]))
         end
     elseif tryparse(Int64, ARGS[1]) !== nothing

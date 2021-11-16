@@ -86,7 +86,7 @@ end
 """
 Sparsity options for GraphBLAS. values can be summed to produce additional options.
 """
-@cenum GBSparsity::Int32 begin
+@enum GBSparsity::Int32 begin
     GBDENSE = 8 #libgb.GxB_FULL
     GBBITMAP = 4 #libgb.GxB_BITMAP
     GBSPARSE = 2 #libgb.GxB_SPARSE
