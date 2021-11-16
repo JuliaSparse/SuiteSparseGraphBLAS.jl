@@ -273,6 +273,13 @@ function Base.setindex!(
     subassign!(u, x, ALL; mask, accum, desc)
     return nothing
 end
+# silly overload to help a bit with broadcasting.
+function Base.setindex!(
+    u::GBVector, x, I::Union{Vector, UnitRange, StepRange, Colon}, ::Colon;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    Base.setindex!(u, x, I; mask, accum, desc)
+end
 function Base.setindex!(
     u::GBVector, x, I::Union{Vector, UnitRange, StepRange};
     mask = nothing, accum = nothing, desc = nothing

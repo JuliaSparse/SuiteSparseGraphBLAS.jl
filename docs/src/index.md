@@ -55,7 +55,8 @@ SuiteSparse:GraphBLAS takes advantage of this by storing matrices in one of four
 !!! warning "Default Orientation"
     The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays, for greater speed
     in certain operations. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
-    `Matrix` will be stored by-column. This can be changed using `gbset(A, :format, :byrow)`.
+    `Matrix` will be stored by-column. The orientation of a `GBMatrix` can be modified using
+    `gbset(A, :format, :byrow)` or `gbset(A, :format, :bycol)`.
 
 The matrix and vector in the graphic above can be constructed as follows:
 
