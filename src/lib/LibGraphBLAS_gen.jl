@@ -1,26 +1,517 @@
 module LibGraphBLAS
 
-const GxB_FC32_t = ComplexF32
+const GxB_FC64_t = ComplexF64
 
-const GxB_FC64_t = ComplexF32
+const GxB_FC32_t = ComplexF32
 
 const GrB_Index = UInt64
 
-@enum GrB_Info::UInt32 begin
+mutable struct GB_Type_opaque end
+
+const GrB_Type = Ptr{GB_Type_opaque}
+
+@enum GrB_Info::Int32 begin
     GrB_SUCCESS = 0
     GrB_NO_VALUE = 1
-    GrB_UNINITIALIZED_OBJECT = 2
-    GrB_INVALID_OBJECT = 3
-    GrB_NULL_POINTER = 4
-    GrB_INVALID_VALUE = 5
-    GrB_INVALID_INDEX = 6
-    GrB_DOMAIN_MISMATCH = 7
-    GrB_DIMENSION_MISMATCH = 8
-    GrB_OUTPUT_NOT_EMPTY = 9
-    GrB_OUT_OF_MEMORY = 10
-    GrB_INSUFFICIENT_SPACE = 11
-    GrB_INDEX_OUT_OF_BOUNDS = 12
-    GrB_PANIC = 13
+    GrB_UNINITIALIZED_OBJECT = -1
+    GrB_NULL_POINTER = -2
+    GrB_INVALID_VALUE = -3
+    GrB_INVALID_INDEX = -4
+    GrB_DOMAIN_MISMATCH = -5
+    GrB_DIMENSION_MISMATCH = -6
+    GrB_OUTPUT_NOT_EMPTY = -7
+    GrB_NOT_IMPLEMENTED = -8
+    GrB_PANIC = -101
+    GrB_OUT_OF_MEMORY = -102
+    GrB_INSUFFICIENT_SPACE = -103
+    GrB_INVALID_OBJECT = -104
+    GrB_INDEX_OUT_OF_BOUNDS = -105
+    GrB_EMPTY_OBJECT = -106
+end
+
+function GxB_Type_new(type, sizeof_ctype, type_name, type_defn)
+    ccall((:GxB_Type_new, libgraphblas), GrB_Info, (Ptr{GrB_Type}, Csize_t, Ptr{Cchar}, Ptr{Cchar}), type, sizeof_ctype, type_name, type_defn)
+end
+
+mutable struct GB_UnaryOp_opaque end
+
+const GrB_UnaryOp = Ptr{GB_UnaryOp_opaque}
+
+# typedef void ( * GxB_unary_function ) ( void * , const void * )
+const GxB_unary_function = Ptr{Cvoid}
+
+function GxB_UnaryOp_new(unaryop, _function, ztype, xtype, unop_name, unop_defn)
+    ccall((:GxB_UnaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp}, GxB_unary_function, GrB_Type, GrB_Type, Ptr{Cchar}, Ptr{Cchar}), unaryop, _function, ztype, xtype, unop_name, unop_defn)
+end
+
+mutable struct GB_BinaryOp_opaque end
+
+const GrB_BinaryOp = Ptr{GB_BinaryOp_opaque}
+
+# typedef void ( * GxB_binary_function ) ( void * , const void * , const void * )
+const GxB_binary_function = Ptr{Cvoid}
+
+function GxB_BinaryOp_new(op, _function, ztype, xtype, ytype, binop_name, binop_defn)
+    ccall((:GxB_BinaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp}, GxB_binary_function, GrB_Type, GrB_Type, GrB_Type, Ptr{Cchar}, Ptr{Cchar}), op, _function, ztype, xtype, ytype, binop_name, binop_defn)
+end
+
+mutable struct GB_SelectOp_opaque end
+
+const GxB_SelectOp = Ptr{GB_SelectOp_opaque}
+
+# typedef bool ( * GxB_select_function ) // return true if A(i,j) is kept ( GrB_Index i , // row index of A(i,j) GrB_Index j , // column index of A(i,j) const void * x , // value of A(i,j) const void * thunk // optional input for select function )
+const GxB_select_function = Ptr{Cvoid}
+
+function GB_SelectOp_new(selectop, _function, xtype, ttype, name)
+    ccall((:GB_SelectOp_new, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp}, GxB_select_function, GrB_Type, GrB_Type, Ptr{Cchar}), selectop, _function, xtype, ttype, name)
+end
+
+mutable struct GB_IndexUnaryOp_opaque end
+
+const GrB_IndexUnaryOp = Ptr{GB_IndexUnaryOp_opaque}
+
+# typedef void ( * GxB_index_unary_function ) ( void * z , // output value z, of type ztype const void * x , // input value x of type xtype; value of v(i) or A(i,j) GrB_Index i , // row index of A(i,j) GrB_Index j , // column index of A(i,j), or zero for v(i) const void * y // input scalar y )
+const GxB_index_unary_function = Ptr{Cvoid}
+
+function GxB_IndexUnaryOp_new(op, _function, ztype, xtype, ytype, idxop_name, idxop_defn)
+    ccall((:GxB_IndexUnaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_IndexUnaryOp}, GxB_index_unary_function, GrB_Type, GrB_Type, GrB_Type, Ptr{Cchar}, Ptr{Cchar}), op, _function, ztype, xtype, ytype, idxop_name, idxop_defn)
+end
+
+mutable struct GB_Vector_opaque end
+
+const GrB_Vector = Ptr{GB_Vector_opaque}
+
+mutable struct GB_Scalar_opaque end
+
+const GrB_Scalar = Ptr{GB_Scalar_opaque}
+
+function GrB_Vector_setElement_Scalar(w, x, i)
+    ccall((:GrB_Vector_setElement_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Scalar, GrB_Index), w, x, i)
+end
+
+function GrB_Vector_extractElement_Scalar(x, v, i)
+    ccall((:GrB_Vector_extractElement_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_Vector, GrB_Index), x, v, i)
+end
+
+mutable struct GB_Matrix_opaque end
+
+const GrB_Matrix = Ptr{GB_Matrix_opaque}
+
+function GrB_Matrix_setElement_Scalar(C, x, i, j)
+    ccall((:GrB_Matrix_setElement_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Scalar, GrB_Index, GrB_Index), C, x, i, j)
+end
+
+function GrB_Matrix_extractElement_Scalar(x, A, i, j)
+    ccall((:GrB_Matrix_extractElement_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
+end
+
+@enum GxB_Option_Field::UInt32 begin
+    GxB_HYPER_SWITCH = 0
+    GxB_BITMAP_SWITCH = 34
+    GxB_FORMAT = 1
+    GxB_MODE = 2
+    GxB_LIBRARY_NAME = 8
+    GxB_LIBRARY_VERSION = 9
+    GxB_LIBRARY_DATE = 10
+    GxB_LIBRARY_ABOUT = 11
+    GxB_LIBRARY_URL = 12
+    GxB_LIBRARY_LICENSE = 13
+    GxB_LIBRARY_COMPILE_DATE = 14
+    GxB_LIBRARY_COMPILE_TIME = 15
+    GxB_API_VERSION = 16
+    GxB_API_DATE = 17
+    GxB_API_ABOUT = 18
+    GxB_API_URL = 19
+    GxB_GLOBAL_NTHREADS = 5
+    GxB_GLOBAL_CHUNK = 7
+    GxB_BURBLE = 99
+    GxB_PRINTF = 101
+    GxB_FLUSH = 102
+    GxB_MEMORY_POOL = 103
+    GxB_PRINT_1BASED = 104
+    GxB_SPARSITY_STATUS = 33
+    GxB_IS_HYPER = 6
+    GxB_SPARSITY_CONTROL = 32
+    GxB_GLOBAL_GPU_CONTROL = 21
+    GxB_GLOBAL_GPU_CHUNK = 22
+end
+
+mutable struct GB_Descriptor_opaque end
+
+const GrB_Descriptor = Ptr{GB_Descriptor_opaque}
+
+function GrB_Type_free(type)
+    ccall((:GrB_Type_free, libgraphblas), GrB_Info, (Ptr{GrB_Type},), type)
+end
+
+function GrB_UnaryOp_free(unaryop)
+    ccall((:GrB_UnaryOp_free, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp},), unaryop)
+end
+
+function GrB_BinaryOp_free(binaryop)
+    ccall((:GrB_BinaryOp_free, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp},), binaryop)
+end
+
+function GxB_SelectOp_free(selectop)
+    ccall((:GxB_SelectOp_free, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp},), selectop)
+end
+
+function GrB_IndexUnaryOp_free(op)
+    ccall((:GrB_IndexUnaryOp_free, libgraphblas), GrB_Info, (Ptr{GrB_IndexUnaryOp},), op)
+end
+
+mutable struct GB_Monoid_opaque end
+
+const GrB_Monoid = Ptr{GB_Monoid_opaque}
+
+function GrB_Monoid_free(monoid)
+    ccall((:GrB_Monoid_free, libgraphblas), GrB_Info, (Ptr{GrB_Monoid},), monoid)
+end
+
+mutable struct GB_Semiring_opaque end
+
+const GrB_Semiring = Ptr{GB_Semiring_opaque}
+
+function GrB_Semiring_free(semiring)
+    ccall((:GrB_Semiring_free, libgraphblas), GrB_Info, (Ptr{GrB_Semiring},), semiring)
+end
+
+function GrB_Scalar_free(s)
+    ccall((:GrB_Scalar_free, libgraphblas), GrB_Info, (Ptr{GrB_Scalar},), s)
+end
+
+function GrB_Vector_free(v)
+    ccall((:GrB_Vector_free, libgraphblas), GrB_Info, (Ptr{GrB_Vector},), v)
+end
+
+function GrB_Matrix_free(A)
+    ccall((:GrB_Matrix_free, libgraphblas), GrB_Info, (Ptr{GrB_Matrix},), A)
+end
+
+function GrB_Descriptor_free(descriptor)
+    ccall((:GrB_Descriptor_free, libgraphblas), GrB_Info, (Ptr{GrB_Descriptor},), descriptor)
+end
+
+@enum GrB_WaitMode::UInt32 begin
+    GrB_COMPLETE = 0
+    GrB_MATERIALIZE = 1
+end
+
+function GrB_Type_wait(type, waitmode)
+    ccall((:GrB_Type_wait, libgraphblas), GrB_Info, (GrB_Type, GrB_WaitMode), type, waitmode)
+end
+
+function GrB_UnaryOp_wait(op, waitmode)
+    ccall((:GrB_UnaryOp_wait, libgraphblas), GrB_Info, (GrB_UnaryOp, GrB_WaitMode), op, waitmode)
+end
+
+function GrB_BinaryOp_wait(op, waitmode)
+    ccall((:GrB_BinaryOp_wait, libgraphblas), GrB_Info, (GrB_BinaryOp, GrB_WaitMode), op, waitmode)
+end
+
+function GxB_SelectOp_wait(op, waitmode)
+    ccall((:GxB_SelectOp_wait, libgraphblas), GrB_Info, (GxB_SelectOp, GrB_WaitMode), op, waitmode)
+end
+
+function GrB_IndexUnaryOp_wait(op, waitmode)
+    ccall((:GrB_IndexUnaryOp_wait, libgraphblas), GrB_Info, (GrB_IndexUnaryOp, GrB_WaitMode), op, waitmode)
+end
+
+function GrB_Monoid_wait(monoid, waitmode)
+    ccall((:GrB_Monoid_wait, libgraphblas), GrB_Info, (GrB_Monoid, GrB_WaitMode), monoid, waitmode)
+end
+
+function GrB_Semiring_wait(semiring, waitmode)
+    ccall((:GrB_Semiring_wait, libgraphblas), GrB_Info, (GrB_Semiring, GrB_WaitMode), semiring, waitmode)
+end
+
+function GrB_Scalar_wait(s, waitmode)
+    ccall((:GrB_Scalar_wait, libgraphblas), GrB_Info, (GrB_Scalar, GrB_WaitMode), s, waitmode)
+end
+
+function GrB_Vector_wait(v, waitmode)
+    ccall((:GrB_Vector_wait, libgraphblas), GrB_Info, (GrB_Vector, GrB_WaitMode), v, waitmode)
+end
+
+function GrB_Matrix_wait(A, waitmode)
+    ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (GrB_Matrix, GrB_WaitMode), A, waitmode)
+end
+
+function GrB_Descriptor_wait(desc, waitmode)
+    ccall((:GrB_Descriptor_wait, libgraphblas), GrB_Info, (GrB_Descriptor, GrB_WaitMode), desc, waitmode)
+end
+
+function GrB_Type_error(error, type)
+    ccall((:GrB_Type_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Type), error, type)
+end
+
+function GrB_UnaryOp_error(error, op)
+    ccall((:GrB_UnaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_UnaryOp), error, op)
+end
+
+function GrB_BinaryOp_error(error, op)
+    ccall((:GrB_BinaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_BinaryOp), error, op)
+end
+
+function GxB_SelectOp_error(error, op)
+    ccall((:GxB_SelectOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_SelectOp), error, op)
+end
+
+function GrB_IndexUnaryOp_error(error, op)
+    ccall((:GrB_IndexUnaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_IndexUnaryOp), error, op)
+end
+
+function GrB_Monoid_error(error, monoid)
+    ccall((:GrB_Monoid_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Monoid), error, monoid)
+end
+
+function GrB_Semiring_error(error, semiring)
+    ccall((:GrB_Semiring_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Semiring), error, semiring)
+end
+
+function GrB_Scalar_error(error, s)
+    ccall((:GrB_Scalar_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Scalar), error, s)
+end
+
+function GrB_Vector_error(error, v)
+    ccall((:GrB_Vector_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Vector), error, v)
+end
+
+function GrB_Matrix_error(error, A)
+    ccall((:GrB_Matrix_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Matrix), error, A)
+end
+
+function GrB_Descriptor_error(error, d)
+    ccall((:GrB_Descriptor_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Descriptor), error, d)
+end
+
+function GrB_Matrix_eWiseMult_Semiring(C, Mask, accum, semiring, A, B, desc)
+    ccall((:GrB_Matrix_eWiseMult_Semiring, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, semiring, A, B, desc)
+end
+
+function GrB_Matrix_eWiseMult_Monoid(C, Mask, accum, monoid, A, B, desc)
+    ccall((:GrB_Matrix_eWiseMult_Monoid, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, monoid, A, B, desc)
+end
+
+function GrB_Matrix_eWiseMult_BinaryOp(C, Mask, accum, mult, A, B, desc)
+    ccall((:GrB_Matrix_eWiseMult_BinaryOp, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, mult, A, B, desc)
+end
+
+function GrB_Vector_eWiseMult_Semiring(w, mask, accum, semiring, u, v, desc)
+    ccall((:GrB_Vector_eWiseMult_Semiring, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Semiring, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, semiring, u, v, desc)
+end
+
+function GrB_Vector_eWiseMult_Monoid(w, mask, accum, monoid, u, v, desc)
+    ccall((:GrB_Vector_eWiseMult_Monoid, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Monoid, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, monoid, u, v, desc)
+end
+
+function GrB_Vector_eWiseMult_BinaryOp(w, mask, accum, mult, u, v, desc)
+    ccall((:GrB_Vector_eWiseMult_BinaryOp, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, mult, u, v, desc)
+end
+
+function GrB_Matrix_eWiseAdd_Semiring(C, Mask, accum, semiring, A, B, desc)
+    ccall((:GrB_Matrix_eWiseAdd_Semiring, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, semiring, A, B, desc)
+end
+
+function GrB_Matrix_eWiseAdd_Monoid(C, Mask, accum, monoid, A, B, desc)
+    ccall((:GrB_Matrix_eWiseAdd_Monoid, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, monoid, A, B, desc)
+end
+
+function GrB_Matrix_eWiseAdd_BinaryOp(C, Mask, accum, add, A, B, desc)
+    ccall((:GrB_Matrix_eWiseAdd_BinaryOp, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, add, A, B, desc)
+end
+
+function GrB_Vector_eWiseAdd_Semiring(w, mask, accum, semiring, u, v, desc)
+    ccall((:GrB_Vector_eWiseAdd_Semiring, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Semiring, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, semiring, u, v, desc)
+end
+
+function GrB_Vector_eWiseAdd_Monoid(w, mask, accum, monoid, u, v, desc)
+    ccall((:GrB_Vector_eWiseAdd_Monoid, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Monoid, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, monoid, u, v, desc)
+end
+
+function GrB_Vector_eWiseAdd_BinaryOp(w, mask, accum, add, u, v, desc)
+    ccall((:GrB_Vector_eWiseAdd_BinaryOp, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, add, u, v, desc)
+end
+
+function GxB_Matrix_eWiseUnion(C, Mask, accum, add, A, alpha, B, beta, desc)
+    ccall((:GxB_Matrix_eWiseUnion, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Scalar, GrB_Matrix, GrB_Scalar, GrB_Descriptor), C, Mask, accum, add, A, alpha, B, beta, desc)
+end
+
+function GxB_Vector_eWiseUnion(w, mask, accum, add, u, alpha, v, beta, desc)
+    ccall((:GxB_Vector_eWiseUnion, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Scalar, GrB_Vector, GrB_Scalar, GrB_Descriptor), w, mask, accum, add, u, alpha, v, beta, desc)
+end
+
+function GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
+    ccall((:GrB_Vector_extract, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, u, I, ni, desc)
+end
+
+function GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)
+    ccall((:GrB_Col_extract, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, GrB_Index, GrB_Descriptor), w, mask, accum, A, I, ni, j, desc)
+end
+
+function GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)
+    ccall((:GrB_Matrix_extract, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, A, I, ni, J, nj, desc)
+end
+
+function GxB_Vector_subassign_Scalar(w, mask, accum, x, I, ni, desc)
+    ccall((:GxB_Vector_subassign_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Scalar, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, x, I, ni, desc)
+end
+
+function GxB_Vector_subassign(w, mask, accum, u, I, ni, desc)
+    ccall((:GxB_Vector_subassign, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, u, I, ni, desc)
+end
+
+function GxB_Matrix_subassign_Scalar(C, Mask, accum, x, I, ni, J, nj, desc)
+    ccall((:GxB_Matrix_subassign_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Scalar, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, x, I, ni, J, nj, desc)
+end
+
+function GxB_Col_subassign(C, mask, accum, u, I, ni, j, desc)
+    ccall((:GxB_Col_subassign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Index, GrB_Descriptor), C, mask, accum, u, I, ni, j, desc)
+end
+
+function GxB_Row_subassign(C, mask, accum, u, i, J, nj, desc)
+    ccall((:GxB_Row_subassign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, mask, accum, u, i, J, nj, desc)
+end
+
+function GxB_Matrix_subassign(C, Mask, accum, A, I, ni, J, nj, desc)
+    ccall((:GxB_Matrix_subassign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, A, I, ni, J, nj, desc)
+end
+
+function GrB_Vector_assign_Scalar(w, mask, accum, x, I, ni, desc)
+    ccall((:GrB_Vector_assign_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Scalar, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, x, I, ni, desc)
+end
+
+function GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
+    ccall((:GrB_Vector_assign, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, u, I, ni, desc)
+end
+
+function GrB_Matrix_assign_Scalar(C, Mask, accum, x, I, ni, J, nj, desc)
+    ccall((:GrB_Matrix_assign_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Scalar, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, x, I, ni, J, nj, desc)
+end
+
+function GrB_Col_assign(C, mask, accum, u, I, ni, j, desc)
+    ccall((:GrB_Col_assign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Index, GrB_Descriptor), C, mask, accum, u, I, ni, j, desc)
+end
+
+function GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)
+    ccall((:GrB_Row_assign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, mask, accum, u, i, J, nj, desc)
+end
+
+function GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)
+    ccall((:GrB_Matrix_assign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, A, I, ni, J, nj, desc)
+end
+
+function GrB_Vector_apply(w, mask, accum, op, u, desc)
+    ccall((:GrB_Vector_apply, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_UnaryOp, GrB_Vector, GrB_Descriptor), w, mask, accum, op, u, desc)
+end
+
+function GrB_Matrix_apply(C, Mask, accum, op, A, desc)
+    ccall((:GrB_Matrix_apply, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_UnaryOp, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, A, desc)
+end
+
+function GrB_Vector_select_Scalar(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, GrB_Scalar, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Matrix_select_Scalar(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, GrB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GxB_Vector_select(w, mask, accum, op, u, Thunk, desc)
+    ccall((:GxB_Vector_select, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GxB_SelectOp, GrB_Vector, GrB_Scalar, GrB_Descriptor), w, mask, accum, op, u, Thunk, desc)
+end
+
+function GxB_Matrix_select(C, Mask, accum, op, A, Thunk, desc)
+    ccall((:GxB_Matrix_select, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GxB_SelectOp, GrB_Matrix, GrB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, Thunk, desc)
+end
+
+function GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
+    ccall((:GrB_Matrix_reduce_Monoid, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Descriptor), w, mask, accum, monoid, A, desc)
+end
+
+function GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)
+    ccall((:GrB_Matrix_reduce_BinaryOp, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Descriptor), w, mask, accum, op, A, desc)
+end
+
+function GrB_Matrix_kronecker_Semiring(C, M, accum, semiring, A, B, desc)
+    ccall((:GrB_Matrix_kronecker_Semiring, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, M, accum, semiring, A, B, desc)
+end
+
+function GrB_Matrix_kronecker_Monoid(C, M, accum, monoid, A, B, desc)
+    ccall((:GrB_Matrix_kronecker_Monoid, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, M, accum, monoid, A, B, desc)
+end
+
+function GrB_Matrix_kronecker_BinaryOp(C, M, accum, op, A, B, desc)
+    ccall((:GrB_Matrix_kronecker_BinaryOp, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, M, accum, op, A, B, desc)
+end
+
+function GrB_Vector_resize(w, nrows_new)
+    ccall((:GrB_Vector_resize, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), w, nrows_new)
+end
+
+function GrB_Matrix_resize(C, nrows_new, ncols_new)
+    ccall((:GrB_Matrix_resize, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), C, nrows_new, ncols_new)
+end
+
+@enum GxB_Print_Level::UInt32 begin
+    GxB_SILENT = 0
+    GxB_SUMMARY = 1
+    GxB_SHORT = 2
+    GxB_COMPLETE = 3
+    GxB_SHORT_VERBOSE = 4
+    GxB_COMPLETE_VERBOSE = 5
+end
+
+function GxB_Type_fprint(type, name, pr, f)
+    ccall((:GxB_Type_fprint, libgraphblas), GrB_Info, (GrB_Type, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), type, name, pr, f)
+end
+
+function GxB_UnaryOp_fprint(unaryop, name, pr, f)
+    ccall((:GxB_UnaryOp_fprint, libgraphblas), GrB_Info, (GrB_UnaryOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), unaryop, name, pr, f)
+end
+
+function GxB_BinaryOp_fprint(binaryop, name, pr, f)
+    ccall((:GxB_BinaryOp_fprint, libgraphblas), GrB_Info, (GrB_BinaryOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), binaryop, name, pr, f)
+end
+
+function GxB_IndexUnaryOp_fprint(op, name, pr, f)
+    ccall((:GxB_IndexUnaryOp_fprint, libgraphblas), GrB_Info, (GrB_IndexUnaryOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), op, name, pr, f)
+end
+
+function GxB_SelectOp_fprint(selectop, name, pr, f)
+    ccall((:GxB_SelectOp_fprint, libgraphblas), GrB_Info, (GxB_SelectOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), selectop, name, pr, f)
+end
+
+function GxB_Monoid_fprint(monoid, name, pr, f)
+    ccall((:GxB_Monoid_fprint, libgraphblas), GrB_Info, (GrB_Monoid, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), monoid, name, pr, f)
+end
+
+function GxB_Semiring_fprint(semiring, name, pr, f)
+    ccall((:GxB_Semiring_fprint, libgraphblas), GrB_Info, (GrB_Semiring, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), semiring, name, pr, f)
+end
+
+function GxB_Scalar_fprint(s, name, pr, f)
+    ccall((:GxB_Scalar_fprint, libgraphblas), GrB_Info, (GrB_Scalar, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), s, name, pr, f)
+end
+
+function GxB_Vector_fprint(v, name, pr, f)
+    ccall((:GxB_Vector_fprint, libgraphblas), GrB_Info, (GrB_Vector, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), v, name, pr, f)
+end
+
+function GxB_Matrix_fprint(A, name, pr, f)
+    ccall((:GxB_Matrix_fprint, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), A, name, pr, f)
+end
+
+function GxB_Descriptor_fprint(descriptor, name, pr, f)
+    ccall((:GxB_Descriptor_fprint, libgraphblas), GrB_Info, (GrB_Descriptor, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), descriptor, name, pr, f)
+end
+
+function GxB_Vector_sort(w, p, op, u, desc)
+    ccall((:GxB_Vector_sort, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, GrB_Descriptor), w, p, op, u, desc)
+end
+
+function GxB_Matrix_sort(C, P, op, A, desc)
+    ccall((:GxB_Matrix_sort, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, GrB_Descriptor), C, P, op, A, desc)
 end
 
 @enum GrB_Mode::UInt32 begin
@@ -32,8 +523,8 @@ function GrB_init(mode)
     ccall((:GrB_init, libgraphblas), GrB_Info, (GrB_Mode,), mode)
 end
 
-function GxB_init(mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function, user_malloc_is_thread_safe)
-    ccall((:GxB_init, libgraphblas), GrB_Info, (GrB_Mode, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Bool), mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function, user_malloc_is_thread_safe)
+function GxB_init(mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function)
+    ccall((:GxB_init, libgraphblas), GrB_Info, (GrB_Mode, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function)
 end
 
 function GrB_finalize()
@@ -55,13 +546,14 @@ end
     GxB_DESCRIPTOR_GPU_CHUNK = 22
     GxB_AxB_METHOD = 1000
     GxB_SORT = 35
+    GxB_COMPRESSION = 36
+    GxB_IMPORT = 37
 end
 
 @enum GrB_Desc_Value::UInt32 begin
     GxB_DEFAULT = 0
     GrB_REPLACE = 1
     GrB_COMP = 2
-    # GrB_SCMP = 2
     GrB_STRUCTURE = 4
     GrB_TRAN = 3
     GxB_GPU_ALWAYS = 2001
@@ -70,11 +562,8 @@ end
     GxB_AxB_DOT = 1003
     GxB_AxB_HASH = 1004
     GxB_AxB_SAXPY = 1005
+    GxB_SECURE_IMPORT = 502
 end
-
-mutable struct GB_Descriptor_opaque end
-
-const GrB_Descriptor = Ptr{GB_Descriptor_opaque}
 
 function GrB_Descriptor_new(descriptor)
     ccall((:GrB_Descriptor_new, libgraphblas), GrB_Info, (Ptr{GrB_Descriptor},), descriptor)
@@ -88,85 +577,68 @@ function GxB_Descriptor_get(val, desc, field)
     ccall((:GxB_Descriptor_get, libgraphblas), GrB_Info, (Ptr{GrB_Desc_Value}, GrB_Descriptor, GrB_Desc_Field), val, desc, field)
 end
 
-function GrB_Descriptor_free(descriptor)
-    ccall((:GrB_Descriptor_free, libgraphblas), GrB_Info, (Ptr{GrB_Descriptor},), descriptor)
+function GB_Type_new(type, sizeof_ctype, type_name)
+    ccall((:GB_Type_new, libgraphblas), GrB_Info, (Ptr{GrB_Type}, Csize_t, Ptr{Cchar}), type, sizeof_ctype, type_name)
 end
 
-mutable struct GB_Type_opaque end
-
-const GrB_Type = Ptr{GB_Type_opaque}
-
-function GB_Type_new(type, sizeof_ctype, name)
-    ccall((:GB_Type_new, libgraphblas), GrB_Info, (Ptr{GrB_Type}, Csize_t, Ptr{Cchar}), type, sizeof_ctype, name)
+function GxB_Type_name(type_name, type)
+    ccall((:GxB_Type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_Type), type_name, type)
 end
 
 function GxB_Type_size(size, type)
     ccall((:GxB_Type_size, libgraphblas), GrB_Info, (Ptr{Csize_t}, GrB_Type), size, type)
 end
 
-function GrB_Type_free(type)
-    ccall((:GrB_Type_free, libgraphblas), GrB_Info, (Ptr{GrB_Type},), type)
+function GxB_Type_from_name(type, type_name)
+    ccall((:GxB_Type_from_name, libgraphblas), GrB_Info, (Ptr{GrB_Type}, Ptr{Cchar}), type, type_name)
 end
 
-mutable struct GB_UnaryOp_opaque end
-
-const GrB_UnaryOp = Ptr{GB_UnaryOp_opaque}
-
-# typedef void ( * GxB_unary_function ) ( void * , const void * )
-const GxB_unary_function = Ptr{Cvoid}
-
-function GB_UnaryOp_new(unaryop, _function, ztype, xtype, name)
-    ccall((:GB_UnaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp}, GxB_unary_function, GrB_Type, GrB_Type, Ptr{Cchar}), unaryop, _function, ztype, xtype, name)
+function GB_UnaryOp_new(unaryop, _function, ztype, xtype, unop_name)
+    ccall((:GB_UnaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp}, GxB_unary_function, GrB_Type, GrB_Type, Ptr{Cchar}), unaryop, _function, ztype, xtype, unop_name)
 end
 
 function GxB_UnaryOp_ztype(ztype, unaryop)
     ccall((:GxB_UnaryOp_ztype, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_UnaryOp), ztype, unaryop)
 end
 
+function GxB_UnaryOp_ztype_name(type_name, unaryop)
+    ccall((:GxB_UnaryOp_ztype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_UnaryOp), type_name, unaryop)
+end
+
 function GxB_UnaryOp_xtype(xtype, unaryop)
     ccall((:GxB_UnaryOp_xtype, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_UnaryOp), xtype, unaryop)
 end
 
-function GrB_UnaryOp_free(unaryop)
-    ccall((:GrB_UnaryOp_free, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp},), unaryop)
+function GxB_UnaryOp_xtype_name(type_name, unaryop)
+    ccall((:GxB_UnaryOp_xtype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_UnaryOp), type_name, unaryop)
 end
 
-mutable struct GB_BinaryOp_opaque end
-
-const GrB_BinaryOp = Ptr{GB_BinaryOp_opaque}
-
-# typedef void ( * GxB_binary_function ) ( void * , const void * , const void * )
-const GxB_binary_function = Ptr{Cvoid}
-
-function GB_BinaryOp_new(binaryop, _function, ztype, xtype, ytype, name)
-    ccall((:GB_BinaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp}, GxB_binary_function, GrB_Type, GrB_Type, GrB_Type, Ptr{Cchar}), binaryop, _function, ztype, xtype, ytype, name)
+function GB_BinaryOp_new(binaryop, _function, ztype, xtype, ytype, binop_name)
+    ccall((:GB_BinaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp}, GxB_binary_function, GrB_Type, GrB_Type, GrB_Type, Ptr{Cchar}), binaryop, _function, ztype, xtype, ytype, binop_name)
 end
 
 function GxB_BinaryOp_ztype(ztype, binaryop)
     ccall((:GxB_BinaryOp_ztype, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_BinaryOp), ztype, binaryop)
 end
 
+function GxB_BinaryOp_ztype_name(type_name, binaryop)
+    ccall((:GxB_BinaryOp_ztype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_BinaryOp), type_name, binaryop)
+end
+
 function GxB_BinaryOp_xtype(xtype, binaryop)
     ccall((:GxB_BinaryOp_xtype, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_BinaryOp), xtype, binaryop)
+end
+
+function GxB_BinaryOp_xtype_name(type_name, binaryop)
+    ccall((:GxB_BinaryOp_xtype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_BinaryOp), type_name, binaryop)
 end
 
 function GxB_BinaryOp_ytype(ytype, binaryop)
     ccall((:GxB_BinaryOp_ytype, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_BinaryOp), ytype, binaryop)
 end
 
-function GrB_BinaryOp_free(binaryop)
-    ccall((:GrB_BinaryOp_free, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp},), binaryop)
-end
-
-mutable struct GB_SelectOp_opaque end
-
-const GxB_SelectOp = Ptr{GB_SelectOp_opaque}
-
-# typedef bool ( * GxB_select_function ) // return true if A(i,j) is kept ( GrB_Index i , // row index of A(i,j) GrB_Index j , // column index of A(i,j) const void * x , // value of A(i,j) const void * thunk // optional input for select function )
-const GxB_select_function = Ptr{Cvoid}
-
-function GB_SelectOp_new(selectop, _function, xtype, ttype, name)
-    ccall((:GB_SelectOp_new, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp}, GxB_select_function, GrB_Type, GrB_Type, Ptr{Cchar}), selectop, _function, xtype, ttype, name)
+function GxB_BinaryOp_ytype_name(type_name, binaryop)
+    ccall((:GxB_BinaryOp_ytype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_BinaryOp), type_name, binaryop)
 end
 
 function GxB_SelectOp_xtype(xtype, selectop)
@@ -177,13 +649,17 @@ function GxB_SelectOp_ttype(ttype, selectop)
     ccall((:GxB_SelectOp_ttype, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GxB_SelectOp), ttype, selectop)
 end
 
-function GxB_SelectOp_free(selectop)
-    ccall((:GxB_SelectOp_free, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp},), selectop)
+function GxB_IndexUnaryOp_ztype_name(type_name, op)
+    ccall((:GxB_IndexUnaryOp_ztype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_IndexUnaryOp), type_name, op)
 end
 
-mutable struct GB_Monoid_opaque end
+function GxB_IndexUnaryOp_xtype_name(type_name, op)
+    ccall((:GxB_IndexUnaryOp_xtype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_IndexUnaryOp), type_name, op)
+end
 
-const GrB_Monoid = Ptr{GB_Monoid_opaque}
+function GxB_IndexUnaryOp_ytype_name(type_name, op)
+    ccall((:GxB_IndexUnaryOp_ytype_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_IndexUnaryOp), type_name, op)
+end
 
 function GrB_Monoid_new_BOOL(monoid, op, identity)
     ccall((:GrB_Monoid_new_BOOL, libgraphblas), GrB_Info, (Ptr{GrB_Monoid}, GrB_BinaryOp, Bool), monoid, op, identity)
@@ -309,14 +785,6 @@ function GxB_Monoid_terminal(has_terminal, terminal, monoid)
     ccall((:GxB_Monoid_terminal, libgraphblas), GrB_Info, (Ptr{Bool}, Ptr{Cvoid}, GrB_Monoid), has_terminal, terminal, monoid)
 end
 
-function GrB_Monoid_free(monoid)
-    ccall((:GrB_Monoid_free, libgraphblas), GrB_Info, (Ptr{GrB_Monoid},), monoid)
-end
-
-mutable struct GB_Semiring_opaque end
-
-const GrB_Semiring = Ptr{GB_Semiring_opaque}
-
 function GrB_Semiring_new(semiring, add, multiply)
     ccall((:GrB_Semiring_new, libgraphblas), GrB_Info, (Ptr{GrB_Semiring}, GrB_Monoid, GrB_BinaryOp), semiring, add, multiply)
 end
@@ -329,157 +797,263 @@ function GxB_Semiring_multiply(multiply, semiring)
     ccall((:GxB_Semiring_multiply, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp}, GrB_Semiring), multiply, semiring)
 end
 
-function GrB_Semiring_free(semiring)
-    ccall((:GrB_Semiring_free, libgraphblas), GrB_Info, (Ptr{GrB_Semiring},), semiring)
-end
-
-mutable struct GB_Scalar_opaque end
-
 const GxB_Scalar = Ptr{GB_Scalar_opaque}
 
-function GxB_Scalar_new(s, type)
-    ccall((:GxB_Scalar_new, libgraphblas), GrB_Info, (Ptr{GxB_Scalar}, GrB_Type), s, type)
+function GrB_Scalar_new(s, type)
+    ccall((:GrB_Scalar_new, libgraphblas), GrB_Info, (Ptr{GrB_Scalar}, GrB_Type), s, type)
 end
 
-function GxB_Scalar_dup(s, t)
-    ccall((:GxB_Scalar_dup, libgraphblas), GrB_Info, (Ptr{GxB_Scalar}, GxB_Scalar), s, t)
+function GrB_Scalar_dup(s, t)
+    ccall((:GrB_Scalar_dup, libgraphblas), GrB_Info, (Ptr{GrB_Scalar}, GrB_Scalar), s, t)
 end
 
-function GxB_Scalar_clear(s)
-    ccall((:GxB_Scalar_clear, libgraphblas), GrB_Info, (GxB_Scalar,), s)
+function GrB_Scalar_clear(s)
+    ccall((:GrB_Scalar_clear, libgraphblas), GrB_Info, (GrB_Scalar,), s)
 end
 
-function GxB_Scalar_nvals(nvals, s)
-    ccall((:GxB_Scalar_nvals, libgraphblas), GrB_Info, (Ptr{GrB_Index}, GxB_Scalar), nvals, s)
+function GrB_Scalar_nvals(nvals, s)
+    ccall((:GrB_Scalar_nvals, libgraphblas), GrB_Info, (Ptr{GrB_Index}, GrB_Scalar), nvals, s)
 end
 
 function GxB_Scalar_type(type, s)
-    ccall((:GxB_Scalar_type, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GxB_Scalar), type, s)
+    ccall((:GxB_Scalar_type, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_Scalar), type, s)
+end
+
+function GxB_Scalar_type_name(type_name, s)
+    ccall((:GxB_Scalar_type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_Scalar), type_name, s)
 end
 
 function GxB_Scalar_memoryUsage(size, s)
-    ccall((:GxB_Scalar_memoryUsage, libgraphblas), GrB_Info, (Ptr{Csize_t}, GxB_Scalar), size, s)
+    ccall((:GxB_Scalar_memoryUsage, libgraphblas), GrB_Info, (Ptr{Csize_t}, GrB_Scalar), size, s)
+end
+
+function GxB_Scalar_new(s, type)
+    ccall((:GxB_Scalar_new, libgraphblas), GrB_Info, (Ptr{GrB_Scalar}, GrB_Type), s, type)
+end
+
+function GxB_Scalar_dup(s, t)
+    ccall((:GxB_Scalar_dup, libgraphblas), GrB_Info, (Ptr{GrB_Scalar}, GrB_Scalar), s, t)
+end
+
+function GxB_Scalar_clear(s)
+    ccall((:GxB_Scalar_clear, libgraphblas), GrB_Info, (GrB_Scalar,), s)
+end
+
+function GxB_Scalar_nvals(nvals, s)
+    ccall((:GxB_Scalar_nvals, libgraphblas), GrB_Info, (Ptr{GrB_Index}, GrB_Scalar), nvals, s)
 end
 
 function GxB_Scalar_free(s)
-    ccall((:GxB_Scalar_free, libgraphblas), GrB_Info, (Ptr{GxB_Scalar},), s)
+    ccall((:GxB_Scalar_free, libgraphblas), GrB_Info, (Ptr{GrB_Scalar},), s)
 end
 
-function GxB_Scalar_setElement_BOOL(s, x)
-    ccall((:GxB_Scalar_setElement_BOOL, libgraphblas), GrB_Info, (GxB_Scalar, Bool), s, x)
+function GrB_Scalar_setElement_BOOL(s, x)
+    ccall((:GrB_Scalar_setElement_BOOL, libgraphblas), GrB_Info, (GrB_Scalar, Bool), s, x)
 end
 
-function GxB_Scalar_setElement_INT8(s, x)
-    ccall((:GxB_Scalar_setElement_INT8, libgraphblas), GrB_Info, (GxB_Scalar, Int8), s, x)
+function GrB_Scalar_setElement_INT8(s, x)
+    ccall((:GrB_Scalar_setElement_INT8, libgraphblas), GrB_Info, (GrB_Scalar, Int8), s, x)
 end
 
-function GxB_Scalar_setElement_UINT8(s, x)
-    ccall((:GxB_Scalar_setElement_UINT8, libgraphblas), GrB_Info, (GxB_Scalar, UInt8), s, x)
+function GrB_Scalar_setElement_UINT8(s, x)
+    ccall((:GrB_Scalar_setElement_UINT8, libgraphblas), GrB_Info, (GrB_Scalar, UInt8), s, x)
 end
 
-function GxB_Scalar_setElement_INT16(s, x)
-    ccall((:GxB_Scalar_setElement_INT16, libgraphblas), GrB_Info, (GxB_Scalar, Int16), s, x)
+function GrB_Scalar_setElement_INT16(s, x)
+    ccall((:GrB_Scalar_setElement_INT16, libgraphblas), GrB_Info, (GrB_Scalar, Int16), s, x)
 end
 
-function GxB_Scalar_setElement_UINT16(s, x)
-    ccall((:GxB_Scalar_setElement_UINT16, libgraphblas), GrB_Info, (GxB_Scalar, UInt16), s, x)
+function GrB_Scalar_setElement_UINT16(s, x)
+    ccall((:GrB_Scalar_setElement_UINT16, libgraphblas), GrB_Info, (GrB_Scalar, UInt16), s, x)
 end
 
-function GxB_Scalar_setElement_INT32(s, x)
-    ccall((:GxB_Scalar_setElement_INT32, libgraphblas), GrB_Info, (GxB_Scalar, Int32), s, x)
+function GrB_Scalar_setElement_INT32(s, x)
+    ccall((:GrB_Scalar_setElement_INT32, libgraphblas), GrB_Info, (GrB_Scalar, Int32), s, x)
 end
 
-function GxB_Scalar_setElement_UINT32(s, x)
-    ccall((:GxB_Scalar_setElement_UINT32, libgraphblas), GrB_Info, (GxB_Scalar, UInt32), s, x)
+function GrB_Scalar_setElement_UINT32(s, x)
+    ccall((:GrB_Scalar_setElement_UINT32, libgraphblas), GrB_Info, (GrB_Scalar, UInt32), s, x)
 end
 
-function GxB_Scalar_setElement_INT64(s, x)
-    ccall((:GxB_Scalar_setElement_INT64, libgraphblas), GrB_Info, (GxB_Scalar, Int64), s, x)
+function GrB_Scalar_setElement_INT64(s, x)
+    ccall((:GrB_Scalar_setElement_INT64, libgraphblas), GrB_Info, (GrB_Scalar, Int64), s, x)
 end
 
-function GxB_Scalar_setElement_UINT64(s, x)
-    ccall((:GxB_Scalar_setElement_UINT64, libgraphblas), GrB_Info, (GxB_Scalar, UInt64), s, x)
+function GrB_Scalar_setElement_UINT64(s, x)
+    ccall((:GrB_Scalar_setElement_UINT64, libgraphblas), GrB_Info, (GrB_Scalar, UInt64), s, x)
 end
 
-function GxB_Scalar_setElement_FP32(s, x)
-    ccall((:GxB_Scalar_setElement_FP32, libgraphblas), GrB_Info, (GxB_Scalar, Cfloat), s, x)
+function GrB_Scalar_setElement_FP32(s, x)
+    ccall((:GrB_Scalar_setElement_FP32, libgraphblas), GrB_Info, (GrB_Scalar, Cfloat), s, x)
 end
 
-function GxB_Scalar_setElement_FP64(s, x)
-    ccall((:GxB_Scalar_setElement_FP64, libgraphblas), GrB_Info, (GxB_Scalar, Cdouble), s, x)
+function GrB_Scalar_setElement_FP64(s, x)
+    ccall((:GrB_Scalar_setElement_FP64, libgraphblas), GrB_Info, (GrB_Scalar, Cdouble), s, x)
 end
 
 function GxB_Scalar_setElement_FC32(s, x)
-    ccall((:GxB_Scalar_setElement_FC32, libgraphblas), GrB_Info, (GxB_Scalar, GxB_FC32_t), s, x)
+    ccall((:GxB_Scalar_setElement_FC32, libgraphblas), GrB_Info, (GrB_Scalar, GxB_FC32_t), s, x)
 end
 
 function GxB_Scalar_setElement_FC64(s, x)
-    ccall((:GxB_Scalar_setElement_FC64, libgraphblas), GrB_Info, (GxB_Scalar, GxB_FC64_t), s, x)
+    ccall((:GxB_Scalar_setElement_FC64, libgraphblas), GrB_Info, (GrB_Scalar, GxB_FC64_t), s, x)
+end
+
+function GrB_Scalar_setElement_UDT(s, x)
+    ccall((:GrB_Scalar_setElement_UDT, libgraphblas), GrB_Info, (GrB_Scalar, Ptr{Cvoid}), s, x)
+end
+
+function GxB_Scalar_setElement_BOOL(s, x)
+    ccall((:GxB_Scalar_setElement_BOOL, libgraphblas), GrB_Info, (GrB_Scalar, Bool), s, x)
+end
+
+function GxB_Scalar_setElement_INT8(s, x)
+    ccall((:GxB_Scalar_setElement_INT8, libgraphblas), GrB_Info, (GrB_Scalar, Int8), s, x)
+end
+
+function GxB_Scalar_setElement_INT16(s, x)
+    ccall((:GxB_Scalar_setElement_INT16, libgraphblas), GrB_Info, (GrB_Scalar, Int16), s, x)
+end
+
+function GxB_Scalar_setElement_INT32(s, x)
+    ccall((:GxB_Scalar_setElement_INT32, libgraphblas), GrB_Info, (GrB_Scalar, Int32), s, x)
+end
+
+function GxB_Scalar_setElement_INT64(s, x)
+    ccall((:GxB_Scalar_setElement_INT64, libgraphblas), GrB_Info, (GrB_Scalar, Int64), s, x)
+end
+
+function GxB_Scalar_setElement_UINT8(s, x)
+    ccall((:GxB_Scalar_setElement_UINT8, libgraphblas), GrB_Info, (GrB_Scalar, UInt8), s, x)
+end
+
+function GxB_Scalar_setElement_UINT16(s, x)
+    ccall((:GxB_Scalar_setElement_UINT16, libgraphblas), GrB_Info, (GrB_Scalar, UInt16), s, x)
+end
+
+function GxB_Scalar_setElement_UINT32(s, x)
+    ccall((:GxB_Scalar_setElement_UINT32, libgraphblas), GrB_Info, (GrB_Scalar, UInt32), s, x)
+end
+
+function GxB_Scalar_setElement_UINT64(s, x)
+    ccall((:GxB_Scalar_setElement_UINT64, libgraphblas), GrB_Info, (GrB_Scalar, UInt64), s, x)
+end
+
+function GxB_Scalar_setElement_FP32(s, x)
+    ccall((:GxB_Scalar_setElement_FP32, libgraphblas), GrB_Info, (GrB_Scalar, Cfloat), s, x)
+end
+
+function GxB_Scalar_setElement_FP64(s, x)
+    ccall((:GxB_Scalar_setElement_FP64, libgraphblas), GrB_Info, (GrB_Scalar, Cdouble), s, x)
 end
 
 function GxB_Scalar_setElement_UDT(s, x)
-    ccall((:GxB_Scalar_setElement_UDT, libgraphblas), GrB_Info, (GxB_Scalar, Ptr{Cvoid}), s, x)
+    ccall((:GxB_Scalar_setElement_UDT, libgraphblas), GrB_Info, (GrB_Scalar, Ptr{Cvoid}), s, x)
 end
 
-function GxB_Scalar_extractElement_BOOL(x, s)
-    ccall((:GxB_Scalar_extractElement_BOOL, libgraphblas), GrB_Info, (Ptr{Bool}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_BOOL(x, s)
+    ccall((:GrB_Scalar_extractElement_BOOL, libgraphblas), GrB_Info, (Ptr{Bool}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_INT8(x, s)
-    ccall((:GxB_Scalar_extractElement_INT8, libgraphblas), GrB_Info, (Ptr{Int8}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_INT8(x, s)
+    ccall((:GrB_Scalar_extractElement_INT8, libgraphblas), GrB_Info, (Ptr{Int8}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_UINT8(x, s)
-    ccall((:GxB_Scalar_extractElement_UINT8, libgraphblas), GrB_Info, (Ptr{UInt8}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_UINT8(x, s)
+    ccall((:GrB_Scalar_extractElement_UINT8, libgraphblas), GrB_Info, (Ptr{UInt8}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_INT16(x, s)
-    ccall((:GxB_Scalar_extractElement_INT16, libgraphblas), GrB_Info, (Ptr{Int16}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_INT16(x, s)
+    ccall((:GrB_Scalar_extractElement_INT16, libgraphblas), GrB_Info, (Ptr{Int16}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_UINT16(x, s)
-    ccall((:GxB_Scalar_extractElement_UINT16, libgraphblas), GrB_Info, (Ptr{UInt16}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_UINT16(x, s)
+    ccall((:GrB_Scalar_extractElement_UINT16, libgraphblas), GrB_Info, (Ptr{UInt16}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_INT32(x, s)
-    ccall((:GxB_Scalar_extractElement_INT32, libgraphblas), GrB_Info, (Ptr{Int32}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_INT32(x, s)
+    ccall((:GrB_Scalar_extractElement_INT32, libgraphblas), GrB_Info, (Ptr{Int32}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_UINT32(x, s)
-    ccall((:GxB_Scalar_extractElement_UINT32, libgraphblas), GrB_Info, (Ptr{UInt32}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_UINT32(x, s)
+    ccall((:GrB_Scalar_extractElement_UINT32, libgraphblas), GrB_Info, (Ptr{UInt32}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_INT64(x, s)
-    ccall((:GxB_Scalar_extractElement_INT64, libgraphblas), GrB_Info, (Ptr{Int64}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_INT64(x, s)
+    ccall((:GrB_Scalar_extractElement_INT64, libgraphblas), GrB_Info, (Ptr{Int64}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_UINT64(x, s)
-    ccall((:GxB_Scalar_extractElement_UINT64, libgraphblas), GrB_Info, (Ptr{UInt64}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_UINT64(x, s)
+    ccall((:GrB_Scalar_extractElement_UINT64, libgraphblas), GrB_Info, (Ptr{UInt64}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_FP32(x, s)
-    ccall((:GxB_Scalar_extractElement_FP32, libgraphblas), GrB_Info, (Ptr{Cfloat}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_FP32(x, s)
+    ccall((:GrB_Scalar_extractElement_FP32, libgraphblas), GrB_Info, (Ptr{Cfloat}, GrB_Scalar), x, s)
 end
 
-function GxB_Scalar_extractElement_FP64(x, s)
-    ccall((:GxB_Scalar_extractElement_FP64, libgraphblas), GrB_Info, (Ptr{Cdouble}, GxB_Scalar), x, s)
+function GrB_Scalar_extractElement_FP64(x, s)
+    ccall((:GrB_Scalar_extractElement_FP64, libgraphblas), GrB_Info, (Ptr{Cdouble}, GrB_Scalar), x, s)
 end
 
 function GxB_Scalar_extractElement_FC32(x, s)
-    ccall((:GxB_Scalar_extractElement_FC32, libgraphblas), GrB_Info, (Ptr{GxB_FC32_t}, GxB_Scalar), x, s)
+    ccall((:GxB_Scalar_extractElement_FC32, libgraphblas), GrB_Info, (Ptr{GxB_FC32_t}, GrB_Scalar), x, s)
 end
 
 function GxB_Scalar_extractElement_FC64(x, s)
-    ccall((:GxB_Scalar_extractElement_FC64, libgraphblas), GrB_Info, (Ptr{GxB_FC64_t}, GxB_Scalar), x, s)
+    ccall((:GxB_Scalar_extractElement_FC64, libgraphblas), GrB_Info, (Ptr{GxB_FC64_t}, GrB_Scalar), x, s)
+end
+
+function GrB_Scalar_extractElement_UDT(x, s)
+    ccall((:GrB_Scalar_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_BOOL(x, s)
+    ccall((:GxB_Scalar_extractElement_BOOL, libgraphblas), GrB_Info, (Ptr{Bool}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_INT8(x, s)
+    ccall((:GxB_Scalar_extractElement_INT8, libgraphblas), GrB_Info, (Ptr{Int8}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_INT16(x, s)
+    ccall((:GxB_Scalar_extractElement_INT16, libgraphblas), GrB_Info, (Ptr{Int16}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_INT32(x, s)
+    ccall((:GxB_Scalar_extractElement_INT32, libgraphblas), GrB_Info, (Ptr{Int32}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_INT64(x, s)
+    ccall((:GxB_Scalar_extractElement_INT64, libgraphblas), GrB_Info, (Ptr{Int64}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_UINT8(x, s)
+    ccall((:GxB_Scalar_extractElement_UINT8, libgraphblas), GrB_Info, (Ptr{UInt8}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_UINT16(x, s)
+    ccall((:GxB_Scalar_extractElement_UINT16, libgraphblas), GrB_Info, (Ptr{UInt16}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_UINT32(x, s)
+    ccall((:GxB_Scalar_extractElement_UINT32, libgraphblas), GrB_Info, (Ptr{UInt32}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_UINT64(x, s)
+    ccall((:GxB_Scalar_extractElement_UINT64, libgraphblas), GrB_Info, (Ptr{UInt64}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_FP32(x, s)
+    ccall((:GxB_Scalar_extractElement_FP32, libgraphblas), GrB_Info, (Ptr{Cfloat}, GrB_Scalar), x, s)
+end
+
+function GxB_Scalar_extractElement_FP64(x, s)
+    ccall((:GxB_Scalar_extractElement_FP64, libgraphblas), GrB_Info, (Ptr{Cdouble}, GrB_Scalar), x, s)
 end
 
 function GxB_Scalar_extractElement_UDT(x, s)
-    ccall((:GxB_Scalar_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GxB_Scalar), x, s)
+    ccall((:GxB_Scalar_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Scalar), x, s)
 end
-
-mutable struct GB_Vector_opaque end
-
-const GrB_Vector = Ptr{GB_Vector_opaque}
 
 function GrB_Vector_new(v, type, n)
     ccall((:GrB_Vector_new, libgraphblas), GrB_Info, (Ptr{GrB_Vector}, GrB_Type, GrB_Index), v, type, n)
@@ -505,16 +1079,16 @@ function GxB_Vector_type(type, v)
     ccall((:GxB_Vector_type, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_Vector), type, v)
 end
 
+function GxB_Vector_type_name(type_name, v)
+    ccall((:GxB_Vector_type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_Vector), type_name, v)
+end
+
 function GxB_Vector_memoryUsage(size, v)
     ccall((:GxB_Vector_memoryUsage, libgraphblas), GrB_Info, (Ptr{Csize_t}, GrB_Vector), size, v)
 end
 
 function GxB_Vector_iso(iso, v)
     ccall((:GxB_Vector_iso, libgraphblas), GrB_Info, (Ptr{Bool}, GrB_Vector), iso, v)
-end
-
-function GrB_Vector_free(v)
-    ccall((:GrB_Vector_free, libgraphblas), GrB_Info, (Ptr{GrB_Vector},), v)
 end
 
 function GrB_Vector_build_BOOL(w, I, X, nvals, dup)
@@ -574,7 +1148,7 @@ function GrB_Vector_build_UDT(w, I, X, nvals, dup)
 end
 
 function GxB_Vector_build_Scalar(w, I, scalar, nvals)
-    ccall((:GxB_Vector_build_Scalar, libgraphblas), GrB_Info, (GrB_Vector, Ptr{GrB_Index}, GxB_Scalar, GrB_Index), w, I, scalar, nvals)
+    ccall((:GxB_Vector_build_Scalar, libgraphblas), GrB_Info, (GrB_Vector, Ptr{GrB_Index}, GrB_Scalar, GrB_Index), w, I, scalar, nvals)
 end
 
 function GrB_Vector_setElement_BOOL(w, x, i)
@@ -749,10 +1323,6 @@ function GrB_Vector_extractTuples_UDT(I, X, nvals, v)
     ccall((:GrB_Vector_extractTuples_UDT, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{Cvoid}, Ptr{GrB_Index}, GrB_Vector), I, X, nvals, v)
 end
 
-mutable struct GB_Matrix_opaque end
-
-const GrB_Matrix = Ptr{GB_Matrix_opaque}
-
 function GrB_Matrix_new(A, type, nrows, ncols)
     ccall((:GrB_Matrix_new, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index), A, type, nrows, ncols)
 end
@@ -781,16 +1351,16 @@ function GxB_Matrix_type(type, A)
     ccall((:GxB_Matrix_type, libgraphblas), GrB_Info, (Ptr{GrB_Type}, GrB_Matrix), type, A)
 end
 
+function GxB_Matrix_type_name(type_name, A)
+    ccall((:GxB_Matrix_type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, GrB_Matrix), type_name, A)
+end
+
 function GxB_Matrix_memoryUsage(size, A)
     ccall((:GxB_Matrix_memoryUsage, libgraphblas), GrB_Info, (Ptr{Csize_t}, GrB_Matrix), size, A)
 end
 
 function GxB_Matrix_iso(iso, A)
     ccall((:GxB_Matrix_iso, libgraphblas), GrB_Info, (Ptr{Bool}, GrB_Matrix), iso, A)
-end
-
-function GrB_Matrix_free(A)
-    ccall((:GrB_Matrix_free, libgraphblas), GrB_Info, (Ptr{GrB_Matrix},), A)
 end
 
 function GrB_Matrix_build_BOOL(C, I, J, X, nvals, dup)
@@ -850,7 +1420,7 @@ function GrB_Matrix_build_UDT(C, I, J, X, nvals, dup)
 end
 
 function GxB_Matrix_build_Scalar(C, I, J, scalar, nvals)
-    ccall((:GxB_Matrix_build_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{GrB_Index}, Ptr{GrB_Index}, GxB_Scalar, GrB_Index), C, I, J, scalar, nvals)
+    ccall((:GxB_Matrix_build_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Scalar, GrB_Index), C, I, J, scalar, nvals)
 end
 
 function GrB_Matrix_setElement_BOOL(C, x, i, j)
@@ -1037,39 +1607,12 @@ function GxB_Matrix_diag(C, v, k, desc)
     ccall((:GxB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64, GrB_Descriptor), C, v, k, desc)
 end
 
-function GxB_Vector_diag(v, A, k, desc)
-    ccall((:GxB_Vector_diag, libgraphblas), GrB_Info, (GrB_Vector, GrB_Matrix, Int64, GrB_Descriptor), v, A, k, desc)
+function GrB_Matrix_diag(C, v, k)
+    ccall((:GrB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64), C, v, k)
 end
 
-@enum GxB_Option_Field::UInt32 begin
-    GxB_HYPER_SWITCH = 0
-    GxB_BITMAP_SWITCH = 34
-    GxB_FORMAT = 1
-    GxB_MODE = 2
-    GxB_LIBRARY_NAME = 8
-    GxB_LIBRARY_VERSION = 9
-    GxB_LIBRARY_DATE = 10
-    GxB_LIBRARY_ABOUT = 11
-    GxB_LIBRARY_URL = 12
-    GxB_LIBRARY_LICENSE = 13
-    GxB_LIBRARY_COMPILE_DATE = 14
-    GxB_LIBRARY_COMPILE_TIME = 15
-    GxB_API_VERSION = 16
-    GxB_API_DATE = 17
-    GxB_API_ABOUT = 18
-    GxB_API_URL = 19
-    GxB_GLOBAL_NTHREADS = 5
-    GxB_GLOBAL_CHUNK = 7
-    GxB_BURBLE = 99
-    GxB_PRINTF = 101
-    GxB_FLUSH = 102
-    GxB_MEMORY_POOL = 103
-    GxB_PRINT_1BASED = 104
-    GxB_SPARSITY_STATUS = 33
-    GxB_IS_HYPER = 6
-    GxB_SPARSITY_CONTROL = 32
-    GxB_GLOBAL_GPU_CONTROL = 21
-    GxB_GLOBAL_GPU_CHUNK = 22
+function GxB_Vector_diag(v, A, k, desc)
+    ccall((:GxB_Vector_diag, libgraphblas), GrB_Info, (GrB_Vector, GrB_Matrix, Int64, GrB_Descriptor), v, A, k, desc)
 end
 
 @enum GxB_Format_Value::Int32 begin
@@ -1078,84 +1621,12 @@ end
     GxB_NO_FORMAT = -1
 end
 
-function GrB_Type_wait(type)
-    ccall((:GrB_Type_wait, libgraphblas), GrB_Info, (Ptr{GrB_Type},), type)
-end
-
-function GrB_UnaryOp_wait(op)
-    ccall((:GrB_UnaryOp_wait, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp},), op)
-end
-
-function GrB_BinaryOp_wait(op)
-    ccall((:GrB_BinaryOp_wait, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp},), op)
-end
-
-function GxB_SelectOp_wait(op)
-    ccall((:GxB_SelectOp_wait, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp},), op)
-end
-
-function GrB_Monoid_wait(monoid)
-    ccall((:GrB_Monoid_wait, libgraphblas), GrB_Info, (Ptr{GrB_Monoid},), monoid)
-end
-
-function GrB_Semiring_wait(semiring)
-    ccall((:GrB_Semiring_wait, libgraphblas), GrB_Info, (Ptr{GrB_Semiring},), semiring)
-end
-
-function GrB_Descriptor_wait(desc)
-    ccall((:GrB_Descriptor_wait, libgraphblas), GrB_Info, (Ptr{GrB_Descriptor},), desc)
-end
-
 function GxB_Scalar_wait(s)
-    ccall((:GxB_Scalar_wait, libgraphblas), GrB_Info, (Ptr{GxB_Scalar},), s)
-end
-
-function GrB_Vector_wait(v)
-    ccall((:GrB_Vector_wait, libgraphblas), GrB_Info, (Ptr{GrB_Vector},), v)
-end
-
-function GrB_Matrix_wait(A)
-    ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (Ptr{GrB_Matrix},), A)
-end
-
-function GrB_Type_error(error, type)
-    ccall((:GrB_Type_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Type), error, type)
-end
-
-function GrB_UnaryOp_error(error, op)
-    ccall((:GrB_UnaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_UnaryOp), error, op)
-end
-
-function GrB_BinaryOp_error(error, op)
-    ccall((:GrB_BinaryOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_BinaryOp), error, op)
-end
-
-function GxB_SelectOp_error(error, op)
-    ccall((:GxB_SelectOp_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_SelectOp), error, op)
-end
-
-function GrB_Monoid_error(error, monoid)
-    ccall((:GrB_Monoid_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Monoid), error, monoid)
-end
-
-function GrB_Semiring_error(error, semiring)
-    ccall((:GrB_Semiring_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Semiring), error, semiring)
+    ccall((:GxB_Scalar_wait, libgraphblas), GrB_Info, (Ptr{GrB_Scalar},), s)
 end
 
 function GxB_Scalar_error(error, s)
-    ccall((:GxB_Scalar_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GxB_Scalar), error, s)
-end
-
-function GrB_Vector_error(error, v)
-    ccall((:GrB_Vector_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Vector), error, v)
-end
-
-function GrB_Matrix_error(error, A)
-    ccall((:GrB_Matrix_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Matrix), error, A)
-end
-
-function GrB_Descriptor_error(error, d)
-    ccall((:GrB_Descriptor_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Descriptor), error, d)
+    ccall((:GxB_Scalar_error, libgraphblas), GrB_Info, (Ptr{Ptr{Cchar}}, GrB_Scalar), error, s)
 end
 
 function GrB_mxm(C, Mask, accum, semiring, A, B, desc)
@@ -1168,82 +1639,6 @@ end
 
 function GrB_mxv(w, mask, accum, semiring, A, u, desc)
     ccall((:GrB_mxv, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Vector, GrB_Descriptor), w, mask, accum, semiring, A, u, desc)
-end
-
-function GrB_Vector_eWiseMult_Semiring(w, mask, accum, semiring, u, v, desc)
-    ccall((:GrB_Vector_eWiseMult_Semiring, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Semiring, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, semiring, u, v, desc)
-end
-
-function GrB_Vector_eWiseMult_Monoid(w, mask, accum, monoid, u, v, desc)
-    ccall((:GrB_Vector_eWiseMult_Monoid, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Monoid, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, monoid, u, v, desc)
-end
-
-function GrB_Vector_eWiseMult_BinaryOp(w, mask, accum, mult, u, v, desc)
-    ccall((:GrB_Vector_eWiseMult_BinaryOp, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, mult, u, v, desc)
-end
-
-function GrB_Matrix_eWiseMult_Semiring(C, Mask, accum, semiring, A, B, desc)
-    ccall((:GrB_Matrix_eWiseMult_Semiring, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, semiring, A, B, desc)
-end
-
-function GrB_Matrix_eWiseMult_Monoid(C, Mask, accum, monoid, A, B, desc)
-    ccall((:GrB_Matrix_eWiseMult_Monoid, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, monoid, A, B, desc)
-end
-
-function GrB_Matrix_eWiseMult_BinaryOp(C, Mask, accum, mult, A, B, desc)
-    ccall((:GrB_Matrix_eWiseMult_BinaryOp, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, mult, A, B, desc)
-end
-
-function GrB_Vector_eWiseAdd_Semiring(w, mask, accum, semiring, u, v, desc)
-    ccall((:GrB_Vector_eWiseAdd_Semiring, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Semiring, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, semiring, u, v, desc)
-end
-
-function GrB_Vector_eWiseAdd_Monoid(w, mask, accum, monoid, u, v, desc)
-    ccall((:GrB_Vector_eWiseAdd_Monoid, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Monoid, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, monoid, u, v, desc)
-end
-
-function GrB_Vector_eWiseAdd_BinaryOp(w, mask, accum, add, u, v, desc)
-    ccall((:GrB_Vector_eWiseAdd_BinaryOp, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Vector, GrB_Descriptor), w, mask, accum, add, u, v, desc)
-end
-
-function GrB_Matrix_eWiseAdd_Semiring(C, Mask, accum, semiring, A, B, desc)
-    ccall((:GrB_Matrix_eWiseAdd_Semiring, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, semiring, A, B, desc)
-end
-
-function GrB_Matrix_eWiseAdd_Monoid(C, Mask, accum, monoid, A, B, desc)
-    ccall((:GrB_Matrix_eWiseAdd_Monoid, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, monoid, A, B, desc)
-end
-
-function GrB_Matrix_eWiseAdd_BinaryOp(C, Mask, accum, add, A, B, desc)
-    ccall((:GrB_Matrix_eWiseAdd_BinaryOp, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, add, A, B, desc)
-end
-
-function GrB_Vector_extract(w, mask, accum, u, I, ni, desc)
-    ccall((:GrB_Vector_extract, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, u, I, ni, desc)
-end
-
-function GrB_Matrix_extract(C, Mask, accum, A, I, ni, J, nj, desc)
-    ccall((:GrB_Matrix_extract, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, A, I, ni, J, nj, desc)
-end
-
-function GrB_Col_extract(w, mask, accum, A, I, ni, j, desc)
-    ccall((:GrB_Col_extract, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, GrB_Index, GrB_Descriptor), w, mask, accum, A, I, ni, j, desc)
-end
-
-function GxB_Vector_subassign(w, mask, accum, u, I, ni, desc)
-    ccall((:GxB_Vector_subassign, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, u, I, ni, desc)
-end
-
-function GxB_Matrix_subassign(C, Mask, accum, A, I, ni, J, nj, desc)
-    ccall((:GxB_Matrix_subassign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, A, I, ni, J, nj, desc)
-end
-
-function GxB_Col_subassign(C, mask, accum, u, I, ni, j, desc)
-    ccall((:GxB_Col_subassign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Index, GrB_Descriptor), C, mask, accum, u, I, ni, j, desc)
-end
-
-function GxB_Row_subassign(C, mask, accum, u, i, J, nj, desc)
-    ccall((:GxB_Row_subassign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, mask, accum, u, i, J, nj, desc)
 end
 
 function GxB_Vector_subassign_BOOL(w, mask, accum, x, I, ni, desc)
@@ -1358,22 +1753,6 @@ function GxB_Matrix_subassign_UDT(C, Mask, accum, x, I, ni, J, nj, desc)
     ccall((:GxB_Matrix_subassign_UDT, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, Ptr{Cvoid}, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, x, I, ni, J, nj, desc)
 end
 
-function GrB_Vector_assign(w, mask, accum, u, I, ni, desc)
-    ccall((:GrB_Vector_assign, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, u, I, ni, desc)
-end
-
-function GrB_Matrix_assign(C, Mask, accum, A, I, ni, J, nj, desc)
-    ccall((:GrB_Matrix_assign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, A, I, ni, J, nj, desc)
-end
-
-function GrB_Col_assign(C, mask, accum, u, I, ni, j, desc)
-    ccall((:GrB_Col_assign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, Ptr{GrB_Index}, GrB_Index, GrB_Index, GrB_Descriptor), C, mask, accum, u, I, ni, j, desc)
-end
-
-function GrB_Row_assign(C, mask, accum, u, i, J, nj, desc)
-    ccall((:GrB_Row_assign, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, GrB_BinaryOp, GrB_Vector, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, mask, accum, u, i, J, nj, desc)
-end
-
 function GrB_Vector_assign_BOOL(w, mask, accum, x, I, ni, desc)
     ccall((:GrB_Vector_assign_BOOL, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, Bool, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), w, mask, accum, x, I, ni, desc)
 end
@@ -1486,16 +1865,12 @@ function GrB_Matrix_assign_UDT(C, Mask, accum, x, I, ni, J, nj, desc)
     ccall((:GrB_Matrix_assign_UDT, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, Ptr{Cvoid}, Ptr{GrB_Index}, GrB_Index, Ptr{GrB_Index}, GrB_Index, GrB_Descriptor), C, Mask, accum, x, I, ni, J, nj, desc)
 end
 
-function GrB_Vector_apply(w, mask, accum, op, u, desc)
-    ccall((:GrB_Vector_apply, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_UnaryOp, GrB_Vector, GrB_Descriptor), w, mask, accum, op, u, desc)
-end
-
-function GrB_Matrix_apply(C, Mask, accum, op, A, desc)
-    ccall((:GrB_Matrix_apply, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_UnaryOp, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, A, desc)
+function GrB_Vector_apply_BinaryOp1st_Scalar(w, mask, accum, op, x, u, desc)
+    ccall((:GrB_Vector_apply_BinaryOp1st_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Scalar, GrB_Vector, GrB_Descriptor), w, mask, accum, op, x, u, desc)
 end
 
 function GxB_Vector_apply_BinaryOp1st(w, mask, accum, op, x, u, desc)
-    ccall((:GxB_Vector_apply_BinaryOp1st, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GxB_Scalar, GrB_Vector, GrB_Descriptor), w, mask, accum, op, x, u, desc)
+    ccall((:GxB_Vector_apply_BinaryOp1st, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Scalar, GrB_Vector, GrB_Descriptor), w, mask, accum, op, x, u, desc)
 end
 
 function GrB_Vector_apply_BinaryOp1st_BOOL(w, mask, accum, op, x, u, desc)
@@ -1554,8 +1929,12 @@ function GrB_Vector_apply_BinaryOp1st_UDT(w, mask, accum, op, x, u, desc)
     ccall((:GrB_Vector_apply_BinaryOp1st_UDT, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, Ptr{Cvoid}, GrB_Vector, GrB_Descriptor), w, mask, accum, op, x, u, desc)
 end
 
+function GrB_Vector_apply_BinaryOp2nd_Scalar(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_BinaryOp2nd_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Scalar, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
 function GxB_Vector_apply_BinaryOp2nd(w, mask, accum, op, u, y, desc)
-    ccall((:GxB_Vector_apply_BinaryOp2nd, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GxB_Scalar, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+    ccall((:GxB_Vector_apply_BinaryOp2nd, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Scalar, GrB_Descriptor), w, mask, accum, op, u, y, desc)
 end
 
 function GrB_Vector_apply_BinaryOp2nd_BOOL(w, mask, accum, op, u, y, desc)
@@ -1614,8 +1993,72 @@ function GrB_Vector_apply_BinaryOp2nd_UDT(w, mask, accum, op, u, y, desc)
     ccall((:GrB_Vector_apply_BinaryOp2nd_UDT, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, Ptr{Cvoid}, GrB_Descriptor), w, mask, accum, op, u, y, desc)
 end
 
+function GrB_Vector_apply_IndexOp_Scalar(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_Scalar, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, GrB_Scalar, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_BOOL(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_BOOL, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Bool, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_INT8(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_INT8, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int8, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_INT16(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_INT16, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int16, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_INT32(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_INT32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int32, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_INT64(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_INT64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int64, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_UINT8(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_UINT8, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt8, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_UINT16(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_UINT16, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt16, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_UINT32(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_UINT32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt32, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_UINT64(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_UINT64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt64, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_FP32(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_FP32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Cfloat, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_FP64(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_FP64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Cdouble, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GxB_Vector_apply_IndexOp_FC32(w, mask, accum, op, u, y, desc)
+    ccall((:GxB_Vector_apply_IndexOp_FC32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, GxB_FC32_t, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GxB_Vector_apply_IndexOp_FC64(w, mask, accum, op, u, y, desc)
+    ccall((:GxB_Vector_apply_IndexOp_FC64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, GxB_FC64_t, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_apply_IndexOp_UDT(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_apply_IndexOp_UDT, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Ptr{Cvoid}, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Matrix_apply_BinaryOp1st_Scalar(C, Mask, accum, op, x, A, desc)
+    ccall((:GrB_Matrix_apply_BinaryOp1st_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Scalar, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, x, A, desc)
+end
+
 function GxB_Matrix_apply_BinaryOp1st(C, Mask, accum, op, x, A, desc)
-    ccall((:GxB_Matrix_apply_BinaryOp1st, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GxB_Scalar, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, x, A, desc)
+    ccall((:GxB_Matrix_apply_BinaryOp1st, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Scalar, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, x, A, desc)
 end
 
 function GrB_Matrix_apply_BinaryOp1st_BOOL(C, Mask, accum, op, x, A, desc)
@@ -1674,8 +2117,12 @@ function GrB_Matrix_apply_BinaryOp1st_UDT(C, Mask, accum, op, x, A, desc)
     ccall((:GrB_Matrix_apply_BinaryOp1st_UDT, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, Ptr{Cvoid}, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, x, A, desc)
 end
 
+function GrB_Matrix_apply_BinaryOp2nd_Scalar(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_BinaryOp2nd_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
 function GxB_Matrix_apply_BinaryOp2nd(C, Mask, accum, op, A, y, desc)
-    ccall((:GxB_Matrix_apply_BinaryOp2nd, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GxB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+    ccall((:GxB_Matrix_apply_BinaryOp2nd, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
 end
 
 function GrB_Matrix_apply_BinaryOp2nd_BOOL(C, Mask, accum, op, A, y, desc)
@@ -1734,20 +2181,176 @@ function GrB_Matrix_apply_BinaryOp2nd_UDT(C, Mask, accum, op, A, y, desc)
     ccall((:GrB_Matrix_apply_BinaryOp2nd_UDT, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, Ptr{Cvoid}, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
 end
 
-function GxB_Vector_select(w, mask, accum, op, u, Thunk, desc)
-    ccall((:GxB_Vector_select, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GxB_SelectOp, GrB_Vector, GxB_Scalar, GrB_Descriptor), w, mask, accum, op, u, Thunk, desc)
+function GrB_Matrix_apply_IndexOp_Scalar(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_Scalar, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, GrB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
 end
 
-function GxB_Matrix_select(C, Mask, accum, op, A, Thunk, desc)
-    ccall((:GxB_Matrix_select, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GxB_SelectOp, GrB_Matrix, GxB_Scalar, GrB_Descriptor), C, Mask, accum, op, A, Thunk, desc)
+function GrB_Matrix_apply_IndexOp_BOOL(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_BOOL, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Bool, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
 end
 
-function GrB_Matrix_reduce_Monoid(w, mask, accum, monoid, A, desc)
-    ccall((:GrB_Matrix_reduce_Monoid, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Descriptor), w, mask, accum, monoid, A, desc)
+function GrB_Matrix_apply_IndexOp_INT8(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_INT8, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int8, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
 end
 
-function GrB_Matrix_reduce_BinaryOp(w, mask, accum, op, A, desc)
-    ccall((:GrB_Matrix_reduce_BinaryOp, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Descriptor), w, mask, accum, op, A, desc)
+function GrB_Matrix_apply_IndexOp_INT16(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_INT16, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int16, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_INT32(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_INT32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int32, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_INT64(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_INT64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int64, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_UINT8(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_UINT8, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt8, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_UINT16(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_UINT16, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt16, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_UINT32(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_UINT32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt32, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_UINT64(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_UINT64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt64, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_FP32(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_FP32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Cfloat, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_FP64(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_FP64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Cdouble, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GxB_Matrix_apply_IndexOp_FC32(C, Mask, accum, op, A, y, desc)
+    ccall((:GxB_Matrix_apply_IndexOp_FC32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, GxB_FC32_t, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GxB_Matrix_apply_IndexOp_FC64(C, Mask, accum, op, A, y, desc)
+    ccall((:GxB_Matrix_apply_IndexOp_FC64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, GxB_FC64_t, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_apply_IndexOp_UDT(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_apply_IndexOp_UDT, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Ptr{Cvoid}, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Vector_select_BOOL(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_BOOL, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Bool, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_INT8(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_INT8, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int8, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_INT16(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_INT16, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int16, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_INT32(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_INT32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int32, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_INT64(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_INT64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Int64, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_UINT8(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_UINT8, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt8, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_UINT16(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_UINT16, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt16, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_UINT32(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_UINT32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt32, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_UINT64(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_UINT64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, UInt64, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_FP32(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_FP32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Cfloat, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_FP64(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_FP64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Cdouble, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GxB_Vector_select_FC32(w, mask, accum, op, u, y, desc)
+    ccall((:GxB_Vector_select_FC32, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, GxB_FC32_t, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GxB_Vector_select_FC64(w, mask, accum, op, u, y, desc)
+    ccall((:GxB_Vector_select_FC64, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, GxB_FC64_t, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Vector_select_UDT(w, mask, accum, op, u, y, desc)
+    ccall((:GrB_Vector_select_UDT, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Vector, Ptr{Cvoid}, GrB_Descriptor), w, mask, accum, op, u, y, desc)
+end
+
+function GrB_Matrix_select_BOOL(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_BOOL, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Bool, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_INT8(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_INT8, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int8, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_INT16(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_INT16, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int16, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_INT32(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_INT32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int32, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_INT64(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_INT64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Int64, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_UINT8(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_UINT8, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt8, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_UINT16(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_UINT16, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt16, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_UINT32(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_UINT32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt32, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_UINT64(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_UINT64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, UInt64, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_FP32(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_FP32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Cfloat, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_FP64(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_FP64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Cdouble, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GxB_Matrix_select_FC32(C, Mask, accum, op, A, y, desc)
+    ccall((:GxB_Matrix_select_FC32, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, GxB_FC32_t, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GxB_Matrix_select_FC64(C, Mask, accum, op, A, y, desc)
+    ccall((:GxB_Matrix_select_FC64, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, GxB_FC64_t, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
+end
+
+function GrB_Matrix_select_UDT(C, Mask, accum, op, A, y, desc)
+    ccall((:GrB_Matrix_select_UDT, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_IndexUnaryOp, GrB_Matrix, Ptr{Cvoid}, GrB_Descriptor), C, Mask, accum, op, A, y, desc)
 end
 
 function GrB_Vector_reduce_BOOL(c, accum, monoid, u, desc)
@@ -1806,6 +2409,14 @@ function GrB_Vector_reduce_UDT(c, accum, monoid, u, desc)
     ccall((:GrB_Vector_reduce_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_BinaryOp, GrB_Monoid, GrB_Vector, GrB_Descriptor), c, accum, monoid, u, desc)
 end
 
+function GrB_Vector_reduce_Monoid_Scalar(c, accum, monoid, u, desc)
+    ccall((:GrB_Vector_reduce_Monoid_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_BinaryOp, GrB_Monoid, GrB_Vector, GrB_Descriptor), c, accum, monoid, u, desc)
+end
+
+function GrB_Vector_reduce_BinaryOp_Scalar(c, accum, op, u, desc)
+    ccall((:GrB_Vector_reduce_BinaryOp_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_BinaryOp, GrB_BinaryOp, GrB_Vector, GrB_Descriptor), c, accum, op, u, desc)
+end
+
 function GrB_Matrix_reduce_BOOL(c, accum, monoid, A, desc)
     ccall((:GrB_Matrix_reduce_BOOL, libgraphblas), GrB_Info, (Ptr{Bool}, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Descriptor), c, accum, monoid, A, desc)
 end
@@ -1862,6 +2473,14 @@ function GrB_Matrix_reduce_UDT(c, accum, monoid, A, desc)
     ccall((:GrB_Matrix_reduce_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Descriptor), c, accum, monoid, A, desc)
 end
 
+function GrB_Matrix_reduce_Monoid_Scalar(c, accum, monoid, A, desc)
+    ccall((:GrB_Matrix_reduce_Monoid_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Descriptor), c, accum, monoid, A, desc)
+end
+
+function GrB_Matrix_reduce_BinaryOp_Scalar(S, accum, op, A, desc)
+    ccall((:GrB_Matrix_reduce_BinaryOp_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Descriptor), S, accum, op, A, desc)
+end
+
 function GrB_transpose(C, Mask, accum, A, desc)
     ccall((:GrB_transpose, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, GrB_Descriptor), C, Mask, accum, A, desc)
 end
@@ -1870,81 +2489,12 @@ function GxB_kron(C, Mask, accum, op, A, B, desc)
     ccall((:GxB_kron, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, Mask, accum, op, A, B, desc)
 end
 
-function GrB_Matrix_kronecker_BinaryOp(C, M, accum, op, A, B, desc)
-    ccall((:GrB_Matrix_kronecker_BinaryOp, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_BinaryOp, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, M, accum, op, A, B, desc)
-end
-
-function GrB_Matrix_kronecker_Monoid(C, M, accum, monoid, A, B, desc)
-    ccall((:GrB_Matrix_kronecker_Monoid, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Monoid, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, M, accum, monoid, A, B, desc)
-end
-
-function GrB_Matrix_kronecker_Semiring(C, M, accum, semiring, A, B, desc)
-    ccall((:GrB_Matrix_kronecker_Semiring, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Semiring, GrB_Matrix, GrB_Matrix, GrB_Descriptor), C, M, accum, semiring, A, B, desc)
-end
-
-function GrB_Matrix_resize(C, nrows_new, ncols_new)
-    ccall((:GrB_Matrix_resize, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), C, nrows_new, ncols_new)
-end
-
-function GrB_Vector_resize(w, nrows_new)
-    ccall((:GrB_Vector_resize, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), w, nrows_new)
-end
-
 function GxB_Matrix_resize(C, nrows_new, ncols_new)
     ccall((:GxB_Matrix_resize, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), C, nrows_new, ncols_new)
 end
 
 function GxB_Vector_resize(w, nrows_new)
     ccall((:GxB_Vector_resize, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), w, nrows_new)
-end
-
-@enum GxB_Print_Level::UInt32 begin
-    GxB_SILENT = 0
-    GxB_SUMMARY = 1
-    GxB_SHORT = 2
-    GxB_COMPLETE = 3
-    GxB_SHORT_VERBOSE = 4
-    GxB_COMPLETE_VERBOSE = 5
-end
-
-function GxB_Type_fprint(type, name, pr, f)
-    ccall((:GxB_Type_fprint, libgraphblas), GrB_Info, (GrB_Type, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), type, name, pr, f)
-end
-
-function GxB_UnaryOp_fprint(unaryop, name, pr, f)
-    ccall((:GxB_UnaryOp_fprint, libgraphblas), GrB_Info, (GrB_UnaryOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), unaryop, name, pr, f)
-end
-
-function GxB_BinaryOp_fprint(binaryop, name, pr, f)
-    ccall((:GxB_BinaryOp_fprint, libgraphblas), GrB_Info, (GrB_BinaryOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), binaryop, name, pr, f)
-end
-
-function GxB_SelectOp_fprint(selectop, name, pr, f)
-    ccall((:GxB_SelectOp_fprint, libgraphblas), GrB_Info, (GxB_SelectOp, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), selectop, name, pr, f)
-end
-
-function GxB_Monoid_fprint(monoid, name, pr, f)
-    ccall((:GxB_Monoid_fprint, libgraphblas), GrB_Info, (GrB_Monoid, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), monoid, name, pr, f)
-end
-
-function GxB_Semiring_fprint(semiring, name, pr, f)
-    ccall((:GxB_Semiring_fprint, libgraphblas), GrB_Info, (GrB_Semiring, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), semiring, name, pr, f)
-end
-
-function GxB_Descriptor_fprint(descriptor, name, pr, f)
-    ccall((:GxB_Descriptor_fprint, libgraphblas), GrB_Info, (GrB_Descriptor, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), descriptor, name, pr, f)
-end
-
-function GxB_Matrix_fprint(A, name, pr, f)
-    ccall((:GxB_Matrix_fprint, libgraphblas), GrB_Info, (GrB_Matrix, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), A, name, pr, f)
-end
-
-function GxB_Vector_fprint(v, name, pr, f)
-    ccall((:GxB_Vector_fprint, libgraphblas), GrB_Info, (GrB_Vector, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), v, name, pr, f)
-end
-
-function GxB_Scalar_fprint(s, name, pr, f)
-    ccall((:GxB_Scalar_fprint, libgraphblas), GrB_Info, (GxB_Scalar, Ptr{Cchar}, GxB_Print_Level, Ptr{Libc.FILE}), s, name, pr, f)
 end
 
 function GxB_Matrix_import_CSR(A, type, nrows, ncols, Ap, Aj, Ax, Ap_size, Aj_size, Ax_size, iso, jumbled, desc)
@@ -2123,27 +2673,189 @@ function GxB_Vector_unpack_Full(v, vx, vx_size, iso, desc)
     ccall((:GxB_Vector_unpack_Full, libgraphblas), GrB_Info, (GrB_Vector, Ptr{Ptr{Cvoid}}, Ptr{GrB_Index}, Ptr{Bool}, GrB_Descriptor), v, vx, vx_size, iso, desc)
 end
 
+@enum GrB_Format::UInt32 begin
+    GrB_CSR_FORMAT = 0
+    GrB_CSC_FORMAT = 1
+    GrB_COO_FORMAT = 2
+end
+
+function GrB_Matrix_import_BOOL(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_BOOL, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Bool}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_INT8(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_INT8, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int8}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_INT16(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_INT16, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int16}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_INT32(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_INT32, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int32}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_INT64(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_INT64, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int64}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_UINT8(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_UINT8, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt8}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_UINT16(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_UINT16, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt16}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_UINT32(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_UINT32, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt32}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_UINT64(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_UINT64, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt64}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_FP32(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_FP32, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cfloat}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_FP64(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_FP64, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cdouble}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GxB_Matrix_import_FC32(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GxB_Matrix_import_FC32, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GxB_FC32_t}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GxB_Matrix_import_FC64(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GxB_Matrix_import_FC64, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GxB_FC64_t}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_import_UDT(A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+    ccall((:GrB_Matrix_import_UDT, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cvoid}, GrB_Index, GrB_Index, GrB_Index, GrB_Format), A, type, nrows, ncols, Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format)
+end
+
+function GrB_Matrix_export_BOOL(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_BOOL, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Bool}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_INT8(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_INT8, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int8}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_INT16(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_INT16, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int16}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_INT32(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_INT32, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int32}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_INT64(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_INT64, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Int64}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_UINT8(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_UINT8, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt8}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_UINT16(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_UINT16, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt16}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_UINT32(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_UINT32, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt32}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_UINT64(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_UINT64, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{UInt64}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_FP32(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_FP32, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cfloat}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_FP64(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_FP64, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cdouble}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GxB_Matrix_export_FC32(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GxB_Matrix_export_FC32, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GxB_FC32_t}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GxB_Matrix_export_FC64(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GxB_Matrix_export_FC64, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GxB_FC64_t}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_export_UDT(Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_export_UDT, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{Cvoid}, Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap, Ai, Ax, Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_exportSize(Ap_len, Ai_len, Ax_len, format, A)
+    ccall((:GrB_Matrix_exportSize, libgraphblas), GrB_Info, (Ptr{GrB_Index}, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Format, GrB_Matrix), Ap_len, Ai_len, Ax_len, format, A)
+end
+
+function GrB_Matrix_exportHint(format, A)
+    ccall((:GrB_Matrix_exportHint, libgraphblas), GrB_Info, (Ptr{GrB_Format}, GrB_Matrix), format, A)
+end
+
+function GxB_Matrix_serialize(blob_handle, blob_size_handle, A, desc)
+    ccall((:GxB_Matrix_serialize, libgraphblas), GrB_Info, (Ptr{Ptr{Cvoid}}, Ptr{GrB_Index}, GrB_Matrix, GrB_Descriptor), blob_handle, blob_size_handle, A, desc)
+end
+
+function GrB_Matrix_serialize(blob, blob_size_handle, A)
+    ccall((:GrB_Matrix_serialize, libgraphblas), GrB_Info, (Ptr{Cvoid}, Ptr{GrB_Index}, GrB_Matrix), blob, blob_size_handle, A)
+end
+
+function GxB_Vector_serialize(blob_handle, blob_size_handle, u, desc)
+    ccall((:GxB_Vector_serialize, libgraphblas), GrB_Info, (Ptr{Ptr{Cvoid}}, Ptr{GrB_Index}, GrB_Vector, GrB_Descriptor), blob_handle, blob_size_handle, u, desc)
+end
+
+function GrB_Matrix_serializeSize(blob_size_handle, A)
+    ccall((:GrB_Matrix_serializeSize, libgraphblas), GrB_Info, (Ptr{GrB_Index}, GrB_Matrix), blob_size_handle, A)
+end
+
+function GxB_Matrix_deserialize(C, type, blob, blob_size, desc)
+    ccall((:GxB_Matrix_deserialize, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, Ptr{Cvoid}, GrB_Index, GrB_Descriptor), C, type, blob, blob_size, desc)
+end
+
+function GrB_Matrix_deserialize(C, type, blob, blob_size)
+    ccall((:GrB_Matrix_deserialize, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Type, Ptr{Cvoid}, GrB_Index), C, type, blob, blob_size)
+end
+
+function GxB_Vector_deserialize(w, type, blob, blob_size, desc)
+    ccall((:GxB_Vector_deserialize, libgraphblas), GrB_Info, (Ptr{GrB_Vector}, GrB_Type, Ptr{Cvoid}, GrB_Index, GrB_Descriptor), w, type, blob, blob_size, desc)
+end
+
+function GxB_deserialize_type_name(type_name, blob, blob_size)
+    ccall((:GxB_deserialize_type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, Ptr{Cvoid}, GrB_Index), type_name, blob, blob_size)
+end
+
 # Skipping MacroDefinition: GB_PUBLIC extern
 
 const GxB_STDC_VERSION = __STDC_VERSION__
 
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
-const GxB_IMPLEMENTATION_DATE = "Aug 23, 2021"
+const GxB_IMPLEMENTATION_DATE = "Nov 15, 2021"
 
-const GxB_IMPLEMENTATION_MAJOR = 5
+const GxB_IMPLEMENTATION_MAJOR = 6
 
-const GxB_IMPLEMENTATION_MINOR = 1
+const GxB_IMPLEMENTATION_MINOR = 0
 
-const GxB_IMPLEMENTATION_SUB = 7
+const GxB_IMPLEMENTATION_SUB = 0
 
-const GxB_SPEC_DATE = "Sept 25, 2019"
+const GxB_SPEC_DATE = "Nov 15, 2021"
 
-const GxB_SPEC_MAJOR = 1
+const GxB_SPEC_MAJOR = 2
 
-const GxB_SPEC_MINOR = 3
+const GxB_SPEC_MINOR = 0
 
 const GxB_SPEC_SUB = 0
+
+const GRB_VERSION = GxB_SPEC_MAJOR
+
+const GRB_SUBVERSION = GxB_SPEC_MINOR
 
 const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTATION_MINOR, GxB_IMPLEMENTATION_SUB)
 
@@ -2171,11 +2883,9 @@ const GxB_SPEC_VERSION = GxB_VERSION(GxB_SPEC_MAJOR, GxB_SPEC_MINOR, GxB_SPEC_SU
 #"Mathematics by Jeremy Kepner.  See also 'Graph Algorithms in the Language\n" \
 #"of Linear Algebra,' edited by J. Kepner and J. Gilbert, SIAM, 2011.\n"
 
+const GrB_INDEX_MAX = (GrB_Index(Culonglong(1) << 60))(-1)
+
 const GxB_INDEX_MAX = GrB_Index(Culonglong(1) << 60)
-
-const GRB_VERSION = GxB_SPEC_MAJOR
-
-const GRB_SUBVERSION = GxB_SPEC_MINOR
 
 const GxB_NTHREADS = 5
 
@@ -2184,6 +2894,10 @@ const GxB_CHUNK = 7
 const GxB_GPU_CONTROL = 21
 
 const GxB_GPU_CHUNK = 22
+
+const GxB_FAST_IMPORT = GxB_DEFAULT
+
+const GxB_MAX_NAME_LEN = 128
 
 const GxB_HYPER = 0
 
@@ -2216,5 +2930,15 @@ const GxB_BEGIN = 0
 const GxB_END = 1
 
 const GxB_INC = 2
+
+const GxB_COMPRESSION_NONE = -1
+
+const GxB_COMPRESSION_DEFAULT = 0
+
+const GxB_COMPRESSION_LZ4 = 1000
+
+const GxB_COMPRESSION_LZ4HC = 2000
+
+const GxB_COMPRESSION_INTEL = 1000000
 
 end # module

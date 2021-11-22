@@ -18,5 +18,5 @@ SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [compat]
 MacroTools = "0.5"
-SSGraphBLAS_jll = "5.1"
+SSGraphBLAS_jll = "6.0"
 julia = "1.6"
