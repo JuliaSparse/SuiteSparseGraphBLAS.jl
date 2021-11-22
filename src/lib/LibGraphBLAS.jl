@@ -102,21 +102,23 @@ end
 const valid_vec = [Bool, Int8, UInt8, Int16, UInt16, Int32, UInt32,
 Int64, UInt64, Float32, Float64, ComplexF32, ComplexF64]
 
-@enum GrB_Info::UInt32 begin
+@enum GrB_Info::Int32 begin
     GrB_SUCCESS = 0
     GrB_NO_VALUE = 1
-    GrB_UNINITIALIZED_OBJECT = 2
-    GrB_INVALID_OBJECT = 3
-    GrB_NULL_POINTER = 4
-    GrB_INVALID_VALUE = 5
-    GrB_INVALID_INDEX = 6
-    GrB_DOMAIN_MISMATCH = 7
-    GrB_DIMENSION_MISMATCH = 8
-    GrB_OUTPUT_NOT_EMPTY = 9
-    GrB_OUT_OF_MEMORY = 10
-    GrB_INSUFFICIENT_SPACE = 11
-    GrB_INDEX_OUT_OF_BOUNDS = 12
-    GrB_PANIC = 13
+    GrB_UNINITIALIZED_OBJECT = -1
+    GrB_NULL_POINTER = -2
+    GrB_INVALID_VALUE = -3
+    GrB_INVALID_INDEX = -4
+    GrB_DOMAIN_MISMATCH = -5
+    GrB_DIMENSION_MISMATCH = -6
+    GrB_OUTPUT_NOT_EMPTY = -7
+    GrB_NOT_IMPLEMENTED = -8
+    GrB_PANIC = -101
+    GrB_OUT_OF_MEMORY = -102
+    GrB_INSUFFICIENT_SPACE = -103
+    GrB_INVALID_OBJECT = -104
+    GrB_INDEX_OUT_OF_BOUNDS = -105
+    GrB_EMPTY_OBJECT = -106
 end
 
 @enum GrB_Mode::UInt32 begin
@@ -128,8 +130,8 @@ function GrB_init(mode)
     @wraperror ccall((:GrB_init, libgraphblas), GrB_Info, (GrB_Mode,), mode)
 end
 
-function GxB_init(mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function, user_malloc_is_thread_safe)
-    @wraperror ccall((:GxB_init, libgraphblas), GrB_Info, (GrB_Mode, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Bool), mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function, user_malloc_is_thread_safe)
+function GxB_init(mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function)
+    @wraperror ccall((:GxB_init, libgraphblas), GrB_Info, (GrB_Mode, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function)
 end
 
 function GxB_cuda_init(mode)
@@ -306,6 +308,17 @@ const GxB_select_function = Ptr{Cvoid}
 
 function GB_SelectOp_new(selectop, _function, xtype, ttype, name)
     @wraperror ccall((:GB_SelectOp_new, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp}, GxB_select_function, GrB_Type, GrB_Type, Ptr{Cchar}), selectop, _function, xtype, ttype, name)
+end
+
+mutable struct GB_IndexUnaryOp_opaque end
+
+const GrB_IndexUnaryOp = Ptr{GB_IndexUnaryOp_opaque}
+
+# typedef void ( * GxB_index_unary_function ) ( void * z , // output value z, of type ztype const void * x , // input value x of type xtype; value of v(i) or A(i,j) GrB_Index i , // row index of A(i,j) GrB_Index j , // column index of A(i,j), or zero for v(i) const void * y // input scalar y )
+const GxB_index_unary_function = Ptr{Cvoid}
+
+function GxB_IndexUnaryOp_new(op, _function, ztype, xtype, ytype, idxop_name, idxop_defn)
+    ccall((:GxB_IndexUnaryOp_new, libgraphblas), GrB_Info, (Ptr{GrB_IndexUnaryOp}, GxB_index_unary_function, GrB_Type, GrB_Type, GrB_Type, Ptr{Cchar}, Ptr{Cchar}), op, _function, ztype, xtype, ytype, idxop_name, idxop_defn)
 end
 
 function GxB_SelectOp_xtype(xtype, selectop)
@@ -501,6 +514,7 @@ end
 
 mutable struct GB_Scalar_opaque end
 
+const GrB_Scalar = Ptr{GB_Scalar_opaque}
 const GxB_Scalar = Ptr{GB_Scalar_opaque}
 
 function GxB_Scalar_new(s, type)
@@ -1386,44 +1400,53 @@ end
     GxB_NO_FORMAT = -1
 end
 
-function GrB_Type_wait(type)
-    @wraperror ccall((:GrB_Type_wait, libgraphblas), GrB_Info, (Ptr{GrB_Type},), type)
+@enum GrB_WaitMode::UInt32 begin
+    GrB_COMPLETE = 0
+    GrB_MATERIALIZE = 1
 end
 
-function GrB_UnaryOp_wait(op)
-    @wraperror ccall((:GrB_UnaryOp_wait, libgraphblas), GrB_Info, (Ptr{GrB_UnaryOp},), op)
+function GrB_Type_wait(type, waitmode)
+    ccall((:GrB_Type_wait, libgraphblas), GrB_Info, (GrB_Type, GrB_WaitMode), type, waitmode)
 end
 
-function GrB_BinaryOp_wait(op)
-    @wraperror ccall((:GrB_BinaryOp_wait, libgraphblas), GrB_Info, (Ptr{GrB_BinaryOp},), op)
+function GrB_UnaryOp_wait(op, waitmode)
+    ccall((:GrB_UnaryOp_wait, libgraphblas), GrB_Info, (GrB_UnaryOp, GrB_WaitMode), op, waitmode)
 end
 
-function GxB_SelectOp_wait(op)
-    @wraperror ccall((:GxB_SelectOp_wait, libgraphblas), GrB_Info, (Ptr{GxB_SelectOp},), op)
+function GrB_BinaryOp_wait(op, waitmode)
+    ccall((:GrB_BinaryOp_wait, libgraphblas), GrB_Info, (GrB_BinaryOp, GrB_WaitMode), op, waitmode)
 end
 
-function GrB_Monoid_wait(monoid)
-    @wraperror ccall((:GrB_Monoid_wait, libgraphblas), GrB_Info, (Ptr{GrB_Monoid},), monoid)
+function GxB_SelectOp_wait(op, waitmode)
+    ccall((:GxB_SelectOp_wait, libgraphblas), GrB_Info, (GxB_SelectOp, GrB_WaitMode), op, waitmode)
 end
 
-function GrB_Semiring_wait(semiring)
-    @wraperror ccall((:GrB_Semiring_wait, libgraphblas), GrB_Info, (Ptr{GrB_Semiring},), semiring)
+function GrB_IndexUnaryOp_wait(op, waitmode)
+    ccall((:GrB_IndexUnaryOp_wait, libgraphblas), GrB_Info, (GrB_IndexUnaryOp, GrB_WaitMode), op, waitmode)
 end
 
-function GrB_Descriptor_wait(desc)
-    @wraperror ccall((:GrB_Descriptor_wait, libgraphblas), GrB_Info, (Ptr{GrB_Descriptor},), desc)
+function GrB_Monoid_wait(monoid, waitmode)
+    ccall((:GrB_Monoid_wait, libgraphblas), GrB_Info, (GrB_Monoid, GrB_WaitMode), monoid, waitmode)
 end
 
-function GxB_Scalar_wait(s)
-    @wraperror ccall((:GxB_Scalar_wait, libgraphblas), GrB_Info, (Ptr{GxB_Scalar},), s)
+function GrB_Semiring_wait(semiring, waitmode)
+    ccall((:GrB_Semiring_wait, libgraphblas), GrB_Info, (GrB_Semiring, GrB_WaitMode), semiring, waitmode)
 end
 
-function GrB_Vector_wait(v)
-    @wraperror ccall((:GrB_Vector_wait, libgraphblas), GrB_Info, (Ptr{GrB_Vector},), v)
+function GrB_Scalar_wait(s, waitmode)
+    ccall((:GrB_Scalar_wait, libgraphblas), GrB_Info, (GrB_Scalar, GrB_WaitMode), s, waitmode)
 end
 
-function GrB_Matrix_wait(A)
-    @wraperror ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (Ptr{GrB_Matrix},), A)
+function GrB_Vector_wait(v, waitmode)
+    ccall((:GrB_Vector_wait, libgraphblas), GrB_Info, (GrB_Vector, GrB_WaitMode), v, waitmode)
+end
+
+function GrB_Matrix_wait(A, waitmode)
+    ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (GrB_Matrix, GrB_WaitMode), A, waitmode)
+end
+
+function GrB_Descriptor_wait(desc, waitmode)
+    ccall((:GrB_Descriptor_wait, libgraphblas), GrB_Info, (GrB_Descriptor, GrB_WaitMode), desc, waitmode)
 end
 
 function GrB_Type_error(type)

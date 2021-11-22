@@ -131,7 +131,7 @@ function __init__()
     # We initialize GraphBLAS by giving it Julia's GC wrapped memory management functions.
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
-    libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free), true)
+    libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
     gbset(:nthreads, Sys.CPU_THREADS ÷ 2)
     # Eagerly load selectops constants.
     _loadselectops()
