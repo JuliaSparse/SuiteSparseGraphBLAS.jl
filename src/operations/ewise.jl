@@ -11,7 +11,7 @@ union equivalent see [`eadd!`](@ref).
 # Arguments
 - `C::GBArray`: the output vector or matrix.
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = *`: the binary operation which is 
+- `op::Union{Function, AbstractBinaryOp, Monoid} = *`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
 
 # Keywords
@@ -53,7 +53,7 @@ end
 """
     emul(A::GBArray, B::GBArray, op = *; kwargs...)::GBMatrix
 
-Apply the binary operator `op` elementwise on the set intersection of `A` and `B`. 
+Apply the binary operator `op` elementwise on the set intersection of `A` and `B`.
 When `op = *` this is equivalent to `A .* B`, however any binary operator may be substituted.
 
 The pattern of the result is the set intersection of `A` and `B`. For a set
@@ -61,7 +61,7 @@ union equivalent see [`eadd`](@ref).
 
 # Arguments
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = *`: the binary operation which is 
+- `op::Union{Function, AbstractBinaryOp, Monoid} = *`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
 
 # Keywords
@@ -107,7 +107,7 @@ For a set intersection equivalent see [`emul!`](@ref).
 # Arguments
 - `C::GBArray`: the output vector or matrix.
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is 
+- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
 
 # Keywords
@@ -148,7 +148,7 @@ end
 """
     eadd(A::GBArray, B::GBArray, op = +; kwargs...)::GBVecOrMat
 
-Apply the binary operator `op` elementwise on the set union of `A` and `B`. 
+Apply the binary operator `op` elementwise on the set union of `A` and `B`.
 When `op = +` this is equivalent to `A .+ B`, however any binary operation may be substituted.
 
 Note that the behavior of `A[i,j] op B[i,j]` may be unintuitive when one operand is an implicit
@@ -159,7 +159,7 @@ For a set intersection equivalent see [`emul`](@ref).
 
 # Arguments
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is 
+- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
 
 # Keywords
@@ -185,6 +185,96 @@ function eadd(
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
+
+"""
+    eunion!(C::GBVecOrMat, A::GBArray{T}, α::T B::GBArray, β::T, op = +; kwargs...)::GBVecOrMat
+
+Apply the binary operator `op` elementwise on the set union of `A` and `B`. Store or
+accumulate the result into C. When `op = +` this is equivalent to `A .+ B`,
+however any binary operation may be substituted.
+
+Unlike `eadd!` where an argument missing in `A` causes the `B` element to "pass-through",
+`eunion!` utilizes the `α` and `β` arguments for the missing operand elements.
+
+# Arguments
+- `C::GBArray`: the output vector or matrix.
+- `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
+- `α, β`: The fill-in value for `A` and `B` respectively.
+- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
+    applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
+
+# Keywords
+- `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
+- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+    such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Union{Nothing, Descriptor} = nothing`
+"""
+function eunion!(
+    C::GBVecOrMat,
+    A::GBArray{T},
+    α::T,
+    B::GBArray{U},
+    β::U,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where {T, U}
+    mask, accum = _handlenothings(mask, accum)
+    desc = _handledescriptor(desc; in1=A, in2 = B)
+    size(C) == size(A) == size(B) || throw(DimensionMismatch())
+    op = getoperator(op, optype(A, B))
+    accum = getaccum(accum, eltype(C))
+    if op isa TypedBinaryOperator
+        libgb.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
+        return C
+    else
+        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
+    end
+    return C
+end
+
+"""
+    eunion(C::GBVecOrMat, A::GBArray{T}, α::T B::GBArray, β::T, op = +; kwargs...)::GBVecOrMat
+
+Apply the binary operator `op` elementwise on the set union of `A` and `B`.
+When `op = +` this is equivalent to `A .+ B`, however any binary operation may be substituted.
+
+Unlike `eadd!` where an argument missing in `A` causes the `B` element to "pass-through",
+`eunion!` utilizes the `α` and `β` arguments for the missing operand elements.
+
+# Arguments
+- `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
+- `α, β`: The fill-in value for `A` and `B` respectively.
+- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
+    applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
+
+# Keywords
+- `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
+- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+    such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
+- `desc::Union{Nothing, Descriptor} = nothing`
+"""
+function eunion(
+    A::GBArray{T},
+    α::T,
+    B::GBArray{U},
+    β::U,
+    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where {T, U}
+    t = inferoutputtype(A, B, op)
+    if A isa GBVector && B isa GBVector
+        C = GBVector{t}(size(A))
+    else
+        C = GBMatrix{t}(size(A))
+    end
+    return eunion!(C, A, α, B, β, op; mask, accum, desc)
+end
+
+
 function emul!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
     emul!(C, A, B, BinaryOp(op); mask, accum, desc)
 end
@@ -201,12 +291,20 @@ function eadd(A, B, op::Function; mask = nothing, accum = nothing, desc = nothin
     eadd(A, B, BinaryOp(op); mask, accum, desc)
 end
 
+function eunion!(C, A, α, B, β, op::Function; mask = nothing, accum = nothing, desc = nothing)
+    eunion!(C, A, α, B, β, BinaryOp(op); mask, accum, desc)
+end
+
+function eunion(A, α, B, β, op::Function; mask = nothing, accum = nothing, desc = nothing)
+    eunion(A, α, B, β, BinaryOp(op); mask, accum, desc)
+end
+
 function Base.:+(A::GBArray, B::GBArray)
-    eadd(A, B, BinaryOps.PLUS)
+    eadd(A, B, +)
 end
 
 function Base.:-(A::GBArray, B::GBArray)
-    eadd(A, B, BinaryOps.MINUS)
+    eadd(A, B, -)
 end
 
 ⊕(A, B, op; mask = nothing, accum = nothing, desc = nothing) =

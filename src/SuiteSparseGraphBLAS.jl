@@ -91,6 +91,8 @@ include("chainrules/constructorrules.jl")
 #include("random.jl")
 include("misc.jl")
 include("asjulia.jl")
+include("sparsemat.jl")
+export SparseArrayCompat
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
@@ -113,7 +115,7 @@ export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!,
-gbrand
+gbrand, eunion, eunion!
 # Reexports from LinAlg
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
 

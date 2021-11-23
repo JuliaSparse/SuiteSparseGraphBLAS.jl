@@ -1,7 +1,7 @@
 module SparseArrayCompat
 import SparseArrays
 using ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: GBMatrix
+using ..SuiteSparseGraphBLAS: GBMatrix, mutatingop, ∨, ∧
 using LinearAlgebra
 using Base.Broadcast
 
@@ -15,6 +15,7 @@ mutable struct SparseMatrixGB{Tv} <: SparseArrays.AbstractSparseMatrix{Tv, Int64
     gbmat::GBMatrix{Tv}
     fillvalue::Tv
     function SparseMatrixGB{Tv}(gbmat::GBMatrix{Tv}, fillval::Fv) where {Tv, Fv}
+        gbset(gbmat, :format, :bycol)
         return new(gbmat, promote_type(Tv, Fv)(fillval))
     end
 end
@@ -48,7 +49,7 @@ SparseMatrixGB(A::SparseArrays.SparseMatrixCSC{T}, fill=zero(T)) where{T} =
     SparseMatrixGB{T}(GBMatrix(A), fill)
 Base.copy(A::SparseMatrixGB{Tv}) where {Tv} = SparseMatrixGB(copy(A.gbmat), copy(A.fillvalue))
 Base.size(A::SparseMatrixGB) = size(A.gbmat)
-SparseArrays.nnz(A::SparseMatrixGB) = nnz(A.gbmat)
+SparseArrays.nnz(A::SparseMatrixGB) = SparseArrays.nnz(A.gbmat)
 Base.eltype(::Type{SparseMatrixGB{Tv}}) where{Tv} = Tv
 
 function Base.similar(A::SparseMatrixGB{Tv}, ::Type{TNew}, dims::Union{Dims{1}, Dims{2}}) where {Tv, TNew}
@@ -79,41 +80,61 @@ Base.:+(A::SparseMatrixGB, B::SparseMatrixGB) = SparseMatrixGB(A.gbmat + B.gbmat
 Base.:*(A::SparseMatrixGB, B::SparseMatrixGB) = SparseMatrixGB(A.gbmat * B.gbmat)
 
 # Mapping
-function Base.map!(op, A::SparseMatrixGB)
-    map!(op, A.gbmat)
+function Base.map!(op, A::SparseMatrixGB; mask = nothing, accum = nothing, desc = nothing)
+    map!(op, A.gbmat; mask, accum, desc)
     A.fillvalue = op(A.fillvalue)
 end
-function Base.map!(op, C::SparseMatrixGB, A::SparseMatrixGB)
-    map!(op, C, A)
+function Base.map!(op, C::SparseMatrixGB, A::SparseMatrixGB; mask = nothing, accum = nothing, desc = nothing)
+    map!(op, C, A; mask, accum, desc)
     C.fillvalue = op(A.fillvalue)
 end
 
-function Base.map!(op, A::SparseMatrixGB, x)
-    map!(op, A.gbmat, x)
+function Base.map!(op, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing)
+    map!(op, A.gbmat, x; mask, accum, desc)
     A.fillvalue = op(A.fillvalue, x)
 end
-function Base.map!(op, C::SparseMatrixGB, A::SparseMatrixGB, x)
-    map!(op, C, A, x)
+function Base.map!(op, C::SparseMatrixGB, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing)
+    map!(op, C, A, x; mask, accum, desc)
     C.fillvalue = op(A.fillvalue, x)
 end
 
-Base.map(op, A::SparseMatrixGB) = SparseMatrixGB(map(op, A.gbmat), op(A.fillvalue))
-Base.map(op, A::SparseMatrixGB, x) = SparseMatrixGB(map(op, A.gbmat, x), op(A.fillvalue, x))
+Base.map(op, A::SparseMatrixGB; mask = nothing, accum = nothing, desc = nothing) =
+    SparseMatrixGB(map(op, A.gbmat; mask, accum, desc), op(A.fillvalue))
+Base.map(op, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing) =
+    SparseMatrixGB(map(op, A.gbmat, x), op(A.fillvalue, x))
 
-function SuiteSparseGraphBLAS.eadd!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
-    eadd!(C.gbmat, A.gbmat, B.gbmat)
+function SuiteSparseGraphBLAS.eadd!(
+    C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    eunion!(C.gbmat, A.gbmat, A.fillvalue, B.gbmat, B.fillvalue; mask, accum, desc)
     C.fillvalue = op(A.fillvalue, B.fillvalue)
 end
-function SuiteSparseGraphBLAS.eadd(A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
-    return SparseMatrixGB(eadd(A.gbmat, B.gbmat, op), op(A.fillvalue, B.fillvalue))
+function SuiteSparseGraphBLAS.eadd(
+    A::SparseMatrixGB, B::SparseMatrixGB, op::Function;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return SparseMatrixGB(
+        eunion(A.gbmat, A.fillvalue, B.gbmat, B.fillvalue, op; mask, accum, desc),
+        op(A.fillvalue, B.fillvalue)
+    )
 end
 
-function SuiteSparseGraphBLAS.emul!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
-    emul!(C.gbmat, A.gbmat, B.gbmat)
+function SuiteSparseGraphBLAS.emul!(
+    C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    emul!(C.gbmat, A.gbmat, B.gbmat; mask, accum, desc)
     C.fillvalue = op(A.fillvalue, B.fillvalue)
 end
-function SuiteSparseGraphBLAS.emul(A::SparseMatrixGB, B::SparseMatrixGB, op::Function)
-    return SparseMatrixGB(emul(A.gbmat, B.gbmat, op), op(A.fillvalue, B.fillvalue))
+function SuiteSparseGraphBLAS.emul(
+    A::SparseMatrixGB, B::SparseMatrixGB, op::Function;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return SparseMatrixGB(
+        emul(A.gbmat, B.gbmat, op; mask, accum, desc),
+        op(A.fillvalue, B.fillvalue)
+    )
 end
 
 # Broadcasting
@@ -124,6 +145,18 @@ valunwrap(::Val{x}) where x = x
 struct SparseMatGBStyle <: Broadcast.AbstractArrayStyle{2} end
 Base.BroadcastStyle(::Type{<:SparseMatrixGB}) = SparseMatGBStyle()
 Base.BroadcastStyle(::Type{<:Transpose{T, <:SparseMatrixGB} where T}) = SparseMatGBStyle()
+
+# We don't want the defaultadd for GBMatrix, since we want to default to SparseMatrixCSC behavior
+defaultadd(::Function) = eadd
+for op ∈ [
+    :*,
+    :∧,
+]
+    funcquote = quote
+        defaultadd(::typeof($op)) = emul
+    end
+    @eval($funcquote)
+end
 
 SparseMatGBStyle(::Val{0}) = SparseMatGBStyle()
 SparseMatGBStyle(::Val{1}) = SparseMatGBStyle()
@@ -161,7 +194,7 @@ end
             right = copy(right)
         end
         if left isa SparseMatrixGB && right isa SparseMatrixGB
-            add = SuiteSparseGraphBLAS.defaultadd(f)
+            add = defaultadd(f)
             return add(left, right, f)
         else
             return map(f, left, right)
@@ -169,11 +202,83 @@ end
     end
 end
 
-function Base.broadcasted(::typeof(-), A::SparseMatrixGB, B::SparseMatrixGB)
-    map!(-, B)
-    C = eadd(A, B, +)
-    map!(-, B)
-    return C
+@inline function Base.copyto!(C::SparseMatrixGB, bc::Broadcast.Broadcasted{SparseMatGBStyle})
+    l = length(bc.args)
+    if l == 1
+        x = first(bc.args)
+        if bc.f === Base.identity
+            C[:,:, accum=second] = x
+            return C
+        end
+        return map!(bc.f, C, x; accum=second)
+    else
+
+        left = first(bc.args)
+        right = last(bc.args)
+        # handle annoyances with the pow operator
+        if left isa Base.RefValue{typeof(^)}
+            f = ^
+            left = bc.args[2]
+            right = valunwrap(right[])
+        end
+        # TODO: This if statement should probably be *inside* one of the inner ones to avoid duplication.
+        if left === C
+            if !(right isa Broadcast.Broadcasted)
+                # This should be something of the form A .<op>= <expr> or A .= A .<op> <expr> which are equivalent.
+                # this will be done by a subassign
+                C[:,:, accum=bc.f] = right
+                return C
+            else
+                # The form A .<op>= expr
+                # but not of the form A .= C ... B.
+                accum = bc.f
+                f = right.f
+                if length(right.args) == 1
+                    # Should be catching expressions of the form A .<op>= <op>.(B)
+                    subarg = first(right.args)
+                    if subarg isa Broadcast.Broadcasted
+                        subarg = copy(subarg)
+                    end
+                    return map!(f, C, subarg; accum)
+                else
+                    # Otherwise we know there's two operands on the LHS so we have A .<op>= C .<op> B
+                    # Or a generalization with any compound *lazy* RHS.
+                    (subargleft, subargright) = right.args
+                    # subargleft and subargright are C and B respectively.
+                    # If they're further nested broadcasts we can't fuse them, so just copy.
+                    subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
+                    subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
+                    if subargleft isa SparseMatrixGB && subargright isa SparseMatrixGB
+                        add = mutatingop(defaultadd(f))
+                        return add(C, subargleft, subargright, f; accum)
+                    else
+                        return map!(f, C, subargleft, subargright; accum)
+                    end
+                end
+            end
+        else
+            # Some expression of the form A .= C .<op> B or a generalization
+            # excluding A .= A .<op> <expr>, since that is captured above.
+            if left isa Broadcast.Broadcasted
+                left = copy(left)
+            end
+            if right isa Broadcast.Broadcasted
+                right = copy(right)
+            end
+            if left isa SparseMatrixGB && right isa SparseMatrixGB
+                add = mutatingop(defaultadd(f))
+                return add(C, left, right, f)
+            else
+                return map!(C, f, left, right; accum=second)
+            end
+        end
+    end
 end
+
+LinearAlgebra.kron!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB) =
+    LinearAlgebra.kron!(C.gbmat, A.gbmat, B.gbmat)
+LinearAlgebra.kron(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB) =
+    LinearAlgebra.kron(C.gbmat, A.gbmat, B.gbmat)
+
 
 end
