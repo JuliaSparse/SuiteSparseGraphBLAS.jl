@@ -12,7 +12,7 @@ using SuiteSparseGraphBLAS.SparseArrayCompat
     @test A .- C ≈ B .- D
     @test A .* C ≈ B .* D
     @test min.(A, C) ≈ min.(B, D)
-    @test max.(A, C) ≈ min.(B, D)
+    @test max.(A, C) ≈ max.(B, D)
 
     # map tests
     @test map(one, A) == map(one, B)
