@@ -1,5 +1,5 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://graphblas.juliasparse.org/dev/)
-
+[![](https://img.shields.io/badge/docs-stable-green.svg)](https://graphblas.juliasparse.org/stable/)
 # SuiteSparseGraphBLAS.jl
 A fast, general sparse linear algebra and graph computation package, based on SuiteSparse:GraphBLAS.
 
