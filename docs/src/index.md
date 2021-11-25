@@ -20,10 +20,11 @@ Pkg.add("SuiteSparseGraphBLAS")
 
 The SuiteSparse:GraphBLAS binary is installed automatically as `SSGraphBLAS_jll`.
 
+Then in the REPL or script `using SuiteSparseGraphBLAS` will import the package.
 # Introduction
 
 GraphBLAS harnesses the well-understood duality between graphs and matrices.
-Specifically a graph can be represented by its [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix), [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix), or the many variations on those formats. 
+Specifically a graph can be represented by its [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix), [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix), or one of the many variations on those formats. 
 With this matrix representation in hand we have a method to operate on the graph using linear algebra operations on the matrix.
 
 Below is an example of the adjacency matrix of a directed graph, and finding the neighbors of a single vertex using basic matrix-vector multiplication on the arithemtic semiring.

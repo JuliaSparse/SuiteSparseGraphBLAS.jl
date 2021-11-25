@@ -26,6 +26,10 @@ where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumula
 !!! note "assign vs subassign"
     `subassign` is equivalent to `assign` except that the mask in `subassign` has the dimensions of ``\bf C(I,J)`` vs the dimensions of ``C`` for `assign`, and elements outside of the mask will never be modified by `subassign`. See the [GraphBLAS User Guide](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/GraphBLAS_UserGuide.pdf) for more details.
 
+## Operation Documentation
+
+All non-mutating operations below support a mutating form by adding an output array as the first argument as well as the `!` function suffix. 
+
 ### `mul`
 ```@docs
 mul
@@ -45,37 +49,41 @@ LinearAlgebra.kron
 
 ## Common arguments
 
-The operations above have often accept most or all of the following arguments.
+The operations typically accept one of the following types in the `op` argument.
 
 ### `op` - `UnaryOp`, `BinaryOp`, `Monoid`, `Semiring`, or `SelectOp`:
 
-This is the most important argument for most of the GraphBLAS operations. It determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`.
-Most operations are restricted to one type of operator.
+This argument determines ``\oplus``, ``\otimes``, or ``f`` in the table above as well as the semiring used in `mul`. They typically have synonymous functions in Julia, so `conj` can be used in place of `UnaryOps.CONJ` for instance.
 
 !!! tip "Built-Ins"
     The built-in operators can be found in the submodules: `UnaryOps`, `BinaryOps`, `Monoids`, and `Semirings`.
+
+See the [Operators](@ref) section for more information.
 
 ### `desc` - `Descriptor`:
 
 The descriptor argument allows the user to modify the operation in some fashion. The most common options are:
 
-- `desc.[input1 | input2] == [DEFAULT | TRANSPOSE]` 
+- `desc.[transpose_input1 | transpose_input2] == [true | false]` 
 
-    Transposes the inputs and can be found in `[T0 | T1 | T0T1]`. 
     Typically you should use Julia's built-in transpose functionality.
 
-- `desc.mask == [DEFAULT | STRUCTURE | COMPLEMENT | STRUCT_COMP]` 
+- `desc.complement_mask == [true | false]` 
 
-    If `STRUCTURE` is set the operation will use the presence of a value rather than the value itself to determine whether the index is masked. 
-    If `COMPLEMENT` is set the presence/truth value is complemented (ie. if **no** value is present or the value is **false** that index is masked).
+    If `complement_mask` is set the presence/truth value of the mask is complemented.
 
-- `desc.output == [DEFAULT | REPLACE]`
+- `desc.structural_mask == [true | false]`
+    
+    If `structural_mask` is set the presence of a value in the mask determines the presence of values
+    in the output, rather than the actual value of the mask.
 
-    If `REPLACE` is set the operation will replace all values in the output matrix **after** the accumulation step. 
+- `desc.replace_output == [true | false]`
+
+    If this option is set the operation will replace all values in the output matrix **after** the accumulation step. 
     If an index is found in the output matrix, but not in the results of the operation it will be set to `nothing`. 
 
 
-### `accum` - `BinaryOp`:
+### `accum` - `BinaryOp | Function`:
 
 The `accum` keyword argument provides a binary operation to accumulate results into the result array. 
 The accumulation step is performed **before** masking.
@@ -88,16 +96,10 @@ The mask may also be complemented. These options are controlled by the `desc` ar
 
 ## Order of Operations
 
-A GraphBLAS operation occurs in the following order (steps are skipped when possible):
+A GraphBLAS operation semantically occurs in the following order:
 
 1. Calculate `T = <operation>(args...)`
 2. Elementwise accumulate `Z[i,j] = accum(C[i,j], T[i,j])`
 3. Optionally masked assignment `C[i,j] = mask[i,j] ? Z[i,j] : [nothing | C[i,j]]`
 
-If `REPLACE` is set the option in step 3. is `nothing`, otherwise it is `C[i,j]`.
-
-## Operation Documentation
-
-All non-mutating operations below support a mutating form by adding an output array as the first argument as well as the `!` function suffix. 
-
-
+If `replace_output` is set the option in step 3. is `nothing`, otherwise it is `C[i,j]`.

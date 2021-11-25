@@ -92,7 +92,7 @@ end
     extract(A::GBMatOrTranspose, I, J; kwargs...)::GBMatrix
     extract(A::GBVector, I; kwargs...)::GBVector
 
-    Extract a submatrix or subvector from `A`
+Extract a submatrix or subvector from `A`
 
 # Arguments
 - `A::GBArray`: the array being indexed.

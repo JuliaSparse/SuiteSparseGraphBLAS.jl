@@ -38,14 +38,19 @@ SuiteSparseGraphBLAS.GBVector(::AbstractVector{<:Integer}, ::AbstractVector)
 
 # Indexing
 
-Normal AbstractArray and SparseArray indexing should work here. Including indexing by scalars, vectors, and ranges.
+The usual AbstractArray and SparseArray indexing capabilities are available. Including indexing by scalars, vectors, and ranges.
 
 !!! danger "Indexing Structural Zeros"
-    When indexing a `SparseMatrixCSC` from `SparseArrays` a structural, or implicit, zero will be returned as `zero(T)` where `T` is the elemtn type of the matrix.
+    When indexing a `SparseMatrixCSC` from `SparseArrays` a structural, or implicit, zero will be returned as `zero(T)` where `T` is the element type of the matrix.
 
-    When indexing a GBArray a structural zero is instead returned as `nothing`. While this is a significant departure from the `SparseMatrixCSC` it more closely matches the GraphBLAS spec, and enables the consuming method to determine the value of implicit zeros. 
+    When indexing a GBArray structural zeros are instead returned as `nothing`. 
+    While this is a significant departure from the `SparseMatrixCSC` it more closely matches the GraphBLAS spec,
+    and enables the consuming method to determine the value of implicit zeros. 
     
     For instance with an element type of `Float64` you may want the zero to be `0.0`, `-∞` or `+∞` depending on your algorithm. In addition, for graph algorithms there may be a distinction between an implicit zero, indicating the lack of an edge between two vertices in an adjacency matrix, and an explicit zero where the edge exists but has a `0` weight.
+
+    Better compatibility with `SparseMatrixCSC` and the ability to specify the value of implicit zeros is provided
+    by `SuiteSparseGraphBLAS.SparseArrayCompat.SparseMatrixGB` array type.
 
 ```@repl mat
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
@@ -64,6 +69,11 @@ The functionality illustrated above extends to `GBVector` as well.
 # Transpose
 The lazy Julia `transpose` is available, and the adjoint operator `'` is also
 overloaded to be equivalent.
+
+!!! danger "Adjoint vs Transpose"
+    The adjoint operator `'` currently transposes matrices rather than performing the
+    conjugate transposition. In the future this will change to the complex conjugate
+    for complex types, but currently you must do `map(conj, A')` to achieve this.
 
 # Utilities
 

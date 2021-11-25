@@ -91,7 +91,7 @@ Base.setindex!(o::AbstractBinaryOp, x, t1::DataType, t2::DataType) = setindex!(o
 Base.setindex!(o::AbstractBinaryOp, x, t::DataType) = setindex!(o, x, (t, t))
 
 function addtoop(op::AbstractUnaryOp, type)
-    f = juliaop(op)
+    f = Base.invokelatest(juliaop, op)
     resulttypes = Base.return_types(f, (type,))
     if length(resulttypes) != 1
         throw(ArgumentError("Inferred more than one result type for function $(string(f)) on type $type."))
@@ -100,8 +100,8 @@ function addtoop(op::AbstractUnaryOp, type)
 end
 
 function addtoop(op::AbstractBinaryOp, type1, type2)
-    f = juliaop(op)
-    resulttypes = Base.return_types(f, (type, type2))
+    f = Base.invokelatest(juliaop, op)
+    resulttypes = Base.return_types(f, (type1, type2))
     if length(resulttypes) != 1
         throw(ArgumentError("Inferred more than one result type for function $(string(f)) on type $type."))
     end
@@ -113,5 +113,5 @@ function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
     print(io, o.name, ": ", validtypes(o))
 end
 
-function juliaop end
+juliaop(op) = nothing
 juliaop(op::AbstractMonoid) = juliaop(op(op))

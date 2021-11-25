@@ -1,5 +1,5 @@
 module UnaryOps
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp, GBType, 
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp, GBType,
     valid_vec, juliaop, toGBType
 import ..SuiteSparseGraphBLAS: juliaop
 using ..libgb

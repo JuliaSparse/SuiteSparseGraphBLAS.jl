@@ -9,7 +9,16 @@ Applying `select` with a `SelectOp` will always return a result with the same ty
 
 Built-in `SelectOp`s can be found in the `SelectOps` submodule.
 
-```@autodocs
-Modules = [SuiteSparseGraphBLAS]
-Pages   = ["selectops.jl"]
+```@docs
+SuiteSparseGraphBLAS.TRIL
+SuiteSparseGraphBLAS.TRIU
+SuiteSparseGraphBLAS.DIAG
+SuiteSparseGraphBLAS.OFFDIAG
+SuiteSparseGraphBLAS.NONZERO
+SuiteSparseGraphBLAS.NE
+SuiteSparseGraphBLAS.EQ
+SuiteSparseGraphBLAS.GT
+SuiteSparseGraphBLAS.GE
+SuiteSparseGraphBLAS.LT
+SuiteSparseGraphBLAS.LE
 ```

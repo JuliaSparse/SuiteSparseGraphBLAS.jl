@@ -59,7 +59,7 @@ function _loadselectops()
 end
 
 
-Base.getindex(op::AbstractSelectOp, t::DataType) = nothing
+Base.getindex(::AbstractSelectOp, ::DataType) = nothing
 
 function validtypes(::AbstractSelectOp)
     return Any
