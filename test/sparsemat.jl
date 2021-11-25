@@ -19,5 +19,5 @@ using SuiteSparseGraphBLAS.SparseArrayCompat
     @test map(sin, A) ≈ map(sin, B)
     @test map(identity, A) == map(identity, B)
     @test map(cos, A) ≈ map(cos, B)
-
+    @test map((x)-> 1.5*x^2 + 3.0, A) ≈ map((x)-> 1.5*x^2 + 3.0, B)
 end
