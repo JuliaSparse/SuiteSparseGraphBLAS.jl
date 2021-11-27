@@ -75,6 +75,14 @@ function build(A::GBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where
     )
     return A
 end
+
+function wait(A::GBArray)
+    waitmode = libgb.GrB_MATERIALIZE
+    libgb.GrB_Matrix_wait(A, waitmode)
+    return nothing
+end
+
+
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 
@@ -213,6 +221,7 @@ for T ∈ valid_vec
             nvals = Ref{libgb.GrB_Index}(nnz(A))
             I = Vector{libgb.GrB_Index}(undef, nvals[])
             J = Vector{libgb.GrB_Index}(undef, nvals[])
+            wait(A)
             libgb.$func(I, J, C_NULL, nvals, A)
             nvals[] == length(I) == length(J) || throw(DimensionMismatch(""))
             return I .+ 1, J .+ 1

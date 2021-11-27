@@ -184,6 +184,7 @@ for T ∈ valid_vec
         function SparseArrays.nonzeroinds(v::GBVector{$T})
             nvals = Ref{libgb.GrB_Index}(nnz(v))
             I = Vector{libgb.GrB_Index}(undef, nvals[])
+            wait(v)
             libgb.$func(I, C_NULL, C_NULL, nvals, v)
             nvals[] == length(I) || throw(DimensionMismatch(""))
             return I .+ 1

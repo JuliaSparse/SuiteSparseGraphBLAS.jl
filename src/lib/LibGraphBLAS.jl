@@ -1406,47 +1406,47 @@ end
 end
 
 function GrB_Type_wait(type, waitmode)
-    ccall((:GrB_Type_wait, libgraphblas), GrB_Info, (GrB_Type, GrB_WaitMode), type, waitmode)
+    @wraperror ccall((:GrB_Type_wait, libgraphblas), GrB_Info, (GrB_Type, GrB_WaitMode), type, waitmode)
 end
 
 function GrB_UnaryOp_wait(op, waitmode)
-    ccall((:GrB_UnaryOp_wait, libgraphblas), GrB_Info, (GrB_UnaryOp, GrB_WaitMode), op, waitmode)
+    @wraperror ccall((:GrB_UnaryOp_wait, libgraphblas), GrB_Info, (GrB_UnaryOp, GrB_WaitMode), op, waitmode)
 end
 
 function GrB_BinaryOp_wait(op, waitmode)
-    ccall((:GrB_BinaryOp_wait, libgraphblas), GrB_Info, (GrB_BinaryOp, GrB_WaitMode), op, waitmode)
+    @wraperror ccall((:GrB_BinaryOp_wait, libgraphblas), GrB_Info, (GrB_BinaryOp, GrB_WaitMode), op, waitmode)
 end
 
 function GxB_SelectOp_wait(op, waitmode)
-    ccall((:GxB_SelectOp_wait, libgraphblas), GrB_Info, (GxB_SelectOp, GrB_WaitMode), op, waitmode)
+    @wraperror ccall((:GxB_SelectOp_wait, libgraphblas), GrB_Info, (GxB_SelectOp, GrB_WaitMode), op, waitmode)
 end
 
 function GrB_IndexUnaryOp_wait(op, waitmode)
-    ccall((:GrB_IndexUnaryOp_wait, libgraphblas), GrB_Info, (GrB_IndexUnaryOp, GrB_WaitMode), op, waitmode)
+    @wraperror ccall((:GrB_IndexUnaryOp_wait, libgraphblas), GrB_Info, (GrB_IndexUnaryOp, GrB_WaitMode), op, waitmode)
 end
 
 function GrB_Monoid_wait(monoid, waitmode)
-    ccall((:GrB_Monoid_wait, libgraphblas), GrB_Info, (GrB_Monoid, GrB_WaitMode), monoid, waitmode)
+    @wraperror ccall((:GrB_Monoid_wait, libgraphblas), GrB_Info, (GrB_Monoid, GrB_WaitMode), monoid, waitmode)
 end
 
 function GrB_Semiring_wait(semiring, waitmode)
-    ccall((:GrB_Semiring_wait, libgraphblas), GrB_Info, (GrB_Semiring, GrB_WaitMode), semiring, waitmode)
+    @wraperror ccall((:GrB_Semiring_wait, libgraphblas), GrB_Info, (GrB_Semiring, GrB_WaitMode), semiring, waitmode)
 end
 
 function GrB_Scalar_wait(s, waitmode)
-    ccall((:GrB_Scalar_wait, libgraphblas), GrB_Info, (GrB_Scalar, GrB_WaitMode), s, waitmode)
+    @wraperror ccall((:GrB_Scalar_wait, libgraphblas), GrB_Info, (GrB_Scalar, GrB_WaitMode), s, waitmode)
 end
 
 function GrB_Vector_wait(v, waitmode)
-    ccall((:GrB_Vector_wait, libgraphblas), GrB_Info, (GrB_Vector, GrB_WaitMode), v, waitmode)
+    @wraperror ccall((:GrB_Vector_wait, libgraphblas), GrB_Info, (GrB_Vector, GrB_WaitMode), v, waitmode)
 end
 
 function GrB_Matrix_wait(A, waitmode)
-    ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (GrB_Matrix, GrB_WaitMode), A, waitmode)
+    @wraperror ccall((:GrB_Matrix_wait, libgraphblas), GrB_Info, (GrB_Matrix, GrB_WaitMode), A, waitmode)
 end
 
 function GrB_Descriptor_wait(desc, waitmode)
-    ccall((:GrB_Descriptor_wait, libgraphblas), GrB_Info, (GrB_Descriptor, GrB_WaitMode), desc, waitmode)
+    @wraperror ccall((:GrB_Descriptor_wait, libgraphblas), GrB_Info, (GrB_Descriptor, GrB_WaitMode), desc, waitmode)
 end
 
 function GrB_Type_error(type)
@@ -2005,8 +2005,6 @@ function GrB_Matrix_assign_UDT(C, Mask, accum, x, I, ni, J, nj, desc)
 end
 
 function GrB_Vector_apply(w, mask, accum, op, u, desc)
-    GrB_Vector_wait(Ref(w.p))
-    GrB_Vector_wait(Ref(w.p))
     @wraperror ccall((:GrB_Vector_apply, libgraphblas), GrB_Info, (GrB_Vector, GrB_Vector, GrB_BinaryOp, GrB_UnaryOp, GrB_Vector, GrB_Descriptor), w, mask, accum, op, u, desc)
 end
 

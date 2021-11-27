@@ -1,8 +1,9 @@
 mutable struct SelectOp <: AbstractSelectOp
     name::String
     p::libgb.GxB_SelectOp
-    function SelectOp(name, p::libgb.GxB_SelectOp)
-        d = new(name, p)
+    juliaop::Union{Function, Nothing}
+    function SelectOp(name, p::libgb.GxB_SelectOp, juliaop)
+        d = new(name, p, juliaop)
         function f(selectop)
             libgb.GxB_SelectOp_free(Ref(selectop.p))
         end
@@ -14,22 +15,31 @@ const SelectUnion = Union{AbstractSelectOp, libgb.GxB_SelectOp}
 
 Base.unsafe_convert(::Type{libgb.GxB_SelectOp}, selectop::SelectOp) = selectop.p
 
-const TRIL = SelectOp("GxB_TRIL", libgb.GxB_SelectOp(C_NULL))
-const TRIU = SelectOp("GxB_TRIU", libgb.GxB_SelectOp(C_NULL))
-const DIAG = SelectOp("GxB_DIAG", libgb.GxB_SelectOp(C_NULL))
-const OFFDIAG = SelectOp("GxB_OFFDIAG", libgb.GxB_SelectOp(C_NULL))
-const NONZERO = SelectOp("GxB_NONZERO", libgb.GxB_SelectOp(C_NULL))
-const EQ_ZERO = SelectOp("GxB_EQ_ZERO", libgb.GxB_SelectOp(C_NULL))
-const GT_ZERO = SelectOp("GxB_GT_ZERO", libgb.GxB_SelectOp(C_NULL))
-const GE_ZERO = SelectOp("GxB_GE_ZERO", libgb.GxB_SelectOp(C_NULL))
-const LT_ZERO = SelectOp("GxB_LT_ZERO", libgb.GxB_SelectOp(C_NULL))
-const LE_ZERO = SelectOp("GxB_LE_ZERO", libgb.GxB_SelectOp(C_NULL))
-const NE = SelectOp("GxB_NE_THUNK", libgb.GxB_SelectOp(C_NULL))
-const EQ = SelectOp("GxB_EQ_THUNK", libgb.GxB_SelectOp(C_NULL))
-const GT = SelectOp("GxB_GT_THUNK", libgb.GxB_SelectOp(C_NULL))
-const GE = SelectOp("GxB_GE_THUNK", libgb.GxB_SelectOp(C_NULL))
-const LT = SelectOp("GxB_LT_THUNK", libgb.GxB_SelectOp(C_NULL))
-const LE = SelectOp("GxB_LE_THUNK", libgb.GxB_SelectOp(C_NULL))
+const TRIL = SelectOp("GxB_TRIL", libgb.GxB_SelectOp(C_NULL), LinearAlgebra.tril)
+const TRIU = SelectOp("GxB_TRIU", libgb.GxB_SelectOp(C_NULL), LinearAlgebra.triu)
+const DIAG = SelectOp("GxB_DIAG", libgb.GxB_SelectOp(C_NULL), LinearAlgebra.diag)
+
+"""
+    offdiag(A::GBArray, k=0)
+
+Select the entries **not** on the `k`th diagonal of A.
+"""
+function offdiag end #I don't know of a function which does this already.
+const OFFDIAG = SelectOp("GxB_OFFDIAG", libgb.GxB_SelectOp(C_NULL), offdiag)
+offdiag(A::GBArray, k=0) = select(offdiag, A, k)
+
+const NONZERO = SelectOp("GxB_NONZERO", libgb.GxB_SelectOp(C_NULL), nonzeros)
+const EQ_ZERO = SelectOp("GxB_EQ_ZERO", libgb.GxB_SelectOp(C_NULL), nothing)
+const GT_ZERO = SelectOp("GxB_GT_ZERO", libgb.GxB_SelectOp(C_NULL), nothing)
+const GE_ZERO = SelectOp("GxB_GE_ZERO", libgb.GxB_SelectOp(C_NULL), nothing)
+const LT_ZERO = SelectOp("GxB_LT_ZERO", libgb.GxB_SelectOp(C_NULL), nothing)
+const LE_ZERO = SelectOp("GxB_LE_ZERO", libgb.GxB_SelectOp(C_NULL), nothing)
+const NE = SelectOp("GxB_NE_THUNK", libgb.GxB_SelectOp(C_NULL), !=)
+const EQ = SelectOp("GxB_EQ_THUNK", libgb.GxB_SelectOp(C_NULL), ==)
+const GT = SelectOp("GxB_GT_THUNK", libgb.GxB_SelectOp(C_NULL), >)
+const GE = SelectOp("GxB_GE_THUNK", libgb.GxB_SelectOp(C_NULL), >=)
+const LT = SelectOp("GxB_LT_THUNK", libgb.GxB_SelectOp(C_NULL), <)
+const LE = SelectOp("GxB_LE_THUNK", libgb.GxB_SelectOp(C_NULL), <=)
 
 function SelectOp(name)
     simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
@@ -66,3 +76,4 @@ function validtypes(::AbstractSelectOp)
 end
 
 Base.show(io::IO, ::MIME"text/plain", s::SelectUnion) = gxbprint(io, s)
+juliaop(op::AbstractSelectOp) = op.juliaop

@@ -26,9 +26,15 @@ include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
 using .libgb
 include("operators/libgbops.jl")
+
+# Globals
+
+
 include("types.jl")
 include("gbtypes.jl")
 
+
+include("constants.jl")
 
 include("operators/operatorutils.jl")
 include("operators/unaryops.jl")
@@ -48,12 +54,10 @@ _createbinaryops()
 _createmonoids()
 _createsemirings()
 
+
+
 include("operators/oplist.jl")
 include("indexutils.jl")
-
-# Globals
-include("constants.jl")
-
 
 include("operations/extract.jl")
 include("scalar.jl")
