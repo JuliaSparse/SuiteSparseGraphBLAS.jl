@@ -1,2 +1,2 @@
 [SuiteSparseGraphBLAS]
-shared_lib = "../GraphBLAS/build/libgraphblas.so"
+shared_lib = "default"
