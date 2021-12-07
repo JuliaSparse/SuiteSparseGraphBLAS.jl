@@ -28,6 +28,38 @@ function asArray(f::Function, A::GBVecOrMat{T}; dropzeros=false, freeunpacked=fa
     return result
 end
 
+function asCSCVectors(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
+    colptr, rowidx, values =  _unpackcscmatrix!(A)
+    result = try
+        f(colptr, rowidx, values, A)
+    finally
+        if freeunpacked
+            ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), pointer(colptr))
+            ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), pointer(rowidx))
+            ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
+        else
+            _packcscmatrix!(A, colptr, rowidx, values)
+        end
+    end
+    return result
+end
+
+function asCSRVectors(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
+    rowptr, colidx, values =  _unpackcsrmatrix!(A)
+    result = try
+        f(rowptr, colidx, values, A)
+    finally
+        if freeunpacked
+            ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), pointer(rowptr))
+            ccall(:jl_free, Cvoid, (Ptr{libgb.GrB_Index},), pointer(colidx))
+            ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
+        else
+            _packcsrmatrix!(A, rowptr, colidx, values)
+        end
+    end
+    return result
+end
+
 function asSparseMatrixCSC(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
     colptr, rowidx, values =  _unpackcscmatrix!(A)
     array = SparseMatrixCSC{T, libgb.GrB_Index}(size(A, 1), size(A, 2), colptr, rowidx, values)
