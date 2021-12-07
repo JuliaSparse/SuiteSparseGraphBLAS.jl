@@ -10,6 +10,8 @@ steps:
           rootfs_treehash: "2a058481b567f0e91b9aa3ce4ad4f09e6419355a"
           uid: 1000
           gid: 1000
+          workspaces:
+            - "/cache:/cache"
     agents:
       queue: "juliaecosystem"
       sandbox.jl: "true"
@@ -18,7 +20,7 @@ steps:
     commands: |
       git clone --branch master https://github.com/DrTimothyAldenDavis/GraphBLAS.git
       cd GraphBLAS
-      make JOBS=8
+      make JOBS=16
       cd ../benchmarks
       julia --project -e ' using Pkg; Pkg.instantiate(); using SuiteSparseGraphBLAS; SuiteSparseGraphBLAS.set_lib!("../GraphBLAS/build/libgraphblas.so"); exit()'
       julia ./benchmarks/benchmarks.jl mtx.txt
