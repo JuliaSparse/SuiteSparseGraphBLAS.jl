@@ -20,6 +20,8 @@ function _packcscmatrix!(
     values::Vector{T};
     desc = nothing
     ) where {T}
+    colptr .-= 1
+    rowidx .-= 1
     colptrsize = length(colptr) * sizeof(libgb.GrB_Index)
     rowidxsize = length(rowidx) * sizeof(libgb.GrB_Index)
     valsize = length(values) * sizeof(T)
@@ -28,7 +30,7 @@ function _packcscmatrix!(
     values = Ref{Ptr{Cvoid}}(pointer(values))
     desc = _handledescriptor(desc)
 
-    libgb.GxB_Matrix_pack_CSC(
+    x = libgb.GxB_Matrix_pack_CSC(
         A,
         colptr,
         rowidx,
@@ -50,6 +52,8 @@ function _packcsrmatrix!(
     values::Vector{T};
     desc = nothing
     ) where {T}
+    rowptr .-= 1
+    colidx .-= 1
     rowptrsize = length(rowptr) * sizeof(libgb.GrB_Index)
     colidxsize = length(colidx) * sizeof(libgb.GrB_Index)
     valsize = length(values) * sizeof(T)
