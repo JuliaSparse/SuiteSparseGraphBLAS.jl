@@ -295,7 +295,7 @@ if length(ARGS) != 0
         else
             lines = readlines(ARGS[1])
             filter!((x) -> !occursin("#", x), lines)
-            singlebench.(readlines(ARGS[1]))
+            singlebench.(lines)
         end
     elseif tryparse(Int64, ARGS[1]) !== nothing
         singlebench(ARGS[1])

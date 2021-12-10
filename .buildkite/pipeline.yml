@@ -23,4 +23,4 @@ steps:
       make JOBS=16
       cd ../benchmarks
       julia --project -e ' using Pkg; Pkg.instantiate(); using SuiteSparseGraphBLAS; SuiteSparseGraphBLAS.set_lib!("../GraphBLAS/build/libgraphblas.so"); exit()'
-      julia ./benchmarks.jl mtx.txt
+      julia benchmarks.jl mtx.txt
