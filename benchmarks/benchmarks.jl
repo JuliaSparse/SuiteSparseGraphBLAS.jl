@@ -35,7 +35,7 @@ BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
 
 # Comment or uncomment this line to disable or enable MKLSparse respectively.
 # This will only work for SpMM and SpMV and only operates on CSC.
-using MKLSparse
+#using MKLSparse
 
 # Change this to change the size of the dense RHS of csrtimesfull and csctimesfull
 const sizefullrhs = [1,2,4]
