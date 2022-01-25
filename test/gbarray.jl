@@ -64,7 +64,7 @@
         @test m[10, 10] == 90
 
         #vectors
-        x = sprand(Float32, 100, 0.35)
+        x = sparse(Float32, 100, 0.35)
         v = GBVector(x)
         clear!(v)
         @test nnz(v) == 0
@@ -74,8 +74,8 @@
         @test v[100] == 10
 
         #steprange, mask, accum
-        v[10:10:100, mask = GBVector(rand(Bool, 10)), accum = BinaryOps.ISEQ] =
+        v[10:10:100, mask = GBVector([true, true, true, false, false,false, true, false, true, true]), accum = BinaryOps.ISEQ] =
         collect(1:10)
-        @test_broken v[10] == 1 && v[60] == 6 && v[100] == 1
+        @test v[10] == 1 && v[60] == 6 && v[100] == 1
     end
 end
