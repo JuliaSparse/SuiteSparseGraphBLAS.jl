@@ -64,7 +64,7 @@
         @test m[10, 10] == 90
 
         #vectors
-        x = sparse(Float32, 100, 0.35)
+        x = sprand(Float32, 100, 0.35)
         v = GBVector(x)
         clear!(v)
         @test nnz(v) == 0

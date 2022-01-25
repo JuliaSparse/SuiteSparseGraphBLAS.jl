@@ -5,7 +5,7 @@ using ..SuiteSparseGraphBLAS: GBMatrix, mutatingop, ∨, ∧
 using LinearAlgebra
 using Base.Broadcast
 
-export SparseMatrixGB
+export SparseMatrixGB, dropzeros, dropzeros!
 # Basic struct, Base, and SparseArrays definitions:
 ###################################################
 """
@@ -47,6 +47,11 @@ SparseMatrixGB(
 SparseMatrixGB(A::GBMatrix{T}, fill=zero(T)) where {T} = SparseMatrixGB{T}(A, fill)
 SparseMatrixGB(A::SparseArrays.SparseMatrixCSC{T}, fill=zero(T)) where{T} =
     SparseMatrixGB{T}(GBMatrix(A), fill)
+function SparseMatrixGB(A::Array{T}, fill=zero(T); dropzeros=false) where {T}
+    O = GBMatrix(A)
+    dropzeros && SparseArrays.dropzeros!(O)
+    return SparseMatrixGB{T}(O, fill)
+end
 Base.copy(A::SparseMatrixGB{Tv}) where {Tv} = SparseMatrixGB(copy(A.gbmat), copy(A.fillvalue))
 Base.size(A::SparseMatrixGB) = size(A.gbmat)
 SparseArrays.nnz(A::SparseMatrixGB) = SparseArrays.nnz(A.gbmat)
@@ -280,5 +285,6 @@ LinearAlgebra.kron!(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB) =
 LinearAlgebra.kron(C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB) =
     LinearAlgebra.kron(C.gbmat, A.gbmat, B.gbmat)
 
-
+SparseArrays.dropzeros(A::SparseMatrixGB) = SparseMatrixGB(SparseArrays.dropzeros(A.gbmat), A.fillvalue)
+SparseArrays.dropzeros!(A::SparseMatrixGB) = SparseArrays.dropzeros!(A.gbmat)
 end

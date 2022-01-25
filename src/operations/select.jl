@@ -93,3 +93,4 @@ end
 LinearAlgebra.tril(A::GBArray, k::Integer = 0) = select(tril, A, k)
 LinearAlgebra.triu(A::GBArray, k::Integer = 0) = select(triu, A, k)
 SparseArrays.dropzeros(A::GBArray) = select(nonzeros, A)
+SparseArrays.dropzeros!(A::GBArray) = select!(nonzeros, A)

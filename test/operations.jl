@@ -6,4 +6,5 @@
     include("operations/reduce.jl")
     include("operations/select.jl")
     include("operations/transpose.jl")
+    include("operations/broadcasting.jl")
 end

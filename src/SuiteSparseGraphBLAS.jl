@@ -95,7 +95,7 @@ include("chainrules/constructorrules.jl")
 #include("random.jl")
 include("misc.jl")
 include("asjulia.jl")
-include("sparsemat.jl")
+include("spmgb/sparsemat.jl")
 export SparseArrayCompat
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
