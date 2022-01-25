@@ -33,6 +33,19 @@
             test_rrule(mul, M, Y, Semirings.PLUS_MINUS)
             test_rrule(mul, M, N, Semirings.PLUS_MINUS)
         end
+
+        @testset "+.first" begin
+            test_frule(mul, M, Y, Semirings.PLUS_FIRST)
+            test_frule(mul, M, N, Semirings.PLUS_FIRST)
+            test_rrule(mul, M, Y ⊢ NoTangent(), Semirings.PLUS_FIRST)
+            test_rrule(mul, M, N ⊢ NoTangent(), Semirings.PLUS_FIRST)
+        end
+        @testset "+.second" begin
+            test_frule(mul, M, Y, Semirings.PLUS_SECOND)
+            test_frule(mul, M, N, Semirings.PLUS_SECOND)
+            test_rrule(mul, M ⊢ NoTangent(), Y, Semirings.PLUS_SECOND)
+            test_rrule(mul, M ⊢ NoTangent(), N, Semirings.PLUS_SECOND)
+        end
     end
 
     @testset "Sparse" begin
@@ -67,6 +80,18 @@
             test_frule(mul, M, N, Semirings.PLUS_MINUS)
             test_rrule(mul, M, Y, Semirings.PLUS_MINUS)
             test_rrule(mul, M, N, Semirings.PLUS_MINUS)
+        end
+        @testset "+.first" begin
+            test_frule(mul, M, Y, Semirings.PLUS_FIRST)
+            test_frule(mul, M, N, Semirings.PLUS_FIRST)
+            test_rrule(mul, M, Y ⊢ NoTangent(), Semirings.PLUS_FIRST)
+            test_rrule(mul, M, N ⊢ NoTangent(), Semirings.PLUS_FIRST)
+        end
+        @testset "+.second" begin
+            test_frule(mul, M, Y, Semirings.PLUS_SECOND)
+            test_frule(mul, M, N, Semirings.PLUS_SECOND)
+            test_rrule(mul, M ⊢ NoTangent(), Y, Semirings.PLUS_SECOND)
+            test_rrule(mul, M ⊢ NoTangent(), N, Semirings.PLUS_SECOND)
         end
     end
 end

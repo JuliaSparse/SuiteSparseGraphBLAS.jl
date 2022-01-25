@@ -1,14 +1,14 @@
 using SuiteSparseGraphBLAS
 function pagerank(
-    A,
+    A::SuiteSparseGraphBLAS.GBArray,
     d = reduce(+, A; dims=2),
     α = 0.85,
     maxiters = 100,
-    ϵ = 1.0e-4
+    ϵ = 1.0e-6
 )
     n = size(A, 1)
-    r = GBVector{Float32}(n)
-    t = GBVector{Float32}(n)
+    r = GBVector{Float64}(n)
+    t = GBVector{Float64}(n)
     d[:, accum=/] = α
     r[:] = 1.0 / n
     teleport = (1 - α) / n

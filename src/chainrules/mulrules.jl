@@ -117,11 +117,58 @@ function rrule(
 end
 
 # PLUS_FIRST:
+function frule(
+    (_, ΔA, ΔB, _),
+    ::typeof(mul),
+    A::GBArray,
+    B::GBArray,
+    ::typeof(Semirings.PLUS_FIRST)
+)
+    Ω = mul(A, B, Semirings.PLUS_FIRST)
+    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), Semirings.PLUS_FIRST)
+    return Ω, ∂Ω
+end
+
+function rrule(
+    ::typeof(mul),
+    A::GBArray,
+    B::GBArray,
+    ::typeof(Semirings.PLUS_FIRST)
+)
+    function mulpullback(ΔΩ)
+        ∂A = mul(unthunk(ΔΩ), B', Semirings.PLUS_FIRST; mask=A)
+        ∂B = NoTangent() # perhaps this should be ZeroTangent(), not sure.
+        return NoTangent(), ∂A, ∂B, NoTangent()
+    end
+    return mul(A, B, Semirings.PLUS_FIRST), mulpullback
+end
 
 # PLUS_SECOND:
+function frule(
+    (_, ΔA, ΔB, _),
+    ::typeof(mul),
+    A::GBArray,
+    B::GBArray,
+    ::typeof(Semirings.PLUS_SECOND)
+)
+    Ω = mul(A, B, Semirings.PLUS_SECOND)
+    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), Semirings.PLUS_SECOND)
+    return Ω, ∂Ω
+end
 
-
-#FIRST/SECOND rules:
+function rrule(
+    ::typeof(mul),
+    A::GBArray,
+    B::GBArray,
+    ::typeof(Semirings.PLUS_SECOND)
+)
+    function mulpullback(ΔΩ)
+        ∂A = NoTangent()
+        ∂B = mul(A', unthunk(ΔΩ), Semirings.PLUS_SECOND; mask=B)
+        return NoTangent(), ∂A, ∂B, NoTangent()
+    end
+    return mul(A, B, Semirings.PLUS_SECOND), mulpullback
+end
 
 # TROPICAL REDUCERS:
 
