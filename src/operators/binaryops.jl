@@ -49,6 +49,24 @@ function _addbinaryop(
     opref = Ref{libgb.GrB_BinaryOp}()
     binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{T}, Ref{U}, Ref{V}))
     libgb.GB_BinaryOp_new(opref, binaryopfn_C, ztype, xtype, ytype, op.name)
+    op.typedops[(U, V)] = TypedBinaryOperator{U, V, T}(opref[])
+    return nothing
+end
+
+function _addbinaryop(
+    op::AbstractBinaryOp,
+    fn::Function,
+    ztype::Type{T},
+    xtype::Type{U},
+    ytype::Type{V}
+) where {T,U,V}
+    function binaryopfn(z, x, y)
+        unsafe_store!(z, fn(x, y))
+        return nothing
+    end
+    opref = Ref{libgb.GrB_BinaryOp}()
+    binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{T}, Ref{U}, Ref{V}))
+    libgb.GB_BinaryOp_new(opref, binaryopfn_C, toGBType(ztype), toGBType(xtype), toGBType(ytype), op.name)
     op.typedops[(U, V)] = TypedBinaryOperator{xtype, ytype, ztype}(opref[])
     return nothing
 end

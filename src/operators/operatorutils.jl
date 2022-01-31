@@ -72,23 +72,23 @@ function Base.getindex(o::AbstractOp, t::DataType)
     end
 end
 
-function Base.getindex(o::AbstractBinaryOp, t1::DataType, t2::DataType)
+function Base.getindex(o::Union{AbstractSemiring, AbstractBinaryOp}, t1::DataType, t2::DataType)
     _isloaded(o) || _load(o)
     if (Any, Any) ∈ keys(o.typedops)
         getindex(o.typedops, (Any, Any))
     else
         if !haskey(o.typedops, (t1, t2))
-            addtoop(o, (t1, t2))
+            addtoop(o, t1, t2)
         end
         getindex(o.typedops, (t1, t2))
     end
 end
-Base.getindex(o::AbstractBinaryOp, tup::Tuple{DataType, DataType}) = o[tup...]
-Base.getindex(o::AbstractBinaryOp, t::DataType) = o[t, t]
+Base.getindex(o::Union{AbstractSemiring, AbstractBinaryOp}, tup::Tuple{DataType, DataType}) = o[tup...]
+Base.getindex(o::Union{AbstractBinaryOp, AbstractSemiring}, t::DataType) = o[t, t]
 
-Base.setindex!(o::AbstractBinaryOp, x, tup::Tuple{DataType, DataType}) = setindex!(o.typedops, x, tup)
-Base.setindex!(o::AbstractBinaryOp, x, t1::DataType, t2::DataType) = setindex!(o, x, (t1, t2))
-Base.setindex!(o::AbstractBinaryOp, x, t::DataType) = setindex!(o, x, (t, t))
+Base.setindex!(o::Union{AbstractSemiring, AbstractBinaryOp}, x, tup::Tuple{DataType, DataType}) = setindex!(o.typedops, x, tup)
+Base.setindex!(o::Union{AbstractSemiring, AbstractBinaryOp}, x, t1::DataType, t2::DataType) = setindex!(o, x, (t1, t2))
+Base.setindex!(o::Union{AbstractSemiring, AbstractBinaryOp}, x, t::DataType) = setindex!(o, x, (t, t))
 
 function addtoop(op::AbstractUnaryOp, type)
     f = Base.invokelatest(juliaop, op)
@@ -114,4 +114,6 @@ function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
 end
 
 juliaop(op) = nothing
-juliaop(op::AbstractMonoid) = juliaop(op(op))
+juliaop(op::AbstractMonoid) = juliaop(binaryop(op))
+
+# returntype(A, B, )

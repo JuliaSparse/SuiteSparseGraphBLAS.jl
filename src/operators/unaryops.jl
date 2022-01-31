@@ -7,8 +7,10 @@ export UnaryOp
 function UnaryOp(name)
     if isGxB(name) || isGrB(name) #If it's a GrB/GxB op we don't want the prefix
         simplifiedname = name[5:end]
+        builtin = true
     else
         simplifiedname = name
+        builtin = false
     end
     tname = Symbol(simplifiedname * "_T")
     simplifiedname = Symbol(simplifiedname)
@@ -81,7 +83,7 @@ function _addunaryop(op::AbstractUnaryOp, fn::Function, ztype::GBType{T}, xtype:
     opref = Ref{libgb.GrB_UnaryOp}()
     unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{T}, Ref{U}))
     libgb.GB_UnaryOp_new(opref, unaryopfn_C, ztype, xtype, op.name)
-    op.typedops[U] = TypedUnaryOperator{xtype, ztype}(opref[])
+    op.typedops[U] = TypedUnaryOperator{U, T}(opref[])
     return nothing
 end
 

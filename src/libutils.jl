@@ -31,6 +31,38 @@ function suffix(T)
     end
 end
 
+function suffix(T::Symbol)
+    if T === :Bool
+        return "BOOL"
+    elseif T === :Int8
+        return "INT8"
+    elseif T === :UInt8
+        return "UINT8"
+    elseif T === :Int16
+        return "INT16"
+    elseif T === :UInt16
+        return "UINT16"
+    elseif T === :Int32
+        return "INT32"
+    elseif T === :UInt32
+        return "UINT32"
+    elseif T === :Int64
+        return "INT64"
+    elseif T === :UInt64
+        return "UINT64"
+    elseif  T === :Float32
+        return "FP32"
+    elseif T === :Float64
+        return "FP64"
+    elseif T === :ComplexF32
+        return "FC32"
+    elseif T === :ComplexF64
+        return "FC64"
+    else
+        throw(ArgumentError("Not a valid GrB data type"))
+    end
+end
+
 function towrappertype(T)
     if T == Bool
         return :Bool

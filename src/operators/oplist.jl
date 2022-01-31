@@ -634,7 +634,7 @@ Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
 * Terminal: -∞
 """
 Monoids.MIN_MONOID
-op(::typeof(Monoids.MIN_MONOID)) = BinaryOps.MIN
+binaryop(::typeof(Monoids.MIN_MONOID)) = BinaryOps.MIN
 Monoids.Monoid(::typeof(min)) = Monoids.MIN_MONOID
 """
 Max monoid: `f(x::ℝ, y::ℝ)::ℝ = max(x, y)`
@@ -642,7 +642,7 @@ Max monoid: `f(x::ℝ, y::ℝ)::ℝ = max(x, y)`
 * Terminal: +∞
 """
 Monoids.MAX_MONOID
-op(::typeof(Monoids.MAX_MONOID)) = BinaryOps.MAX
+binaryop(::typeof(Monoids.MAX_MONOID)) = BinaryOps.MAX
 Monoids.Monoid(::typeof(max)) = Monoids.MAX_MONOID
 """
 Plus monoid: `f(x::T, y::T)::T = x + y`
@@ -650,7 +650,7 @@ Plus monoid: `f(x::T, y::T)::T = x + y`
 * Terminal: nothing
 """
 Monoids.PLUS_MONOID
-op(::typeof(Monoids.PLUS_MONOID)) = BinaryOps.PLUS
+binaryop(::typeof(Monoids.PLUS_MONOID)) = BinaryOps.PLUS
 Monoids.Monoid(::typeof(+)) = Monoids.PLUS_MONOID
 """
 Times monoid: `f(x::T, y::T)::T = xy`
@@ -658,7 +658,7 @@ Times monoid: `f(x::T, y::T)::T = xy`
 * Terminal: 0 for non Floating-point numbers.
 """
 Monoids.TIMES_MONOID
-op(::typeof(Monoids.TIMES_MONOID)) = BinaryOps.TIMES
+binaryop(::typeof(Monoids.TIMES_MONOID)) = BinaryOps.TIMES
 Monoids.Monoid(::typeof(*)) = Monoids.TIMES_MONOID
 """
 Any monoid: `f(x::T, y::T)::T = x or y`
@@ -666,7 +666,7 @@ Any monoid: `f(x::T, y::T)::T = x or y`
 * Terminal: any
 """
 Monoids.ANY_MONOID
-op(::typeof(Monoids.ANY_MONOID)) = BinaryOps.ANY
+binaryop(::typeof(Monoids.ANY_MONOID)) = BinaryOps.ANY
 Monoids.Monoid(::typeof(any)) = Monoids.ANY_MONOID
 """
 Logical OR monoid: `f(x::Bool, y::Bool)::Bool = x ∨ y`
@@ -674,7 +674,7 @@ Logical OR monoid: `f(x::Bool, y::Bool)::Bool = x ∨ y`
 * Terminal: true
 """
 Monoids.LOR_MONOID
-op(::typeof(Monoids.LOR_MONOID)) = BinaryOps.LOR
+binaryop(::typeof(Monoids.LOR_MONOID)) = BinaryOps.LOR
 Monoids.Monoid(::typeof(∨)) = Monoids.LOR_MONOID
 """
 Logical AND monoid: `f(x::Bool, y::Bool)::Bool = x ∧ y`
@@ -682,7 +682,7 @@ Logical AND monoid: `f(x::Bool, y::Bool)::Bool = x ∧ y`
 * Terminal: false
 """
 Monoids.LAND_MONOID
-op(::typeof(Monoids.LAND_MONOID)) = BinaryOps.LAND
+binaryop(::typeof(Monoids.LAND_MONOID)) = BinaryOps.LAND
 Monoids.Monoid(::typeof(∧)) = Monoids.LAND_MONOID
 """
 Logical XOR monoid: `f(x::Bool, y::Bool)::Bool = x ⊻ y`
@@ -690,7 +690,7 @@ Logical XOR monoid: `f(x::Bool, y::Bool)::Bool = x ⊻ y`
 * Terminal: nothing
 """
 Monoids.LXOR_MONOID
-op(::typeof(Monoids.LXOR_MONOID)) = BinaryOps.LXOR
+binaryop(::typeof(Monoids.LXOR_MONOID)) = BinaryOps.LXOR
 Monoids.Monoid(::typeof(lxor)) = Monoids.LXOR_MONOID
 """
 Logical XNOR monoid: `f(x::Bool, y::Bool)::Bool = x == y`
@@ -703,14 +703,14 @@ Monoids.LXNOR_MONOID
 Boolean Equality `f(x::Bool, y::Bool)::Bool = x == y`.
 """
 Monoids.EQ_MONOID
-op(::typeof(Monoids.EQ_MONOID)) = BinaryOps.EQ
+binaryop(::typeof(Monoids.EQ_MONOID)) = BinaryOps.EQ
 Monoids.Monoid(::typeof(==)) = Monoids.EQ_MONOID
 """
 Bitwise OR monoid: `f(x::ℤ, y::ℤ)::ℤ = x|y`
 * Identity: All bits `0`.* Terminal: All bits `1`.
 """
 Monoids.BOR_MONOID
-op(::typeof(Monoids.BOR_MONOID)) = BinaryOps.BOR
+binaryop(::typeof(Monoids.BOR_MONOID)) = BinaryOps.BOR
 Monoids.Monoid(::typeof(|)) = Monoids.BOR_MONOID
 """
 Bitwise AND monoid: `f(x::ℤ, y::ℤ)::ℤ = x&y`
@@ -718,7 +718,7 @@ Bitwise AND monoid: `f(x::ℤ, y::ℤ)::ℤ = x&y`
 * Terminal: All bits `0`.
 """
 Monoids.BAND_MONOID
-op(::typeof(Monoids.BAND_MONOID)) = BinaryOps.BAND
+binaryop(::typeof(Monoids.BAND_MONOID)) = BinaryOps.BAND
 Monoids.Monoid(::typeof(&)) = Monoids.BAND_MONOID
 """
 Bitwise XOR monoid: `f(x::ℤ, y::ℤ)::ℤ = x^y`
@@ -726,7 +726,7 @@ Bitwise XOR monoid: `f(x::ℤ, y::ℤ)::ℤ = x^y`
 * Terminal: nothing
 """
 Monoids.BXOR_MONOID
-op(::typeof(Monoids.BXOR_MONOID)) = BinaryOps.BXOR
+binaryop(::typeof(Monoids.BXOR_MONOID)) = BinaryOps.BXOR
 Monoids.Monoid(::typeof(⊻)) = Monoids.BXOR_MONOID
 """
 Bitwise XNOR monoid: `f(x::ℤ, y::ℤ)::ℤ = ~(x^y)`
@@ -734,7 +734,7 @@ Bitwise XNOR monoid: `f(x::ℤ, y::ℤ)::ℤ = ~(x^y)`
 * Terminal: nothing
 """
 Monoids.BXNOR_MONOID
-op(::typeof(Monoids.BXNOR_MONOID)) = BinaryOps.BXNOR
+binaryop(::typeof(Monoids.BXNOR_MONOID)) = BinaryOps.BXNOR
 Monoids.Monoid(::typeof(!⊻)) = Monoids.BXNOR_MONOID
 
 mulop(rig::AbstractSemiring) = nothing

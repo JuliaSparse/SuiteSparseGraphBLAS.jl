@@ -96,6 +96,9 @@ include("chainrules/constructorrules.jl")
 include("misc.jl")
 include("asjulia.jl")
 include("spmgb/sparsemat.jl")
+include("consts.jl")
+using .Consts
+
 export SparseArrayCompat
 export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules

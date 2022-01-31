@@ -18,6 +18,7 @@ end
 
 optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
 
+# TODO: REMOVE
 function inferoutputtype(::GBArray{T}, ::GBArray{U}, op) where {T, U}
     t = optype(T, U)
     if op isa Tuple
@@ -28,26 +29,31 @@ function inferoutputtype(::GBArray{T}, ::GBArray{U}, op) where {T, U}
     return ztype(op, t)
 end
 
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractOp) where {T, U}
-    t = optype(T, U)
-    return ztype(op, t)
+function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractBinaryOp) where {T, U}
+    return Base._return_type(juliaop(op), (T, U))
+end
+
+
+
+function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractSemiring) where {T, U}
+    bintype = Base._return_type(mulop(op), (T, U))
+    return Base._return_type(addop(op), (bintype, bintype))
 end
 function inferoutputtype(::GBArray{T}, op::AbstractOp) where {T}
-    return ztype(op, T)
+    return Base._return_type(juliaop(op), (T,))
 end
-function inferoutputtype(::GBArray{T}, op) where {T}
-    return ztype(UnaryOp(op), T)
-end
-function inferoutputtype(::GBArray{T}, ::AbstractTypedOp{Z}) where {T, Z}
-    return Z
-end
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, ::AbstractTypedOp{Z}) where {T, U, Z}
-    return Z
-end
+
+# function inferoutputtype(::GBArray{T}, ::AbstractTypedOp{Z}) where {T, Z}
+#     return Z
+# end
+# function inferoutputtype(::GBArray{T}, ::GBArray{U}, ::AbstractTypedOp{Z}) where {T, U, Z}
+#     return Z
+# end
 
 function _handlenothings(kwargs...)
     return (x === nothing ? C_NULL : x for x in kwargs)
 end
+
 """
     xtype(op::GrBOp)::DataType
 

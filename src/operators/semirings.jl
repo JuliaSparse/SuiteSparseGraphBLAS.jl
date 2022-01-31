@@ -17,9 +17,9 @@ function Semiring(name)
     containername, exportedname = _semiringnames(name)
     structquote = quote
         struct $containername <: AbstractSemiring
-            typedops::Dict{DataType, TypedSemiring}
+            typedops::Dict{Tuple{DataType, DataType}, TypedSemiring}
             name::String
-            $containername() = new(Dict{DataType, TypedSemiring}(), $name)
+            $containername() = new(Dict{Tuple{DataType, DataType}, TypedSemiring}(), $name)
         end
     end
     @eval($structquote)
@@ -271,7 +271,7 @@ end
 function _addsemiring(rig::AbstractSemiring, add::TypedMonoid, mul::TypedBinaryOperator)
     rigref = Ref{TypedSemiring}()
     libgb.GrB_Semiring_new(rigref, add, mul)
-    rig.typedops[xtype(add)] = TypedSemiring(rigref[])
+    rig.typedops[xtype(add), ytype(add)] = TypedSemiring(rigref[])
     return nothing
 end
 
@@ -845,34 +845,34 @@ function _load(rig::AbstractSemiring)
     ]
     name = rig.name
     if name ∈ booleans
-        rig.typedops[Bool] = TypedSemiring(load_global(name * "_BOOL", libgb.GrB_Semiring))
+        rig.typedops[Bool,Bool] = TypedSemiring(load_global(name * "_BOOL", libgb.GrB_Semiring))
     end
 
     if name ∈ integers
-        rig.typedops[Int8] = TypedSemiring(load_global(name * "_INT8", libgb.GrB_Semiring))
-        rig.typedops[Int16] = TypedSemiring(load_global(name * "_INT16", libgb.GrB_Semiring))
-        rig.typedops[Int32] = TypedSemiring(load_global(name * "_INT32", libgb.GrB_Semiring))
-        rig.typedops[Int64] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
+        rig.typedops[Int8,Int8] = TypedSemiring(load_global(name * "_INT8", libgb.GrB_Semiring))
+        rig.typedops[Int16,Int16] = TypedSemiring(load_global(name * "_INT16", libgb.GrB_Semiring))
+        rig.typedops[Int32,Int32] = TypedSemiring(load_global(name * "_INT32", libgb.GrB_Semiring))
+        rig.typedops[Int64,Int64] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
     end
 
     if name ∈ unsignedintegers
-        rig.typedops[UInt8] = TypedSemiring(load_global(name * "_UINT8", libgb.GrB_Semiring))
-        rig.typedops[UInt16] = TypedSemiring(load_global(name * "_UINT16", libgb.GrB_Semiring))
-        rig.typedops[UInt32] = TypedSemiring(load_global(name * "_UINT32", libgb.GrB_Semiring))
-        rig.typedops[UInt64] = TypedSemiring(load_global(name * "_UINT64", libgb.GrB_Semiring))
+        rig.typedops[UInt8,UInt8] = TypedSemiring(load_global(name * "_UINT8", libgb.GrB_Semiring))
+        rig.typedops[UInt16,UInt16] = TypedSemiring(load_global(name * "_UINT16", libgb.GrB_Semiring))
+        rig.typedops[UInt32,UInt32] = TypedSemiring(load_global(name * "_UINT32", libgb.GrB_Semiring))
+        rig.typedops[UInt64,UInt64] = TypedSemiring(load_global(name * "_UINT64", libgb.GrB_Semiring))
     end
 
     if name ∈ floats
-        rig.typedops[Float32] = TypedSemiring(load_global(name * "_FP32", libgb.GrB_Semiring))
-        rig.typedops[Float64] = TypedSemiring(load_global(name * "_FP64", libgb.GrB_Semiring))
+        rig.typedops[Float32,Float32] = TypedSemiring(load_global(name * "_FP32", libgb.GrB_Semiring))
+        rig.typedops[Float64,Float64] = TypedSemiring(load_global(name * "_FP64", libgb.GrB_Semiring))
     end
     if name ∈ positionals
-        rig.typedops[Any] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
+        rig.typedops[Any, Any] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
     end
     name = replace(name, "GrB_" => "GxB_")
     name = replace(name, "_SEMIRING" => "")
     if name ∈ complexes
-        rig.typedops[ComplexF32] = TypedSemiring(load_global(name * "_FC32", libgb.GrB_Semiring))
-        rig.typedops[ComplexF64] = TypedSemiring(load_global(name * "_FC64", libgb.GrB_Semiring))
+        rig.typedops[ComplexF32,ComplexF32] = TypedSemiring(load_global(name * "_FC32", libgb.GrB_Semiring))
+        rig.typedops[ComplexF64,ComplexF64] = TypedSemiring(load_global(name * "_FC64", libgb.GrB_Semiring))
     end
 end
