@@ -1,5 +1,3 @@
-
-
 struct UnaryOp{F} <: AbstractUnaryOp
     juliaop::F
 end
@@ -26,7 +24,7 @@ function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     if builtin
         constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(insym)), $(esc(outsym))}($builtin, false, $namestr, libgb.GrB_UnaryOp(C_NULL)))
     else
-        constquote = :(const $(esc(namesym)) = TypedUnaryOperator($(esc(jlfunc)), $(esc(outsym)), $(esc(insym))))
+        constquote = :(const $(esc(namesym)) = TypedUnaryOperator($(esc(jlfunc)), $(esc(insym)), $(esc(outsym))))
     end
     return quote
         $(constquote)

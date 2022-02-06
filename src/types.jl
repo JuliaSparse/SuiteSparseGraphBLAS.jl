@@ -1,18 +1,39 @@
 mutable struct TypedUnaryOperator{X, Z} <: AbstractTypedOp{Z}
+    builtin::Bool
+    loaded::Bool
+    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
     p::libgb.GrB_UnaryOp
-    function TypedUnaryOperator{X, Z}(p) where {X, Z}
-        unop = new(p)
-        function f(op)
+    function TypedUnaryOperator{X, Z}(builtin, loaded, typestr, p) where {X, Z}
+        unop = new(builtin, loaded, typestr, p)
+        return finalizer(unop) do op
             libgb.GrB_UnaryOp_free(Ref(op.p))
         end
-        return finalizer(f, unop)
     end
 end
-function TypedUnaryOperator(p::libgb.GrB_UnaryOp)
-    return TypedUnaryOperator{xtype(p), ztype(p)}(p)
-end
-Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator) = op.p
 
+function TypedUnaryOperator(fn::Function, ::Type{X}, ::Type{Z}) where {X, Z}
+    function unaryopfn(z, x)
+        unsafe_store!(z, fn(x))
+        return nothing
+    end
+    opref = Ref{libgb.GrB_UnaryOp}()
+    unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{Z}, Ref{X}))
+    libgb.GB_UnaryOp_new(opref, unaryopfn_C, toGBType(Z), toGBType(X))
+    return TypedUnaryOperator{X, Z}(false, true, string(fn), opref[])
+end
+
+function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator)
+    # We can lazily load the built-ins since they are already constants. 
+    # Could potentially do this with UDFs, but probably not worth the effort.
+    if op.builtin && !op.loaded
+        op.p = load_global(typestr, libgb.GrB_BinaryOp)
+    end
+    if !op.loaded
+        error("This operator could not be loaded, and is invalid.")
+    else
+        return op.p
+    end
+end
 mutable struct TypedBinaryOperator{X, Y, Z} <: AbstractTypedOp{Z}
     p::libgb.GrB_BinaryOp
     function TypedBinaryOperator{X, Y, Z}(p) where {X, Y, Z}

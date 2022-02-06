@@ -36,6 +36,36 @@ function getoperator(op, t)
     end
 end
 
+
+function binaryop end
+function monoid end
+const Itypes = (:Int8, :Int16, :Int32, :Int64, :UInt8, :UInt16, :UInt32, :UInt64)
+const Ftypes = (:Float32, :Float64)
+const Ztypes = (:ComplexF32, :ComplexF64)
+const FZtypes = (Ftypes..., Ztypes...)
+const Rtypes = (Itypes..., Ftypes..., :Bool)
+const Ntypes = (:Int64, ) # :Int32 as well, but can't disambiguate, and hopefully unecessary
+const Ttypes = (Rtypes..., Ztypes...)
+function symtotype(sym)
+    if sym === :I
+        return Itypes
+    elseif sym === :F
+        return Ftypes
+    elseif sym === :Z
+        return Ztypes
+    elseif sym === :R
+        return Rtypes
+    elseif sym === :N
+        return Ntypes
+    elseif sym === :FZ
+        return FZtypes
+    elseif sym === :T
+        return Ttypes
+    else
+        return sym
+    end
+end
+
 getaccum(::Nothing, t) = C_NULL
 getaccum(op::Function, t) = getoperator(BinaryOp(op), t)
 getaccum(op, t) = getoperator(op, t)

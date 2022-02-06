@@ -1,5 +1,6 @@
 module Consts
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, libgb, libgb.GrB_UnaryOp, libgb.GrB_BinaryOp, libgb.GrB_Monoid, suffix, AbstractTypedOp, load_global, AbstractUnaryOp
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, libgb, libgb.GrB_UnaryOp, libgb.GrB_BinaryOp, libgb.GrB_Monoid, suffix, AbstractTypedOp, load_global, AbstractUnaryOp,
+AbstractBinaryOp, AbstractMonoid, AbstractSemiring
 using SpecialFunctions
 export @unop, @binop, @monoid, @rig
 function juliaop end
@@ -44,3 +45,8 @@ include("operators/binaryops2.jl")
 include("operators/monoids2.jl")
 include("operators/semirings2.jl")
 end
+
+# module testing
+# using ..Consts
+# Consts.@unop atand F=>F
+# end
