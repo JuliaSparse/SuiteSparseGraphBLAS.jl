@@ -1,62 +1,47 @@
-mutable struct TypedUnaryOperator{X, Z} <: AbstractTypedOp{Z}
-    builtin::Bool
-    loaded::Bool
-    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
-    p::libgb.GrB_UnaryOp
-    function TypedUnaryOperator{X, Z}(builtin, loaded, typestr, p) where {X, Z}
-        unop = new(builtin, loaded, typestr, p)
-        return finalizer(unop) do op
-            libgb.GrB_UnaryOp_free(Ref(op.p))
-        end
-    end
-end
+
 
 struct UnaryOp{F} <: AbstractUnaryOp
     juliaop::F
 end
+juliaop(op::UnaryOp) = op.juliaop
 
-function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator) 
-    if op.builtin && !op.loaded
-        op.p = load_global(typestr, libgb.GrB_BinaryOp)
-    end
-    if !op.loaded
-        error("This operator could not be loaded, and is invalid.")
-    else
-        return op.p
-    end
-end
 
-function typedunopconstexpr(dispatchstruct, builtin, namestr, intype, outtype)
+function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     # Complex ops must always be GxB prefixed
     if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
         namestr = "GxB" * namestr[4:end]
     end
+    if intype === :Any && outtype ∈ Ntypes # POSITIONAL ops use the output type for suffix
+        namestr = namestr * "_$(suffix(outtype))"
+    else
+        namestr = namestr * "_$(suffix(intype))"
+    end
     if builtin
-        if intype === :Any && outtype ∈ Ntypes # POSITIONAL ops use the output type for suffix
-            namestr = namestr * "_$(suffix(outtype))"
-        else
-            namestr = namestr * "_$(suffix(intype))"
-        end
         namesym = Symbol(namestr[5:end])
     else
         namesym = Symbol(namestr)
     end
     insym = Symbol(intype)
     outsym = Symbol(outtype)
+    if builtin
+        constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(insym)), $(esc(outsym))}($builtin, false, $namestr, libgb.GrB_UnaryOp(C_NULL)))
+    else
+        constquote = :(const $(esc(namesym)) = TypedUnaryOperator($(esc(jlfunc)), $(esc(outsym)), $(esc(insym))))
+    end
     return quote
-        const $(esc(namesym)) = TypedUnaryOperator{$(esc(insym)), $(esc(outsym))}($builtin, false, $namestr, libgb.GrB_UnaryOp(C_NULL))
-        (::$(esc(dispatchstruct)))(::Type{$(esc(insym))}) = $(esc(namesym))
+        $(constquote)
+        (::UnaryOp{$(esc(:typeof))($(esc(jlfunc)))})(::Type{$(esc(insym))}) = $(esc(namesym))
     end
 end
 
-function typedunopexprs(dispatchstruct, builtin, namestr, intypes, outtypes)
+function typedunopexprs(jlfunc, builtin, namestr, intypes, outtypes)
     if intypes isa Symbol
         intypes = [intypes]
     end
     if outtypes isa Symbol
         outtypes = [outtypes]
     end
-    exprs = typedunopconstexpr.(Ref(dispatchstruct), Ref(builtin), Ref(namestr), intypes, outtypes)
+    exprs = typedunopconstexpr.(Ref(jlfunc), Ref(builtin), Ref(namestr), intypes, outtypes)
     if exprs isa Expr
         return exprs
     else
@@ -67,6 +52,8 @@ function typedunopexprs(dispatchstruct, builtin, namestr, intypes, outtypes)
 end
 
 macro unop(expr...)
+    # If the first token is :new then we want to create a new dummy function. I don't love this feature, but it's necessary for things like 
+    # second, secondi, firsti, etc which don't have equivalent functions in Julia.
     if first(expr) === :new
         newfunc = :(function $(esc(expr[2])) end)
         expr = expr[2:end]
@@ -74,28 +61,31 @@ macro unop(expr...)
         newfunc = :()
     end
     jlfunc = first(expr)
-    #dispatchfunc = Symbol(uppercase(string(first(expr))))
-    name = string(expr[2])
+    if expr[2] isa Symbol
+        name = string(expr[2])
+        types = expr[3]
+    else # if we aren't given a name then we'll assume it's just uppercased of the function.
+        name = uppercase(string(jlfunc))
+        types = expr[2]
+    end
     if isGxB(name) || isGrB(name)
         builtin = true
     else
         builtin = false
     end
-    dispatchstruct = Symbol((builtin ? name[5:end] : name) * "_T")
     dispatchfunc = Symbol(builtin ? name[5:end] : name)
-    types = expr[3]
     if types.head !== :call || types.args[1] !== :(=>)
         error("Type constraints should be in the form <Symbol>=><Symbol>")
     end
     intypes = symtotype(types.args[2])
     outtypes = symtotype(types.args[3])
-    constquote = typedunopexprs(dispatchstruct, builtin, name, intypes, outtypes)
+    constquote = typedunopexprs(jlfunc, builtin, name, intypes, outtypes)
     dispatchquote = quote
-        struct $(esc(dispatchstruct)) <: AbstractUnaryOp end
-        const $(esc(dispatchfunc)) = $(esc(dispatchstruct))()
+        global UnaryOp
         $newfunc
-        Consts.unaryop(::$(esc(:typeof))($(esc(jlfunc)))) = $(esc(dispatchfunc))
-        Consts.juliaop(::$(esc(dispatchstruct))) = $(esc(jlfunc))
+        const $(esc(dispatchfunc)) = UnaryOp($(esc(jlfunc)))
+        global unaryop
+        unaryop(::$(esc(:typeof))($(esc(jlfunc)))) = $(esc(dispatchfunc))
         $constquote
     end
     return dispatchquote
