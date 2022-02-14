@@ -33,6 +33,9 @@ function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractBinaryOp) where
     return Base._return_type(juliaop(op), (T, U))
 end
 
+function inferoutputtype(::GBArray{T}, op::AbstractBinaryOp) where {T}
+    return ztype(op(T))
+end
 
 
 function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractSemiring) where {T, U}

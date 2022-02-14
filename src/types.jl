@@ -18,7 +18,7 @@ function TypedUnaryOperator(fn::Function, ::Type{X}, ::Type{Z}) where {X, Z}
     end
     opref = Ref{libgb.GrB_UnaryOp}()
     unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{Z}, Ref{X}))
-    libgb.GB_UnaryOp_new(opref, unaryopfn_C, toGBType(Z), toGBType(X))
+    libgb.GB_UnaryOp_new(opref, unaryopfn_C, toGBType(Z), toGBType(X), string(fn))
     return TypedUnaryOperator{X, Z}(false, true, string(fn), opref[])
 end
 
@@ -26,7 +26,8 @@ function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator)
     # We can lazily load the built-ins since they are already constants. 
     # Could potentially do this with UDFs, but probably not worth the effort.
     if op.builtin && !op.loaded
-        op.p = load_global(typestr, libgb.GrB_BinaryOp)
+        op.p = load_global(op.typestr, libgb.GrB_UnaryOp)
+        op.loaded = true
     end
     if !op.loaded
         error("This operator could not be loaded, and is invalid.")
@@ -35,34 +36,78 @@ function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator)
     end
 end
 mutable struct TypedBinaryOperator{X, Y, Z} <: AbstractTypedOp{Z}
+    builtin::Bool
+    loaded::Bool
+    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
     p::libgb.GrB_BinaryOp
-    function TypedBinaryOperator{X, Y, Z}(p) where {X, Y, Z}
-        binop = new(p)
-        function f(op)
+    function TypedBinaryOperator{X, Y, Z}(builtin, loaded, typestr, p) where {X, Y, Z}
+        binop = new(builtin, loaded, typestr, p)
+        return finalizer(binop) do op
             libgb.GrB_BinaryOp_free(Ref(op.p))
         end
-        return finalizer(f, binop)
     end
 end
-function TypedBinaryOperator(p::libgb.GrB_BinaryOp)
-    return TypedBinaryOperator{xtype(p), ytype(p), ztype(p)}(p)
+function TypedBinaryOperator(fn::Function, ::Type{X}, ::Type{Y} ::Type{Z}) where {X, Y, Z}
+    function binaryopfn(z, x, y)
+        unsafe_store!(z, fn(x, y))
+        return nothing
+    end
+    opref = Ref{libgb.GrB_BinaryOp}()
+    binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{Z}, Ref{X}, Ref{Y}))
+    libgb.GB_BinaryOp_new(opref, binaryopfn_C, toGBType(Z), toGBType(X), toGBType(Y), string(fn))
+    return TypedBinaryOperator{X, Y, Z}(false, true, string(fn), opref[])
 end
-Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator) = op.p
 
-mutable struct TypedMonoid{X, Y, Z} <: AbstractTypedOp{Z}
-    p::libgb.GrB_Monoid
-    function TypedMonoid{X, Y, Z}(p) where {X, Y, Z}
-        monoid = new(p)
-        function f(m)
-            libgb.GrB_Monoid_free(Ref(m.p))
-        end
-        return finalizer(f, monoid)
+function Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator)
+    # We can lazily load the built-ins since they are already constants. 
+    # Could potentially do this with UDFs, but probably not worth the effort.
+    if op.builtin && !op.loaded
+        op.p = load_global(op.typestr, libgb.GrB_UnaryOp)
+        op.loaded = true
+    end
+    if !op.loaded
+        error("This operator could not be loaded, and is invalid.")
+    else
+        return op.p
     end
 end
-function TypedMonoid(p::libgb.GrB_Monoid)
-    return TypedMonoid{xtype(p), ytype(p), ztype(p)}(p)
+
+mutable struct TypedMonoid{Z, T} <: AbstractTypedOp{Z}
+    builtin::Bool
+    loaded::Bool
+    typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
+    p::libgb.GrB_Monoid
+    identity::Z
+    terminal::T
+    function TypedMonoid{Z, T}(builtin, loaded, typestr, p, identity::Z, terminal::T) where {Z, T<:Union{Nothing, Z}}
+        monoid = new(builtin, loaded, typestr, p, identity, terminal)
+        return finalizer(monoid) do op
+            libgb.GrB_Monoid_free(Ref(op.p))
+        end
+    end
 end
-Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid) = op.p
+
+function TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Z, terminal::T) where {Z, T<:Union{Z, Nothing}}
+    opref = Ref{libgb.GrB_Monoid}()
+    if terminal === nothing
+        if Z ∈ valid_union
+            libgb.monoididnew[Z](opref, binop, identity)
+        else
+            libgb.monoididnew[Any](opref, binop, Ptr{Cvoid}(pointer(identity)))
+        end
+        return TypedBinaryOperator{X, Y, Z}(false, true, string(fn), opref[])
+end
+
+function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid) 
+   if op.builtin && !op.loaded
+       op.p = load_global(typestr, libgb.GrB_Monoid)
+   end
+   if !op.loaded
+       error("This operator could not be loaded, and is invalid.")
+   else
+       return op.p
+   end
+end
 
 mutable struct TypedSemiring{X, Y, Z} <: AbstractTypedOp{Z}
     p::libgb.GrB_Semiring

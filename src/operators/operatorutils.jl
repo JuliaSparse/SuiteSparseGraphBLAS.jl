@@ -36,6 +36,8 @@ function getoperator(op, t)
     end
 end
 
+getoperator(op::TypedUnaryOperator, t) = op
+getoperator(op::AbstractUnaryOp, t) = op(t)
 
 function binaryop end
 function monoid end
@@ -139,9 +141,9 @@ function addtoop(op::AbstractBinaryOp, type1, type2)
 end
 addtoop(op::AbstractBinaryOp, type) = addtoop(op, type, type)
 
-function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
-    print(io, o.name, ": ", validtypes(o))
-end
+# function Base.show(io::IO, ::MIME"text/plain", o::AbstractOp)
+#     print(io, o.name, ": ", validtypes(o))
+# end
 
 juliaop(op) = nothing
 juliaop(op::AbstractMonoid) = juliaop(binaryop(op))

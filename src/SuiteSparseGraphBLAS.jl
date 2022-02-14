@@ -49,7 +49,7 @@ using .Monoids
 using .Semirings
 
 # Create typed operators
-_createunaryops()
+# _createunaryops()
 _createbinaryops()
 _createmonoids()
 _createsemirings()
@@ -83,21 +83,21 @@ include("pack.jl")
 include("unpack.jl")
 include("options.jl")
 #EXPERIMENTAL
-include("operations/argminmax.jl")
-include("operations/broadcasts.jl")
-include("chainrules/chainruleutils.jl")
-include("chainrules/mulrules.jl")
-include("chainrules/ewiserules.jl")
-include("chainrules/maprules.jl")
-include("chainrules/reducerules.jl")
-include("chainrules/selectrules.jl")
-include("chainrules/constructorrules.jl")
-#include("random.jl")
-include("misc.jl")
-include("asjulia.jl")
-include("spmgb/sparsemat.jl")
-include("consts.jl")
-using .Consts
+# include("operations/argminmax.jl")
+# include("operations/broadcasts.jl")
+# include("chainrules/chainruleutils.jl")
+# include("chainrules/mulrules.jl")
+# include("chainrules/ewiserules.jl")
+# include("chainrules/maprules.jl")
+# include("chainrules/reducerules.jl")
+# include("chainrules/selectrules.jl")
+# include("chainrules/constructorrules.jl")
+# #include("random.jl")
+# include("misc.jl")
+# include("asjulia.jl")
+# include("spmgb/sparsemat.jl")
+# include("consts.jl")
+# using .Consts
 
 export SparseArrayCompat
 export libgb

@@ -1,305 +1,305 @@
-#Unary Operators
-"""
-Identity: `z=x`
-"""
-UnaryOps.IDENTITY
-juliaop(::typeof(UnaryOps.IDENTITY)) = identity
-UnaryOps.UnaryOp(::typeof(identity)) = UnaryOps.IDENTITY
-"""
-Additive Inverse: `z=-x`
-"""
-UnaryOps.AINV
-juliaop(::typeof(UnaryOps.AINV)) = -
-UnaryOps.UnaryOp(::typeof(-)) = UnaryOps.AINV
-"""
-Logical Negation
-
-`z=¬x::Bool`
-
-`Real`:  `z=¬(x::ℝ ≠ 0)`
-"""
-UnaryOps.LNOT
-juliaop(::typeof(UnaryOps.LNOT)) = !
-UnaryOps.UnaryOp(::typeof(!)) = UnaryOps.LNOT
-"""
-Multiplicative Inverse: `z=1/x`
-"""
-UnaryOps.MINV
-juliaop(::typeof(UnaryOps.MINV)) = inv
-UnaryOps.UnaryOp(::typeof(inv)) = UnaryOps.MINV
-"""
-One: `z=one(x)`
-"""
-UnaryOps.ONE
-juliaop(::typeof(UnaryOps.ONE)) = one
-UnaryOps.UnaryOp(::typeof(one)) = UnaryOps.ONE
-"""
-Absolute Value: `z=|x|`
-"""
-UnaryOps.ABS
-juliaop(::typeof(UnaryOps.ABS)) = abs
-UnaryOps.UnaryOp(::typeof(abs)) = UnaryOps.ABS
-"""
-Bitwise Negation: `z=¬x`
-"""
-UnaryOps.BNOT
-juliaop(::typeof(UnaryOps.BNOT)) = ~
-UnaryOps.UnaryOp(::typeof(~)) = UnaryOps.BNOT
-"""
-Square Root: `z=√(x)`
-"""
-UnaryOps.SQRT
-juliaop(::typeof(UnaryOps.SQRT)) = sqrt
-UnaryOps.UnaryOp(::typeof(sqrt)) = UnaryOps.SQRT
-"""
-Natural Logarithm: `z=logₑ(x)`
-"""
-UnaryOps.LOG
-juliaop(::typeof(UnaryOps.LOG)) = log
-UnaryOps.UnaryOp(::typeof(log)) = UnaryOps.LOG
-"""
-Natural Base Exponential: `z=eˣ`
-"""
-UnaryOps.EXP
-juliaop(::typeof(UnaryOps.EXP)) = exp
-UnaryOps.UnaryOp(::typeof(exp)) = UnaryOps.EXP
-"""
-Log Base 2: `z=log₂(x)`
-"""
-UnaryOps.LOG2
-juliaop(::typeof(UnaryOps.LOG2)) = log2
-UnaryOps.UnaryOp(::typeof(log2)) = UnaryOps.LOG2
-"""
-Sine: `z=sin(x)`
-"""
-UnaryOps.SIN
-juliaop(::typeof(UnaryOps.SIN)) = sin
-UnaryOps.UnaryOp(::typeof(sin)) = UnaryOps.SIN
-"""
-Cosine: `z=cos(x)`
-"""
-UnaryOps.COS
-juliaop(::typeof(UnaryOps.COS)) = cos
-UnaryOps.UnaryOp(::typeof(cos)) = UnaryOps.COS
-"""
-Tangent: `z=tan(x)`
-"""
-UnaryOps.TAN
-juliaop(::typeof(UnaryOps.TAN)) = tan
-UnaryOps.UnaryOp(::typeof(tan)) = UnaryOps.TAN
-"""
-Inverse Cosine: `z=cos⁻¹(x)`
-"""
-UnaryOps.ACOS
-juliaop(::typeof(UnaryOps.ACOS)) = acos
-UnaryOps.UnaryOp(::typeof(acos)) = UnaryOps.ACOS
-"""
-Inverse Sine: `z=sin⁻¹(x)`
-"""
-UnaryOps.ASIN
-juliaop(::typeof(UnaryOps.ASIN)) = asin
-UnaryOps.UnaryOp(::typeof(asin)) = UnaryOps.ASIN
-"""
-Inverse Tangent: `z=tan⁻¹(x)`
-"""
-UnaryOps.ATAN
-juliaop(::typeof(UnaryOps.ATAN)) = atan
-UnaryOps.UnaryOp(::typeof(atan)) = UnaryOps.ATAN
-"""
-Hyperbolic Sine: `z=sinh(x)`
-"""
-UnaryOps.SINH
-juliaop(::typeof(UnaryOps.SINH)) = sinh
-UnaryOps.UnaryOp(::typeof(sinh)) = UnaryOps.SINH
-"""
-Hyperbolic Cosine: `z=cosh(x)`
-"""
-UnaryOps.COSH
-juliaop(::typeof(UnaryOps.COSH)) = cosh
-UnaryOps.UnaryOp(::typeof(cosh)) = UnaryOps.COSH
-"""
-Hyperbolic Tangent: `z=tanh(x)`
-"""
-UnaryOps.TANH
-juliaop(::typeof(UnaryOps.TANH)) = tanh
-UnaryOps.UnaryOp(::typeof(tanh)) = UnaryOps.TANH
-"""
-Inverse Hyperbolic Sine: `z=sinh⁻¹(x)`
-"""
-UnaryOps.ASINH
-juliaop(::typeof(UnaryOps.ASINH)) = asinh
-UnaryOps.UnaryOp(::typeof(asinh)) = UnaryOps.ASINH
-"""
-Inverse Hyperbolic Cosine: `z=cosh⁻¹(x)`
-"""
-UnaryOps.ACOSH
-juliaop(::typeof(UnaryOps.ACOSH)) = acosh
-UnaryOps.UnaryOp(::typeof(acosh)) = UnaryOps.ACOSH
-"""
-Inverse Hyperbolic Tangent: `z=tanh⁻¹(x)`
-"""
-UnaryOps.ATANH
-juliaop(::typeof(UnaryOps.ATANH)) = atanh
-UnaryOps.UnaryOp(::typeof(atanh)) = UnaryOps.ATANH
-"""
-Sign Function: `z=signum(x)`
-"""
-UnaryOps.SIGNUM
-juliaop(::typeof(UnaryOps.SIGNUM)) = sign
-UnaryOps.UnaryOp(::typeof(sign)) = UnaryOps.SIGNUM
-"""
-Ceiling Function: `z=⌈x⌉`
-"""
-UnaryOps.CEIL
-juliaop(::typeof(UnaryOps.CEIL)) = ceil
-UnaryOps.UnaryOp(::typeof(ceil)) = UnaryOps.CEIL
-"""
-Floor Function: `z=⌊x⌋`
-"""
-UnaryOps.FLOOR
-juliaop(::typeof(UnaryOps.FLOOR)) = floor
-UnaryOps.UnaryOp(::typeof(floor)) = UnaryOps.FLOOR
-"""
-Round to nearest: `z=round(x)`
-"""
-UnaryOps.ROUND
-juliaop(::typeof(UnaryOps.ROUND)) = round
-UnaryOps.UnaryOp(::typeof(round)) = UnaryOps.ROUND
-"""
-Truncate: `z=trunc(x)`
-"""
-UnaryOps.TRUNC
-juliaop(::typeof(UnaryOps.TRUNC)) = trunc
-UnaryOps.UnaryOp(::typeof(trunc)) = UnaryOps.TRUNC
-"""
-Base-2 Exponential: `z=2ˣ`
-"""
-UnaryOps.EXP2
-juliaop(::typeof(UnaryOps.EXP2)) = exp2
-UnaryOps.UnaryOp(::typeof(exp2)) = UnaryOps.EXP2
-"""
-Natural Exponential - 1: `z=eˣ - 1`
-"""
-UnaryOps.EXPM1
-juliaop(::typeof(UnaryOps.EXPM1)) = expm1
-UnaryOps.UnaryOp(::typeof(expm1)) = UnaryOps.EXPM1
-"""
-Log Base 10: `z=log₁₀(x)`
-"""
-UnaryOps.LOG10
-juliaop(::typeof(UnaryOps.LOG10)) = log10
-UnaryOps.UnaryOp(::typeof(log10)) = UnaryOps.LOG10
-"""
-Natural Log of x + 1: `z=logₑ(x + 1)`
-"""
-UnaryOps.LOG1P
-juliaop(::typeof(UnaryOps.LOG1P)) = log1p
-UnaryOps.UnaryOp(::typeof(log1p)) = UnaryOps.LOG1P
-"""
-Log of Gamma Function: `z=log(|Γ(x)|)`
-"""
-UnaryOps.LGAMMA
-juliaop(::typeof(UnaryOps.LGAMMA)) = lgamma
-UnaryOps.UnaryOp(::typeof(lgamma)) = UnaryOps.LGAMMA
-"""
-Gamma Function: `z=Γ(x)`
-"""
-UnaryOps.TGAMMA
-juliaop(::typeof(UnaryOps.TGAMMA)) = gamma
-UnaryOps.UnaryOp(::typeof(gamma)) = UnaryOps.TGAMMA
-"""
-Error Function: `z=erf(x)`
-"""
-UnaryOps.ERF
-juliaop(::typeof(UnaryOps.ERF)) = erf
-UnaryOps.UnaryOp(::typeof(erf)) = UnaryOps.ERF
-"""
-Complimentary Error Function: `z=erfc(x)`
-"""
-UnaryOps.ERFC
-juliaop(::typeof(UnaryOps.ERFC)) = erfc
-UnaryOps.UnaryOp(::typeof(erfc)) = UnaryOps.ERFC
-
-#There is no exact equivalent here, since Julia's frexp returns (frexpx, frexpe).
-"""
-Normalized Exponent: `z=frexpe(x)`
-"""
-UnaryOps.FREXPE
-function frexpe end
-juliaop(::typeof(UnaryOps.FREXPE)) = frexpe
-UnaryOps.UnaryOp(::typeof(frexpe)) = UnaryOps.FREXPE
-"""
-Normalized Fraction: `z=frexpx(x)`
-"""
-UnaryOps.FREXPX
-function frexpx end
-juliaop(::typeof(UnaryOps.FREXPX)) = frexpx
-UnaryOps.UnaryOp(::typeof(frexpx)) = UnaryOps.frexpx
-
-"""
-Complex Conjugate: `z=x̄`
-"""
-UnaryOps.CONJ
-juliaop(::typeof(UnaryOps.CONJ)) = conj
-UnaryOps.UnaryOp(::typeof(conj)) = UnaryOps.CONJ
-"""
-Real Part: `z=real(x)`
-"""
-UnaryOps.CREAL
-juliaop(::typeof(UnaryOps.CREAL)) = real
-UnaryOps.UnaryOp(::typeof(real)) = UnaryOps.CREAL
-"""
-Imaginary Part: `z=imag(x)`
-"""
-UnaryOps.CIMAG
-juliaop(::typeof(UnaryOps.CIMAG)) = imag
-UnaryOps.UnaryOp(::typeof(imag)) = UnaryOps.CIMAG
-"""
-Angle: `z=carg(x)`
-"""
-UnaryOps.CARG
-juliaop(::typeof(UnaryOps.CARG)) = angle
-UnaryOps.UnaryOp(::typeof(angle)) = UnaryOps.CARG
-"""
-isinf: `z=(x == ±∞)`
-"""
-UnaryOps.ISINF
-juliaop(::typeof(UnaryOps.ISINF)) = isinf
-UnaryOps.UnaryOp(::typeof(isinf)) = UnaryOps.ISINF
-"""
-isnan: `z=(x == NaN)`
-"""
-UnaryOps.ISNAN
-juliaop(::typeof(UnaryOps.ISNAN)) = isnan
-UnaryOps.UnaryOp(::typeof(isnan)) = UnaryOps.ISNAN
-"""
-isfinite: `z=isfinite(x)`
-"""
-UnaryOps.ISFINITE
-juliaop(::typeof(UnaryOps.ISFINITE)) = isfinite
-UnaryOps.UnaryOp(::typeof(isfinite)) = UnaryOps.ISFINITE
-"""
-0-based Row Index: `z=i`
-"""
-UnaryOps.POSITIONI #No Julia version since it's 0-based.
-"""
-1-Based Row Index: `z=i + 1`
-"""
-UnaryOps.POSITIONI1
-function positioni end
-juliaop(::typeof(UnaryOps.POSITIONI1)) = positioni
-UnaryOps.UnaryOp(::typeof(positioni)) = UnaryOps.POSITIONI1
-"""
-0-Based Column Index: `z=j`
-"""
-UnaryOps.POSITIONJ #No Julia version since it's 0-based.
-"""
-1-Based Column Index: `z=j + 1`
-"""
-UnaryOps.POSITIONJ1
-function positionj end
-juliaop(::typeof(UnaryOps.POSITIONJ1)) = positionj
-UnaryOps.UnaryOp(::typeof(positionj)) = UnaryOps.POSITIONJ1
+# #Unary Operators
+# """
+# Identity: `z=x`
+# """
+# UnaryOps.IDENTITY
+# juliaop(::typeof(UnaryOps.IDENTITY)) = identity
+# UnaryOps.UnaryOp(::typeof(identity)) = UnaryOps.IDENTITY
+# """
+# Additive Inverse: `z=-x`
+# """
+# UnaryOps.AINV
+# juliaop(::typeof(UnaryOps.AINV)) = -
+# UnaryOps.UnaryOp(::typeof(-)) = UnaryOps.AINV
+# """
+# Logical Negation
+# 
+# `z=¬x::Bool`
+# 
+# `Real`:  `z=¬(x::ℝ ≠ 0)`
+# """
+# UnaryOps.LNOT
+# juliaop(::typeof(UnaryOps.LNOT)) = !
+# UnaryOps.UnaryOp(::typeof(!)) = UnaryOps.LNOT
+# """
+# Multiplicative Inverse: `z=1/x`
+# """
+# UnaryOps.MINV
+# juliaop(::typeof(UnaryOps.MINV)) = inv
+# UnaryOps.UnaryOp(::typeof(inv)) = UnaryOps.MINV
+# """
+# One: `z=one(x)`
+# """
+# UnaryOps.ONE
+# juliaop(::typeof(UnaryOps.ONE)) = one
+# UnaryOps.UnaryOp(::typeof(one)) = UnaryOps.ONE
+# """
+# Absolute Value: `z=|x|`
+# """
+# UnaryOps.ABS
+# juliaop(::typeof(UnaryOps.ABS)) = abs
+# UnaryOps.UnaryOp(::typeof(abs)) = UnaryOps.ABS
+# """
+# Bitwise Negation: `z=¬x`
+# """
+# UnaryOps.BNOT
+# juliaop(::typeof(UnaryOps.BNOT)) = ~
+# UnaryOps.UnaryOp(::typeof(~)) = UnaryOps.BNOT
+# """
+# Square Root: `z=√(x)`
+# """
+# UnaryOps.SQRT
+# juliaop(::typeof(UnaryOps.SQRT)) = sqrt
+# UnaryOps.UnaryOp(::typeof(sqrt)) = UnaryOps.SQRT
+# """
+# Natural Logarithm: `z=logₑ(x)`
+# """
+# UnaryOps.LOG
+# juliaop(::typeof(UnaryOps.LOG)) = log
+# UnaryOps.UnaryOp(::typeof(log)) = UnaryOps.LOG
+# """
+# Natural Base Exponential: `z=eˣ`
+# """
+# UnaryOps.EXP
+# juliaop(::typeof(UnaryOps.EXP)) = exp
+# UnaryOps.UnaryOp(::typeof(exp)) = UnaryOps.EXP
+# """
+# Log Base 2: `z=log₂(x)`
+# """
+# UnaryOps.LOG2
+# juliaop(::typeof(UnaryOps.LOG2)) = log2
+# UnaryOps.UnaryOp(::typeof(log2)) = UnaryOps.LOG2
+# """
+# Sine: `z=sin(x)`
+# """
+# UnaryOps.SIN
+# juliaop(::typeof(UnaryOps.SIN)) = sin
+# UnaryOps.UnaryOp(::typeof(sin)) = UnaryOps.SIN
+# """
+# Cosine: `z=cos(x)`
+# """
+# UnaryOps.COS
+# juliaop(::typeof(UnaryOps.COS)) = cos
+# UnaryOps.UnaryOp(::typeof(cos)) = UnaryOps.COS
+# """
+# Tangent: `z=tan(x)`
+# """
+# UnaryOps.TAN
+# juliaop(::typeof(UnaryOps.TAN)) = tan
+# UnaryOps.UnaryOp(::typeof(tan)) = UnaryOps.TAN
+# """
+# Inverse Cosine: `z=cos⁻¹(x)`
+# """
+# UnaryOps.ACOS
+# juliaop(::typeof(UnaryOps.ACOS)) = acos
+# UnaryOps.UnaryOp(::typeof(acos)) = UnaryOps.ACOS
+# """
+# Inverse Sine: `z=sin⁻¹(x)`
+# """
+# UnaryOps.ASIN
+# juliaop(::typeof(UnaryOps.ASIN)) = asin
+# UnaryOps.UnaryOp(::typeof(asin)) = UnaryOps.ASIN
+# """
+# Inverse Tangent: `z=tan⁻¹(x)`
+# """
+# UnaryOps.ATAN
+# juliaop(::typeof(UnaryOps.ATAN)) = atan
+# UnaryOps.UnaryOp(::typeof(atan)) = UnaryOps.ATAN
+# """
+# Hyperbolic Sine: `z=sinh(x)`
+# """
+# UnaryOps.SINH
+# juliaop(::typeof(UnaryOps.SINH)) = sinh
+# UnaryOps.UnaryOp(::typeof(sinh)) = UnaryOps.SINH
+# """
+# Hyperbolic Cosine: `z=cosh(x)`
+# """
+# UnaryOps.COSH
+# juliaop(::typeof(UnaryOps.COSH)) = cosh
+# UnaryOps.UnaryOp(::typeof(cosh)) = UnaryOps.COSH
+# """
+# Hyperbolic Tangent: `z=tanh(x)`
+# """
+# UnaryOps.TANH
+# juliaop(::typeof(UnaryOps.TANH)) = tanh
+# UnaryOps.UnaryOp(::typeof(tanh)) = UnaryOps.TANH
+# """
+# Inverse Hyperbolic Sine: `z=sinh⁻¹(x)`
+# """
+# UnaryOps.ASINH
+# juliaop(::typeof(UnaryOps.ASINH)) = asinh
+# UnaryOps.UnaryOp(::typeof(asinh)) = UnaryOps.ASINH
+# """
+# Inverse Hyperbolic Cosine: `z=cosh⁻¹(x)`
+# """
+# UnaryOps.ACOSH
+# juliaop(::typeof(UnaryOps.ACOSH)) = acosh
+# UnaryOps.UnaryOp(::typeof(acosh)) = UnaryOps.ACOSH
+# """
+# Inverse Hyperbolic Tangent: `z=tanh⁻¹(x)`
+# """
+# UnaryOps.ATANH
+# juliaop(::typeof(UnaryOps.ATANH)) = atanh
+# UnaryOps.UnaryOp(::typeof(atanh)) = UnaryOps.ATANH
+# """
+# Sign Function: `z=signum(x)`
+# """
+# UnaryOps.SIGNUM
+# juliaop(::typeof(UnaryOps.SIGNUM)) = sign
+# UnaryOps.UnaryOp(::typeof(sign)) = UnaryOps.SIGNUM
+# """
+# Ceiling Function: `z=⌈x⌉`
+# """
+# UnaryOps.CEIL
+# juliaop(::typeof(UnaryOps.CEIL)) = ceil
+# UnaryOps.UnaryOp(::typeof(ceil)) = UnaryOps.CEIL
+# """
+# Floor Function: `z=⌊x⌋`
+# """
+# UnaryOps.FLOOR
+# juliaop(::typeof(UnaryOps.FLOOR)) = floor
+# UnaryOps.UnaryOp(::typeof(floor)) = UnaryOps.FLOOR
+# """
+# Round to nearest: `z=round(x)`
+# """
+# UnaryOps.ROUND
+# juliaop(::typeof(UnaryOps.ROUND)) = round
+# UnaryOps.UnaryOp(::typeof(round)) = UnaryOps.ROUND
+# """
+# Truncate: `z=trunc(x)`
+# """
+# UnaryOps.TRUNC
+# juliaop(::typeof(UnaryOps.TRUNC)) = trunc
+# UnaryOps.UnaryOp(::typeof(trunc)) = UnaryOps.TRUNC
+# """
+# Base-2 Exponential: `z=2ˣ`
+# """
+# UnaryOps.EXP2
+# juliaop(::typeof(UnaryOps.EXP2)) = exp2
+# UnaryOps.UnaryOp(::typeof(exp2)) = UnaryOps.EXP2
+# """
+# Natural Exponential - 1: `z=eˣ - 1`
+# """
+# UnaryOps.EXPM1
+# juliaop(::typeof(UnaryOps.EXPM1)) = expm1
+# UnaryOps.UnaryOp(::typeof(expm1)) = UnaryOps.EXPM1
+# """
+# Log Base 10: `z=log₁₀(x)`
+# """
+# UnaryOps.LOG10
+# juliaop(::typeof(UnaryOps.LOG10)) = log10
+# UnaryOps.UnaryOp(::typeof(log10)) = UnaryOps.LOG10
+# """
+# Natural Log of x + 1: `z=logₑ(x + 1)`
+# """
+# UnaryOps.LOG1P
+# juliaop(::typeof(UnaryOps.LOG1P)) = log1p
+# UnaryOps.UnaryOp(::typeof(log1p)) = UnaryOps.LOG1P
+# """
+# Log of Gamma Function: `z=log(|Γ(x)|)`
+# """
+# UnaryOps.LGAMMA
+# juliaop(::typeof(UnaryOps.LGAMMA)) = lgamma
+# UnaryOps.UnaryOp(::typeof(lgamma)) = UnaryOps.LGAMMA
+# """
+# Gamma Function: `z=Γ(x)`
+# """
+# UnaryOps.TGAMMA
+# juliaop(::typeof(UnaryOps.TGAMMA)) = gamma
+# UnaryOps.UnaryOp(::typeof(gamma)) = UnaryOps.TGAMMA
+# """
+# Error Function: `z=erf(x)`
+# """
+# UnaryOps.ERF
+# juliaop(::typeof(UnaryOps.ERF)) = erf
+# UnaryOps.UnaryOp(::typeof(erf)) = UnaryOps.ERF
+# """
+# Complimentary Error Function: `z=erfc(x)`
+# """
+# UnaryOps.ERFC
+# juliaop(::typeof(UnaryOps.ERFC)) = erfc
+# UnaryOps.UnaryOp(::typeof(erfc)) = UnaryOps.ERFC
+# 
+# #There is no exact equivalent here, since Julia's frexp returns (frexpx, frexpe).
+# """
+# Normalized Exponent: `z=frexpe(x)`
+# """
+# UnaryOps.FREXPE
+# function frexpe end
+# juliaop(::typeof(UnaryOps.FREXPE)) = frexpe
+# UnaryOps.UnaryOp(::typeof(frexpe)) = UnaryOps.FREXPE
+# """
+# Normalized Fraction: `z=frexpx(x)`
+# """
+# UnaryOps.FREXPX
+# function frexpx end
+# juliaop(::typeof(UnaryOps.FREXPX)) = frexpx
+# UnaryOps.UnaryOp(::typeof(frexpx)) = UnaryOps.frexpx
+# 
+# """
+# Complex Conjugate: `z=x̄`
+# """
+# UnaryOps.CONJ
+# juliaop(::typeof(UnaryOps.CONJ)) = conj
+# UnaryOps.UnaryOp(::typeof(conj)) = UnaryOps.CONJ
+# """
+# Real Part: `z=real(x)`
+# """
+# UnaryOps.CREAL
+# juliaop(::typeof(UnaryOps.CREAL)) = real
+# UnaryOps.UnaryOp(::typeof(real)) = UnaryOps.CREAL
+# """
+# Imaginary Part: `z=imag(x)`
+# """
+# UnaryOps.CIMAG
+# juliaop(::typeof(UnaryOps.CIMAG)) = imag
+# UnaryOps.UnaryOp(::typeof(imag)) = UnaryOps.CIMAG
+# """
+# Angle: `z=carg(x)`
+# """
+# UnaryOps.CARG
+# juliaop(::typeof(UnaryOps.CARG)) = angle
+# UnaryOps.UnaryOp(::typeof(angle)) = UnaryOps.CARG
+# """
+# isinf: `z=(x == ±∞)`
+# """
+# UnaryOps.ISINF
+# juliaop(::typeof(UnaryOps.ISINF)) = isinf
+# UnaryOps.UnaryOp(::typeof(isinf)) = UnaryOps.ISINF
+# """
+# isnan: `z=(x == NaN)`
+# """
+# UnaryOps.ISNAN
+# juliaop(::typeof(UnaryOps.ISNAN)) = isnan
+# UnaryOps.UnaryOp(::typeof(isnan)) = UnaryOps.ISNAN
+# """
+# isfinite: `z=isfinite(x)`
+# """
+# UnaryOps.ISFINITE
+# juliaop(::typeof(UnaryOps.ISFINITE)) = isfinite
+# UnaryOps.UnaryOp(::typeof(isfinite)) = UnaryOps.ISFINITE
+# """
+# 0-based Row Index: `z=i`
+# """
+# UnaryOps.POSITIONI #No Julia version since it's 0-based.
+# """
+# 1-Based Row Index: `z=i + 1`
+# """
+# UnaryOps.POSITIONI1
+# function positioni end
+# juliaop(::typeof(UnaryOps.POSITIONI1)) = positioni
+# UnaryOps.UnaryOp(::typeof(positioni)) = UnaryOps.POSITIONI1
+# """
+# 0-Based Column Index: `z=j`
+# """
+# UnaryOps.POSITIONJ #No Julia version since it's 0-based.
+# """
+# 1-Based Column Index: `z=j + 1`
+# """
+# UnaryOps.POSITIONJ1
+# function positionj end
+# juliaop(::typeof(UnaryOps.POSITIONJ1)) = positionj
+# UnaryOps.UnaryOp(::typeof(positionj)) = UnaryOps.POSITIONJ1
 
 #Binary Operators
 """
