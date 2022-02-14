@@ -1,25 +1,4 @@
-mutable struct TypedMonoidOperator{X, Z} <: AbstractTypedOp{Z}
-    builtin::Bool
-    loaded::Bool
-    typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
-    p::libgb.GrB_Monoid
-    function TypedMonoidOperator{X, Z}(builtin, loaded, typestr, p) where {X, Z}
-        monoid = new(builtin, loaded, typestr, p)
-        return finalizer(monoid) do op
-            libgb.GrB_Monoid_free(Ref(op.p))
-        end
-    end
-end
-function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoidOperator) 
-   if op.builtin && !op.loaded
-       op.p = load_global(typestr, libgb.GrB_Monoid)
-   end
-   if !op.loaded
-       error("This operator could not be loaded, and is invalid.")
-   else
-       return op.p
-   end
-end
+
 
 function typedmonoidconstexpr(dispatchstruct, builtin, namestr, xtype, outtype)
     # Complex ops must always be GxB prefixed
