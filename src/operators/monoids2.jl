@@ -1,18 +1,62 @@
+module Monoids
 
+import ..SuiteSparseGraphBLAS
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
+    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOp, _builtinMonoid
+using ..libgb
+export Monoid, @monoid
 
-function typedmonoidconstexpr(dispatchstruct, builtin, namestr, xtype, outtype)
-    # Complex ops must always be GxB prefixed
-    if (xtype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
+struct Monoid{F} <: AbstractMonoid
+    binaryop::BinaryOp{F}
+end
+SuiteSparseGraphBLAS.juliaop(op::Monoid) = juliaop(op.binaryop)
+
+function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
+    if type ∈ Ztypes && isGrB(namestr)
         namestr = "GxB" * namestr[4:end]
     end
+    if isGxB(namestr)
+        namestr = namestr * "_$(suffix(type))" * "_MONOID"
+    elseif isGrB(namestr)
+        namestr = namestr * "_MONOID" * "_$(suffix(type))"
+    else
+        namestr = namestr * "_$(suffix(type))"
+    end
     if builtin
-        namestr = namestr * "_$(suffix(xtype))"
+        namesym = Symbol(namestr[5:end])
+    else
+        namesym = Symbol(namestr)
+    end
+    typesym = Symbol(type)
+    if builtin
+        constquote = :(const $(esc(namesym)) = _builtinMonoid(namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)))))
+    else
+        constquote = :(const $(esc(namesym)) = TypedMonoid(BinaryOp($(esc(jlfunc)))($(esc(typesym))), $(esc(identity), $(esc(term)))))
+    end
+    return quote
+        $(constquote)
+        (::$(esc(:Monoid)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$typesym}) = $(esc(namesym))
+    end
+end
+
+function typedmonoidexprs(jlfunc, builtin, namestr, type, identity, term)
+    if type isa Symbol
+        types = [type]
+    end
+    exprs = typedbinopconstexpr.(Ref(jlfunc), Ref(builtin), Ref(namestr), )
+end
+function typedmonoidconstexpr(dispatchstruct, builtin, namestr, type)
+    # Complex ops must always be GxB prefixed
+    if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
+        namestr = "GxB" * namestr[4:end]
+    end
+    namestr = namestr * "_$(suffix(type))"
+    if builtin
         namesym = Symbol(namestr[5:end])
     else
         namesym = Symbol(namestr)
     end
     xsym = Symbol(xtype)
-    outsym = Symbol(outtype)
     return quote
         const $(esc(namesym)) = TypedMonoidOperator{$xsym, $outsym}($builtin, false, $namestr, libgb.GrB_Monoid(C_NULL))
         $(esc(dispatchstruct))(::Type{$xsym}) = $(esc(namesym))
@@ -59,8 +103,6 @@ macro monoid(expr...)
     outtypes = intypes
     constquote = typedmonoidexprs(dispatchfunc, builtin, name, intypes, outtypes)
     dispatchquote = Base.remove_linenums!(quote
-        struct $(esc(dispatchstruct)) <: AbstractMonoid end
-        const $(esc(dispatchfunc)) = $(esc(dispatchstruct))()
         $newfunc
         Consts.binaryop(::$(esc(dispatchstruct))) = $(esc(binop))
         Consts.monoid(::$(esc(:typeof))($(esc(binop)))) = $(esc(dispatchfunc))

@@ -72,19 +72,24 @@ function Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator
     end
 end
 
-mutable struct TypedMonoid{Z, T} <: AbstractTypedOp{Z}
+mutable struct TypedMonoid{Z} <: AbstractTypedOp{Z}
     builtin::Bool
     loaded::Bool
     typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
     p::libgb.GrB_Monoid
-    identity::Z
-    terminal::T
-    function TypedMonoid{Z, T}(builtin, loaded, typestr, p, identity::Z, terminal::T) where {Z, T<:Union{Nothing, Z}}
-        monoid = new(builtin, loaded, typestr, p, identity, terminal)
+    binaryop::libgb.GrB_BinaryOp{Z, Z, Z}
+    function TypedMonoid{Z}(builtin, loaded, typestr, p, binaryop::TypedBinaryOperator{Z, Z, Z})
+        monoid = new(builtin, loaded, typestr, p, binaryop)
         return finalizer(monoid) do op
             libgb.GrB_Monoid_free(Ref(op.p))
         end
     end
+end
+
+# We do this AoT because we need to know whether there's a terminal or not.
+function _builtinMonoid(typestr, binaryop::TypedBinaryOperator{Z, Z, Z}) where {Z}
+    p = load_global(typestr, libgb.GrB_Monoid)
+    return TypedMonoid{Z}(true, true, typestr, p, binaryop)
 end
 
 function TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Z, terminal::T) where {Z, T<:Union{Z, Nothing}}
@@ -93,20 +98,26 @@ function TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Z, terminal:
         if Z ∈ valid_union
             libgb.monoididnew[Z](opref, binop, identity)
         else
-            libgb.monoididnew[Any](opref, binop, Ptr{Cvoid}(pointer(identity)))
+            libgb.monoididnew[Any](opref, binop, Ref(identity))
         end
-        return TypedBinaryOperator{X, Y, Z}(false, true, string(fn), opref[])
+    else
+        if Z ∈ valid_union
+            libgb.monoidtermnew[Z](opref, binop, identity, terminal)
+        else
+            libgb.monoidtermnew[Any](opref, binop, Ref(identity), Ref(terminal))
+        end
+    end
+    return TypedMonoid{Z}(false, true, string(fn), opref[])
 end
 
+# These are sort of ugly...
+TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Function) where {Z} = TypedMonoid(binop, identity(Z))
+TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Function, terminal::Function) where {Z} = TypedMonoid(binop, identity(Z), terminal(Z))
+
+TypedMonoid(binop::TypedBinaryOperator, identity) = TypedMonoid(binop, identity, nothing)
+
 function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid) 
-   if op.builtin && !op.loaded
-       op.p = load_global(typestr, libgb.GrB_Monoid)
-   end
-   if !op.loaded
-       error("This operator could not be loaded, and is invalid.")
-   else
-       return op.p
-   end
+    return op.p
 end
 
 mutable struct TypedSemiring{X, Y, Z} <: AbstractTypedOp{Z}
