@@ -1,176 +1,125 @@
 module Monoids
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, splitconstant
+
+import ..SuiteSparseGraphBLAS
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
+    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, _builtinMonoid, BinaryOps.∨, BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor
 using ..libgb
-export Monoid
+export Monoid, @monoid
 
-function _monoidnames(name)
-    if isGxB(name) || isGrB(name)
-        simple = splitconstant(name)[2]
-    else
-        simple = name
+struct Monoid{F} <: AbstractMonoid
+    binaryop::BinaryOp{F}
+end
+SuiteSparseGraphBLAS.juliaop(op::Monoid) = juliaop(op.binaryop)
+Monoid(f::Function) = Monoid(BinaryOp(f))
+
+function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
+    if type ∈ Ztypes && isGrB(namestr)
+        namestr = "GxB" * namestr[4:end]
     end
-    containername = Symbol(simple, "_MONOID_T")
-    exportedname = Symbol(simple * "_MONOID")
-    return containername, exportedname
+    if isGxB(namestr)
+        namestr = namestr * "_$(suffix(type))" * "_MONOID"
+    elseif isGrB(namestr)
+        namestr = namestr * "_MONOID" * "_$(suffix(type))"
+    else
+        namestr = namestr * "_$(suffix(type))"
+    end
+    if builtin
+        namesym = Symbol(namestr[5:end])
+    else
+        namesym = Symbol(namestr)
+    end
+    typesym = Symbol(type)
+    if builtin
+        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym)))))
+    else
+        constquote = :(const $(esc(namesym)) = TypedMonoid(BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
+    end
+    return quote
+        $(constquote)
+        (::$(esc(:Monoid)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$typesym}) = $(esc(namesym))
+    end
 end
 
-function Monoid(name)
-    containername, exportedname = _monoidnames(name)
-    structquote = quote
-        struct $containername <: AbstractMonoid
-            typedops::Dict{DataType, TypedMonoid}
-            name::String
-            $containername() = new(Dict{DataType, TypedMonoid}(), $name)
+function typedmonoidexprs(jlfunc, builtin, namestr, types, identity, term)
+    if types isa Symbol
+        types = [types]
+    end
+    exprs = typedmonoidconstexpr.(Ref(jlfunc), Ref(builtin), Ref(namestr), types, Ref(identity), Ref(term))
+    if exprs isa Expr
+        return exprs
+    else
+        return quote
+            $(exprs...)
         end
     end
-    @eval($structquote)
-    constquote = quote
-        const $exportedname = $containername()
-        export $exportedname
+end
+
+macro monoid(expr...)
+    # no need to create a new function, we must have already done this for binops.
+    jlfunc = first(expr)
+    if expr[3] isa Symbol # we have a name symbol
+        name = string(expr[2])
+        types = expr[3]
+        if length(expr) >= 4
+            @assert expr[4].head === :call && expr[4].args[1] === :(=>) && expr[4].args[2] === :(id) "Invalid macro formatting."
+            id = expr[4].args[3]
+        else
+            id = :one
+        end
+
+        if length(expr) == 5
+            @assert expr[5].head === :call && expr[5].args[1] === :(=>) && expr[5].args[2] === :(term)
+            term = expr[5].args[3]
+        else
+            term = :nothing
+        end
+        
+    else # we use the function name
+        name = uppercase(string(jlfunc))
+        types = expr[2]
+        if length(expr) >= 3
+            @assert expr[3].head === :call && expr[3].args[1] === :(=>) && expr[3].args[2] === :(id) "Invalid macro formatting."
+            id = expr[3].args[3]
+        else
+            id = :one
+        end
+
+        if length(expr) == 4
+            @assert expr[4].head === :call && expr[4].args[1] === :(=>) && expr[4].args[2] === :(term)
+            term = expr[4].args[3]
+        else
+            term = :nothing
+        end
     end
-    @eval($constquote)
-    return getproperty(Monoids, exportedname)
+    
+    builtin = isGxB(name) || isGrB(name)
+    types = symtotype(types)
+    constquote = typedmonoidexprs(jlfunc, builtin, name, types, id, term)
+    return constquote
 end
+
+# We link to the BinaryOp rather than the Julia functions, 
+# because users will mostly be exposed to the higher level interface.
+
+@monoid (+) GrB_PLUS T
+@monoid (*) GrB_TIMES T
+
+@monoid any GxB_ANY T
+@monoid min GrB_MIN R
+@monoid max GrB_MAX R
+
+@monoid (∨) GrB_LOR Bool
+@monoid (∧) GrB_LAND Bool
+@monoid lxor GrB_LXOR Bool
+@monoid xnor GrB_LXNOR Bool
+@monoid (|) GrB_BOR I
+@monoid (&) GrB_BAND I
+@monoid (⊻) GrB_BXOR I
+@monoid bxnor GrB_BXNOR I
+
 end
+
 const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
-
-
-
-#TODO: Rewrite
-function _createmonoids()
-    builtins = [
-        "GrB_MIN",
-        "GrB_MAX",
-        "GrB_PLUS",
-        "GrB_TIMES",
-        "GxB_ANY",
-        "GrB_LOR",
-        "GrB_LAND",
-        "GrB_LXOR",
-        "GrB_LXNOR",
-        "GxB_EQ",
-        "GxB_BOR",
-        "GxB_BAND",
-        "GxB_BXOR",
-        "GxB_BXNOR",
-    ]
-    for name ∈ builtins
-        Monoids.Monoid(name)
-    end
-end
-
-#This is adapted from the fork by cvdlab
-#NOTE: Terminals do not work with built in BinaryOps.
-function _addmonoid(op::AbstractMonoid, binop::BinaryUnion, id::T, terminal = nothing) where {T}
-    if terminal === nothing
-        terminal = C_NULL
-    else
-        typeof(terminal) == T || throw(ArgumentError("id and terminal must have the same type."))
-    end
-    if binop isa AbstractBinaryOp
-        binop = binop[T]
-    end
-    monref = Ref{libgb.GrB_Monoid}()
-    if T <: valid_union
-        if terminal == C_NULL
-            libgb.monoididnew[T](monref, binop, id)
-        else
-            libgb.monoidtermnew[T](monref, binop, id, terminal)
-        end
-    else
-        libgb.monoidtermnew[Any](monref, binop, Ptr{Cvoid}(id), Ptr{Cvoid}(terminal))
-    end
-    op.typedops[T] = TypedMonoid{xtype(binop), ytype(binop), ztype(binop)}(monref[])
-    return nothing
-end
-
-#Monoid Constructors
-####################
-
-function Monoids.Monoid(name::String, binop::BinaryUnion, id::T, terminal = nothing) where {T}
-    if binop isa AbstractBinaryOp #If this is an AbstractBinaryOp we need to narrow down
-        binop = binop[T]
-    end
-    m = Monoids.Monoid(name)
-    _addmonoid(m, binop, id, terminal)
-    return m
-end
-function Monoids.Monoid(name::String, binop::AbstractBinaryOp, id::AbstractVector, terminal = nothing)
-    m = Monoids.Monoid(name)
-    for i ∈ 1:length(id)
-        binop2 = binop[typeof(id[i])]
-        if terminal === nothing
-            _addmonoid(m, binop2, id[i], nothing)
-        else
-            _addmonoid(m, binop2, id[i], terminal[i])
-        end
-    end
-    return m
-end
-
-Monoids.Monoid(::Function) =
-    error("You must construct monoids from an existing BinaryOp and an identity value.")
-
-function _load(monoid::AbstractMonoid)
-    booleans = ["GxB_ANY", "GrB_LOR", "GrB_LAND", "GrB_LXOR", "GrB_LXNOR", "GxB_EQ"]
-    integers = ["GrB_MIN", "GrB_MAX", "GrB_PLUS", "GrB_TIMES", "GxB_ANY"]
-    unsignedintegers = [
-        "GrB_MIN",
-        "GrB_MAX",
-        "GrB_PLUS",
-        "GrB_TIMES",
-        "GxB_ANY",
-        "GxB_BOR",
-        "GxB_BAND",
-        "GxB_BXOR",
-        "GxB_BXNOR",
-    ]
-    floats = ["GrB_MIN", "GrB_MAX", "GrB_PLUS", "GrB_TIMES", "GxB_ANY"]
-    complexes = ["GxB_PLUS", "GxB_TIMES", "GxB_ANY"]
-    name = monoid.name
-
-    if name ∈ booleans
-        constname = name * ((isGxB(name) ? "_BOOL_MONOID" : "_MONOID_BOOL"))
-        monoid.typedops[Bool] = TypedMonoid(load_global(constname, libgb.GrB_Monoid))
-    end
-
-    if name ∈ integers
-        monoid.typedops[Int8] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_INT8_MONOID" : "_MONOID_INT8"), libgb.GrB_Monoid))
-        monoid.typedops[Int16] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_INT16_MONOID" : "_MONOID_INT16"), libgb.GrB_Monoid))
-        monoid.typedops[Int32] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_INT32_MONOID" : "_MONOID_INT32"), libgb.GrB_Monoid))
-        monoid.typedops[Int64] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_INT64_MONOID" : "_MONOID_INT64"), libgb.GrB_Monoid))
-    end
-
-    if name ∈ unsignedintegers
-        monoid.typedops[UInt8] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT8_MONOID" : "_MONOID_UINT8"), libgb.GrB_Monoid))
-        monoid.typedops[UInt16] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT16_MONOID" : "_MONOID_UINT16"), libgb.GrB_Monoid))
-        monoid.typedops[UInt32] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT32_MONOID" : "_MONOID_UINT32"), libgb.GrB_Monoid))
-        monoid.typedops[UInt64] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_UINT64_MONOID" : "_MONOID_UINT64"), libgb.GrB_Monoid))
-    end
-
-    if name ∈ floats
-        monoid.typedops[Float32] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_FP32_MONOID" : "_MONOID_FP32"), libgb.GrB_Monoid))
-        monoid.typedops[Float64] =
-            TypedMonoid(load_global(name * (isGxB(name) ? "_FP64_MONOID" : "_MONOID_FP64"), libgb.GrB_Monoid))
-    end
-    name = "GxB_" * name[5:end]
-    if name ∈ complexes
-        #Complex monoids are always GxB, so "_MONOID" is always at the end.
-        monoid.typedops[ComplexF32] = TypedMonoid(load_global(name * "_FC32_MONOID", libgb.GrB_Monoid))
-        monoid.typedops[ComplexF64] = TypedMonoid(load_global(name * "_FC64_MONOID", libgb.GrB_Monoid))
-    end
-end
-
-
-ztype(::TypedMonoid{X, Y, Z}) where {X, Y, Z} = Z
-xtype(::TypedMonoid{X, Y, Z}) where {X, Y, Z} = X
-ytype(::TypedMonoid{X, Y, Z}) where {X, Y, Z} = Y
+ztype(::TypedMonoid{X}) where {X} = X
+xtype(::TypedMonoid{X}) where {X} = X
+ytype(::TypedMonoid{X}) where {X} = X
