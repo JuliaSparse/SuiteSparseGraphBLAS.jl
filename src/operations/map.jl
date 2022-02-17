@@ -1,80 +1,22 @@
 
 
 function Base.map!(
-    op::UnaryUnion, C::GBArray, A::GBArray;
+    op, C::GBArray, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
-    op = getoperator(op, eltype(A))
+    op = UnaryOp(op)(eltype(A))
     accum = getaccum(accum, eltype(C))
     libgb.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
     return C
 end
 
-Base.map!(op, C::GBArray, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map!(UnaryOp(op), C, A; mask, accum, desc)
-
 function Base.map!(
-    op::UnaryUnion, A::GBArray;
+    op, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     return map!(op, A, A; mask, accum, desc)
-end
-
-Base.map!(op, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map!(UnaryOp(op), A; mask, accum, desc)
-
-function Base.map(
-    op::UnaryUnion, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    t = inferoutputtype(A, op)
-    return map!(op, similar(A, t), A; mask, accum, desc)
-end
-
-Base.map(op, A::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(UnaryOp(op), A; mask, accum, desc)
-
-function Base.map!(
-    op::BinaryUnion, C::GBArray, x, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    mask, accum = _handlenothings(mask, accum)
-    desc = _handledescriptor(desc; in2=A)
-    op = getoperator(op, optype(eltype(A), typeof(x)))
-    accum = getaccum(accum, eltype(C))
-    libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, parent(A), desc)
-    return C
-end
-
-function Base.map!(
-    op, C::GBArray, x, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    map!(BinaryOps.BinaryOp(op), C, x, A; mask, accum, desc)
-end
-
-function Base.map!(
-    op::BinaryUnion, x, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return map!(op, A, x, A; mask, accum, desc)
-end
-
-function Base.map!(
-    op, x, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    map!(BinaryOps.BinaryOp(op), x, A; mask, accum, desc)
-end
-
-function Base.map(
-    op::BinaryUnion, x, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    t = inferoutputtype(A, op)
-    return map!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
 """
@@ -100,76 +42,83 @@ BinaryOps and two argument functions require the additional argument `x` which i
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
 function Base.map(
-    op, x, A::GBArray;
+    op, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    map(BinaryOps.BinaryOp(op), x, A; mask, accum, desc)
+    t = inferunarytype(eltype(A), op)
+    return map!(op, similar(A, t), A; mask, accum, desc)
 end
 
 function Base.map!(
-    op::BinaryUnion, C::GBArray, A::GBArray, x;
+    op, C::GBArray, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
-    desc = _handledescriptor(desc; in1=A)
-    op = getoperator(op, optype(eltype(A), typeof(x)))
+    desc = _handledescriptor(desc; in2=A)
+    op = BinaryOp(op)(eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
-    libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, parent(A), x, desc)
+    libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, parent(A), desc)
     return C
+end
+
+function Base.map!(
+    op, x, A::GBArray;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return map!(op, A, x, A; mask, accum, desc)
+end
+
+function Base.map(
+    op, x, A::GBArray;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    t = inferunarytype(eltype(A), op)
+    return map!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
 function Base.map!(
     op, C::GBArray, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
-    map!(BinaryOps.BinaryOp(op), C, A, x; mask, accum, desc)
+    mask, accum = _handlenothings(mask, accum)
+    desc = _handledescriptor(desc; in1=A)
+    op = BinaryOp(op)(eltype(A), typeof(x))
+    accum = getaccum(accum, eltype(C))
+    libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, parent(A), x, desc)
+    return C
 end
 
 function Base.map!(
-    op::BinaryUnion, A::GBArray, x;
+    op, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
     return map!(op, A, A, x; mask, accum, desc)
 end
 
-function Base.map!(
+function Base.map(
     op, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
-    map!(BinaryOps.BinaryOp(op), A, A, x; mask, accum, desc)
-end
-
-function Base.map(
-    op::BinaryUnion, A::GBArray, x;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    t = inferoutputtype(A, op)
+    t = inferunarytype(eltype(A), op)
     return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-function Base.map(
-    op, A::GBArray, x;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    map(BinaryOps.BinaryOp(op), A, x; mask, accum, desc)
-end
+Base.:+(x, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(+, x, u; mask, accum, desc)
+Base.:+(u::GBArray, x; mask = nothing, accum = nothing, desc = nothing) =
+    map(+, u, x; mask, accum, desc)
 
-Base.:+(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(BinaryOps.PLUS, x, u; mask, accum, desc)
-Base.:+(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
-    map(BinaryOps.PLUS, u, x; mask, accum, desc)
+Base.:*(x, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(*, x, u; mask, accum, desc)
+Base.:*(u::GBArray, x; mask = nothing, accum = nothing, desc = nothing) =
+    map(*, u, x; mask, accum, desc)
 
-Base.:*(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(BinaryOps.TIMES, x, u; mask, accum, desc)
-Base.:*(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
-    map(BinaryOps.TIMES, u, x; mask, accum, desc)
+Base.:-(x, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
+    map(-, x, u; mask, accum, desc)
+Base.:-(u::GBArray, x; mask = nothing, accum = nothing, desc = nothing) =
+    map(-, u, x; mask, accum, desc)
 
-Base.:-(x::valid_union, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(BinaryOps.MINUS, x, u; mask, accum, desc)
-Base.:-(u::GBArray, x::valid_union; mask = nothing, accum = nothing, desc = nothing) =
-    map(BinaryOps.MINUS, u, x; mask, accum, desc)
-
-Base.:-(u::GBArray) = map(UnaryOps.AINV, u)
+Base.:-(u::GBArray) = map(-, u)
 
 """
     mask!(C::GBArray, A::GBArray, mask::GBArray)

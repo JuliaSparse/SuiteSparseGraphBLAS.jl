@@ -1,878 +1,409 @@
 module Semirings
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, splitconstant
+import ..SuiteSparseGraphBLAS
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBType,
+    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes,
+    Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, Monoids.Monoid, BinaryOps.second, BinaryOps.rminus,
+    BinaryOps.iseq, BinaryOps.isne, BinaryOps.isgt, BinaryOps.islt, BinaryOps.isge, BinaryOps.isle, BinaryOps.∨,
+    BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.fmod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
+    BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
+    BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj
 using ..libgb
-export Semiring
-function _semiringnames(name)
-    if isGxB(name) || isGrB(name)
-        simple = name[5:end]
-    else
-        simple = name
-    end
-    simple = replace(simple, "_SEMIRING" => "")
-    containername = Symbol(simple, "_T")
-    exportedname = Symbol(simple)
-    return containername, exportedname
+export Semiring, @rig
+
+struct Semiring{FM, FA} <: AbstractSemiring
+    addop::Monoid{FA}
+    mulop::BinaryOp{FM}
 end
-function Semiring(name)
-    containername, exportedname = _semiringnames(name)
-    structquote = quote
-        struct $containername <: AbstractSemiring
-            typedops::Dict{Tuple{DataType, DataType}, TypedSemiring}
-            name::String
-            $containername() = new(Dict{Tuple{DataType, DataType}, TypedSemiring}(), $name)
+Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),BinaryOp(mulop))
+Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
+
+function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, outtype)
+    # Complex ops must always be GxB prefixed
+    if (xtype ∈ Ztypes || ytype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
+        namestr = "GxB" * namestr[4:end]
+    end
+    namestr = isGrB(namestr) ? namestr * "_SEMIRING" : namestr
+    if xtype === :Any && ytype === :Any && outtype ∈ Ntypes # POSITIONAL ops use the output type for suffix
+        namestr = namestr * "_$(suffix(outtype))"
+    elseif xtype === ytype
+        namestr = namestr * "_$(suffix(xtype))"
+    else
+        namestr = namestr * "_$(suffix(xtype))_$(suffix(ytype))"
+    end
+    if builtin
+        namesym = Symbol(namestr[5:end])
+    else
+        namesym = Symbol(namestr)
+    end
+    xsym = Symbol(xtype)
+    ysym = Symbol(ytype)
+    outsym = Symbol(outtype)
+    dispatchquote = if xtype === :Any && ytype === :Any
+        :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type, ::Type) = $(esc(namesym)))
+    else
+        :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
+    end
+    return quote
+        const $(esc(namesym)) = TypedSemiring($builtin, false, $namestr, libgb.GrB_Semiring(), Monoid($(esc(addfunc)))($(esc(outsym))), BinaryOp($(esc(mulfunc)))($(esc(xsym)), $(esc(ysym))))
+        $(dispatchquote)
+    end
+end
+function typedrigexprs(addfunc, mulfunc, builtin, namestr, xtypes, ytypes, outtypes)
+    if xtypes isa Symbol
+        xtypes = [xtypes]
+    end
+    if ytypes isa Symbol
+        ytypes = [ytypes]
+    end
+    if outtypes isa Symbol
+        outtypes = [outtypes]
+    end
+    exprs = typedrigconstexpr.(Ref(addfunc), Ref(mulfunc), Ref(builtin), Ref(namestr), xtypes, ytypes, outtypes)
+    if exprs isa Expr
+        return exprs
+    else
+        return quote 
+            $(exprs...)
         end
     end
-    @eval($structquote)
-    constquote = quote
-        const $exportedname = $containername()
-        export $exportedname
+end
+
+macro rig(expr...)
+    operands = first(expr)
+    if operands.head === :tuple && operands.args[1] isa Symbol && operands.args[2] isa Symbol
+        reducer = operands.args[1]
+        binop = operands.args[2]
+    else
+        error("Semiring macro 1st argument must be of the form (<Symbol>,<Symbol>)")
     end
-    @eval($constquote)
-    return getproperty(Semirings, exportedname)
-end
-
-end
-
-SemiringUnion = Union{AbstractSemiring, TypedSemiring}
-
-function _monoidfromrigname(name)
-    return split(name, "_")[2] * "_MONOID"
-end
-function _binopfromrigname(name)
-    return split(name, "_")[3]
-end
-
-#TODO: Rewrite
-function _createsemirings()
-    builtins = [
-        "GxB_PLUS_FIRST",
-        "GxB_TIMES_FIRST",
-        "GxB_ANY_FIRST",
-        "GxB_PLUS_SECOND",
-        "GxB_TIMES_SECOND",
-        "GxB_ANY_SECOND",
-        "GxB_MIN_PAIR",
-        "GxB_MAX_PAIR",
-        "GxB_PLUS_PAIR",
-        "GxB_TIMES_PAIR",
-        "GxB_ANY_PAIR",
-        "GxB_MIN_MIN",
-        "GxB_TIMES_MIN",
-        "GxB_ANY_MIN",
-        "GxB_MAX_MAX",
-        "GxB_PLUS_MAX",
-        "GxB_TIMES_MAX",
-        "GxB_ANY_MAX",
-        "GxB_PLUS_PLUS",
-        "GxB_TIMES_PLUS",
-        "GxB_ANY_PLUS",
-        "GxB_MIN_MINUS",
-        "GxB_MAX_MINUS",
-        "GxB_PLUS_MINUS",
-        "GxB_TIMES_MINUS",
-        "GxB_ANY_MINUS",
-        "GxB_TIMES_TIMES",
-        "GxB_ANY_TIMES",
-        "GxB_MIN_DIV",
-        "GxB_MAX_DIV",
-        "GxB_PLUS_DIV",
-        "GxB_TIMES_DIV",
-        "GxB_ANY_DIV",
-        "GxB_MIN_RDIV",
-        "GxB_MAX_RDIV",
-        "GxB_PLUS_RDIV",
-        "GxB_TIMES_RDIV",
-        "GxB_ANY_RDIV",
-        "GxB_MIN_RMINUS",
-        "GxB_MAX_RMINUS",
-        "GxB_PLUS_RMINUS",
-        "GxB_TIMES_RMINUS",
-        "GxB_ANY_RMINUS",
-        "GxB_MIN_ISEQ",
-        "GxB_MAX_ISEQ",
-        "GxB_PLUS_ISEQ",
-        "GxB_TIMES_ISEQ",
-        "GxB_ANY_ISEQ",
-        "GxB_MIN_ISNE",
-        "GxB_MAX_ISNE",
-        "GxB_PLUS_ISNE",
-        "GxB_TIMES_ISNE",
-        "GxB_ANY_ISNE",
-        "GxB_MIN_ISGT",
-        "GxB_MAX_ISGT",
-        "GxB_PLUS_ISGT",
-        "GxB_TIMES_ISGT",
-        "GxB_ANY_ISGT",
-        "GxB_MIN_ISLT",
-        "GxB_MAX_ISLT",
-        "GxB_PLUS_ISLT",
-        "GxB_TIMES_ISLT",
-        "GxB_ANY_ISLT",
-        "GxB_MIN_ISGE",
-        "GxB_MAX_ISGE",
-        "GxB_PLUS_ISGE",
-        "GxB_TIMES_ISGE",
-        "GxB_ANY_ISGE",
-        "GxB_MIN_ISLE",
-        "GxB_MAX_ISLE",
-        "GxB_PLUS_ISLE",
-        "GxB_TIMES_ISLE",
-        "GxB_ANY_ISLE",
-        "GxB_MIN_LOR",
-        "GxB_MAX_LOR",
-        "GxB_PLUS_LOR",
-        "GxB_TIMES_LOR",
-        "GxB_ANY_LOR",
-        "GxB_MIN_LAND",
-        "GxB_MAX_LAND",
-        "GxB_PLUS_LAND",
-        "GxB_TIMES_LAND",
-        "GxB_ANY_LAND",
-        "GxB_MIN_LXOR",
-        "GxB_MAX_LXOR",
-        "GxB_PLUS_LXOR",
-        "GxB_TIMES_LXOR",
-        "GxB_ANY_LXOR",
-        "GxB_LOR_NE",
-        "GxB_LOR_EQ",
-        "GxB_LAND_EQ",
-        "GxB_LXOR_EQ",
-        "GxB_EQ_EQ",
-        "GxB_ANY_EQ",
-        "GxB_LAND_NE",
-        "GxB_LXOR_NE",
-        "GxB_EQ_NE",
-        "GxB_ANY_NE",
-        "GxB_LOR_GT",
-        "GxB_LAND_GT",
-        "GxB_LXOR_GT",
-        "GxB_EQ_GT",
-        "GxB_ANY_GT",
-        "GxB_LOR_LT",
-        "GxB_LAND_LT",
-        "GxB_LXOR_LT",
-        "GxB_EQ_LT",
-        "GxB_ANY_LT",
-        "GxB_LOR_GE",
-        "GxB_LAND_GE",
-        "GxB_LXOR_GE",
-        "GxB_EQ_GE",
-        "GxB_ANY_GE",
-        "GxB_LOR_LE",
-        "GxB_LAND_LE",
-        "GxB_LXOR_LE",
-        "GxB_EQ_LE",
-        "GxB_ANY_LE",
-        "GxB_LOR_FIRST",
-        "GxB_LAND_FIRST",
-        "GxB_LXOR_FIRST",
-        "GxB_EQ_FIRST",
-        "GxB_LOR_SECOND",
-        "GxB_LAND_SECOND",
-        "GxB_LXOR_SECOND",
-        "GxB_EQ_SECOND",
-        "GxB_LOR_PAIR",
-        "GxB_LAND_PAIR",
-        "GxB_LXOR_PAIR",
-        "GxB_EQ_PAIR",
-        "GxB_LOR_LOR",
-        "GxB_LXOR_LOR",
-        "GxB_EQ_LOR",
-        "GxB_LAND_LAND",
-        "GxB_EQ_LAND",
-        "GxB_LOR_LXOR",
-        "GxB_LAND_LXOR",
-        "GxB_LXOR_LXOR",
-        "GxB_EQ_LXOR",
-        "GxB_BOR_BOR",
-        "GxB_BOR_BAND",
-        "GxB_BOR_BXOR",
-        "GxB_BOR_BXNOR",
-        "GxB_BAND_BOR",
-        "GxB_BAND_BAND",
-        "GxB_BAND_BXOR",
-        "GxB_BAND_BXNOR",
-        "GxB_BXOR_BOR",
-        "GxB_BXOR_BAND",
-        "GxB_BXOR_BXOR",
-        "GxB_BXOR_BXNOR",
-        "GxB_BXNOR_BOR",
-        "GxB_BXNOR_BAND",
-        "GxB_BXNOR_BXOR",
-        "GxB_BXNOR_BXNOR",
-        "GxB_MIN_FIRSTI",
-        "GxB_MAX_FIRSTI",
-        "GxB_ANY_FIRSTI",
-        "GxB_PLUS_FIRSTI",
-        "GxB_TIMES_FIRSTI",
-        "GxB_MIN_FIRSTI1",
-        "GxB_MAX_FIRSTI1",
-        "GxB_ANY_FIRSTI1",
-        "GxB_PLUS_FIRSTI1",
-        "GxB_TIMES_FIRSTI1",
-        "GxB_MIN_FIRSTJ",
-        "GxB_MAX_FIRSTJ",
-        "GxB_ANY_FIRSTJ",
-        "GxB_PLUS_FIRSTJ",
-        "GxB_TIMES_FIRSTJ",
-        "GxB_MIN_FIRSTJ1",
-        "GxB_MAX_FIRSTJ1",
-        "GxB_ANY_FIRSTJ1",
-        "GxB_PLUS_FIRSTJ1",
-        "GxB_TIMES_FIRSTJ1",
-        "GxB_MIN_SECONDI",
-        "GxB_MAX_SECONDI",
-        "GxB_ANY_SECONDI",
-        "GxB_PLUS_SECONDI",
-        "GxB_TIMES_SECONDI",
-        "GxB_MIN_SECONDI1",
-        "GxB_MAX_SECONDI1",
-        "GxB_ANY_SECONDI1",
-        "GxB_PLUS_SECONDI1",
-        "GxB_TIMES_SECONDI1",
-        "GxB_MIN_SECONDJ",
-        "GxB_MAX_SECONDJ",
-        "GxB_ANY_SECONDJ",
-        "GxB_PLUS_SECONDJ",
-        "GxB_TIMES_SECONDJ",
-        "GxB_MIN_SECONDJ1",
-        "GxB_MAX_SECONDJ1",
-        "GxB_ANY_SECONDJ1",
-        "GxB_PLUS_SECONDJ1",
-        "GxB_TIMES_SECONDJ1",
-        "GrB_PLUS_TIMES_SEMIRING",
-        "GrB_PLUS_MIN_SEMIRING",
-        "GrB_MIN_PLUS_SEMIRING",
-        "GrB_MIN_TIMES_SEMIRING",
-        "GrB_MIN_FIRST_SEMIRING",
-        "GrB_MIN_SECOND_SEMIRING",
-        "GrB_MIN_MAX_SEMIRING",
-        "GrB_MAX_PLUS_SEMIRING",
-        "GrB_MAX_TIMES_SEMIRING",
-        "GrB_MAX_FIRST_SEMIRING",
-        "GrB_MAX_SECOND_SEMIRING",
-        "GrB_MAX_MIN_SEMIRING",
-        "GrB_LOR_LAND_SEMIRING",
-        "GrB_LAND_LOR_SEMIRING",
-        "GrB_LXOR_LAND_SEMIRING",
-        "GrB_LXNOR_LOR_SEMIRING",
-    ]
-
-    for name ∈ builtins
-        rig = Semiring(name)
-        monoid = getproperty(Monoids, Symbol(_monoidfromrigname(name)))
-        eval(:(monoid(::typeof($rig)) = $monoid))
-        binop = getproperty(BinaryOps, Symbol(_binopfromrigname(name)))
-        eval(:(binop(::typeof($rig)) = $binop))
+    if expr[2] isa Symbol
+        name = string(expr[2])
+        types = expr[3]
+    else # if we aren't given a name then we'll assume it's just uppercased of the function.
+        name = uppercase(string(jlfunc))
+        types = expr[2]
     end
-end
-
-#Add typed ⊕ and ⊗ to semiring
-function _addsemiring(rig::AbstractSemiring, add::TypedMonoid, mul::TypedBinaryOperator)
-    rigref = Ref{TypedSemiring}()
-    libgb.GrB_Semiring_new(rigref, add, mul)
-    rig.typedops[xtype(add), ytype(add)] = TypedSemiring(rigref[])
-    return nothing
-end
-
-#New semiring with typed ⊕ and ⊗
-function Semirings.Semiring(name::String, add::TypedMonoid, mul::TypedBinaryOperator)
-    rig = Semirings.Semiring(name)
-    _addsemiring(rig, add, mul)
-    return rig
-end
-
-#New semiring with all supported types in the intersection of validtypes(⊕) and validtypes(⊗)
-function Semirings.Semiring(name::String, add::AbstractMonoid, mul::AbstractBinaryOp)
-    tadd = validtypes(add)
-    tmul = validtypes(mul)
-    trig = intersect(tadd, tmul)
-    rig = Semirings.Semiring(name)
-    eval(:(addop(::typeof($rig)) = juliaop($(add))))
-    eval(:(mulop(::typeof($rig)) = juliaop($(mul))))
-    for t ∈ trig
-        _addsemiring(rig, add[t], mul[t])
+    builtin = isGxB(name) || isGrB(name)
+    if types.head !== :call || types.args[1] !== :(=>)
+        error("Type constraints should be in the form <Symbol>=><Symbol>")
     end
-    return rig
+    intypes = types.args[2]
+    if intypes isa Expr && intypes.head === :tuple
+        xtypes = symtotype(intypes.args[1])
+        ytypes = symtotype(intypes.args[2])
+    else
+        xtypes = symtotype(intypes)
+        ytypes = xtypes
+    end
+    outtypes = symtotype(types.args[3])
+    constquote = typedrigexprs(reducer, binop, builtin, name, xtypes, ytypes, outtypes)
+    return constquote
+end
+
+# (MIN, MAX, PLUS, TIMES, ANY) × 
+# (FIRST, SECOND, PAIR(ONEB), MIN, MAX, PLUS, MINUS, RMINUS, TIMES, DIV, RDIV, ISEQ, 
+# ISNE, ISGT, ISLT, ISGE, ISLE, LOR, LAND, LXOR) ×
+# (I..., F...)
+@rig (min, first) GxB_MIN_FIRST IF=>IF
+@rig (min, second) GxB_MIN_SECOND IF=>IF
+@rig (min, one) GxB_MIN_PAIR IF=>IF
+@rig (min, min) GxB_MIN_MIN IF=>IF
+@rig (min, max) GxB_MIN_MAX IF=>IF
+@rig (min, +) GxB_MIN_PLUS IF=>IF
+@rig (min, -) GxB_MIN_MINUS IF=>IF
+@rig (min, rminus) GxB_MIN_RMINUS IF=>IF
+@rig (min, *) GxB_MIN_TIMES IF=>IF
+@rig (min, /) GxB_MIN_DIV IF=>IF
+@rig (min, \) GxB_MIN_RDIV IF=>IF
+@rig (min, iseq) GxB_MIN_ISEQ IF=>IF
+@rig (min, isne) GxB_MIN_ISNE IF=>IF
+@rig (min, isgt) GxB_MIN_ISGT IF=>IF
+@rig (min, islt) GxB_MIN_ISLT IF=>IF
+@rig (min, isge) GxB_MIN_ISGE IF=>IF
+@rig (min, isle) GxB_MIN_ISLE IF=>IF
+@rig (min, ∨) GxB_MIN_LOR IF=>IF
+@rig (min, ∧) GxB_MIN_LAND IF=>IF
+@rig (min, lxor) GxB_MIN_LXOR IF=>IF
+
+@rig (max, first) GxB_MAX_FIRST IF=>IF
+@rig (max, second) GxB_MAX_SECOND IF=>IF
+@rig (max, one) GxB_MAX_PAIR IF=>IF
+@rig (max, min) GxB_MAX_MIN IF=>IF
+@rig (max, max) GxB_MAX_MAX IF=>IF
+@rig (max, +) GxB_MAX_PLUS IF=>IF
+@rig (max, -) GxB_MAX_MINUS IF=>IF
+@rig (max, rminus) GxB_MAX_RMINUS IF=>IF
+@rig (max, *) GxB_MAX_TIMES IF=>IF
+@rig (max, /) GxB_MAX_DIV IF=>IF
+@rig (max, \) GxB_MAX_RDIV IF=>IF
+@rig (max, iseq) GxB_MAX_ISEQ IF=>IF
+@rig (max, isne) GxB_MAX_ISNE IF=>IF
+@rig (max, isgt) GxB_MAX_ISGT IF=>IF
+@rig (max, islt) GxB_MAX_ISLT IF=>IF
+@rig (max, isge) GxB_MAX_ISGE IF=>IF
+@rig (max, isle) GxB_MAX_ISLE IF=>IF
+@rig (max, ∨) GxB_MAX_LOR IF=>IF
+@rig (max, ∧) GxB_MAX_LAND IF=>IF
+@rig (max, lxor) GxB_MAX_LXOR IF=>IF
+
+@rig (+, first) GxB_PLUS_FIRST IF=>IF
+@rig (+, second) GxB_PLUS_SECOND IF=>IF
+@rig (+, one) GxB_PLUS_PAIR IF=>IF
+@rig (+, min) GxB_PLUS_MIN IF=>IF
+@rig (+, max) GxB_PLUS_MAX IF=>IF
+@rig (+, +) GxB_PLUS_PLUS IF=>IF
+@rig (+, -) GxB_PLUS_MINUS IF=>IF
+@rig (+, rminus) GxB_PLUS_RMINUS IF=>IF
+@rig (+, *) GxB_PLUS_TIMES IF=>IF
+@rig (+, /) GxB_PLUS_DIV IF=>IF
+@rig (+, \) GxB_PLUS_RDIV IF=>IF
+@rig (+, iseq) GxB_PLUS_ISEQ IF=>IF
+@rig (+, isne) GxB_PLUS_ISNE IF=>IF
+@rig (+, isgt) GxB_PLUS_ISGT IF=>IF
+@rig (+, islt) GxB_PLUS_ISLT IF=>IF
+@rig (+, isge) GxB_PLUS_ISGE IF=>IF
+@rig (+, isle) GxB_PLUS_ISLE IF=>IF
+@rig (+, ∨) GxB_PLUS_LOR IF=>IF
+@rig (+, ∧) GxB_PLUS_LAND IF=>IF
+@rig (+, lxor) GxB_PLUS_LXOR IF=>IF
+
+@rig (*, first) GxB_TIMES_FIRST IF=>IF
+@rig (*, second) GxB_TIMES_SECOND IF=>IF
+@rig (*, one) GxB_TIMES_PAIR IF=>IF
+@rig (*, min) GxB_TIMES_MIN IF=>IF
+@rig (*, max) GxB_TIMES_MAX IF=>IF
+@rig (*, +) GxB_TIMES_PLUS IF=>IF
+@rig (*, -) GxB_TIMES_MINUS IF=>IF
+@rig (*, rminus) GxB_TIMES_RMINUS IF=>IF
+@rig (*, *) GxB_TIMES_TIMES IF=>IF
+@rig (*, /) GxB_TIMES_DIV IF=>IF
+@rig (*, \) GxB_TIMES_RDIV IF=>IF
+@rig (*, iseq) GxB_TIMES_ISEQ IF=>IF
+@rig (*, isne) GxB_TIMES_ISNE IF=>IF
+@rig (*, isgt) GxB_TIMES_ISGT IF=>IF
+@rig (*, islt) GxB_TIMES_ISLT IF=>IF
+@rig (*, isge) GxB_TIMES_ISGE IF=>IF
+@rig (*, isle) GxB_TIMES_ISLE IF=>IF
+@rig (*, ∨) GxB_TIMES_LOR IF=>IF
+@rig (*, ∧) GxB_TIMES_LAND IF=>IF
+@rig (*, lxor) GxB_TIMES_LXOR IF=>IF
+
+@rig (any, first) GxB_ANY_FIRST IF=>IF
+@rig (any, second) GxB_ANY_SECOND IF=>IF
+@rig (any, one) GxB_ANY_PAIR IF=>IF
+@rig (any, min) GxB_ANY_MIN IF=>IF
+@rig (any, max) GxB_ANY_MAX IF=>IF
+@rig (any, +) GxB_ANY_PLUS IF=>IF
+@rig (any, -) GxB_ANY_MINUS IF=>IF
+@rig (any, rminus) GxB_ANY_RMINUS IF=>IF
+@rig (any, *) GxB_ANY_TIMES IF=>IF
+@rig (any, /) GxB_ANY_DIV IF=>IF
+@rig (any, \) GxB_ANY_RDIV IF=>IF
+@rig (any, iseq) GxB_ANY_ISEQ IF=>IF
+@rig (any, isne) GxB_ANY_ISNE IF=>IF
+@rig (any, isgt) GxB_ANY_ISGT IF=>IF
+@rig (any, islt) GxB_ANY_ISLT IF=>IF
+@rig (any, isge) GxB_ANY_ISGE IF=>IF
+@rig (any, isle) GxB_ANY_ISLE IF=>IF
+@rig (any, ∨) GxB_ANY_LOR IF=>IF
+@rig (any, ∧) GxB_ANY_LAND IF=>IF
+@rig (any, lxor) GxB_ANY_LXOR IF=>IF
+
+# (LAND, LOR, LXOR, EQ, ANY) × (EQ, NE, GT, LT, GE, LE) × (I..., F...)
+@rig (∧, ==) GxB_LAND_EQ IF=>Bool
+@rig (∧, !=) GxB_LAND_NE IF=>Bool
+@rig (∧, >) GxB_LAND_GT IF=>Bool
+@rig (∧, <) GxB_LAND_LT IF=>Bool
+@rig (∧, >=) GxB_LAND_GE IF=>Bool
+@rig (∧, <=) GxB_LAND_LE IF=>Bool
+
+@rig (∨, ==) GxB_LOR_EQ IF=>Bool
+@rig (∨, !=) GxB_LOR_NE IF=>Bool
+@rig (∨, >) GxB_LOR_GT IF=>Bool
+@rig (∨, <) GxB_LOR_LT IF=>Bool
+@rig (∨, >=) GxB_LOR_GE IF=>Bool
+@rig (∨, <=) GxB_LOR_LE IF=>Bool
+
+@rig (lxor, ==) GxB_LXOR_EQ IF=>Bool
+@rig (lxor, !=) GxB_LXOR_NE IF=>Bool
+@rig (lxor, >) GxB_LXOR_GT IF=>Bool
+@rig (lxor, <) GxB_LXOR_LT IF=>Bool
+@rig (lxor, >=) GxB_LXOR_GE IF=>Bool
+@rig (lxor, <=) GxB_LXOR_LE IF=>Bool
+
+@rig (==, ==) GxB_EQ_EQ IF=>Bool
+@rig (==, !=) GxB_EQ_NE IF=>Bool
+@rig (==, >) GxB_EQ_GT IF=>Bool
+@rig (==, <) GxB_EQ_LT IF=>Bool
+@rig (==, >=) GxB_EQ_GE IF=>Bool
+@rig (==, <=) GxB_EQ_LE IF=>Bool
+
+@rig (any, ==) GxB_ANY_EQ IF=>Bool
+@rig (any, !=) GxB_ANY_NE IF=>Bool
+@rig (any, >) GxB_ANY_GT IF=>Bool
+@rig (any, <) GxB_ANY_LT IF=>Bool
+@rig (any, >=) GxB_ANY_GE IF=>Bool
+@rig (any, <=) GxB_ANY_LE IF=>Bool
+
+# (LAND, LOR, LXOR, EQ, ANY) × (FIRST, SECOND, PAIR(ONEB), LOR, LAND, LXOR, EQ, GT, LT, GE, LE) × Bool
+
+@rig (∧, first) GxB_LAND_FIRST Bool=>Bool
+@rig (∧, second) GxB_LAND_SECOND Bool=>Bool
+@rig (∧, one) GxB_LAND_PAIR Bool=>Bool
+@rig (∧, ∨) GxB_LAND_LOR Bool=>Bool
+@rig (∧, ∧) GxB_LAND_LAND Bool=>Bool
+@rig (∧, lxor) GxB_LAND_LXOR Bool=>Bool
+@rig (∧, ==) GxB_LAND_EQ Bool=>Bool
+@rig (∧, >) GxB_LAND_GT Bool=>Bool
+@rig (∧, <) GxB_LAND_LT Bool=>Bool
+@rig (∧, >=) GxB_LAND_GE Bool=>Bool
+@rig (∧, <=) GxB_LAND_LE Bool=>Bool
+
+@rig (∨, first) GxB_LOR_FIRST Bool=>Bool
+@rig (∨, second) GxB_LOR_SECOND Bool=>Bool
+@rig (∨, one) GxB_LOR_PAIR Bool=>Bool
+@rig (∨, ∨) GxB_LOR_LOR Bool=>Bool
+@rig (∨, ∧) GxB_LOR_LAND Bool=>Bool
+@rig (∨, lxor) GxB_LOR_LXOR Bool=>Bool
+@rig (∨, ==) GxB_LOR_EQ Bool=>Bool
+@rig (∨, >) GxB_LOR_GT Bool=>Bool
+@rig (∨, <) GxB_LOR_LT Bool=>Bool
+@rig (∨, >=) GxB_LOR_GE Bool=>Bool
+@rig (∨, <=) GxB_LOR_LE Bool=>Bool
+
+@rig (lxor, first) GxB_LXOR_FIRST Bool=>Bool
+@rig (lxor, second) GxB_LXOR_SECOND Bool=>Bool
+@rig (lxor, one) GxB_LXOR_PAIR Bool=>Bool
+@rig (lxor, ∨) GxB_LXOR_LOR Bool=>Bool
+@rig (lxor, ∧) GxB_LXOR_LAND Bool=>Bool
+@rig (lxor, lxor) GxB_LXOR_LXOR Bool=>Bool
+@rig (lxor, ==) GxB_LXOR_EQ Bool=>Bool
+@rig (lxor, >) GxB_LXOR_GT Bool=>Bool
+@rig (lxor, <) GxB_LXOR_LT Bool=>Bool
+@rig (lxor, >=) GxB_LXOR_GE Bool=>Bool
+@rig (lxor, <=) GxB_LXOR_LE Bool=>Bool
+
+@rig (==, first) GxB_EQ_FIRST Bool=>Bool
+@rig (==, second) GxB_EQ_SECOND Bool=>Bool
+@rig (==, one) GxB_EQ_PAIR Bool=>Bool
+@rig (==, ∨) GxB_EQ_LOR Bool=>Bool
+@rig (==, ∧) GxB_EQ_LAND Bool=>Bool
+@rig (==, lxor) GxB_EQ_LXOR Bool=>Bool
+@rig (==, ==) GxB_EQ_EQ Bool=>Bool
+@rig (==, >) GxB_EQ_GT Bool=>Bool
+@rig (==, <) GxB_EQ_LT Bool=>Bool
+@rig (==, >=) GxB_EQ_GE Bool=>Bool
+@rig (==, <=) GxB_EQ_LE Bool=>Bool
+
+@rig (any, first) GxB_ANY_FIRST Bool=>Bool
+@rig (any, second) GxB_ANY_SECOND Bool=>Bool
+@rig (any, one) GxB_ANY_PAIR Bool=>Bool
+@rig (any, ∨) GxB_ANY_LOR Bool=>Bool
+@rig (any, ∧) GxB_ANY_LAND Bool=>Bool
+@rig (any, lxor) GxB_ANY_LXOR Bool=>Bool
+@rig (any, ==) GxB_ANY_EQ Bool=>Bool
+@rig (any, >) GxB_ANY_GT Bool=>Bool
+@rig (any, <) GxB_ANY_LT Bool=>Bool
+@rig (any, >=) GxB_ANY_GE Bool=>Bool
+@rig (any, <=) GxB_ANY_LE Bool=>Bool
+
+# (PLUS, TIMES, ANY) × (FIRST, SECOND, PAIR(ONEB), PLUS, MINUS, RMINUS, TIMES, DIV, RDIV) × Z
+@rig (+, first) GxB_PLUS_FIRST Z=>Z
+@rig (+, second) GxB_PLUS_SECOND Z=>Z
+@rig (+, one) GxB_PLUS_PAIR Z=>Z
+@rig (+, +) GxB_PLUS_PLUS Z=>Z
+@rig (+, -) GxB_PLUS_MINUS Z=>Z
+@rig (+, rminus) GxB_PLUS_RMINUS Z=>Z
+@rig (+, *) GxB_PLUS_TIMES Z=>Z
+@rig (+, /) GxB_PLUS_DIV Z=>Z
+@rig (+, \) GxB_PLUS_RDIV Z=>Z
+
+@rig (*, first) GxB_TIMES_FIRST Z=>Z
+@rig (*, second) GxB_TIMES_SECOND Z=>Z
+@rig (*, one) GxB_TIMES_PAIR Z=>Z
+@rig (*, +) GxB_TIMES_PLUS Z=>Z
+@rig (*, -) GxB_TIMES_MINUS Z=>Z
+@rig (*, rminus) GxB_TIMES_RMINUS Z=>Z
+@rig (*, *) GxB_TIMES_TIMES Z=>Z
+@rig (*, /) GxB_TIMES_DIV Z=>Z
+@rig (*, \) GxB_TIMES_RDIV Z=>Z
+
+@rig (any, first) GxB_ANY_FIRST Z=>Z
+@rig (any, second) GxB_ANY_SECOND Z=>Z
+@rig (any, one) GxB_ANY_PAIR Z=>Z
+@rig (any, +) GxB_ANY_PLUS Z=>Z
+@rig (any, -) GxB_ANY_MINUS Z=>Z
+@rig (any, rminus) GxB_ANY_RMINUS Z=>Z
+@rig (any, *) GxB_ANY_TIMES Z=>Z
+@rig (any, /) GxB_ANY_DIV Z=>Z
+@rig (any, \) GxB_ANY_RDIV Z=>Z
+
+@rig (|, |) GxB_BOR_BOR U=>U
+@rig (|, &) GxB_BOR_BAND U=>U
+@rig (|, ⊻) GxB_BOR_BXOR U=>U
+@rig (|, bxnor) GxB_BOR_BXNOR U=>U
+
+@rig (&, |) GxB_BAND_BOR U=>U
+@rig (&, &) GxB_BAND_BAND U=>U
+@rig (&, ⊻) GxB_BAND_BXOR U=>U
+@rig (&, bxnor) GxB_BAND_BXNOR U=>U
+
+@rig (⊻, |) GxB_BXOR_BOR U=>U
+@rig (⊻, &) GxB_BXOR_BAND U=>U
+@rig (⊻, ⊻) GxB_BXOR_BXOR U=>U
+@rig (⊻, bxnor) GxB_BXOR_BXNOR U=>U
+
+@rig (bxnor, |) GxB_BXNOR_BOR U=>U
+@rig (bxnor, &) GxB_BXNOR_BAND U=>U
+@rig (bxnor, ⊻) GxB_BXNOR_BXOR U=>U
+@rig (bxnor, bxnor) GxB_BXNOR_BXNOR U=>U
+
+@rig (min, firsti) GxB_MIN_FIRSTI1 Any=>N
+@rig (min, firsti0) GxB_MIN_FIRSTI Any=>N
+@rig (min, firstj) GxB_MIN_FIRSTJ1 Any=>N
+@rig (min, firstj0) GxB_MIN_FIRSTJ Any=>N
+@rig (min, secondi) GxB_MIN_SECONDI1 Any=>N
+@rig (min, secondi0) GxB_MIN_SECONDI Any=>N
+@rig (min, secondj) GxB_MIN_SECONDJ1 Any=>N
+@rig (min, secondj0) GxB_MIN_SECONDJ Any=>N
+
+@rig (max, firsti) GxB_MAX_FIRSTI1 Any=>N
+@rig (max, firsti0) GxB_MAX_FIRSTI Any=>N
+@rig (max, firstj) GxB_MAX_FIRSTJ1 Any=>N
+@rig (max, firstj0) GxB_MAX_FIRSTJ Any=>N
+@rig (max, secondi) GxB_MAX_SECONDI1 Any=>N
+@rig (max, secondi0) GxB_MAX_SECONDI Any=>N
+@rig (max, secondj) GxB_MAX_SECONDJ1 Any=>N
+@rig (max, secondj0) GxB_MAX_SECONDJ Any=>N
+
+@rig (+, firsti) GxB_PLUS_FIRSTI1 Any=>N
+@rig (+, firsti0) GxB_PLUS_FIRSTI Any=>N
+@rig (+, firstj) GxB_PLUS_FIRSTJ1 Any=>N
+@rig (+, firstj0) GxB_PLUS_FIRSTJ Any=>N
+@rig (+, secondi) GxB_PLUS_SECONDI1 Any=>N
+@rig (+, secondi0) GxB_PLUS_SECONDI Any=>N
+@rig (+, secondj) GxB_PLUS_SECONDJ1 Any=>N
+@rig (+, secondj0) GxB_PLUS_SECONDJ Any=>N
+
+@rig (*, firsti) GxB_TIMES_FIRSTI1 Any=>N
+@rig (*, firsti0) GxB_TIMES_FIRSTI Any=>N
+@rig (*, firstj) GxB_TIMES_FIRSTJ1 Any=>N
+@rig (*, firstj0) GxB_TIMES_FIRSTJ Any=>N
+@rig (*, secondi) GxB_TIMES_SECONDI1 Any=>N
+@rig (*, secondi0) GxB_TIMES_SECONDI Any=>N
+@rig (*, secondj) GxB_TIMES_SECONDJ1 Any=>N
+@rig (*, secondj0) GxB_TIMES_SECONDJ Any=>N
+
+@rig (any, firsti) GxB_ANY_FIRSTI1 Any=>N
+@rig (any, firsti0) GxB_ANY_FIRSTI Any=>N
+@rig (any, firstj) GxB_ANY_FIRSTJ1 Any=>N
+@rig (any, firstj0) GxB_ANY_FIRSTJ Any=>N
+@rig (any, secondi) GxB_ANY_SECONDI1 Any=>N
+@rig (any, secondi0) GxB_ANY_SECONDI Any=>N
+@rig (any, secondj) GxB_ANY_SECONDJ1 Any=>N
+@rig (any, secondj0) GxB_ANY_SECONDJ Any=>N
 end
 
 ztype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = Z
 xtype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = X
-ytype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = Y
-
-function _load(rig::AbstractSemiring)
-    booleans = ["GxB_LOR_FIRST",
-        "GxB_LAND_FIRST",
-        "GxB_LXOR_FIRST",
-        "GxB_EQ_FIRST",
-        "GxB_ANY_FIRST",
-        "GxB_LOR_SECOND",
-        "GxB_LAND_SECOND",
-        "GxB_LXOR_SECOND",
-        "GxB_EQ_SECOND",
-        "GxB_ANY_SECOND",
-        "GxB_LOR_PAIR",
-        "GxB_LAND_PAIR",
-        "GxB_LXOR_PAIR",
-        "GxB_EQ_PAIR",
-        "GxB_ANY_PAIR",
-        "GxB_LOR_LOR",
-        "GxB_LXOR_LOR",
-        "GxB_EQ_LOR",
-        "GxB_ANY_LOR",
-        "GxB_LAND_LAND",
-        "GxB_EQ_LAND",
-        "GxB_ANY_LAND",
-        "GxB_LOR_LXOR",
-        "GxB_LAND_LXOR",
-        "GxB_LXOR_LXOR",
-        "GxB_EQ_LXOR",
-        "GxB_ANY_LXOR",
-        "GxB_LOR_EQ",
-        "GxB_LAND_EQ",
-        "GxB_LXOR_EQ",
-        "GxB_EQ_EQ",
-        "GxB_ANY_EQ",
-        "GxB_LOR_GT",
-        "GxB_LAND_GT",
-        "GxB_LXOR_GT",
-        "GxB_EQ_GT",
-        "GxB_ANY_GT",
-        "GxB_LOR_LT",
-        "GxB_LAND_LT",
-        "GxB_LXOR_LT",
-        "GxB_EQ_LT",
-        "GxB_ANY_LT",
-        "GxB_LOR_GE",
-        "GxB_LAND_GE",
-        "GxB_LXOR_GE",
-        "GxB_EQ_GE",
-        "GxB_ANY_GE",
-        "GxB_LOR_LE",
-        "GxB_LAND_LE",
-        "GxB_LXOR_LE",
-        "GxB_EQ_LE",
-        "GxB_ANY_LE",
-        "GrB_LOR_LAND_SEMIRING",
-        "GrB_LAND_LOR_SEMIRING",
-        "GrB_LXOR_LAND_SEMIRING",
-        "GrB_LXNOR_LOR_SEMIRING",
-    ]
-
-    integers = ["GxB_PLUS_FIRST",
-        "GxB_TIMES_FIRST",
-        "GxB_ANY_FIRST",
-        "GxB_PLUS_SECOND",
-        "GxB_TIMES_SECOND",
-        "GxB_ANY_SECOND",
-        "GxB_MIN_PAIR",
-        "GxB_MAX_PAIR",
-        "GxB_PLUS_PAIR",
-        "GxB_TIMES_PAIR",
-        "GxB_ANY_PAIR",
-        "GxB_MIN_MIN",
-        "GxB_TIMES_MIN",
-        "GxB_ANY_MIN",
-        "GxB_MAX_MAX",
-        "GxB_PLUS_MAX",
-        "GxB_TIMES_MAX",
-        "GxB_ANY_MAX",
-        "GxB_PLUS_PLUS",
-        "GxB_TIMES_PLUS",
-        "GxB_ANY_PLUS",
-        "GxB_MIN_MINUS",
-        "GxB_MAX_MINUS",
-        "GxB_PLUS_MINUS",
-        "GxB_TIMES_MINUS",
-        "GxB_ANY_MINUS",
-        "GxB_TIMES_TIMES",
-        "GxB_ANY_TIMES",
-        "GxB_MIN_DIV",
-        "GxB_MAX_DIV",
-        "GxB_PLUS_DIV",
-        "GxB_TIMES_DIV",
-        "GxB_ANY_DIV",
-        "GxB_MIN_RDIV",
-        "GxB_MAX_RDIV",
-        "GxB_PLUS_RDIV",
-        "GxB_TIMES_RDIV",
-        "GxB_ANY_RDIV",
-        "GxB_MIN_RMINUS",
-        "GxB_MAX_RMINUS",
-        "GxB_PLUS_RMINUS",
-        "GxB_TIMES_RMINUS",
-        "GxB_ANY_RMINUS",
-        "GxB_MIN_ISEQ",
-        "GxB_MAX_ISEQ",
-        "GxB_PLUS_ISEQ",
-        "GxB_TIMES_ISEQ",
-        "GxB_ANY_ISEQ",
-        "GxB_MIN_ISNE",
-        "GxB_MAX_ISNE",
-        "GxB_PLUS_ISNE",
-        "GxB_TIMES_ISNE",
-        "GxB_ANY_ISNE",
-        "GxB_MIN_ISGT",
-        "GxB_MAX_ISGT",
-        "GxB_PLUS_ISGT",
-        "GxB_TIMES_ISGT",
-        "GxB_ANY_ISGT",
-        "GxB_MIN_ISLT",
-        "GxB_MAX_ISLT",
-        "GxB_PLUS_ISLT",
-        "GxB_TIMES_ISLT",
-        "GxB_ANY_ISLT",
-        "GxB_MIN_ISGE",
-        "GxB_MAX_ISGE",
-        "GxB_PLUS_ISGE",
-        "GxB_TIMES_ISGE",
-        "GxB_ANY_ISGE",
-        "GxB_MIN_ISLE",
-        "GxB_MAX_ISLE",
-        "GxB_PLUS_ISLE",
-        "GxB_TIMES_ISLE",
-        "GxB_ANY_ISLE",
-        "GxB_MIN_LOR",
-        "GxB_MAX_LOR",
-        "GxB_PLUS_LOR",
-        "GxB_TIMES_LOR",
-        "GxB_ANY_LOR",
-        "GxB_MIN_LAND",
-        "GxB_MAX_LAND",
-        "GxB_PLUS_LAND",
-        "GxB_TIMES_LAND",
-        "GxB_ANY_LAND",
-        "GxB_MIN_LXOR",
-        "GxB_MAX_LXOR",
-        "GxB_PLUS_LXOR",
-        "GxB_TIMES_LXOR",
-        "GxB_ANY_LXOR",
-        "GxB_LOR_NE",
-        "GxB_LOR_EQ",
-        "GxB_LAND_EQ",
-        "GxB_LXOR_EQ",
-        "GxB_EQ_EQ",
-        "GxB_ANY_EQ",
-        "GxB_LAND_NE",
-        "GxB_LXOR_NE",
-        "GxB_EQ_NE",
-        "GxB_ANY_NE",
-        "GxB_LOR_GT",
-        "GxB_LAND_GT",
-        "GxB_LXOR_GT",
-        "GxB_EQ_GT",
-        "GxB_ANY_GT",
-        "GxB_LOR_LT",
-        "GxB_LAND_LT",
-        "GxB_LXOR_LT",
-        "GxB_EQ_LT",
-        "GxB_ANY_LT",
-        "GxB_LOR_GE",
-        "GxB_LAND_GE",
-        "GxB_LXOR_GE",
-        "GxB_EQ_GE",
-        "GxB_ANY_GE",
-        "GxB_LOR_LE",
-        "GxB_LAND_LE",
-        "GxB_LXOR_LE",
-        "GxB_EQ_LE",
-        "GxB_ANY_LE",
-        "GrB_PLUS_TIMES_SEMIRING",
-        "GrB_PLUS_MIN_SEMIRING",
-        "GrB_MIN_PLUS_SEMIRING",
-        "GrB_MIN_TIMES_SEMIRING",
-        "GrB_MIN_FIRST_SEMIRING",
-        "GrB_MIN_SECOND_SEMIRING",
-        "GrB_MIN_MAX_SEMIRING",
-        "GrB_MAX_PLUS_SEMIRING",
-        "GrB_MAX_TIMES_SEMIRING",
-        "GrB_MAX_FIRST_SEMIRING",
-        "GrB_MAX_SECOND_SEMIRING",
-        "GrB_MAX_MIN_SEMIRING",
-    ]
-
-    unsignedintegers = ["GxB_PLUS_FIRST",
-        "GxB_TIMES_FIRST",
-        "GxB_ANY_FIRST",
-        "GxB_PLUS_SECOND",
-        "GxB_TIMES_SECOND",
-        "GxB_ANY_SECOND",
-        "GxB_MIN_PAIR",
-        "GxB_MAX_PAIR",
-        "GxB_PLUS_PAIR",
-        "GxB_TIMES_PAIR",
-        "GxB_ANY_PAIR",
-        "GxB_MIN_MIN",
-        "GxB_TIMES_MIN",
-        "GxB_ANY_MIN",
-        "GxB_MAX_MAX",
-        "GxB_PLUS_MAX",
-        "GxB_TIMES_MAX",
-        "GxB_ANY_MAX",
-        "GxB_PLUS_PLUS",
-        "GxB_TIMES_PLUS",
-        "GxB_ANY_PLUS",
-        "GxB_MIN_MINUS",
-        "GxB_MAX_MINUS",
-        "GxB_PLUS_MINUS",
-        "GxB_TIMES_MINUS",
-        "GxB_ANY_MINUS",
-        "GxB_TIMES_TIMES",
-        "GxB_ANY_TIMES",
-        "GxB_MIN_DIV",
-        "GxB_MAX_DIV",
-        "GxB_PLUS_DIV",
-        "GxB_TIMES_DIV",
-        "GxB_ANY_DIV",
-        "GxB_MIN_RDIV",
-        "GxB_MAX_RDIV",
-        "GxB_PLUS_RDIV",
-        "GxB_TIMES_RDIV",
-        "GxB_ANY_RDIV",
-        "GxB_MIN_RMINUS",
-        "GxB_MAX_RMINUS",
-        "GxB_PLUS_RMINUS",
-        "GxB_TIMES_RMINUS",
-        "GxB_ANY_RMINUS",
-        "GxB_MIN_ISEQ",
-        "GxB_MAX_ISEQ",
-        "GxB_PLUS_ISEQ",
-        "GxB_TIMES_ISEQ",
-        "GxB_ANY_ISEQ",
-        "GxB_MIN_ISNE",
-        "GxB_MAX_ISNE",
-        "GxB_PLUS_ISNE",
-        "GxB_TIMES_ISNE",
-        "GxB_ANY_ISNE",
-        "GxB_MIN_ISGT",
-        "GxB_MAX_ISGT",
-        "GxB_PLUS_ISGT",
-        "GxB_TIMES_ISGT",
-        "GxB_ANY_ISGT",
-        "GxB_MIN_ISLT",
-        "GxB_MAX_ISLT",
-        "GxB_PLUS_ISLT",
-        "GxB_TIMES_ISLT",
-        "GxB_ANY_ISLT",
-        "GxB_MIN_ISGE",
-        "GxB_MAX_ISGE",
-        "GxB_PLUS_ISGE",
-        "GxB_TIMES_ISGE",
-        "GxB_ANY_ISGE",
-        "GxB_MIN_ISLE",
-        "GxB_MAX_ISLE",
-        "GxB_PLUS_ISLE",
-        "GxB_TIMES_ISLE",
-        "GxB_ANY_ISLE",
-        "GxB_MIN_LOR",
-        "GxB_MAX_LOR",
-        "GxB_PLUS_LOR",
-        "GxB_TIMES_LOR",
-        "GxB_ANY_LOR",
-        "GxB_MIN_LAND",
-        "GxB_MAX_LAND",
-        "GxB_PLUS_LAND",
-        "GxB_TIMES_LAND",
-        "GxB_ANY_LAND",
-        "GxB_MIN_LXOR",
-        "GxB_MAX_LXOR",
-        "GxB_PLUS_LXOR",
-        "GxB_TIMES_LXOR",
-        "GxB_ANY_LXOR",
-        "GxB_LOR_NE",
-        "GxB_LOR_EQ",
-        "GxB_LAND_EQ",
-        "GxB_LXOR_EQ",
-        "GxB_EQ_EQ",
-        "GxB_ANY_EQ",
-        "GxB_LAND_NE",
-        "GxB_LXOR_NE",
-        "GxB_EQ_NE",
-        "GxB_ANY_NE",
-        "GxB_LOR_GT",
-        "GxB_LAND_GT",
-        "GxB_LXOR_GT",
-        "GxB_EQ_GT",
-        "GxB_ANY_GT",
-        "GxB_LOR_LT",
-        "GxB_LAND_LT",
-        "GxB_LXOR_LT",
-        "GxB_EQ_LT",
-        "GxB_ANY_LT",
-        "GxB_LOR_GE",
-        "GxB_LAND_GE",
-        "GxB_LXOR_GE",
-        "GxB_EQ_GE",
-        "GxB_ANY_GE",
-        "GxB_LOR_LE",
-        "GxB_LAND_LE",
-        "GxB_LXOR_LE",
-        "GxB_EQ_LE",
-        "GxB_ANY_LE",
-        "GxB_BOR_BOR",
-        "GxB_BOR_BAND",
-        "GxB_BOR_BXOR",
-        "GxB_BOR_BXNOR",
-        "GxB_BAND_BOR",
-        "GxB_BAND_BAND",
-        "GxB_BAND_BXOR",
-        "GxB_BAND_BXNOR",
-        "GxB_BXOR_BOR",
-        "GxB_BXOR_BAND",
-        "GxB_BXOR_BXOR",
-        "GxB_BXOR_BXNOR",
-        "GxB_BXNOR_BOR",
-        "GxB_BXNOR_BAND",
-        "GxB_BXNOR_BXOR",
-        "GxB_BXNOR_BXNOR",
-        "GrB_PLUS_TIMES_SEMIRING",
-        "GrB_PLUS_MIN_SEMIRING",
-        "GrB_MIN_PLUS_SEMIRING",
-        "GrB_MIN_TIMES_SEMIRING",
-        "GrB_MIN_FIRST_SEMIRING",
-        "GrB_MIN_SECOND_SEMIRING",
-        "GrB_MIN_MAX_SEMIRING",
-        "GrB_MAX_PLUS_SEMIRING",
-        "GrB_MAX_TIMES_SEMIRING",
-        "GrB_MAX_FIRST_SEMIRING",
-        "GrB_MAX_SECOND_SEMIRING",
-        "GrB_MAX_MIN_SEMIRING",
-    ]
-
-    floats = ["GxB_PLUS_FIRST",
-        "GxB_TIMES_FIRST",
-        "GxB_ANY_FIRST",
-        "GxB_PLUS_SECOND",
-        "GxB_TIMES_SECOND",
-        "GxB_ANY_SECOND",
-        "GxB_MIN_PAIR",
-        "GxB_MAX_PAIR",
-        "GxB_PLUS_PAIR",
-        "GxB_TIMES_PAIR",
-        "GxB_ANY_PAIR",
-        "GxB_MIN_MIN",
-        "GxB_TIMES_MIN",
-        "GxB_ANY_MIN",
-        "GxB_MAX_MAX",
-        "GxB_PLUS_MAX",
-        "GxB_TIMES_MAX",
-        "GxB_ANY_MAX",
-        "GxB_PLUS_PLUS",
-        "GxB_TIMES_PLUS",
-        "GxB_ANY_PLUS",
-        "GxB_MIN_MINUS",
-        "GxB_MAX_MINUS",
-        "GxB_PLUS_MINUS",
-        "GxB_TIMES_MINUS",
-        "GxB_ANY_MINUS",
-        "GxB_TIMES_TIMES",
-        "GxB_ANY_TIMES",
-        "GxB_MIN_DIV",
-        "GxB_MAX_DIV",
-        "GxB_PLUS_DIV",
-        "GxB_TIMES_DIV",
-        "GxB_ANY_DIV",
-        "GxB_MIN_RDIV",
-        "GxB_MAX_RDIV",
-        "GxB_PLUS_RDIV",
-        "GxB_TIMES_RDIV",
-        "GxB_ANY_RDIV",
-        "GxB_MIN_RMINUS",
-        "GxB_MAX_RMINUS",
-        "GxB_PLUS_RMINUS",
-        "GxB_TIMES_RMINUS",
-        "GxB_ANY_RMINUS",
-        "GxB_MIN_ISEQ",
-        "GxB_MAX_ISEQ",
-        "GxB_PLUS_ISEQ",
-        "GxB_TIMES_ISEQ",
-        "GxB_ANY_ISEQ",
-        "GxB_MIN_ISNE",
-        "GxB_MAX_ISNE",
-        "GxB_PLUS_ISNE",
-        "GxB_TIMES_ISNE",
-        "GxB_ANY_ISNE",
-        "GxB_MIN_ISGT",
-        "GxB_MAX_ISGT",
-        "GxB_PLUS_ISGT",
-        "GxB_TIMES_ISGT",
-        "GxB_ANY_ISGT",
-        "GxB_MIN_ISLT",
-        "GxB_MAX_ISLT",
-        "GxB_PLUS_ISLT",
-        "GxB_TIMES_ISLT",
-        "GxB_ANY_ISLT",
-        "GxB_MIN_ISGE",
-        "GxB_MAX_ISGE",
-        "GxB_PLUS_ISGE",
-        "GxB_TIMES_ISGE",
-        "GxB_ANY_ISGE",
-        "GxB_MIN_ISLE",
-        "GxB_MAX_ISLE",
-        "GxB_PLUS_ISLE",
-        "GxB_TIMES_ISLE",
-        "GxB_ANY_ISLE",
-        "GxB_MIN_LOR",
-        "GxB_MAX_LOR",
-        "GxB_PLUS_LOR",
-        "GxB_TIMES_LOR",
-        "GxB_ANY_LOR",
-        "GxB_MIN_LAND",
-        "GxB_MAX_LAND",
-        "GxB_PLUS_LAND",
-        "GxB_TIMES_LAND",
-        "GxB_ANY_LAND",
-        "GxB_MIN_LXOR",
-        "GxB_MAX_LXOR",
-        "GxB_PLUS_LXOR",
-        "GxB_TIMES_LXOR",
-        "GxB_ANY_LXOR",
-        "GxB_LOR_NE",
-        "GxB_LOR_EQ",
-        "GxB_LAND_EQ",
-        "GxB_LXOR_EQ",
-        "GxB_EQ_EQ",
-        "GxB_ANY_EQ",
-        "GxB_LAND_NE",
-        "GxB_LXOR_NE",
-        "GxB_EQ_NE",
-        "GxB_ANY_NE",
-        "GxB_LOR_GT",
-        "GxB_LAND_GT",
-        "GxB_LXOR_GT",
-        "GxB_EQ_GT",
-        "GxB_ANY_GT",
-        "GxB_LOR_LT",
-        "GxB_LAND_LT",
-        "GxB_LXOR_LT",
-        "GxB_EQ_LT",
-        "GxB_ANY_LT",
-        "GxB_LOR_GE",
-        "GxB_LAND_GE",
-        "GxB_LXOR_GE",
-        "GxB_EQ_GE",
-        "GxB_ANY_GE",
-        "GxB_LOR_LE",
-        "GxB_LAND_LE",
-        "GxB_LXOR_LE",
-        "GxB_EQ_LE",
-        "GxB_ANY_LE",
-        "GrB_PLUS_TIMES_SEMIRING",
-        "GrB_PLUS_MIN_SEMIRING",
-        "GrB_MIN_PLUS_SEMIRING",
-        "GrB_MIN_TIMES_SEMIRING",
-        "GrB_MIN_FIRST_SEMIRING",
-        "GrB_MIN_SECOND_SEMIRING",
-        "GrB_MIN_MAX_SEMIRING",
-        "GrB_MAX_PLUS_SEMIRING",
-        "GrB_MAX_TIMES_SEMIRING",
-        "GrB_MAX_FIRST_SEMIRING",
-        "GrB_MAX_SECOND_SEMIRING",
-        "GrB_MAX_MIN_SEMIRING",
-    ]
-
-    positionals = [
-        "GxB_MIN_FIRSTI",
-        "GxB_MAX_FIRSTI",
-        "GxB_ANY_FIRSTI",
-        "GxB_PLUS_FIRSTI",
-        "GxB_TIMES_FIRSTI",
-        "GxB_MIN_FIRSTI1",
-        "GxB_MAX_FIRSTI1",
-        "GxB_ANY_FIRSTI1",
-        "GxB_PLUS_FIRSTI1",
-        "GxB_TIMES_FIRSTI1",
-        "GxB_MIN_FIRSTJ",
-        "GxB_MAX_FIRSTJ",
-        "GxB_ANY_FIRSTJ",
-        "GxB_PLUS_FIRSTJ",
-        "GxB_TIMES_FIRSTJ",
-        "GxB_MIN_FIRSTJ1",
-        "GxB_MAX_FIRSTJ1",
-        "GxB_ANY_FIRSTJ1",
-        "GxB_PLUS_FIRSTJ1",
-        "GxB_TIMES_FIRSTJ1",
-        "GxB_MIN_SECONDI",
-        "GxB_MAX_SECONDI",
-        "GxB_ANY_SECONDI",
-        "GxB_PLUS_SECONDI",
-        "GxB_TIMES_SECONDI",
-        "GxB_MIN_SECONDI1",
-        "GxB_MAX_SECONDI1",
-        "GxB_ANY_SECONDI1",
-        "GxB_PLUS_SECONDI1",
-        "GxB_TIMES_SECONDI1",
-        "GxB_MIN_SECONDJ",
-        "GxB_MAX_SECONDJ",
-        "GxB_ANY_SECONDJ",
-        "GxB_PLUS_SECONDJ",
-        "GxB_TIMES_SECONDJ",
-        "GxB_MIN_SECONDJ1",
-        "GxB_MAX_SECONDJ1",
-        "GxB_ANY_SECONDJ1",
-        "GxB_PLUS_SECONDJ1",
-        "GxB_TIMES_SECONDJ1",
-    ]
-
-    complexes = [
-        "GxB_PLUS_FIRST",
-        "GxB_TIMES_FIRST",
-        "GxB_ANY_FIRST",
-        "GxB_PLUS_SECOND",
-        "GxB_TIMES_SECOND",
-        "GxB_ANY_SECOND",
-        "GxB_PLUS_PAIR",
-        "GxB_TIMES_PAIR",
-        "GxB_ANY_PAIR",
-        "GxB_PLUS_PLUS",
-        "GxB_TIMES_PLUS",
-        "GxB_ANY_PLUS",
-        "GxB_PLUS_MINUS",
-        "GxB_TIMES_MINUS",
-        "GxB_ANY_MINUS",
-        "GxB_PLUS_TIMES",
-        "GxB_TIMES_TIMES",
-        "GxB_ANY_TIMES",
-        "GxB_PLUS_DIV",
-        "GxB_TIMES_DIV",
-        "GxB_ANY_DIV",
-        "GxB_PLUS_RDIV",
-        "GxB_TIMES_RDIV",
-        "GxB_ANY_RDIV",
-        "GxB_PLUS_RMINUS",
-        "GxB_TIMES_RMINUS",
-        "GxB_ANY_RMINUS",
-    ]
-    name = rig.name
-    if name ∈ booleans
-        rig.typedops[Bool,Bool] = TypedSemiring(load_global(name * "_BOOL", libgb.GrB_Semiring))
-    end
-
-    if name ∈ integers
-        rig.typedops[Int8,Int8] = TypedSemiring(load_global(name * "_INT8", libgb.GrB_Semiring))
-        rig.typedops[Int16,Int16] = TypedSemiring(load_global(name * "_INT16", libgb.GrB_Semiring))
-        rig.typedops[Int32,Int32] = TypedSemiring(load_global(name * "_INT32", libgb.GrB_Semiring))
-        rig.typedops[Int64,Int64] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
-    end
-
-    if name ∈ unsignedintegers
-        rig.typedops[UInt8,UInt8] = TypedSemiring(load_global(name * "_UINT8", libgb.GrB_Semiring))
-        rig.typedops[UInt16,UInt16] = TypedSemiring(load_global(name * "_UINT16", libgb.GrB_Semiring))
-        rig.typedops[UInt32,UInt32] = TypedSemiring(load_global(name * "_UINT32", libgb.GrB_Semiring))
-        rig.typedops[UInt64,UInt64] = TypedSemiring(load_global(name * "_UINT64", libgb.GrB_Semiring))
-    end
-
-    if name ∈ floats
-        rig.typedops[Float32,Float32] = TypedSemiring(load_global(name * "_FP32", libgb.GrB_Semiring))
-        rig.typedops[Float64,Float64] = TypedSemiring(load_global(name * "_FP64", libgb.GrB_Semiring))
-    end
-    if name ∈ positionals
-        rig.typedops[Any, Any] = TypedSemiring(load_global(name * "_INT64", libgb.GrB_Semiring))
-    end
-    name = replace(name, "GrB_" => "GxB_")
-    name = replace(name, "_SEMIRING" => "")
-    if name ∈ complexes
-        rig.typedops[ComplexF32,ComplexF32] = TypedSemiring(load_global(name * "_FC32", libgb.GrB_Semiring))
-        rig.typedops[ComplexF64,ComplexF64] = TypedSemiring(load_global(name * "_FC64", libgb.GrB_Semiring))
-    end
-end
+ytype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = YTypedSemiring

@@ -136,8 +136,8 @@ for T ∈ valid_vec
         function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = +)
             nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-            dup = BinaryOp(dup)
-            libgb.$func(Ptr{libgb.GrB_Vector}(v.p), Vector{libgb.GrB_Index}(I) .- 1, zeros(libgb.GrB_Index, length(I)), X, length(X), dup[$T])
+            dup = BinaryOp(dup)($T)
+            libgb.$func(Ptr{libgb.GrB_Vector}(v.p), Vector{libgb.GrB_Index}(I) .- 1, zeros(libgb.GrB_Index, length(I)), X, length(X), dup)
         end
     end
     # Setindex functions

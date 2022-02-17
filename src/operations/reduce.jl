@@ -1,25 +1,17 @@
 function reduce!(
-    op::MonoidUnion, w::GBVector, A::GBMatOrTranspose;
+    op, w::GBVector, A::GBMatOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
-    op = getoperator(op, eltype(w))
+    op = Monoid(op)(eltype(w))
     accum = getaccum(accum, eltype(w))
     libgb.GrB_Matrix_reduce_Monoid(Ptr{libgb.GrB_Vector}(w.p), mask, accum, op, parent(A), desc)
     return w
 end
 
-function reduce!(
-    op::Function, w::GBVector, A::GBMatOrTranspose;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    #try to find an existing monoid, if not error:
-    return reduce!(Monoids.Monoid(op), w, A; mask, accum, desc)
-end
-
 function Base.reduce(
-    op::MonoidUnion,
+    op,
     A::GBArray;
     dims = :,
     typeout = nothing,
@@ -50,33 +42,12 @@ function Base.reduce(
             c = Ref(init)
             typec = typeof(init)
         end
-        op = getoperator(op, typec)
+        op = Monoid(op)(typec)
         desc = _handledescriptor(desc; in1=A)
         accum = getaccum(accum, typec)
         libgb.scalarmatreduce[typeout](c, accum, op, parent(A), desc)
         return c[]
     end
-end
-
-function Base.reduce(
-    op::Function, A::GBArray;
-    dims = :, typeout = nothing, init = nothing, mask = nothing, accum = nothing, desc = nothing
-)
-    #try to find an existing monoid, if not error:
-    return reduce(Monoids.Monoid(op), A; mask, accum, desc, dims, typeout, init)
-end
-
-function Base.reduce(
-    ::BinaryUnion,
-    ::GBArray;
-    dims = 2,
-    typeout = nothing,
-    init = nothing,
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    throw(ArgumentError("reduce requires a Monoid op."))
 end
 
 """

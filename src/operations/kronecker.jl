@@ -7,14 +7,14 @@ function LinearAlgebra.kron!(
     C::GBArray,
     A::GBArray,
     B::GBArray,
-    op::BinaryUnion = BinaryOps.TIMES;
+    op = *;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
-    op = getoperator(op, optype(A, B))
+    op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         libgb.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
@@ -26,18 +26,6 @@ function LinearAlgebra.kron!(
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end
     return C
-end
-
-function LinearAlgebra.kron!(
-    C::GBArray,
-    A::GBArray,
-    B::GBArray,
-    op::Function;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return kron!(C, A, B, BinaryOp(op); mask, accum, desc)
 end
 
 """
@@ -61,24 +49,13 @@ Does not support `GBVector`s at this time.
 function LinearAlgebra.kron(
     A::GBArray,
     B::GBArray,
-    op::BinaryUnion = BinaryOps.TIMES;
+    op = *;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    t = inferoutputtype(A, B, op)
+    t = inferbinarytype(eltype(A), eltype(B), op)
     C = GBMatrix{t}(size(A,1) * size(B, 1), size(A, 2) * size(B, 2))
     kron!(C, A, B, op; mask, accum, desc)
     return C
-end
-
-function LinearAlgebra.kron(
-    A::GBArray,
-    B::GBArray,
-    op::Function;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return kron(A, B, BinaryOp(op); mask, accum, desc)
 end

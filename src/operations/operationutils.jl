@@ -16,42 +16,29 @@ function optype(atype, btype)
     end
 end
 
+getaccum(::Nothing, t) = C_NULL
+getaccum(op::Function, t) = BinaryOp(op)(t)
+getaccum(op::BinaryOp, t) = op(t)
+getaccum(op::Function, tleft, tright) = BinaryOp(op)(tleft, tright)
+getaccum(op::BinaryOp, tleft, tright) = op(tleft, tright)
+getaccum(op::TypedBinaryOperator, tleft, tright=tleft) = op
+
 optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
 
-# TODO: REMOVE
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, op) where {T, U}
-    t = optype(T, U)
-    if op isa Tuple
-        op = Semiring(op...)
-    else
-        op = BinaryOp(op)
-    end
-    return ztype(op, t)
-end
+inferunarytype(::Type{T}, op::AbstractUnaryOp) where {T} = ztype(op(T))
+inferunarytype(::Type{T}, op) where {T} = inferunarytype(T, UnaryOp(op))
+inferunarytype(::Type{X}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z} = ztype(op)
 
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractBinaryOp) where {T, U}
-    return Base._return_type(juliaop(op), (T, U))
-end
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractBinaryOp) where {T, U} = ztype(op(T, U))
+inferbinarytype(::Type{T}, ::Type{U}, op) where {T, U} = inferbinarytype(T, U, BinaryOp(op))
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop)
+#semirings are technically binary so we'll just overload that
+inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, Semiring(op))
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)
 
-function inferoutputtype(::GBArray{T}, op::AbstractBinaryOp) where {T}
-    return ztype(op(T))
-end
-
-
-function inferoutputtype(::GBArray{T}, ::GBArray{U}, op::AbstractSemiring) where {T, U}
-    bintype = Base._return_type(mulop(op), (T, U))
-    return Base._return_type(addop(op), (bintype, bintype))
-end
-function inferoutputtype(::GBArray{T}, op::AbstractOp) where {T}
-    return Base._return_type(juliaop(op), (T,))
-end
-
-# function inferoutputtype(::GBArray{T}, ::AbstractTypedOp{Z}) where {T, Z}
-#     return Z
-# end
-# function inferoutputtype(::GBArray{T}, ::GBArray{U}, ::AbstractTypedOp{Z}) where {T, U, Z}
-#     return Z
-# end
+inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = ztype(op)
+inferbinarytype(::Type{X}, ::Type{X}, op::TypedMonoid{F, X, Z}) where {F, X, Z} = ztype(op)
+inferbinarytype(::Type{X}, ::Type{Y}, op::TypedSemiring{F, X, Y, Z}) where {F, X, Y, Z} = ztype(op)
 
 function _handlenothings(kwargs...)
     return (x === nothing ? C_NULL : x for x in kwargs)

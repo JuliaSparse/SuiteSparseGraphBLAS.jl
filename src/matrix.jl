@@ -151,7 +151,7 @@ for T ∈ valid_vec
         function build(A::GBMatrix{$T}, I::AbstractVector, J::AbstractVector, X::Vector{$T};
                 dup = +
             )
-            dup = getoperator(BinaryOp(dup), $T)
+            dup = BinaryOp(dup)($T)
             if !(I isa Vector)
                 I = Vector(I)
             end
@@ -260,6 +260,7 @@ end
 function Base.getindex(A::GBMatOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end
+
 """
     subassign!(C::GBMatrix, A::GBMatrix, I, J; kwargs...)::GBMatrix
 

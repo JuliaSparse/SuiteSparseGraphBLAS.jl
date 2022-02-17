@@ -5,7 +5,11 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp,
     valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
 using ..libgb
 export UnaryOp, @unop
+
+export positioni, positionj, frexpx, frexpe
+
 using SpecialFunctions
+
 struct UnaryOp{F} <: AbstractUnaryOp
     juliaop::F
 end
@@ -29,7 +33,7 @@ function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     insym = Symbol(intype)
     outsym = Symbol(outtype)
     if builtin
-        constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(insym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_UnaryOp(C_NULL)))
+        constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(insym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_UnaryOp(), $(esc(jlfunc))))
     else
         constquote = :(const $(esc(namesym)) = TypedUnaryOperator($(esc(jlfunc)), $(esc(insym)), $(esc(outsym))))
     end
@@ -80,10 +84,10 @@ macro unop(expr...)
     intypes = symtotype(types.args[2])
     outtypes = symtotype(types.args[3])
     constquote = typedunopexprs(jlfunc, builtin, name, intypes, outtypes)
-    dispatchquote = Base.remove_linenums!(quote
+    dispatchquote = quote
         $newfunc
         $constquote
-    end)
+    end
     return dispatchquote
 end
 

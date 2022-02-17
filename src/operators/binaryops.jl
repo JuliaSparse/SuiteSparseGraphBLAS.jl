@@ -1,14 +1,21 @@
 module BinaryOps
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp, GBType,
-    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
+    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, 
+    Ntypes, Ttypes, suffix
 using ..libgb
-export BinaryOp, @binop, ∨, ∧
+export BinaryOp, @binop
+
+export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor, fmod, 
+bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, secondj
+
 struct BinaryOp{F} <: AbstractBinaryOp
     juliaop::F
 end
 SuiteSparseGraphBLAS.juliaop(op::BinaryOp) = op.juliaop
-
+function (op::BinaryOp)(::Type{T}) where {T}
+    op(T, T)
+end
 function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     # Complex ops must always be GxB prefixed
     if (xtype ∈ Ztypes || ytype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
@@ -30,13 +37,18 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     ysym = Symbol(ytype)
     outsym = Symbol(outtype)
     if builtin
-        constquote = :(const $(esc(namesym)) = TypedBinaryOperator{$(esc(xsym)), $(esc(ysym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_BinaryOp(C_NULL)))
+        constquote = :(const $(esc(namesym)) = TypedBinaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_BinaryOp(), $(esc(jlfunc))))
     else
         constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)) $(esc(outsym))))
     end
+    dispatchquote = if xtype === :Any && ytype === :Any
+        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type, ::Type) = $(esc(namesym)))
+    else
+        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
+    end
     return quote
         $(constquote)
-        (::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym))
+        $(dispatchquote)
     end
 end
 function typedbinopexprs(jlfunc, builtin, namestr, xtypes, ytypes, outtypes)

@@ -18,6 +18,7 @@ const Ftypes = (:Float32, :Float64)
 const Ztypes = (:ComplexF32, :ComplexF64)
 const FZtypes = (Ftypes..., Ztypes...)
 const Rtypes = (Itypes..., Ftypes..., :Bool)
+const RnBtypes = (Itypes..., FZtypes...)
 const Ntypes = (:Int64, ) # :Int32 as well, but can't disambiguate, and hopefully unecessary
 const Ttypes = (Rtypes..., Ztypes...)
 function symtotype(sym)
@@ -39,10 +40,6 @@ function symtotype(sym)
         return sym
     end
 end
-
-include("operators/unaryops2.jl")
-include("operators/binaryops2.jl")
-include("operators/monoids2.jl")
 include("operators/semirings2.jl")
 end
 

@@ -12,7 +12,7 @@ function LinearAlgebra.mul!(
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
-    op = getoperator(op, optype(A, B))
+    op = Semiring(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     libgb.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
@@ -51,7 +51,7 @@ function mul(
     accum = nothing,
     desc = nothing
 )
-    t = inferoutputtype(A, B, op)
+    t = inferbinarytype(eltype(A), eltype(B), op)
     if A isa GBMatOrTranspose && B isa GBVector
         C = GBVector{t}(size(A, 1))
     elseif A isa GBVector && B isa GBMatOrTranspose
@@ -72,7 +72,7 @@ function Base.:*(
     accum = nothing,
     desc = nothing
 )
-    return mul(A, B, Semirings.PLUS_TIMES; mask, accum, desc)
+    return mul(A, B, (+, *); mask, accum, desc)
 end
 
 

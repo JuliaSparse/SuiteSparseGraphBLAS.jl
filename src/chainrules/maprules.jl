@@ -51,19 +51,19 @@ function ChainRulesCore.frule(
 end
 
 #Trig
-@scalarmaprule UnaryOps.SIN cos.(A)
-@scalarmaprule UnaryOps.COS -sin.(A)
-@scalarmaprule UnaryOps.TAN @. 1 + (Ω ^ 2)
+@scalarmaprule sin cos.(A)
+@scalarmaprule cos -sin.(A)
+@scalarmaprule tan @. 1 + (Ω ^ 2)
 
 #Hyperbolic Trig
-@scalarmaprule UnaryOps.SINH cosh.(A)
-@scalarmaprule UnaryOps.COSH sinh.(A)
-@scalarmaprule UnaryOps.TANH @. 1 - (Ω ^ 2)
+@scalarmaprule sinh cosh.(A)
+@scalarmaprule cosh sinh.(A)
+@scalarmaprule tanh @. 1 - (Ω ^ 2)
 
-@scalarmaprule UnaryOps.MINV -(Ω .^ 2)
-@scalarmaprule UnaryOps.EXP Ω
+@scalarmaprule inv -(Ω .^ 2)
+@scalarmaprule exp Ω
 
-@scalarmaprule UnaryOps.ABS sign.(A)
+@scalarmaprule abs sign.(A)
 #Anything that uses MINV fails the isapprox tests :().
 # Since in the immortal words of Miha - "FiniteDiff is smarter than you", these shouldn't be enabled.
 #@scalarmaprule UnaryOps.ASIN @. inv(sqrt.(1 - A ^ 2))
@@ -74,11 +74,11 @@ end
 function frule(
     (_, _, ΔA),
     ::typeof(map),
-    ::typeof(UnaryOps.IDENTITY),
+    ::typeof(identity),
     A::GBArray
 )
     return (A, ΔA)
 end
-function rrule(::typeof(map), ::typeof(UnaryOps.IDENTITY), A::GBArray)
+function rrule(::typeof(map), ::typeof(identity), A::GBArray)
     return A, (ΔΩ) -> (NoTangent(), NoTangent(), ΔΩ)
 end

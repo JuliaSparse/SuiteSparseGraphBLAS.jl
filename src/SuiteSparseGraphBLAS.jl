@@ -39,8 +39,7 @@ include("constants.jl")
 include("operators/operatorutils.jl")
 include("operators/unaryops.jl")
 include("operators/binaryops.jl")
-# include("operators/monoids.jl")
-include("operators/monoids2.jl")
+include("operators/monoids.jl")
 include("operators/semirings.jl")
 include("operators/selectops.jl")
 include("descriptors.jl")
@@ -55,47 +54,43 @@ using .Semirings
 # _createmonoids()
 # _createsemirings()
 
-
-
-# include("operators/oplist.jl")
-# include("indexutils.jl")
+include("indexutils.jl")
 # 
-# include("operations/extract.jl")
-# include("scalar.jl")
-# include("vector.jl")
-# include("matrix.jl")
-# include("random.jl")
+include("operations/extract.jl")
+include("scalar.jl")
+include("vector.jl")
+include("matrix.jl")
+include("random.jl")
 # 
-# include("operations/operationutils.jl")
-# include("operations/transpose.jl")
-# include("operations/mul.jl")
-# include("operations/ewise.jl")
-# include("operations/map.jl")
-# include("operations/select.jl")
-# include("operations/reduce.jl")
-# include("operations/kronecker.jl")
-# include("operations/concat.jl")
-# include("operations/resize.jl")
+include("operations/operationutils.jl")
+include("operations/transpose.jl")
+include("operations/mul.jl")
+include("operations/ewise.jl")
+include("operations/map.jl")
+include("operations/select.jl")
+include("operations/reduce.jl")
+include("operations/kronecker.jl")
+include("operations/concat.jl")
+include("operations/resize.jl")
 # 
-# include("print.jl")
-# include("import.jl")
-# include("export.jl")
-# include("pack.jl")
-# include("unpack.jl")
+include("print.jl")
+include("import.jl")
+include("export.jl")
+include("pack.jl")
+include("unpack.jl")
 include("options.jl")
 #EXPERIMENTAL
 # include("operations/argminmax.jl")
-# include("operations/broadcasts.jl")
-# include("chainrules/chainruleutils.jl")
-# include("chainrules/mulrules.jl")
-# include("chainrules/ewiserules.jl")
-# include("chainrules/maprules.jl")
-# include("chainrules/reducerules.jl")
-# include("chainrules/selectrules.jl")
-# include("chainrules/constructorrules.jl")
-# #include("random.jl")
-# include("misc.jl")
-# include("asjulia.jl")
+include("operations/broadcasts.jl")
+include("chainrules/chainruleutils.jl")
+include("chainrules/mulrules.jl")
+include("chainrules/ewiserules.jl")
+include("chainrules/maprules.jl")
+include("chainrules/reducerules.jl")
+include("chainrules/selectrules.jl")
+include("chainrules/constructorrules.jl")
+include("misc.jl")
+include("asjulia.jl")
 # include("spmgb/sparsemat.jl")
 # include("consts.jl")
 # using .Consts
@@ -105,8 +100,8 @@ export libgb
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
-export gbset, gbget
-export xtype, ytype, ztype, validtypes #Determine input/output types of operators
+export gbset, gbget # global and object specific options.
+export xtype, ytype, ztype #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix #arrays
 export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
 
@@ -123,7 +118,7 @@ export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!,
-gbrand, eunion, eunion!
+gbrand, eunion, eunion!, mask, mask!
 # Reexports from LinAlg
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
 
@@ -156,5 +151,4 @@ function __init__()
     end
 end
 
-# include("operators/ztypes.jl")
 end #end of module

@@ -4,27 +4,27 @@ function frule(
     ::typeof(emul),
     A::GBArray,
     B::GBArray,
-    ::typeof(BinaryOps.TIMES)
+    ::typeof(*)
 )
-    Ω = emul(A, B, BinaryOps.TIMES)
-    ∂Ω = emul(unthunk(ΔA), B, BinaryOps.TIMES) + emul(unthunk(ΔB), A, BinaryOps.TIMES)
+    Ω = emul(A, B, *)
+    ∂Ω = emul(unthunk(ΔA), B, *) + emul(unthunk(ΔB), A, *)
     return Ω, ∂Ω
 end
 function frule((_, ΔA, ΔB), ::typeof(emul), A::GBArray, B::GBArray)
-    return frule((nothing, ΔA, ΔB, nothing), emul, A, B, BinaryOps.TIMES)
+    return frule((nothing, ΔA, ΔB, nothing), emul, A, B, *)
 end
 
-function rrule(::typeof(emul), A::GBArray, B::GBArray, ::typeof(BinaryOps.TIMES))
+function rrule(::typeof(emul), A::GBArray, B::GBArray, ::typeof(*))
     function timespullback(ΔΩ)
         ∂A = emul(unthunk(ΔΩ), B)
         ∂B = emul(unthunk(ΔΩ), A)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return emul(A, B, BinaryOps.TIMES), timespullback
+    return emul(A, B, *), timespullback
 end
 
 function rrule(::typeof(emul), A::GBArray, B::GBArray)
-    Ω, fullpb = rrule(emul, A, B, BinaryOps.TIMES)
+    Ω, fullpb = rrule(emul, A, B, *)
     emulpb(ΔΩ) = fullpb(ΔΩ)[1:3]
     return Ω, emulpb
 end
@@ -41,17 +41,17 @@ function frule(
     ::typeof(eadd),
     A::GBArray,
     B::GBArray,
-    ::typeof(BinaryOps.PLUS)
+    ::typeof(+)
 )
-    Ω = eadd(A, B, BinaryOps.PLUS)
-    ∂Ω = eadd(unthunk(ΔA), unthunk(ΔB), BinaryOps.PLUS)
+    Ω = eadd(A, B, +)
+    ∂Ω = eadd(unthunk(ΔA), unthunk(ΔB), +)
     return Ω, ∂Ω
 end
 function frule((_, ΔA, ΔB), ::typeof(eadd), A::GBArray, B::GBArray)
-    return frule((nothing, ΔA, ΔB, nothing), eadd, A, B, BinaryOps.PLUS)
+    return frule((nothing, ΔA, ΔB, nothing), eadd, A, B, +)
 end
 
-function rrule(::typeof(eadd), A::GBArray, B::GBArray, ::typeof(BinaryOps.PLUS))
+function rrule(::typeof(eadd), A::GBArray, B::GBArray, ::typeof(+))
     function pluspullback(ΔΩ)
         return (
             NoTangent(),
@@ -60,11 +60,11 @@ function rrule(::typeof(eadd), A::GBArray, B::GBArray, ::typeof(BinaryOps.PLUS))
             NoTangent()
         )
     end
-    return eadd(A, B, BinaryOps.PLUS), pluspullback
+    return eadd(A, B, +), pluspullback
 end
 
 function rrule(::typeof(eadd), A::GBArray, B::GBArray)
-    Ω, fullpb = rrule(eadd, A, B, BinaryOps.PLUS)
+    Ω, fullpb = rrule(eadd, A, B, +)
     eaddpb(ΔΩ) = fullpb(ΔΩ)[1:3]
     return Ω, eaddpb
 end

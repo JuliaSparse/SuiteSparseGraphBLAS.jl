@@ -30,7 +30,7 @@ function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     end
     typesym = Symbol(type)
     if builtin
-        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym)))))
+        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
     else
         constquote = :(const $(esc(namesym)) = TypedMonoid(BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
     end
@@ -95,27 +95,28 @@ macro monoid(expr...)
     builtin = isGxB(name) || isGrB(name)
     types = symtotype(types)
     constquote = typedmonoidexprs(jlfunc, builtin, name, types, id, term)
-    return constquote
+    return Base.remove_linenums!(constquote)
 end
 
 # We link to the BinaryOp rather than the Julia functions, 
 # because users will mostly be exposed to the higher level interface.
 
-@monoid (+) GrB_PLUS T
-@monoid (*) GrB_TIMES T
+@monoid (+) GrB_PLUS nB id=>zero
+@monoid (*) GrB_TIMES I id=>one term=>zero
+@monoid (*) GrB_TIMES FZ id=>one 
 
-@monoid any GxB_ANY T
-@monoid min GrB_MIN R
-@monoid max GrB_MAX R
+@monoid any GxB_ANY T id=>one term=>one # This is technically incorrect. The identity and terminal are *ANY* value in the domain.
+@monoid min GrB_MIN R id=>typemax term=>typemin
+@monoid max GrB_MAX R id=>typemin term=>typemax
 
-@monoid (∨) GrB_LOR Bool
-@monoid (∧) GrB_LAND Bool
-@monoid lxor GrB_LXOR Bool
-@monoid xnor GrB_LXNOR Bool
-@monoid (|) GrB_BOR I
-@monoid (&) GrB_BAND I
-@monoid (⊻) GrB_BXOR I
-@monoid bxnor GrB_BXNOR I
+@monoid (∨) GrB_LOR Bool id=>false term=>true
+@monoid (∧) GrB_LAND Bool id=>true term=>false
+@monoid (lxor) GrB_LXOR Bool id=>false
+@monoid (==) GrB_LXNOR Bool id=>true
+@monoid (|) GrB_BOR I id=>zero term=>typemax
+@monoid (&) GrB_BAND I id=>typemax term=>zero
+@monoid (⊻) GrB_BXOR I id=>zero
+@monoid bxnor GrB_BXNOR I id=>typemax
 
 end
 

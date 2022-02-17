@@ -3,7 +3,7 @@ function select!(
     op::SelectUnion,
     C::GBVecOrMat,
     A::GBArray,
-    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    thunk = nothing;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -20,10 +20,10 @@ function select!(
 end
 
 function select!(
-    op::Function,
+    op,
     C::GBVecOrMat,
     A::GBArray,
-    thunk::Union{GBScalar, Nothing, Number} = nothing;
+    thunk = nothing;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -31,7 +31,7 @@ function select!(
     return select!(SelectOp(op), C, A, thunk; mask, accum, desc)
 end
 
-function select!(op::Function, A::GBArray, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
+function select!(op, A::GBArray, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
     return select!(op, A, A, thunk; mask, accum, desc)
 end
 

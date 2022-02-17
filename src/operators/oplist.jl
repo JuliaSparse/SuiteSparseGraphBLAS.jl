@@ -301,318 +301,318 @@
 # juliaop(::typeof(UnaryOps.POSITIONJ1)) = positionj
 # UnaryOps.UnaryOp(::typeof(positionj)) = UnaryOps.POSITIONJ1
 
-#Binary Operators
-"""
-First argument: `f(x::T,y::T)::T = x`
-"""
-BinaryOps.FIRST
-juliaop(::typeof(BinaryOps.FIRST)) = first
-BinaryOps.BinaryOp(::typeof(first)) = BinaryOps.FIRST
-"""
-Second argument: `f(x::T,y::T)::T = y`
-"""
-BinaryOps.SECOND
-function second end
-juliaop(::typeof(BinaryOps.SECOND)) = second
-BinaryOps.BinaryOp(::typeof(second)) = BinaryOps.SECOND
-"""
-Power: `f(x::T,y::T)::T = xʸ`
-"""
-BinaryOps.POW
-juliaop(::typeof(BinaryOps.POW)) = ^
-BinaryOps.BinaryOp(::typeof(^)) = BinaryOps.POW
-"""
-Addition: `f(x::T,y::T)::T = x + y`
-"""
-BinaryOps.PLUS
-juliaop(::typeof(BinaryOps.PLUS)) = +
-BinaryOps.BinaryOp(::typeof(+)) = BinaryOps.PLUS
-"""
-Subtraction: `f(x::T,y::T)::T = x - y`
-"""
-BinaryOps.MINUS
-juliaop(::typeof(BinaryOps.MINUS)) = -
-BinaryOps.BinaryOp(::typeof(-)) = BinaryOps.MINUS
-"""
-Multiplication: `f(x::T,y::T)::T = xy`
-"""
-BinaryOps.TIMES
-juliaop(::typeof(BinaryOps.TIMES)) = *
-BinaryOps.BinaryOp(::typeof(*)) = BinaryOps.TIMES
-"""
-Division: `f(x::T,y::T)::T = x / y`
-"""
-BinaryOps.DIV
-juliaop(::typeof(BinaryOps.DIV)) = /
-BinaryOps.BinaryOp(::typeof(/)) = BinaryOps.DIV
-"""
-Reverse Subtraction: `f(x::T,y::T)::T = y - x`
-"""
-BinaryOps.RMINUS
-function rminus end
-juliaop(::typeof(BinaryOps.RMINUS)) = rminus
-BinaryOps.BinaryOp(::typeof(rminus)) = BinaryOps.RMINUS
-"""
-Reverse Division: `f(x::T,y::T)::T = y / x`
-"""
-BinaryOps.RDIV
-juliaop(::typeof(BinaryOps.RDIV)) = \
-BinaryOps.BinaryOp(::typeof(\)) = BinaryOps.RDIV
-"""
-One when both x and y exist: `f(x::T,y::T)::T = 1`
-"""
-BinaryOps.PAIR
-function pair end
-juliaop(::typeof(BinaryOps.PAIR)) = pair
-BinaryOps.BinaryOp(::typeof(pair)) = BinaryOps.PAIR
-"""
-Pick x or y arbitrarily: `f(x::T,y::T)::T = x or y`
-"""
-BinaryOps.ANY
-#This is sort of incorrect
-juliaop(::typeof(BinaryOps.ANY)) = any
-BinaryOps.BinaryOp(::typeof(any)) = BinaryOps.ANY
-"""
-Equal: `f(x::T,y::T)::T = x == y``
-"""
-BinaryOps.ISEQ
-function iseq end
-juliaop(::typeof(BinaryOps.ISEQ)) = iseq
-BinaryOps.BinaryOp(::typeof(iseq)) = BinaryOps.ISEQ
-"""
-Not Equal: `f(x::T,y::T)::T = x ≠ y`
-"""
-BinaryOps.ISNE
-function isne end
-juliaop(::typeof(BinaryOps.ISNE)) = isne
-BinaryOps.BinaryOp(::typeof(isne)) = BinaryOps.ISNE
-"""
-Greater Than: `f(x::ℝ,y::ℝ)::ℝ = x > y`
-"""
-BinaryOps.ISGT
-function isgt end
-juliaop(::typeof(BinaryOps.ISGT)) = isgt
-BinaryOps.BinaryOp(::typeof(isgt)) = BinaryOps.ISGT
-"""
-Less Than: `f(x::ℝ,y::ℝ)::ℝ = x < y`
-"""
-BinaryOps.ISLT
-function islt end
-juliaop(::typeof(BinaryOps.ISLT)) = islt
-BinaryOps.BinaryOp(::typeof(islt)) = BinaryOps.ISLT
-"""
-Greater Than or Equal: `f(x::ℝ,y::ℝ)::ℝ = x ≥ y`
-"""
-BinaryOps.ISGE
-function isge end
-juliaop(::typeof(BinaryOps.ISGE)) = isge
-BinaryOps.BinaryOp(::typeof(isge)) = BinaryOps.ISGE
-"""
-Less Than or Equal: `f(x::ℝ,y::ℝ)::ℝ = x ≤ y`
-"""
-BinaryOps.ISLE
-function isle end
-juliaop(::typeof(BinaryOps.ISLE)) = isle
-BinaryOps.BinaryOp(::typeof(isle)) = BinaryOps.ISLE
-"""
-Minimum: `f(x::ℝ,y::ℝ)::ℝ = min(x, y)`
-"""
-BinaryOps.MIN
-juliaop(::typeof(BinaryOps.MIN)) = min
-BinaryOps.BinaryOp(::typeof(min)) = BinaryOps.MIN
-"""
-Maximum: `f(x::ℝ,y::ℝ)::ℝ = max(x, y)`
-"""
-BinaryOps.MAX
-juliaop(::typeof(BinaryOps.MAX)) = max
-BinaryOps.BinaryOp(::typeof(max)) = BinaryOps.MAX
-"""
-Logical OR: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ∨ (y ≠ 0)`
-"""
-BinaryOps.LOR
-function ∨ end
-juliaop(::typeof(BinaryOps.LOR)) = ∨
-BinaryOps.BinaryOp(::typeof(∨)) = BinaryOps.LOR
-"""
-Logical AND: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ∧ (y ≠ 0)`
-"""
-BinaryOps.LAND
-function ∧ end
-juliaop(::typeof(BinaryOps.LAND)) = ∧
-BinaryOps.BinaryOp(::typeof(∧)) = BinaryOps.LAND
-"""
-Logical AND: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ⊻ (y ≠ 0)`
-"""
-BinaryOps.LXOR
-function lxor end
-juliaop(::typeof(BinaryOps.LXOR)) = lxor
-BinaryOps.BinaryOp(::typeof(lxor)) = BinaryOps.LXOR
-"""
-4-Quadrant Arc Tangent: `f(x::F, y::F)::F = tan⁻¹(y/x)`
-"""
-BinaryOps.ATAN2
-juliaop(::typeof(BinaryOps.ATAN2)) = atan
-BinaryOps.BinaryOp(::typeof(atan)) = BinaryOps.ATAN2
-"""
-Hypotenuse: `f(x::F, y::F)::F = √(x² + y²)`
-"""
-BinaryOps.HYPOT
-juliaop(::typeof(BinaryOps.HYPOT)) = hypot
-BinaryOps.BinaryOp(::typeof(hypot)) = BinaryOps.HYPOT
-"""
-Float remainder of x / y rounded towards zero.
-"""
-BinaryOps.FMOD
-#Is this available?
-function fmod end
-juliaop(::typeof(BinaryOps.FMOD)) = fmod
-BinaryOps.BinaryOp(::typeof(fmod)) = BinaryOps.FMOD
-"""
-Float remainder of x / y rounded towards nearest integral value.
-"""
-BinaryOps.REMAINDER
-juliaop(::typeof(BinaryOps.REMAINDER)) = rem
-BinaryOps.BinaryOp(::typeof(rem)) = BinaryOps.REMAINDER
-"""
-LDEXP: `f(x::F, y::F)::F = x × 2ⁿ`
-"""
-BinaryOps.LDEXP
-juliaop(::typeof(BinaryOps.LDEXP)) = ldexp
-BinaryOps.BinaryOp(::typeof(ldexp)) = BinaryOps.LDEXP
-"""
-Copysign: Value with magnitude of x and sign of y.
-"""
-BinaryOps.COPYSIGN
-juliaop(::typeof(BinaryOps.COPYSIGN)) = copysign
-BinaryOps.BinaryOp(::typeof(copysign)) = BinaryOps.COPYSIGN
-"""
-Bitwise OR: `f(x::ℤ, y::ℤ)::ℤ = x | y`
-"""
-BinaryOps.BOR
-juliaop(::typeof(BinaryOps.BOR)) = |
-BinaryOps.BinaryOp(::typeof(|)) = BinaryOps.BOR
-"""
-Bitwise AND: `f(x::ℤ, y::ℤ)::ℤ = x & y`
-"""
-BinaryOps.BAND
-juliaop(::typeof(BinaryOps.BAND)) = &
-BinaryOps.BinaryOp(::typeof(&)) = BinaryOps.BAND
-"""
-Bitwise XOR: `f(x::ℤ, y::ℤ)::ℤ = x ^ y`
-"""
-BinaryOps.BXOR
-juliaop(::typeof(BinaryOps.BXOR)) = ⊻
-BinaryOps.BinaryOp(::typeof(⊻)) = BinaryOps.BXOR
-"""
-Bitwise XNOR: : `f(x::ℤ, y::ℤ)::ℤ = ~(x ^ y)`
-"""
-BinaryOps.BXNOR
-juliaop(::typeof(BinaryOps.BXNOR)) = !⊻
-BinaryOps.BinaryOp(::typeof(!⊻)) = BinaryOps.BXNOR
-"""
-BGET: `f(x::ℤ, y::ℤ)::ℤ = get bit y of x.`
-"""
-BinaryOps.BGET
-"""
-BSET: `f(x::ℤ, y::ℤ)::ℤ = set bit y of x.`
-"""
-BinaryOps.BSET
-"""
-BCLR: `f(x::ℤ, y::ℤ)::ℤ = clear bit y of x.`
-"""
-BinaryOps.BCLR
-"""
-BSHIFT: `f(x::ℤ, y::Int8)::ℤ = bitshift(x, y)`
-"""
-BinaryOps.BSHIFT
-
-"""
-Equals: `f(x::T, y::T)::Bool = x == y`
-"""
-BinaryOps.EQ
-juliaop(::typeof(BinaryOps.EQ)) = ==
-BinaryOps.BinaryOp(::typeof(==)) = BinaryOps.EQ
-"""
-Not Equals: `f(x::T, y::T)::Bool = x ≠ y`
-"""
-BinaryOps.NE
-juliaop(::typeof(BinaryOps.NE)) = !=
-BinaryOps.BinaryOp(::typeof(!=)) = BinaryOps.NE
-"""
-Greater Than: `f(x::T, y::T)::Bool = x > y`
-"""
-BinaryOps.GT
-juliaop(::typeof(BinaryOps.GT)) = >
-BinaryOps.BinaryOp(::typeof(>)) = BinaryOps.GT
-"""
-Less Than: `f(x::T, y::T)::Bool = x < y`
-"""
-BinaryOps.LT
-juliaop(::typeof(BinaryOps.LT)) = <
-BinaryOps.BinaryOp(::typeof(<)) = BinaryOps.LT
-"""
-Greater Than or Equal: `f(x::T, y::T)::Bool = x ≥ y`
-"""
-BinaryOps.GE
-juliaop(::typeof(BinaryOps.GE)) = >=
-BinaryOps.BinaryOp(::typeof(>=)) = BinaryOps.GE
-"""
-Less Than or Equal: `f(x::T, y::T)::Bool = x ≤ y`
-"""
-BinaryOps.LE
-juliaop(::typeof(BinaryOps.LE)) = <=
-BinaryOps.BinaryOp(::typeof(<=)) = BinaryOps.LE
-"""
-Complex: `f(x::F, y::F)::Complex = x + y × i`
-"""
-BinaryOps.CMPLX
-juliaop(::typeof(BinaryOps.CMPLX)) = complex
-BinaryOps.BinaryOp(::typeof(complex)) = BinaryOps.CMPLX
-"""
-0-Based row index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = i`
-"""
-BinaryOps.FIRSTI
-"""
-1-Based row index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = i + 1`
-"""
-BinaryOps.FIRSTI1
-function firsti end
-juliaop(::typeof(BinaryOps.FIRSTI1)) = firsti
-BinaryOps.BinaryOp(::typeof(firsti)) = BinaryOps.FIRSTI1
-"""
-0-Based column index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = j`
-"""
-BinaryOps.FIRSTJ
-"""
-1-Based column index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = j + 1`
-"""
-BinaryOps.FIRSTJ1
-function firstj end
-juliaop(::typeof(BinaryOps.FIRSTJ1)) = firstj
-BinaryOps.BinaryOp(::typeof(firstj)) = BinaryOps.FIRSTJ1
-"""
-0-Based row index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = k`
-"""
-BinaryOps.SECONDI
-"""
-0-Based row index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = k + 1`
-"""
-BinaryOps.SECONDI1
-function secondi end
-juliaop(::typeof(BinaryOps.SECONDI1)) = secondi
-BinaryOps.BinaryOp(::typeof(secondi)) = BinaryOps.SECONDI1
-"""
-0-Based column index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = l`
-"""
-BinaryOps.SECONDJ
-"""
-1-Based column index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = l + 1`
-"""
-BinaryOps.SECONDJ1
-function secondj end
-juliaop(::typeof(BinaryOps.SECONDJ1)) = secondj
-BinaryOps.BinaryOp(::typeof(secondj)) = BinaryOps.SECONDJ1
-
+# #Binary Operators
+# """
+# First argument: `f(x::T,y::T)::T = x`
+# """
+# BinaryOps.FIRST
+# juliaop(::typeof(BinaryOps.FIRST)) = first
+# BinaryOps.BinaryOp(::typeof(first)) = BinaryOps.FIRST
+# """
+# Second argument: `f(x::T,y::T)::T = y`
+# """
+# BinaryOps.SECOND
+# function second end
+# juliaop(::typeof(BinaryOps.SECOND)) = second
+# BinaryOps.BinaryOp(::typeof(second)) = BinaryOps.SECOND
+# """
+# Power: `f(x::T,y::T)::T = xʸ`
+# """
+# BinaryOps.POW
+# juliaop(::typeof(BinaryOps.POW)) = ^
+# BinaryOps.BinaryOp(::typeof(^)) = BinaryOps.POW
+# """
+# Addition: `f(x::T,y::T)::T = x + y`
+# """
+# BinaryOps.PLUS
+# juliaop(::typeof(BinaryOps.PLUS)) = +
+# BinaryOps.BinaryOp(::typeof(+)) = BinaryOps.PLUS
+# """
+# Subtraction: `f(x::T,y::T)::T = x - y`
+# """
+# BinaryOps.MINUS
+# juliaop(::typeof(BinaryOps.MINUS)) = -
+# BinaryOps.BinaryOp(::typeof(-)) = BinaryOps.MINUS
+# """
+# Multiplication: `f(x::T,y::T)::T = xy`
+# """
+# BinaryOps.TIMES
+# juliaop(::typeof(BinaryOps.TIMES)) = *
+# BinaryOps.BinaryOp(::typeof(*)) = BinaryOps.TIMES
+# """
+# Division: `f(x::T,y::T)::T = x / y`
+# """
+# BinaryOps.DIV
+# juliaop(::typeof(BinaryOps.DIV)) = /
+# BinaryOps.BinaryOp(::typeof(/)) = BinaryOps.DIV
+# """
+# Reverse Subtraction: `f(x::T,y::T)::T = y - x`
+# """
+# BinaryOps.RMINUS
+# function rminus end
+# juliaop(::typeof(BinaryOps.RMINUS)) = rminus
+# BinaryOps.BinaryOp(::typeof(rminus)) = BinaryOps.RMINUS
+# """
+# Reverse Division: `f(x::T,y::T)::T = y / x`
+# """
+# BinaryOps.RDIV
+# juliaop(::typeof(BinaryOps.RDIV)) = \
+# BinaryOps.BinaryOp(::typeof(\)) = BinaryOps.RDIV
+# """
+# One when both x and y exist: `f(x::T,y::T)::T = 1`
+# """
+# BinaryOps.PAIR
+# function pair end
+# juliaop(::typeof(BinaryOps.PAIR)) = pair
+# BinaryOps.BinaryOp(::typeof(pair)) = BinaryOps.PAIR
+# """
+# Pick x or y arbitrarily: `f(x::T,y::T)::T = x or y`
+# """
+# BinaryOps.ANY
+# #This is sort of incorrect
+# juliaop(::typeof(BinaryOps.ANY)) = any
+# BinaryOps.BinaryOp(::typeof(any)) = BinaryOps.ANY
+# """
+# Equal: `f(x::T,y::T)::T = x == y``
+# """
+# BinaryOps.ISEQ
+# function iseq end
+# juliaop(::typeof(BinaryOps.ISEQ)) = iseq
+# BinaryOps.BinaryOp(::typeof(iseq)) = BinaryOps.ISEQ
+# """
+# Not Equal: `f(x::T,y::T)::T = x ≠ y`
+# """
+# BinaryOps.ISNE
+# function isne end
+# juliaop(::typeof(BinaryOps.ISNE)) = isne
+# BinaryOps.BinaryOp(::typeof(isne)) = BinaryOps.ISNE
+# """
+# Greater Than: `f(x::ℝ,y::ℝ)::ℝ = x > y`
+# """
+# BinaryOps.ISGT
+# function isgt end
+# juliaop(::typeof(BinaryOps.ISGT)) = isgt
+# BinaryOps.BinaryOp(::typeof(isgt)) = BinaryOps.ISGT
+# """
+# Less Than: `f(x::ℝ,y::ℝ)::ℝ = x < y`
+# """
+# BinaryOps.ISLT
+# function islt end
+# juliaop(::typeof(BinaryOps.ISLT)) = islt
+# BinaryOps.BinaryOp(::typeof(islt)) = BinaryOps.ISLT
+# """
+# Greater Than or Equal: `f(x::ℝ,y::ℝ)::ℝ = x ≥ y`
+# """
+# BinaryOps.ISGE
+# function isge end
+# juliaop(::typeof(BinaryOps.ISGE)) = isge
+# BinaryOps.BinaryOp(::typeof(isge)) = BinaryOps.ISGE
+# """
+# Less Than or Equal: `f(x::ℝ,y::ℝ)::ℝ = x ≤ y`
+# """
+# BinaryOps.ISLE
+# function isle end
+# juliaop(::typeof(BinaryOps.ISLE)) = isle
+# BinaryOps.BinaryOp(::typeof(isle)) = BinaryOps.ISLE
+# """
+# Minimum: `f(x::ℝ,y::ℝ)::ℝ = min(x, y)`
+# """
+# BinaryOps.MIN
+# juliaop(::typeof(BinaryOps.MIN)) = min
+# BinaryOps.BinaryOp(::typeof(min)) = BinaryOps.MIN
+# """
+# Maximum: `f(x::ℝ,y::ℝ)::ℝ = max(x, y)`
+# """
+# BinaryOps.MAX
+# juliaop(::typeof(BinaryOps.MAX)) = max
+# BinaryOps.BinaryOp(::typeof(max)) = BinaryOps.MAX
+# """
+# Logical OR: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ∨ (y ≠ 0)`
+# """
+# BinaryOps.LOR
+# function ∨ end
+# juliaop(::typeof(BinaryOps.LOR)) = ∨
+# BinaryOps.BinaryOp(::typeof(∨)) = BinaryOps.LOR
+# """
+# Logical AND: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ∧ (y ≠ 0)`
+# """
+# BinaryOps.LAND
+# function ∧ end
+# juliaop(::typeof(BinaryOps.LAND)) = ∧
+# BinaryOps.BinaryOp(::typeof(∧)) = BinaryOps.LAND
+# """
+# Logical AND: `f(x::ℝ,y::ℝ)::ℝ = (x ≠ 0) ⊻ (y ≠ 0)`
+# """
+# BinaryOps.LXOR
+# function lxor end
+# juliaop(::typeof(BinaryOps.LXOR)) = lxor
+# BinaryOps.BinaryOp(::typeof(lxor)) = BinaryOps.LXOR
+# """
+# 4-Quadrant Arc Tangent: `f(x::F, y::F)::F = tan⁻¹(y/x)`
+# """
+# BinaryOps.ATAN2
+# juliaop(::typeof(BinaryOps.ATAN2)) = atan
+# BinaryOps.BinaryOp(::typeof(atan)) = BinaryOps.ATAN2
+# """
+# Hypotenuse: `f(x::F, y::F)::F = √(x² + y²)`
+# """
+# BinaryOps.HYPOT
+# juliaop(::typeof(BinaryOps.HYPOT)) = hypot
+# BinaryOps.BinaryOp(::typeof(hypot)) = BinaryOps.HYPOT
+# """
+# Float remainder of x / y rounded towards zero.
+# """
+# BinaryOps.FMOD
+# #Is this available?
+# function fmod end
+# juliaop(::typeof(BinaryOps.FMOD)) = fmod
+# BinaryOps.BinaryOp(::typeof(fmod)) = BinaryOps.FMOD
+# """
+# Float remainder of x / y rounded towards nearest integral value.
+# """
+# BinaryOps.REMAINDER
+# juliaop(::typeof(BinaryOps.REMAINDER)) = rem
+# BinaryOps.BinaryOp(::typeof(rem)) = BinaryOps.REMAINDER
+# """
+# LDEXP: `f(x::F, y::F)::F = x × 2ⁿ`
+# """
+# BinaryOps.LDEXP
+# juliaop(::typeof(BinaryOps.LDEXP)) = ldexp
+# BinaryOps.BinaryOp(::typeof(ldexp)) = BinaryOps.LDEXP
+# """
+# Copysign: Value with magnitude of x and sign of y.
+# """
+# BinaryOps.COPYSIGN
+# juliaop(::typeof(BinaryOps.COPYSIGN)) = copysign
+# BinaryOps.BinaryOp(::typeof(copysign)) = BinaryOps.COPYSIGN
+# """
+# Bitwise OR: `f(x::ℤ, y::ℤ)::ℤ = x | y`
+# """
+# BinaryOps.BOR
+# juliaop(::typeof(BinaryOps.BOR)) = |
+# BinaryOps.BinaryOp(::typeof(|)) = BinaryOps.BOR
+# """
+# Bitwise AND: `f(x::ℤ, y::ℤ)::ℤ = x & y`
+# """
+# BinaryOps.BAND
+# juliaop(::typeof(BinaryOps.BAND)) = &
+# BinaryOps.BinaryOp(::typeof(&)) = BinaryOps.BAND
+# """
+# Bitwise XOR: `f(x::ℤ, y::ℤ)::ℤ = x ^ y`
+# """
+# BinaryOps.BXOR
+# juliaop(::typeof(BinaryOps.BXOR)) = ⊻
+# BinaryOps.BinaryOp(::typeof(⊻)) = BinaryOps.BXOR
+# """
+# Bitwise XNOR: : `f(x::ℤ, y::ℤ)::ℤ = ~(x ^ y)`
+# """
+# BinaryOps.BXNOR
+# juliaop(::typeof(BinaryOps.BXNOR)) = !⊻
+# BinaryOps.BinaryOp(::typeof(!⊻)) = BinaryOps.BXNOR
+# """
+# BGET: `f(x::ℤ, y::ℤ)::ℤ = get bit y of x.`
+# """
+# BinaryOps.BGET
+# """
+# BSET: `f(x::ℤ, y::ℤ)::ℤ = set bit y of x.`
+# """
+# BinaryOps.BSET
+# """
+# BCLR: `f(x::ℤ, y::ℤ)::ℤ = clear bit y of x.`
+# """
+# BinaryOps.BCLR
+# """
+# BSHIFT: `f(x::ℤ, y::Int8)::ℤ = bitshift(x, y)`
+# """
+# BinaryOps.BSHIFT
+# 
+# """
+# Equals: `f(x::T, y::T)::Bool = x == y`
+# """
+# BinaryOps.EQ
+# juliaop(::typeof(BinaryOps.EQ)) = ==
+# BinaryOps.BinaryOp(::typeof(==)) = BinaryOps.EQ
+# """
+# Not Equals: `f(x::T, y::T)::Bool = x ≠ y`
+# """
+# BinaryOps.NE
+# juliaop(::typeof(BinaryOps.NE)) = !=
+# BinaryOps.BinaryOp(::typeof(!=)) = BinaryOps.NE
+# """
+# Greater Than: `f(x::T, y::T)::Bool = x > y`
+# """
+# BinaryOps.GT
+# juliaop(::typeof(BinaryOps.GT)) = >
+# BinaryOps.BinaryOp(::typeof(>)) = BinaryOps.GT
+# """
+# Less Than: `f(x::T, y::T)::Bool = x < y`
+# """
+# BinaryOps.LT
+# juliaop(::typeof(BinaryOps.LT)) = <
+# BinaryOps.BinaryOp(::typeof(<)) = BinaryOps.LT
+# """
+# Greater Than or Equal: `f(x::T, y::T)::Bool = x ≥ y`
+# """
+# BinaryOps.GE
+# juliaop(::typeof(BinaryOps.GE)) = >=
+# BinaryOps.BinaryOp(::typeof(>=)) = BinaryOps.GE
+# """
+# Less Than or Equal: `f(x::T, y::T)::Bool = x ≤ y`
+# """
+# BinaryOps.LE
+# juliaop(::typeof(BinaryOps.LE)) = <=
+# BinaryOps.BinaryOp(::typeof(<=)) = BinaryOps.LE
+# """
+# Complex: `f(x::F, y::F)::Complex = x + y × i`
+# """
+# BinaryOps.CMPLX
+# juliaop(::typeof(BinaryOps.CMPLX)) = complex
+# BinaryOps.BinaryOp(::typeof(complex)) = BinaryOps.CMPLX
+# """
+# 0-Based row index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = i`
+# """
+# BinaryOps.FIRSTI
+# """
+# 1-Based row index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = i + 1`
+# """
+# BinaryOps.FIRSTI1
+# function firsti end
+# juliaop(::typeof(BinaryOps.FIRSTI1)) = firsti
+# BinaryOps.BinaryOp(::typeof(firsti)) = BinaryOps.FIRSTI1
+# """
+# 0-Based column index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = j`
+# """
+# BinaryOps.FIRSTJ
+# """
+# 1-Based column index of a: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = j + 1`
+# """
+# BinaryOps.FIRSTJ1
+# function firstj end
+# juliaop(::typeof(BinaryOps.FIRSTJ1)) = firstj
+# BinaryOps.BinaryOp(::typeof(firstj)) = BinaryOps.FIRSTJ1
+# """
+# 0-Based row index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = k`
+# """
+# BinaryOps.SECONDI
+# """
+# 0-Based row index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = k + 1`
+# """
+# BinaryOps.SECONDI1
+# function secondi end
+# juliaop(::typeof(BinaryOps.SECONDI1)) = secondi
+# BinaryOps.BinaryOp(::typeof(secondi)) = BinaryOps.SECONDI1
+# """
+# 0-Based column index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = l`
+# """
+# BinaryOps.SECONDJ
+# """
+# 1-Based column index of b: `f(aᵢⱼ::T, bₖₗ::T)::Int64 = l + 1`
+# """
+# BinaryOps.SECONDJ1
+# function secondj end
+# juliaop(::typeof(BinaryOps.SECONDJ1)) = secondj
+# BinaryOps.BinaryOp(::typeof(secondj)) = BinaryOps.SECONDJ1
+# 
 #All binary ops will default to emul
 defaultadd(f) = emul
 # Default to eadd. We're limiting this to + and OR for now to enable easy graph unions.
@@ -625,313 +625,195 @@ for op ∈ [
     end
     @eval($funcquote)
 end
-
-
-#Monoid operators
-"""
-Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
-* Identity: +∞
-* Terminal: -∞
-"""
-Monoids.MIN_MONOID
-binaryop(::typeof(Monoids.MIN_MONOID)) = BinaryOps.MIN
-Monoids.Monoid(::typeof(min)) = Monoids.MIN_MONOID
-"""
-Max monoid: `f(x::ℝ, y::ℝ)::ℝ = max(x, y)`
-* Identity: -∞
-* Terminal: +∞
-"""
-Monoids.MAX_MONOID
-binaryop(::typeof(Monoids.MAX_MONOID)) = BinaryOps.MAX
-Monoids.Monoid(::typeof(max)) = Monoids.MAX_MONOID
-"""
-Plus monoid: `f(x::T, y::T)::T = x + y`
-* Identity: 0
-* Terminal: nothing
-"""
-Monoids.PLUS_MONOID
-binaryop(::typeof(Monoids.PLUS_MONOID)) = BinaryOps.PLUS
-Monoids.Monoid(::typeof(+)) = Monoids.PLUS_MONOID
-"""
-Times monoid: `f(x::T, y::T)::T = xy`
-* Identity: 1
-* Terminal: 0 for non Floating-point numbers.
-"""
-Monoids.TIMES_MONOID
-binaryop(::typeof(Monoids.TIMES_MONOID)) = BinaryOps.TIMES
-Monoids.Monoid(::typeof(*)) = Monoids.TIMES_MONOID
-"""
-Any monoid: `f(x::T, y::T)::T = x or y`
-* Identity: any
-* Terminal: any
-"""
-Monoids.ANY_MONOID
-binaryop(::typeof(Monoids.ANY_MONOID)) = BinaryOps.ANY
-Monoids.Monoid(::typeof(any)) = Monoids.ANY_MONOID
-"""
-Logical OR monoid: `f(x::Bool, y::Bool)::Bool = x ∨ y`
-* Identity: false
-* Terminal: true
-"""
-Monoids.LOR_MONOID
-binaryop(::typeof(Monoids.LOR_MONOID)) = BinaryOps.LOR
-Monoids.Monoid(::typeof(∨)) = Monoids.LOR_MONOID
-"""
-Logical AND monoid: `f(x::Bool, y::Bool)::Bool = x ∧ y`
-* Identity: true
-* Terminal: false
-"""
-Monoids.LAND_MONOID
-binaryop(::typeof(Monoids.LAND_MONOID)) = BinaryOps.LAND
-Monoids.Monoid(::typeof(∧)) = Monoids.LAND_MONOID
-"""
-Logical XOR monoid: `f(x::Bool, y::Bool)::Bool = x ⊻ y`
-* Identity: false
-* Terminal: nothing
-"""
-Monoids.LXOR_MONOID
-binaryop(::typeof(Monoids.LXOR_MONOID)) = BinaryOps.LXOR
-Monoids.Monoid(::typeof(lxor)) = Monoids.LXOR_MONOID
-"""
-Logical XNOR monoid: `f(x::Bool, y::Bool)::Bool = x == y`
-* Identity: true
-* Terminal: nothing
-"""
-Monoids.LXNOR_MONOID
-#Don't care, this is ==.
-"""
-Boolean Equality `f(x::Bool, y::Bool)::Bool = x == y`.
-"""
-Monoids.EQ_MONOID
-binaryop(::typeof(Monoids.EQ_MONOID)) = BinaryOps.EQ
-Monoids.Monoid(::typeof(==)) = Monoids.EQ_MONOID
-"""
-Bitwise OR monoid: `f(x::ℤ, y::ℤ)::ℤ = x|y`
-* Identity: All bits `0`.* Terminal: All bits `1`.
-"""
-Monoids.BOR_MONOID
-binaryop(::typeof(Monoids.BOR_MONOID)) = BinaryOps.BOR
-Monoids.Monoid(::typeof(|)) = Monoids.BOR_MONOID
-"""
-Bitwise AND monoid: `f(x::ℤ, y::ℤ)::ℤ = x&y`
-* Identity: All bits `1`.
-* Terminal: All bits `0`.
-"""
-Monoids.BAND_MONOID
-binaryop(::typeof(Monoids.BAND_MONOID)) = BinaryOps.BAND
-Monoids.Monoid(::typeof(&)) = Monoids.BAND_MONOID
-"""
-Bitwise XOR monoid: `f(x::ℤ, y::ℤ)::ℤ = x^y`
-* Identity: All bits `0`.
-* Terminal: nothing
-"""
-Monoids.BXOR_MONOID
-binaryop(::typeof(Monoids.BXOR_MONOID)) = BinaryOps.BXOR
-Monoids.Monoid(::typeof(⊻)) = Monoids.BXOR_MONOID
-"""
-Bitwise XNOR monoid: `f(x::ℤ, y::ℤ)::ℤ = ~(x^y)`
-* Identity: All bits `1`.
-* Terminal: nothing
-"""
-Monoids.BXNOR_MONOID
-binaryop(::typeof(Monoids.BXNOR_MONOID)) = BinaryOps.BXNOR
-Monoids.Monoid(::typeof(!⊻)) = Monoids.BXNOR_MONOID
-
-mulop(rig::AbstractSemiring) = nothing
-addop(rig::AbstractSemiring) = nothing
-
-# TODO:
-# The definitions below are less than ideal, these should likely be fields of the semiring
-# structs, not evaluated functions.
-for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any, "ANY")]
-    for otimes ∈ [
-        (:/, "DIV"),
-        (:\, "RDIV"),
-        (:first, "FIRST"),
-        (:firsti, "FIRSTI1"),
-        (:firstj, "FIRSTJ1"),
-        (:iseq, "ISEQ"),
-        (:isge, "ISGE"),
-        (:isgt, "ISGT"),
-        (:isle, "ISLE"),
-        (:islt, "ISLT"),
-        (:isne, "ISNE"),
-        (:∧, "LAND"),
-        (:∨, "LOR"),
-        (:lxor, "LXOR"),
-        (:max, "MAX"),
-        (:min, "MIN"),
-        (:-, "MINUS"),
-        (:rminus, "RMINUS"),
-        (:second, "SECOND"),
-        (:secondi, "SECONDI1"),
-        (:secondj, "SECONDJ1"),
-        (:*, "TIMES"),
-        (:+, "PLUS"),
-        (:pair, "PAIR")
-    ]
-    rig = Symbol(oplus[2], "_", otimes[2])
-    funcquote = quote
-        Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
-        addop(::typeof($rig)) = $(oplus[1])
-        mulop(::typeof($rig)) = $(otimes[1])
-    end
-    @eval($funcquote)
-    end
-end
-
-for otimes ∈ [(:(==), "EQ"), (:(>=), "GE"), (:(>), "GT"), (:(<=), "LE"), (:(<), "LT"), (:(!=), "NE")]
-    oplus = (:any, "ANY")
-    rig = Symbol(oplus[2], "_", otimes[2])
-    funcquote = quote
-        Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
-        addop(::typeof($rig)) = $(oplus[1])
-        mulop(::typeof($rig)) = $(otimes[1])
-    end
-    @eval($funcquote)
-end
-for oplus ∈ [(:(==), "EQ"), (:∧, "LAND"), (:∨, "LOR"), (:lxor, "LXOR")]
-    for otimes ∈ [
-        (:(==), "EQ"),
-        (:(>=), "GE"),
-        (:(>), "GT"),
-        (:(<=), "LE"),
-        (:(<), "LT"),
-        (:(!=), "NE"),
-        (:first, "FIRST"),
-        (:second, "SECOND"),
-        (:∧, "LAND"),
-        (:∨, "LOR"),
-        (:lxor, "LXOR"),
-        (:pair, "PAIR")
-    ]
-    rig = Symbol(oplus[2], "_", otimes[2])
-    funcquote = quote
-        Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
-        addop(::typeof($rig)) = $(oplus[1])
-        mulop(::typeof($rig)) = $(otimes[1])
-    end
-    @eval($funcquote)
-    end
-end
+# 
+# 
+# #Monoid operators
+# """
+# Minimum monoid: `f(x::ℝ, y::ℝ)::ℝ = min(x, y)`
+# * Identity: +∞
+# * Terminal: -∞
+# """
+# Monoids.MIN_MONOID
+# binaryop(::typeof(Monoids.MIN_MONOID)) = BinaryOps.MIN
+# Monoids.Monoid(::typeof(min)) = Monoids.MIN_MONOID
+# """
+# Max monoid: `f(x::ℝ, y::ℝ)::ℝ = max(x, y)`
+# * Identity: -∞
+# * Terminal: +∞
+# """
+# Monoids.MAX_MONOID
+# binaryop(::typeof(Monoids.MAX_MONOID)) = BinaryOps.MAX
+# Monoids.Monoid(::typeof(max)) = Monoids.MAX_MONOID
+# """
+# Plus monoid: `f(x::T, y::T)::T = x + y`
+# * Identity: 0
+# * Terminal: nothing
+# """
+# Monoids.PLUS_MONOID
+# binaryop(::typeof(Monoids.PLUS_MONOID)) = BinaryOps.PLUS
+# Monoids.Monoid(::typeof(+)) = Monoids.PLUS_MONOID
+# """
+# Times monoid: `f(x::T, y::T)::T = xy`
+# * Identity: 1
+# * Terminal: 0 for non Floating-point numbers.
+# """
+# Monoids.TIMES_MONOID
+# binaryop(::typeof(Monoids.TIMES_MONOID)) = BinaryOps.TIMES
+# Monoids.Monoid(::typeof(*)) = Monoids.TIMES_MONOID
+# """
+# Any monoid: `f(x::T, y::T)::T = x or y`
+# * Identity: any
+# * Terminal: any
+# """
+# Monoids.ANY_MONOID
+# binaryop(::typeof(Monoids.ANY_MONOID)) = BinaryOps.ANY
+# Monoids.Monoid(::typeof(any)) = Monoids.ANY_MONOID
+# """
+# Logical OR monoid: `f(x::Bool, y::Bool)::Bool = x ∨ y`
+# * Identity: false
+# * Terminal: true
+# """
+# Monoids.LOR_MONOID
+# binaryop(::typeof(Monoids.LOR_MONOID)) = BinaryOps.LOR
+# Monoids.Monoid(::typeof(∨)) = Monoids.LOR_MONOID
+# """
+# Logical AND monoid: `f(x::Bool, y::Bool)::Bool = x ∧ y`
+# * Identity: true
+# * Terminal: false
+# """
+# Monoids.LAND_MONOID
+# binaryop(::typeof(Monoids.LAND_MONOID)) = BinaryOps.LAND
+# Monoids.Monoid(::typeof(∧)) = Monoids.LAND_MONOID
+# """
+# Logical XOR monoid: `f(x::Bool, y::Bool)::Bool = x ⊻ y`
+# * Identity: false
+# * Terminal: nothing
+# """
+# Monoids.LXOR_MONOID
+# binaryop(::typeof(Monoids.LXOR_MONOID)) = BinaryOps.LXOR
+# Monoids.Monoid(::typeof(lxor)) = Monoids.LXOR_MONOID
+# """
+# Logical XNOR monoid: `f(x::Bool, y::Bool)::Bool = x == y`
+# * Identity: true
+# * Terminal: nothing
+# """
+# Monoids.LXNOR_MONOID
+# #Don't care, this is ==.
+# """
+# Boolean Equality `f(x::Bool, y::Bool)::Bool = x == y`.
+# """
+# Monoids.EQ_MONOID
+# binaryop(::typeof(Monoids.EQ_MONOID)) = BinaryOps.EQ
+# Monoids.Monoid(::typeof(==)) = Monoids.EQ_MONOID
+# """
+# Bitwise OR monoid: `f(x::ℤ, y::ℤ)::ℤ = x|y`
+# * Identity: All bits `0`.* Terminal: All bits `1`.
+# """
+# Monoids.BOR_MONOID
+# binaryop(::typeof(Monoids.BOR_MONOID)) = BinaryOps.BOR
+# Monoids.Monoid(::typeof(|)) = Monoids.BOR_MONOID
+# """
+# Bitwise AND monoid: `f(x::ℤ, y::ℤ)::ℤ = x&y`
+# * Identity: All bits `1`.
+# * Terminal: All bits `0`.
+# """
+# Monoids.BAND_MONOID
+# binaryop(::typeof(Monoids.BAND_MONOID)) = BinaryOps.BAND
+# Monoids.Monoid(::typeof(&)) = Monoids.BAND_MONOID
+# """
+# Bitwise XOR monoid: `f(x::ℤ, y::ℤ)::ℤ = x^y`
+# * Identity: All bits `0`.
+# * Terminal: nothing
+# """
+# Monoids.BXOR_MONOID
+# binaryop(::typeof(Monoids.BXOR_MONOID)) = BinaryOps.BXOR
+# Monoids.Monoid(::typeof(⊻)) = Monoids.BXOR_MONOID
+# """
+# Bitwise XNOR monoid: `f(x::ℤ, y::ℤ)::ℤ = ~(x^y)`
+# * Identity: All bits `1`.
+# * Terminal: nothing
+# """
+# Monoids.BXNOR_MONOID
+# binaryop(::typeof(Monoids.BXNOR_MONOID)) = BinaryOps.BXNOR
+# Monoids.Monoid(::typeof(!⊻)) = Monoids.BXNOR_MONOID
+# 
+# mulop(rig::AbstractSemiring) = nothing
+# addop(rig::AbstractSemiring) = nothing
+# 
+# # TODO:
+# # The definitions below are less than ideal, these should likely be fields of the semiring
+# # structs, not evaluated functions.
+# for oplus ∈ [(:max, "MAX"), (:min, "MIN"), (:+, "PLUS"), (:*, "TIMES"), (:any, "ANY")]
+#     for otimes ∈ [
+#         (:/, "DIV"),
+#         (:\, "RDIV"),
+#         (:first, "FIRST"),
+#         (:firsti, "FIRSTI1"),
+#         (:firstj, "FIRSTJ1"),
+#         (:iseq, "ISEQ"),
+#         (:isge, "ISGE"),
+#         (:isgt, "ISGT"),
+#         (:isle, "ISLE"),
+#         (:islt, "ISLT"),
+#         (:isne, "ISNE"),
+#         (:∧, "LAND"),
+#         (:∨, "LOR"),
+#         (:lxor, "LXOR"),
+#         (:max, "MAX"),
+#         (:min, "MIN"),
+#         (:-, "MINUS"),
+#         (:rminus, "RMINUS"),
+#         (:second, "SECOND"),
+#         (:secondi, "SECONDI1"),
+#         (:secondj, "SECONDJ1"),
+#         (:*, "TIMES"),
+#         (:+, "PLUS"),
+#         (:pair, "PAIR")
+#     ]
+#     rig = Symbol(oplus[2], "_", otimes[2])
+#     funcquote = quote
+#         Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+#         addop(::typeof($rig)) = $(oplus[1])
+#         mulop(::typeof($rig)) = $(otimes[1])
+#     end
+#     @eval($funcquote)
+#     end
+# end
+# 
+# for otimes ∈ [(:(==), "EQ"), (:(>=), "GE"), (:(>), "GT"), (:(<=), "LE"), (:(<), "LT"), (:(!=), "NE")]
+#     oplus = (:any, "ANY")
+#     rig = Symbol(oplus[2], "_", otimes[2])
+#     funcquote = quote
+#         Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+#         addop(::typeof($rig)) = $(oplus[1])
+#         mulop(::typeof($rig)) = $(otimes[1])
+#     end
+#     @eval($funcquote)
+# end
+# for oplus ∈ [(:(==), "EQ"), (:∧, "LAND"), (:∨, "LOR"), (:lxor, "LXOR")]
+#     for otimes ∈ [
+#         (:(==), "EQ"),
+#         (:(>=), "GE"),
+#         (:(>), "GT"),
+#         (:(<=), "LE"),
+#         (:(<), "LT"),
+#         (:(!=), "NE"),
+#         (:first, "FIRST"),
+#         (:second, "SECOND"),
+#         (:∧, "LAND"),
+#         (:∨, "LOR"),
+#         (:lxor, "LXOR"),
+#         (:pair, "PAIR")
+#     ]
+#     rig = Symbol(oplus[2], "_", otimes[2])
+#     funcquote = quote
+#         Semirings.Semiring(::typeof($(oplus[1])), ::typeof($(otimes[1]))) = $rig
+#         addop(::typeof($rig)) = $(oplus[1])
+#         mulop(::typeof($rig)) = $(otimes[1])
+#     end
+#     @eval($funcquote)
+#     end
+# end
 
 #Select Ops
 
-"""
-    select(SuiteSparseGraphBLAS.TRIL, A, k=0)
-    select(tril, A, k=0)
-
-Select the entries on or below the `k`th diagonal of A.
-
-See also: `LinearAlgebra.tril`
-"""
-TRIL
-SelectOp(::typeof(LinearAlgebra.tril)) = TRIL
-"""
-    select(SuiteSparseGraphBLAS.TRIU, A, k=0)
-    select(triu, A, k=0)
-
-Select the entries on or above the `k`th diagonal of A.
-
-See also: `LinearAlgebra.triu`
-"""
-TRIU
-SelectOp(::typeof(LinearAlgebra.triu)) = TRIU
-"""
-    select(DIAG, A, k=0)
-
-Select the entries on the `k`th diagonal of A.
-
-See also: `LinearAlgebra.diag`
-"""
-DIAG
-SelectOp(::typeof(LinearAlgebra.diag)) = DIAG
-"""
-    select(OFFDIAG, A, k=0)
-
-Select the entries **not** on the `k`th diagonal of A.
-"""
-OFFDIAG
-SelectOp(::typeof(offdiag)) = OFFDIAG
-"""
-    select(NONZERO, A)
-    select(nonzeros, A)
-Select all entries in A with nonzero value.
-"""
-NONZERO
-SelectOp(::typeof(nonzeros)) = NONZERO
-
-# I don't believe these should have Julia equivalents.
-# Instead select(==, A, 0) will find EQ_ZERO internally.
-"""
-    select(EQ_ZERO, A)
-
-Select all entries in A equal to zero.
-"""
-EQ_ZERO
-"""
-    select(GT_ZERO, A)
-
-Select all entries in A greater than zero.
-"""
-GT_ZERO
-"""
-    select(GE_ZERO, A)
-
-Select all entries in A greater than or equal to zero.
-"""
-GE_ZERO
-"""
-    select(LT_ZERO, A)
-
-Select all entries in A less than zero.
-"""
-LT_ZERO
-"""
-    select(LE_ZERO, A)
-
-Select all entries in A less than or equal to zero.
-"""
-LE_ZERO
-"""
-    select(NE, A, k)
-    select(!=, A, k)
-Select all entries not equal to `k`.
-"""
-NE
-SelectOp(::typeof(!=)) = NE
-"""
-    select(EQ, A, k)
-    select(==, A, k)
-Select all entries equal to `k`.
-"""
-EQ
-SelectOp(::typeof(==)) = EQ
-"""
-    select(GT, A, k)
-    select(>, A, k)
-Select all entries greater than `k`.
-"""
-GT
-SelectOp(::typeof(>)) = GT
-"""
-    select(GE, A, k)
-    select(>=, A, k)
-Select all entries greater than or equal to `k`.
-"""
-GE
-SelectOp(::typeof(>=)) = GE
-"""
-    select(LT, A, k)
-    select(<, A, k)
-Select all entries less than `k`.
-"""
-LT
-SelectOp(::typeof(<)) = LT
-"""
-    select(LE, A, k)
-    select(<=, A, k)
-Select all entries less than or equal to `k`.
-"""
-LE
-SelectOp(::typeof(<=)) = LE

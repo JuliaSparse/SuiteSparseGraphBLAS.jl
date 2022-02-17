@@ -25,7 +25,7 @@ function emul!(
     C::GBVecOrMat,
     A::GBArray,
     B::GBArray,
-    op::MonoidBinaryOrRig = BinaryOps.TIMES;
+    op = *;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -33,7 +33,7 @@ function emul!(
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
-    op = getoperator(op, optype(A, B))
+    op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedSemiring
         libgb.GrB_Matrix_eWiseMult_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
@@ -77,12 +77,12 @@ union equivalent see [`eadd`](@ref).
 function emul(
     A::GBArray,
     B::GBArray,
-    op::MonoidBinaryOrRig = *;
+    op = *;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    t = inferoutputtype(A, B, op)
+    t = inferbinarytype(eltype(A), eltype(B), op)
     if A isa GBVector && B isa GBVector
         C = GBVector{t}(size(A))
     else
@@ -120,7 +120,7 @@ function eadd!(
     C::GBVecOrMat,
     A::GBArray,
     B::GBArray,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+    op = +;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -128,7 +128,7 @@ function eadd!(
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2 = B)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
-    op = getoperator(op, optype(A, B))
+    op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedSemiring
         libgb.GrB_Matrix_eWiseAdd_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
@@ -171,12 +171,12 @@ For a set intersection equivalent see [`emul`](@ref).
 function eadd(
     A::GBArray,
     B::GBArray,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+    op = +;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    t = inferoutputtype(A, B, op)
+    t = inferbinarytype(eltype(A), eltype(B), op)
     if A isa GBVector && B isa GBVector
         C = GBVector{t}(size(A))
     else
@@ -215,7 +215,7 @@ function eunion!(
     α::T,
     B::GBArray{U},
     β::U,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+    op = +;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -223,13 +223,13 @@ function eunion!(
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2 = B)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
-    op = getoperator(op, optype(A, B))
+    op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         libgb.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
         return C
     else
-        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
+        throw(ArgumentError("$op is not a valid binary op."))
     end
     return C
 end
@@ -260,12 +260,12 @@ function eunion(
     α::T,
     B::GBArray{U},
     β::U,
-    op::MonoidBinaryOrRig = BinaryOps.PLUS;
+    op = +;
     mask = nothing,
     accum = nothing,
     desc = nothing
 ) where {T, U}
-    t = inferoutputtype(A, B, op)
+    t = inferbinarytype(eltype(A), eltype(B), op)
     if A isa GBVector && B isa GBVector
         C = GBVector{t}(size(A))
     else
@@ -275,29 +275,29 @@ function eunion(
 end
 
 
-function emul!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
-    emul!(C, A, B, BinaryOp(op); mask, accum, desc)
-end
-
-function emul(A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
-    emul(A, B, BinaryOp(op); mask, accum, desc)
-end
-
-function eadd!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
-    eadd!(C, A, B, BinaryOp(op); mask, accum, desc)
-end
-
-function eadd(A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
-    eadd(A, B, BinaryOp(op); mask, accum, desc)
-end
-
-function eunion!(C, A, α, B, β, op::Function; mask = nothing, accum = nothing, desc = nothing)
-    eunion!(C, A, α, B, β, BinaryOp(op); mask, accum, desc)
-end
-
-function eunion(A, α, B, β, op::Function; mask = nothing, accum = nothing, desc = nothing)
-    eunion(A, α, B, β, BinaryOp(op); mask, accum, desc)
-end
+# function emul!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+#     emul!(C, A, B, BinaryOp(op); mask, accum, desc)
+# end
+# 
+# function emul(A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+#     emul(A, B, BinaryOp(op); mask, accum, desc)
+# end
+# 
+# function eadd!(C, A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+#     eadd!(C, A, B, BinaryOp(op); mask, accum, desc)
+# end
+# 
+# function eadd(A, B, op::Function; mask = nothing, accum = nothing, desc = nothing)
+#     eadd(A, B, BinaryOp(op); mask, accum, desc)
+# end
+# 
+# function eunion!(C, A, α, B, β, op::Function; mask = nothing, accum = nothing, desc = nothing)
+#     eunion!(C, A, α, B, β, BinaryOp(op); mask, accum, desc)
+# end
+# 
+# function eunion(A, α, B, β, op::Function; mask = nothing, accum = nothing, desc = nothing)
+#     eunion(A, α, B, β, BinaryOp(op); mask, accum, desc)
+# end
 
 function Base.:+(A::GBArray, B::GBArray)
     eadd(A, B, +)

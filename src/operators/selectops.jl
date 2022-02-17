@@ -77,3 +77,122 @@ end
 
 Base.show(io::IO, ::MIME"text/plain", s::SelectUnion) = gxbprint(io, s)
 juliaop(op::AbstractSelectOp) = op.juliaop
+
+"""
+    select(SuiteSparseGraphBLAS.TRIL, A, k=0)
+    select(tril, A, k=0)
+
+Select the entries on or below the `k`th diagonal of A.
+
+See also: `LinearAlgebra.tril`
+"""
+TRIL
+SelectOp(::typeof(LinearAlgebra.tril)) = TRIL
+"""
+    select(SuiteSparseGraphBLAS.TRIU, A, k=0)
+    select(triu, A, k=0)
+
+Select the entries on or above the `k`th diagonal of A.
+
+See also: `LinearAlgebra.triu`
+"""
+TRIU
+SelectOp(::typeof(LinearAlgebra.triu)) = TRIU
+"""
+    select(DIAG, A, k=0)
+
+Select the entries on the `k`th diagonal of A.
+
+See also: `LinearAlgebra.diag`
+"""
+DIAG
+SelectOp(::typeof(LinearAlgebra.diag)) = DIAG
+"""
+    select(OFFDIAG, A, k=0)
+
+Select the entries **not** on the `k`th diagonal of A.
+"""
+OFFDIAG
+SelectOp(::typeof(offdiag)) = OFFDIAG
+"""
+    select(NONZERO, A)
+    select(nonzeros, A)
+Select all entries in A with nonzero value.
+"""
+NONZERO
+SelectOp(::typeof(nonzeros)) = NONZERO
+
+# I don't believe these should have Julia equivalents.
+# Instead select(==, A, 0) will find EQ_ZERO internally.
+"""
+    select(EQ_ZERO, A)
+
+Select all entries in A equal to zero.
+"""
+EQ_ZERO
+"""
+    select(GT_ZERO, A)
+
+Select all entries in A greater than zero.
+"""
+GT_ZERO
+"""
+    select(GE_ZERO, A)
+
+Select all entries in A greater than or equal to zero.
+"""
+GE_ZERO
+"""
+    select(LT_ZERO, A)
+
+Select all entries in A less than zero.
+"""
+LT_ZERO
+"""
+    select(LE_ZERO, A)
+
+Select all entries in A less than or equal to zero.
+"""
+LE_ZERO
+"""
+    select(NE, A, k)
+    select(!=, A, k)
+Select all entries not equal to `k`.
+"""
+NE
+SelectOp(::typeof(!=)) = NE
+"""
+    select(EQ, A, k)
+    select(==, A, k)
+Select all entries equal to `k`.
+"""
+EQ
+SelectOp(::typeof(==)) = EQ
+"""
+    select(GT, A, k)
+    select(>, A, k)
+Select all entries greater than `k`.
+"""
+GT
+SelectOp(::typeof(>)) = GT
+"""
+    select(GE, A, k)
+    select(>=, A, k)
+Select all entries greater than or equal to `k`.
+"""
+GE
+SelectOp(::typeof(>=)) = GE
+"""
+    select(LT, A, k)
+    select(<, A, k)
+Select all entries less than `k`.
+"""
+LT
+SelectOp(::typeof(<)) = LT
+"""
+    select(LE, A, k)
+    select(<=, A, k)
+Select all entries less than or equal to `k`.
+"""
+LE
+SelectOp(::typeof(<=)) = LE
