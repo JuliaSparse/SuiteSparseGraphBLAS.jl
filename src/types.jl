@@ -61,8 +61,6 @@ function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X
 end
 
 function Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
-    # We can lazily load the built-ins since they are already constants. 
-    # Could potentially do this with UDFs, but probably not worth the effort.
     if !op.loaded
         if op.builtin
             op.p = load_global(op.typestr, libgb.GrB_UnaryOp)

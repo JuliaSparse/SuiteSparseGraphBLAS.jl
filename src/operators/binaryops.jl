@@ -23,25 +23,6 @@ function (op::BinaryOp)(::Type{T}, ::Type{U}) where {T, U} #fallback
         resulttypes = Base._return_type(op.juliaop, Tuple{T, U})
         TypedBinaryOperator(op.juliaop, T, U, resulttypes)
     end
-    # # If we're here op(T, U) doesn't exist. For example BinaryOp(+)(Float64, Int32) doesn't exist
-    # # Need to try two things:
-    # # 1. promotion (In the example above this should work)
-    # # 2. otherwise build an ephemeral version.
-    # 
-    # #try promotion:
-    # promoted = optype(T, U)
-    # sigs = getproperty.(getproperty.(methods(op), :sig), :parameters)
-    # for vec ∈ sigs
-    #     if length(vec) == 3 && Core.svec(promoted, promoted) == vec
-    #         return op(promoted, promoted)
-    #     end
-    # end
-    # # promotion failed, so we'll build an ephemeral TypedBinOp
-    # 
-    # 
-    # 
-    # 
-    # 
 end
 
 function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)

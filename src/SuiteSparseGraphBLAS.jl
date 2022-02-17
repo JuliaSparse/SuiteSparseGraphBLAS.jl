@@ -48,12 +48,6 @@ using .BinaryOps
 using .Monoids
 using .Semirings
 
-# Create typed operators
-# _createunaryops()
-# _createbinaryops()
-# _createmonoids()
-# _createsemirings()
-
 include("indexutils.jl")
 # 
 include("operations/extract.jl")
@@ -80,7 +74,6 @@ include("pack.jl")
 include("unpack.jl")
 include("options.jl")
 #EXPERIMENTAL
-# include("operations/argminmax.jl")
 include("operations/broadcasts.jl")
 include("chainrules/chainruleutils.jl")
 include("chainrules/mulrules.jl")
@@ -92,7 +85,6 @@ include("chainrules/constructorrules.jl")
 include("misc.jl")
 include("asjulia.jl")
 include("spmgb/sparsemat.jl")
-# include("consts.jl")
 # using .Consts
 
 export SparseArrayCompat
