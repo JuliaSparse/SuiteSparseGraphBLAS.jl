@@ -15,6 +15,15 @@ struct UnaryOp{F} <: AbstractUnaryOp
 end
 SuiteSparseGraphBLAS.juliaop(op::UnaryOp) = op.juliaop
 
+# fallback
+# This is a fallback since creating these every time is incredibly costly.
+function (op::UnaryOp)(::Type{T}) where {T}
+    resulttypes = Base.return_types(op.juliaop, (T,))
+    if length(resulttypes) != 1
+        throw(ArgumentError("Inferred more than one result type for function $(string(op.juliaop)) on type $T."))
+    end
+    return TypedUnaryOperator(op.juliaop, T, resulttypes[1])
+end
 function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     # Complex ops must always be GxB prefixed
     if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
@@ -157,5 +166,5 @@ end
 const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
 
 
-ztype(::TypedUnaryOperator{I, O}) where {I, O} = O
-xtype(::TypedUnaryOperator{I, O}) where {I, O} = I
+ztype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = O
+xtype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = I

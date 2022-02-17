@@ -12,7 +12,7 @@
     o = GBMatrix(ones(Int64, 7, 1))
     mask = GBMatrix(ones(Bool, 7, 1))
     mask[3,1] = false
-    @test mul!(o, m, n; mask, accum=BinaryOps.PLUS) ==
+    @test mul!(o, m, n; mask, accum=+) ==
         GBMatrix([31,1,1,1,31,1,5])
 
     m = GBMatrix([[1,2,3] [4,5,6]])

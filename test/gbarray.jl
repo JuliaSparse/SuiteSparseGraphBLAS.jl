@@ -58,7 +58,7 @@
 
         #range, range, accum, and mask
         mask = GBMatrix([[true, true, false] [false, true, true] [true, false,true]])
-        m[8:10, 8:10, mask = mask, accum = BinaryOps.TIMES, desc = Descriptor(replace_output=true)] =
+        m[8:10, 8:10, mask = mask, accum = *, desc = Descriptor(replace_output=true)] =
             fill(10, 3, 3)
         @test m[9, 10] === nothing
         @test m[10, 10] == 90
@@ -74,7 +74,7 @@
         @test v[100] == 10
 
         #steprange, mask, accum
-        v[10:10:100, mask = GBVector([true, true, true, false, false,false, true, false, true, true]), accum = BinaryOps.ISEQ] =
+        v[10:10:100, mask = GBVector([true, true, true, false, false,false, true, false, true, true]), accum = SuiteSparseGraphBLAS.iseq] =
         collect(1:10)
         @test v[10] == 1 && v[60] == 6 && v[100] == 1
     end

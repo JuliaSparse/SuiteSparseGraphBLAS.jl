@@ -1,8 +1,8 @@
 module BinaryOps
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp, GBType,
-    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, 
-    Ntypes, Ttypes, suffix
+    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
+    Ntypes, Ttypes, suffix, valid_union
 using ..libgb
 export BinaryOp, @binop
 
@@ -13,9 +13,37 @@ struct BinaryOp{F} <: AbstractBinaryOp
     juliaop::F
 end
 SuiteSparseGraphBLAS.juliaop(op::BinaryOp) = op.juliaop
-function (op::BinaryOp)(::Type{T}) where {T}
-    op(T, T)
+(op::BinaryOp)(T) = op(T, T)
+
+function (op::BinaryOp)(::Type{T}, ::Type{U}) where {T, U} #fallback
+    promoted = optype(T, U)
+    return try
+        invoke(op, Tuple{Type{promoted}, Type{promoted}}, promoted, promoted)
+    catch
+        resulttypes = Base._return_type(op.juliaop, Tuple{T, U})
+        TypedBinaryOperator(op.juliaop, T, U, resulttypes)
+    end
+    # # If we're here op(T, U) doesn't exist. For example BinaryOp(+)(Float64, Int32) doesn't exist
+    # # Need to try two things:
+    # # 1. promotion (In the example above this should work)
+    # # 2. otherwise build an ephemeral version.
+    # 
+    # #try promotion:
+    # promoted = optype(T, U)
+    # sigs = getproperty.(getproperty.(methods(op), :sig), :parameters)
+    # for vec ∈ sigs
+    #     if length(vec) == 3 && Core.svec(promoted, promoted) == vec
+    #         return op(promoted, promoted)
+    #     end
+    # end
+    # # promotion failed, so we'll build an ephemeral TypedBinOp
+    # 
+    # 
+    # 
+    # 
+    # 
 end
+
 function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     # Complex ops must always be GxB prefixed
     if (xtype ∈ Ztypes || ytype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
@@ -181,6 +209,6 @@ end
 
 const BinaryUnion = Union{AbstractBinaryOp, TypedBinaryOperator}
 
-ztype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = Z
-xtype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = X
-ytype(::TypedBinaryOperator{X, Y, Z}) where {X, Y, Z} = Y
+ztype(::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = Z
+xtype(::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = X
+ytype(::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = Y

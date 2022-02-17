@@ -12,6 +12,8 @@ end
 SuiteSparseGraphBLAS.juliaop(op::Monoid) = juliaop(op.binaryop)
 Monoid(f::Function) = Monoid(BinaryOp(f))
 
+# Can't really do ephemeral monoid fallbacks... Need the identity and possibly terminal.
+
 function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     if type ∈ Ztypes && isGrB(namestr)
         namestr = "GxB" * namestr[4:end]
@@ -121,6 +123,6 @@ end
 end
 
 const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
-ztype(::TypedMonoid{X}) where {X} = X
-xtype(::TypedMonoid{X}) where {X} = X
-ytype(::TypedMonoid{X}) where {X} = X
+ztype(::TypedMonoid{F, X, T}) where {F, X, T} = X
+xtype(::TypedMonoid{F, X, T}) where {F, X, T} = X
+ytype(::TypedMonoid{F, X, T}) where {F, X, T} = X

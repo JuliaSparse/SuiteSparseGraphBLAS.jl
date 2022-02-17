@@ -6,17 +6,22 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBT
     BinaryOps.iseq, BinaryOps.isne, BinaryOps.isgt, BinaryOps.islt, BinaryOps.isge, BinaryOps.isle, BinaryOps.∨,
     BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.fmod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
     BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
-    BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj
+    BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj, xtype, ytype, ztype
 using ..libgb
 export Semiring, @rig
 
 struct Semiring{FM, FA} <: AbstractSemiring
-    addop::Monoid{FA}
-    mulop::BinaryOp{FM}
+    addop::Monoid{FM}
+    mulop::BinaryOp{FA}
 end
 Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),BinaryOp(mulop))
 Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
 
+function (rig::Semiring)(T, U) #fallback
+    mulop = rig.mulop(T, U)
+    Z = ztype(mulop)
+    TypedSemiring(rig.addop(Z), mulop)
+end
 function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, outtype)
     # Complex ops must always be GxB prefixed
     if (xtype ∈ Ztypes || ytype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)

@@ -1,29 +1,11 @@
-function optype(atype, btype)
-    #If atype is signed, optype must be signed and at least big enough.
-    if atype <: Integer || btype <: Integer
-        if atype <: Signed || btype <: Signed
-            p = promote_type(atype, btype)
-            if p <: Integer
-                return signed(p)
-            else
-                return p
-            end
-        else
-            return promote_type(atype, btype)
-        end
-    else
-        return promote_type(atype, btype)
-    end
-end
 
 getaccum(::Nothing, t) = C_NULL
-getaccum(op::Function, t) = BinaryOp(op)(t)
-getaccum(op::BinaryOp, t) = op(t)
+getaccum(::Ptr{Nothing}, t) = C_NULL
+getaccum(op::Function, t) = BinaryOp(op)(t, t)
+getaccum(op::BinaryOp, t) = op(t, t)
 getaccum(op::Function, tleft, tright) = BinaryOp(op)(tleft, tright)
 getaccum(op::BinaryOp, tleft, tright) = op(tleft, tright)
 getaccum(op::TypedBinaryOperator, tleft, tright=tleft) = op
-
-optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
 
 inferunarytype(::Type{T}, op::AbstractUnaryOp) where {T} = ztype(op(T))
 inferunarytype(::Type{T}, op) where {T} = inferunarytype(T, UnaryOp(op))

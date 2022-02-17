@@ -72,7 +72,7 @@ function Base.map(
     op, x, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
-    t = inferunarytype(eltype(A), op)
+    t = inferbinarytype(typeof(x), eltype(A), op)
     return map!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
@@ -99,7 +99,7 @@ function Base.map(
     op, A::GBArray, x;
     mask = nothing, accum = nothing, desc = nothing
 )
-    t = inferunarytype(eltype(A), op)
+    t = inferbinarytype(eltype(A), typeof(x), op)
     return map!(op, similar(A, t), A, x; mask, accum, desc)
 end
 

@@ -5,46 +5,46 @@
         N = GBMatrix(rand(-10.0:0.05:10.0, 10, 11))
         @testset "+.*" begin
             test_frule(mul, M, Y)
-            test_frule(mul, M, Y, Semirings.PLUS_TIMES)
+            test_frule(mul, M, Y, (+, *))
             test_rrule(mul, M, Y)
-            test_rrule(mul, M, Y, Semirings.PLUS_TIMES)
+            test_rrule(mul, M, Y, (+, *))
 
             test_frule(mul, M, N)
-            test_frule(mul, M, N, Semirings.PLUS_TIMES)
+            test_frule(mul, M, N, (+, *))
             test_rrule(mul, M, N)
-            test_rrule(mul, M, N, Semirings.PLUS_TIMES)
+            test_rrule(mul, M, N, (+, *))
         end
 
         @testset "+.÷" begin
-            test_rrule(mul, M, Y, Semirings.PLUS_DIV)
-            test_rrule(mul, M, N, Semirings.PLUS_DIV)
+            test_rrule(mul, M, Y, (+, /))
+            test_rrule(mul, M, N, (+, /))
         end
 
         @testset "+.+" begin
-            test_frule(mul, M, Y, Semirings.PLUS_PLUS)
-            test_frule(mul, M, N, Semirings.PLUS_PLUS)
-            test_rrule(mul, M, Y, Semirings.PLUS_PLUS)
-            test_rrule(mul, M, N, Semirings.PLUS_PLUS)
+            test_frule(mul, M, Y, (+, +))
+            test_frule(mul, M, N, (+, +))
+            test_rrule(mul, M, Y, (+, +))
+            test_rrule(mul, M, N, (+, +))
         end
 
         @testset "+.-" begin
-            test_frule(mul, M, Y, Semirings.PLUS_MINUS)
-            test_frule(mul, M, N, Semirings.PLUS_MINUS)
-            test_rrule(mul, M, Y, Semirings.PLUS_MINUS)
-            test_rrule(mul, M, N, Semirings.PLUS_MINUS)
+            test_frule(mul, M, Y, (+, -))
+            test_frule(mul, M, N, (+, -))
+            test_rrule(mul, M, Y, (+, -))
+            test_rrule(mul, M, N, (+, -))
         end
 
         @testset "+.first" begin
-            test_frule(mul, M, Y, Semirings.PLUS_FIRST)
-            test_frule(mul, M, N, Semirings.PLUS_FIRST)
-            test_rrule(mul, M, Y ⊢ NoTangent(), Semirings.PLUS_FIRST)
-            test_rrule(mul, M, N ⊢ NoTangent(), Semirings.PLUS_FIRST)
+            test_frule(mul, M, Y, (+, first))
+            test_frule(mul, M, N, (+, first))
+            test_rrule(mul, M, Y ⊢ NoTangent(), (+, first))
+            test_rrule(mul, M, N ⊢ NoTangent(), (+, first))
         end
         @testset "+.second" begin
-            test_frule(mul, M, Y, Semirings.PLUS_SECOND)
-            test_frule(mul, M, N, Semirings.PLUS_SECOND)
-            test_rrule(mul, M ⊢ NoTangent(), Y, Semirings.PLUS_SECOND)
-            test_rrule(mul, M ⊢ NoTangent(), N, Semirings.PLUS_SECOND)
+            test_frule(mul, M, Y, (+, second))
+            test_frule(mul, M, N, (+, second))
+            test_rrule(mul, M ⊢ NoTangent(), Y, (+, second))
+            test_rrule(mul, M ⊢ NoTangent(), N, (+, second))
         end
     end
 
@@ -54,44 +54,44 @@
         N = GBMatrix(sprand(10, 75, 0.05))
         @testset "+.*" begin
             test_frule(mul, M, Y)
-            test_frule(mul, M, Y, Semirings.PLUS_TIMES)
+            test_frule(mul, M, Y, (+, *))
             test_rrule(mul, M, Y)
-            test_rrule(mul, M, Y, Semirings.PLUS_TIMES)
+            test_rrule(mul, M, Y, (+, *))
 
             test_frule(mul, M, N)
-            test_frule(mul, M, N, Semirings.PLUS_TIMES)
+            test_frule(mul, M, N, (+, *))
             test_rrule(mul, M, N)
-            test_rrule(mul, M, N, Semirings.PLUS_TIMES)
+            test_rrule(mul, M, N, (+, *))
         end
 
         @testset "+.÷" begin
-            test_rrule(mul, M, Y, Semirings.PLUS_DIV)
-            test_rrule(mul, M, N, Semirings.PLUS_DIV)
+            test_rrule(mul, M, Y, (+, /))
+            test_rrule(mul, M, N, (+, /))
         end
 
         @testset "+.+" begin
-            test_frule(mul, M, Y, Semirings.PLUS_PLUS)
-            test_frule(mul, M, N, Semirings.PLUS_PLUS)
-            test_rrule(mul, M, Y, Semirings.PLUS_PLUS)
-            test_rrule(mul, M, N, Semirings.PLUS_PLUS)
+            test_frule(mul, M, Y, (+, +))
+            test_frule(mul, M, N, (+, +))
+            test_rrule(mul, M, Y, (+, +))
+            test_rrule(mul, M, N, (+, +))
         end
         @testset "+.-" begin
-            test_frule(mul, M, Y, Semirings.PLUS_MINUS)
-            test_frule(mul, M, N, Semirings.PLUS_MINUS)
-            test_rrule(mul, M, Y, Semirings.PLUS_MINUS)
-            test_rrule(mul, M, N, Semirings.PLUS_MINUS)
+            test_frule(mul, M, Y, (+, -))
+            test_frule(mul, M, N, (+, -))
+            test_rrule(mul, M, Y, (+, -))
+            test_rrule(mul, M, N, (+, -))
         end
         @testset "+.first" begin
-            test_frule(mul, M, Y, Semirings.PLUS_FIRST)
-            test_frule(mul, M, N, Semirings.PLUS_FIRST)
-            test_rrule(mul, M, Y ⊢ NoTangent(), Semirings.PLUS_FIRST)
-            test_rrule(mul, M, N ⊢ NoTangent(), Semirings.PLUS_FIRST)
+            test_frule(mul, M, Y, (+, first))
+            test_frule(mul, M, N, (+, first))
+            test_rrule(mul, M, Y ⊢ NoTangent(), (+, first))
+            test_rrule(mul, M, N ⊢ NoTangent(), (+, first))
         end
         @testset "+.second" begin
-            test_frule(mul, M, Y, Semirings.PLUS_SECOND)
-            test_frule(mul, M, N, Semirings.PLUS_SECOND)
-            test_rrule(mul, M ⊢ NoTangent(), Y, Semirings.PLUS_SECOND)
-            test_rrule(mul, M ⊢ NoTangent(), N, Semirings.PLUS_SECOND)
+            test_frule(mul, M, Y, (+, second))
+            test_frule(mul, M, N, (+, second))
+            test_rrule(mul, M ⊢ NoTangent(), Y, (+, second))
+            test_rrule(mul, M ⊢ NoTangent(), N, (+, second))
         end
     end
 end

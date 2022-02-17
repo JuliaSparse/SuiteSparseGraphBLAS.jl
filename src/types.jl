@@ -57,14 +57,14 @@ mutable struct TypedBinaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
     end
 end
 function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
-    return TypedBinaryOperator{X, Y, Z}(false, false, string(fn), libgb.GrB_BinaryOp(), fn)
+    return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), libgb.GrB_BinaryOp(), fn)
 end
 
 function Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
     # We can lazily load the built-ins since they are already constants. 
     # Could potentially do this with UDFs, but probably not worth the effort.
     if !op.loaded
-        if builtin
+        if op.builtin
             op.p = load_global(op.typestr, libgb.GrB_UnaryOp)
         else
             fn = op.fn
@@ -104,7 +104,7 @@ end
 
 function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid{Z, T}) where {Z, T}
     if !op.loaded
-        if builtin
+        if op.builtin
             op.p = load_global(op.typestr, libgb.GrB_Monoid)
         else
             opref = Ref{libgb.GrB_Monoid}()
@@ -169,7 +169,7 @@ end
 
 function Base.unsafe_convert(::Type{libgb.GrB_Semiring}, op::TypedSemiring)
     if !op.loaded
-        if builtin
+        if op.builtin
             op.p = load_global(op.typestr, libgb.GrB_Semiring)
         else
             opref = Ref{libgb.GrB_Semiring}()
@@ -185,7 +185,7 @@ function Base.unsafe_convert(::Type{libgb.GrB_Semiring}, op::TypedSemiring)
     end
 end
 
-
+TypedSemiring(addop, mulop) = TypedSemiring(false, false, "", libgb.GrB_Semiring(), addop, mulop)
 
 """
 """
