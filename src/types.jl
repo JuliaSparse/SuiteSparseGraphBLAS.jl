@@ -47,7 +47,7 @@ mutable struct TypedBinaryOperator{X, Y, Z} <: AbstractTypedOp{Z}
         end
     end
 end
-function TypedBinaryOperator(fn::Function, ::Type{X}, ::Type{Y} ::Type{Z}) where {X, Y, Z}
+function TypedBinaryOperator(fn::Function, ::Type{X}, ::Type{Y}, ::Type{Z}) where {X, Y, Z}
     function binaryopfn(z, x, y)
         unsafe_store!(z, fn(x, y))
         return nothing
@@ -77,8 +77,8 @@ mutable struct TypedMonoid{Z} <: AbstractTypedOp{Z}
     loaded::Bool
     typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
     p::libgb.GrB_Monoid
-    binaryop::libgb.GrB_BinaryOp{Z, Z, Z}
-    function TypedMonoid{Z}(builtin, loaded, typestr, p, binaryop::TypedBinaryOperator{Z, Z, Z})
+    binaryop::TypedBinaryOperator{Z, Z, Z}
+    function TypedMonoid{Z}(builtin, loaded, typestr, p, binaryop::TypedBinaryOperator{Z, Z, Z}) where Z
         monoid = new(builtin, loaded, typestr, p, binaryop)
         return finalizer(monoid) do op
             libgb.GrB_Monoid_free(Ref(op.p))
@@ -86,10 +86,22 @@ mutable struct TypedMonoid{Z} <: AbstractTypedOp{Z}
     end
 end
 
-# We do this AoT because we need to know whether there's a terminal or not.
+function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid)
+    # We can lazily load the built-ins since they are already constants. 
+    # Could potentially do this with UDFs, but probably not worth the effort.
+    if op.builtin && !op.loaded
+        op.p = load_global(op.typestr, libgb.GrB_Monoid)
+        op.loaded = true
+    end
+    if !op.loaded
+        error("This operator could not be loaded, and is invalid.")
+    else
+        return op.p
+    end
+end
+
 function _builtinMonoid(typestr, binaryop::TypedBinaryOperator{Z, Z, Z}) where {Z}
-    p = load_global(typestr, libgb.GrB_Monoid)
-    return TypedMonoid{Z}(true, true, typestr, p, binaryop)
+    return TypedMonoid{Z}(true, false, typestr, C_NULL, binaryop)
 end
 
 function TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Z, terminal::T) where {Z, T<:Union{Z, Nothing}}
@@ -115,10 +127,6 @@ TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Function) where {Z} =
 TypedMonoid(binop::TypedBinaryOperator{Z, Z, Z}, identity::Function, terminal::Function) where {Z} = TypedMonoid(binop, identity(Z), terminal(Z))
 
 TypedMonoid(binop::TypedBinaryOperator, identity) = TypedMonoid(binop, identity, nothing)
-
-function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid) 
-    return op.p
-end
 
 mutable struct TypedSemiring{X, Y, Z} <: AbstractTypedOp{Z}
     p::libgb.GrB_Semiring

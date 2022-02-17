@@ -1,9 +1,9 @@
 module BinaryOps
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractBinaryOp, GBType,
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp, GBType,
     valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
 using ..libgb
-export BinaryOp, @binop
+export BinaryOp, @binop, ∨, ∧
 struct BinaryOp{F} <: AbstractBinaryOp
     juliaop::F
 end
@@ -14,10 +14,12 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     if (xtype ∈ Ztypes || ytype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
         namestr = "GxB" * namestr[4:end]
     end
-    if intype === :Any && outtype ∈ Ntypes # POSITIONAL ops use the output type for suffix
+    if xtype === :Any && ytype === :Any && outtype ∈ Ntypes # POSITIONAL ops use the output type for suffix
         namestr = namestr * "_$(suffix(outtype))"
+    elseif xtype === ytype
+        namestr = namestr * "_$(suffix(xtype))"
     else
-        namestr = namestr * "_$(suffix(intype))"
+        namestr = namestr * "_$(suffix(xtype))_$(suffix(ytype))"
     end
     if builtin
         namesym = Symbol(namestr[5:end])
@@ -73,7 +75,6 @@ macro binop(expr...)
         types = expr[2]
     end
     builtin = isGxB(name) || isGrB(name)
-    types = expr[3]
     if types.head !== :call || types.args[1] !== :(=>)
         error("Type constraints should be in the form <Symbol>=><Symbol>")
     end
@@ -144,7 +145,7 @@ end
 @binop (&) GrB_BAND I=>I
 @binop (⊻) GrB_BXOR I=>I
 @binop new bxnor GrB_BXNOR I=>I
-BXOR(::Type{Bool}, ::Type{Bool}) = LXOR_BOOL
+(::BinaryOp{typeof(⊻)})(::Type{Bool}, ::Type{Bool}) = LXOR_BOOL
 
 @binop new bget GxB_BGET I=>I
 @binop new bset GxB_BSET I=>I

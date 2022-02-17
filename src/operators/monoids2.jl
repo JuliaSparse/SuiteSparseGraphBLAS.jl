@@ -2,7 +2,7 @@ module Monoids
 
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
-    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOp, _builtinMonoid
+    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, _builtinMonoid, BinaryOps.∨, BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor
 using ..libgb
 export Monoid, @monoid
 
@@ -10,6 +10,7 @@ struct Monoid{F} <: AbstractMonoid
     binaryop::BinaryOp{F}
 end
 SuiteSparseGraphBLAS.juliaop(op::Monoid) = juliaop(op.binaryop)
+Monoid(f::Function) = Monoid(BinaryOp(f))
 
 function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     if type ∈ Ztypes && isGrB(namestr)
@@ -29,9 +30,9 @@ function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     end
     typesym = Symbol(type)
     if builtin
-        constquote = :(const $(esc(namesym)) = _builtinMonoid(namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)))))
+        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym)))))
     else
-        constquote = :(const $(esc(namesym)) = TypedMonoid(BinaryOp($(esc(jlfunc)))($(esc(typesym))), $(esc(identity), $(esc(term)))))
+        constquote = :(const $(esc(namesym)) = TypedMonoid(BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
     end
     return quote
         $(constquote)
@@ -39,93 +40,86 @@ function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     end
 end
 
-function typedmonoidexprs(jlfunc, builtin, namestr, type, identity, term)
-    if type isa Symbol
-        types = [type]
+function typedmonoidexprs(jlfunc, builtin, namestr, types, identity, term)
+    if types isa Symbol
+        types = [types]
     end
-    exprs = typedbinopconstexpr.(Ref(jlfunc), Ref(builtin), Ref(namestr), )
-end
-function typedmonoidconstexpr(dispatchstruct, builtin, namestr, type)
-    # Complex ops must always be GxB prefixed
-    if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
-        namestr = "GxB" * namestr[4:end]
-    end
-    namestr = namestr * "_$(suffix(type))"
-    if builtin
-        namesym = Symbol(namestr[5:end])
-    else
-        namesym = Symbol(namestr)
-    end
-    xsym = Symbol(xtype)
-    return quote
-        const $(esc(namesym)) = TypedMonoidOperator{$xsym, $outsym}($builtin, false, $namestr, libgb.GrB_Monoid(C_NULL))
-        $(esc(dispatchstruct))(::Type{$xsym}) = $(esc(namesym))
-    end
-end
-function typedmonoidexprs(dispatchstruct, builtin, namestr, xtypes, outtypes)
-    if xtypes isa Symbol
-        xtypes = [xtypes]
-    end
-    if outtypes isa Symbol
-        outtypes = [outtypes]
-    end
-    exprs = typedmonoidconstexpr.(Ref(dispatchstruct), Ref(builtin), Ref(namestr), xtypes, outtypes)
+    exprs = typedmonoidconstexpr.(Ref(jlfunc), Ref(builtin), Ref(namestr), types, Ref(identity), Ref(term))
     if exprs isa Expr
         return exprs
     else
-        return quote 
+        return quote
             $(exprs...)
         end
     end
 end
 
 macro monoid(expr...)
-    if first(expr) === :new
-        newfunc = :(function $(esc(expr[2])) end)
-        expr = expr[2:end]
-    else
-        newfunc = :()
+    # no need to create a new function, we must have already done this for binops.
+    jlfunc = first(expr)
+    if expr[3] isa Symbol # we have a name symbol
+        name = string(expr[2])
+        types = expr[3]
+        if length(expr) >= 4
+            @assert expr[4].head === :call && expr[4].args[1] === :(=>) && expr[4].args[2] === :(id) "Invalid macro formatting."
+            id = expr[4].args[3]
+        else
+            id = :one
+        end
+
+        if length(expr) == 5
+            @assert expr[5].head === :call && expr[5].args[1] === :(=>) && expr[5].args[2] === :(term)
+            term = expr[5].args[3]
+        else
+            term = :nothing
+        end
+        
+    else # we use the function name
+        name = uppercase(string(jlfunc))
+        types = expr[2]
+        if length(expr) >= 3
+            @assert expr[3].head === :call && expr[3].args[1] === :(=>) && expr[3].args[2] === :(id) "Invalid macro formatting."
+            id = expr[3].args[3]
+        else
+            id = :one
+        end
+
+        if length(expr) == 4
+            @assert expr[4].head === :call && expr[4].args[1] === :(=>) && expr[4].args[2] === :(term)
+            term = expr[4].args[3]
+        else
+            term = :nothing
+        end
     end
-    binop = first(expr)
-    name = string(expr[2])
-    if isGxB(name) || isGrB(name)
-        builtin = true
-    else
-        builtin = false
-    end
-    dispatchstruct = Symbol((builtin ? name[5:end] : name) * "_T")
-    dispatchfunc = Symbol(builtin ? name[5:end] : name)
-    types = expr[3]
-    if !(types isa Symbol)
-        error("Monoid type constraints should be in the form <Symbol>")
-    end
-    intypes = symtotype(types)
-    outtypes = intypes
-    constquote = typedmonoidexprs(dispatchfunc, builtin, name, intypes, outtypes)
-    dispatchquote = Base.remove_linenums!(quote
-        $newfunc
-        Consts.binaryop(::$(esc(dispatchstruct))) = $(esc(binop))
-        Consts.monoid(::$(esc(:typeof))($(esc(binop)))) = $(esc(dispatchfunc))
-        $constquote
-    end)
-    return dispatchquote
+    
+    builtin = isGxB(name) || isGrB(name)
+    types = symtotype(types)
+    constquote = typedmonoidexprs(jlfunc, builtin, name, types, id, term)
+    return constquote
 end
 
 # We link to the BinaryOp rather than the Julia functions, 
 # because users will mostly be exposed to the higher level interface.
 
-@monoid PLUS GrB_PLUS_MONOID T
-@monoid TIMES GrB_TIMES_MONOID T
+@monoid (+) GrB_PLUS T
+@monoid (*) GrB_TIMES T
 
-@monoid ANY GxB_ANY_MONOID T
-@monoid MIN GrB_MIN_MONOID T
-@monoid MAX GrB_MAX_MONOID T
+@monoid any GxB_ANY T
+@monoid min GrB_MIN R
+@monoid max GrB_MAX R
 
-@monoid LOR GrB_LOR_MONOID Bool
-@monoid LAND GrB_LAND_MONOID Bool
-@monoid LXOR GrB_LXOR_MONOID Bool
-@monoid LXNOR GrB_LXNOR_MONOID Bool
-@monoid BOR GrB_BOR_MONOID I
-@monoid BAND GrB_BAND_MONOID I
-@monoid BXOR GrB_BXOR_MONOID I
-@monoid BXNOR GrB_BXNOR_MONOID I
+@monoid (∨) GrB_LOR Bool
+@monoid (∧) GrB_LAND Bool
+@monoid lxor GrB_LXOR Bool
+@monoid xnor GrB_LXNOR Bool
+@monoid (|) GrB_BOR I
+@monoid (&) GrB_BAND I
+@monoid (⊻) GrB_BXOR I
+@monoid bxnor GrB_BXNOR I
+
+end
+
+const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
+ztype(::TypedMonoid{X}) where {X} = X
+xtype(::TypedMonoid{X}) where {X} = X
+ytype(::TypedMonoid{X}) where {X} = X

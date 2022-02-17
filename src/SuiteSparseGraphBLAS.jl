@@ -39,7 +39,8 @@ include("constants.jl")
 include("operators/operatorutils.jl")
 include("operators/unaryops.jl")
 include("operators/binaryops.jl")
-include("operators/monoids.jl")
+# include("operators/monoids.jl")
+include("operators/monoids2.jl")
 include("operators/semirings.jl")
 include("operators/selectops.jl")
 include("descriptors.jl")
@@ -50,37 +51,37 @@ using .Semirings
 
 # Create typed operators
 # _createunaryops()
-_createbinaryops()
-_createmonoids()
-_createsemirings()
+# _createbinaryops()
+# _createmonoids()
+# _createsemirings()
 
 
 
-include("operators/oplist.jl")
-include("indexutils.jl")
-
-include("operations/extract.jl")
-include("scalar.jl")
-include("vector.jl")
-include("matrix.jl")
-include("random.jl")
-
-include("operations/operationutils.jl")
-include("operations/transpose.jl")
-include("operations/mul.jl")
-include("operations/ewise.jl")
-include("operations/map.jl")
-include("operations/select.jl")
-include("operations/reduce.jl")
-include("operations/kronecker.jl")
-include("operations/concat.jl")
-include("operations/resize.jl")
-
-include("print.jl")
-include("import.jl")
-include("export.jl")
-include("pack.jl")
-include("unpack.jl")
+# include("operators/oplist.jl")
+# include("indexutils.jl")
+# 
+# include("operations/extract.jl")
+# include("scalar.jl")
+# include("vector.jl")
+# include("matrix.jl")
+# include("random.jl")
+# 
+# include("operations/operationutils.jl")
+# include("operations/transpose.jl")
+# include("operations/mul.jl")
+# include("operations/ewise.jl")
+# include("operations/map.jl")
+# include("operations/select.jl")
+# include("operations/reduce.jl")
+# include("operations/kronecker.jl")
+# include("operations/concat.jl")
+# include("operations/resize.jl")
+# 
+# include("print.jl")
+# include("import.jl")
+# include("export.jl")
+# include("pack.jl")
+# include("unpack.jl")
 include("options.jl")
 #EXPERIMENTAL
 # include("operations/argminmax.jl")
@@ -155,5 +156,5 @@ function __init__()
     end
 end
 
-include("operators/ztypes.jl")
+# include("operators/ztypes.jl")
 end #end of module

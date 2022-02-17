@@ -59,7 +59,7 @@ function suffix(T::Symbol)
     elseif T === :ComplexF64
         return "FC64"
     else
-        throw(ArgumentError("Not a valid GrB data type"))
+        return uppercase(string(T))
     end
 end
 
