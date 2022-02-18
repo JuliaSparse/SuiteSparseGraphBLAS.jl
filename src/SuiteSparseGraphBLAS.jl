@@ -85,7 +85,6 @@ include("chainrules/constructorrules.jl")
 include("misc.jl")
 include("asjulia.jl")
 include("spmgb/sparsemat.jl")
-# using .Consts
 
 export SparseArrayCompat
 export libgb

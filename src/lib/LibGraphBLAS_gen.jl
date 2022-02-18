@@ -1,6 +1,6 @@
 module LibGraphBLAS
 
-const GxB_FC64_t = ComplexF64
+const GxB_FC64_t = ComplexF32
 
 const GxB_FC32_t = ComplexF32
 
@@ -13,6 +13,7 @@ const GrB_Type = Ptr{GB_Type_opaque}
 @enum GrB_Info::Int32 begin
     GrB_SUCCESS = 0
     GrB_NO_VALUE = 1
+    GxB_EXHAUSTED = 2
     GrB_UNINITIALIZED_OBJECT = -1
     GrB_NULL_POINTER = -2
     GrB_INVALID_VALUE = -3
@@ -122,6 +123,8 @@ end
     GxB_API_DATE = 17
     GxB_API_ABOUT = 18
     GxB_API_URL = 19
+    GxB_COMPILER_VERSION = 23
+    GxB_COMPILER_NAME = 24
     GxB_GLOBAL_NTHREADS = 5
     GxB_GLOBAL_CHUNK = 7
     GxB_BURBLE = 99
@@ -190,6 +193,33 @@ end
 
 function GrB_Descriptor_free(descriptor)
     ccall((:GrB_Descriptor_free, libgraphblas), GrB_Info, (Ptr{GrB_Descriptor},), descriptor)
+end
+
+struct GB_Iterator_opaque
+    pstart::Int64
+    pend::Int64
+    p::Int64
+    k::Int64
+    header_size::Csize_t
+    pmax::Int64
+    avlen::Int64
+    avdim::Int64
+    anvec::Int64
+    Ap::Ptr{Int64}
+    Ah::Ptr{Int64}
+    Ab::Ptr{Int8}
+    Ai::Ptr{Int64}
+    Ax::Ptr{Cvoid}
+    type_size::Csize_t
+    A_sparsity::Cint
+    iso::Bool
+    by_col::Bool
+end
+
+const GxB_Iterator = Ptr{GB_Iterator_opaque}
+
+function GxB_Iterator_free(iterator)
+    ccall((:GxB_Iterator_free, libgraphblas), GrB_Info, (Ptr{GxB_Iterator},), iterator)
 end
 
 @enum GrB_WaitMode::UInt32 begin
@@ -512,6 +542,28 @@ end
 
 function GxB_Matrix_sort(C, P, op, A, desc)
     ccall((:GxB_Matrix_sort, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Matrix, GrB_BinaryOp, GrB_Matrix, GrB_Descriptor), C, P, op, A, desc)
+end
+
+function GB_Iterator_rc_bitmap_next(iterator)
+    ccall((:GB_Iterator_rc_bitmap_next, libgraphblas), GrB_Info, (GxB_Iterator,), iterator)
+end
+
+@enum GxB_Format_Value::Int32 begin
+    GxB_BY_ROW = 0
+    GxB_BY_COL = 1
+    GxB_NO_FORMAT = -1
+end
+
+function GB_Iterator_attach(iterator, A, format, desc)
+    ccall((:GB_Iterator_attach, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Matrix, GxB_Format_Value, GrB_Descriptor), iterator, A, format, desc)
+end
+
+function GB_Iterator_rc_seek(iterator, j, jth_vector)
+    ccall((:GB_Iterator_rc_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index, Bool), iterator, j, jth_vector)
+end
+
+function GB_Vector_Iterator_bitmap_seek(iterator, p)
+    ccall((:GB_Vector_Iterator_bitmap_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index), iterator, p)
 end
 
 @enum GrB_Mode::UInt32 begin
@@ -1613,12 +1665,6 @@ end
 
 function GxB_Vector_diag(v, A, k, desc)
     ccall((:GxB_Vector_diag, libgraphblas), GrB_Info, (GrB_Vector, GrB_Matrix, Int64, GrB_Descriptor), v, A, k, desc)
-end
-
-@enum GxB_Format_Value::Int32 begin
-    GxB_BY_ROW = 0
-    GxB_BY_COL = 1
-    GxB_NO_FORMAT = -1
 end
 
 function GxB_Scalar_wait(s)
@@ -2831,19 +2877,53 @@ function GxB_deserialize_type_name(type_name, blob, blob_size)
     ccall((:GxB_deserialize_type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, Ptr{Cvoid}, GrB_Index), type_name, blob, blob_size)
 end
 
+function GxB_Iterator_new(iterator)
+    ccall((:GxB_Iterator_new, libgraphblas), GrB_Info, (Ptr{GxB_Iterator},), iterator)
+end
+
+function GxB_Matrix_Iterator_attach(iterator, A, desc)
+    ccall((:GxB_Matrix_Iterator_attach, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Matrix, GrB_Descriptor), iterator, A, desc)
+end
+
+function GxB_Matrix_Iterator_getpmax(iterator)
+    ccall((:GxB_Matrix_Iterator_getpmax, libgraphblas), GrB_Index, (GxB_Iterator,), iterator)
+end
+
+function GxB_Matrix_Iterator_seek(iterator, p)
+    ccall((:GxB_Matrix_Iterator_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index), iterator, p)
+end
+
+function GxB_Matrix_Iterator_next(iterator)
+    ccall((:GxB_Matrix_Iterator_next, libgraphblas), GrB_Info, (GxB_Iterator,), iterator)
+end
+
+function GxB_Matrix_Iterator_getp(iterator)
+    ccall((:GxB_Matrix_Iterator_getp, libgraphblas), GrB_Index, (GxB_Iterator,), iterator)
+end
+
+function GxB_Matrix_Iterator_getIndex(iterator, row, col)
+    ccall((:GxB_Matrix_Iterator_getIndex, libgraphblas), Cvoid, (GxB_Iterator, Ptr{GrB_Index}, Ptr{GrB_Index}), iterator, row, col)
+end
+
+function GxB_Vector_Iterator_attach(iterator, v, desc)
+    ccall((:GxB_Vector_Iterator_attach, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Vector, GrB_Descriptor), iterator, v, desc)
+end
+
 # Skipping MacroDefinition: GB_PUBLIC extern
 
 const GxB_STDC_VERSION = __STDC_VERSION__
 
+const GB_restrict = restrict
+
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
-const GxB_IMPLEMENTATION_DATE = "Nov 15, 2021"
+const GxB_IMPLEMENTATION_DATE = "Feb 16, 2022"
 
 const GxB_IMPLEMENTATION_MAJOR = 6
 
-const GxB_IMPLEMENTATION_MINOR = 0
+const GxB_IMPLEMENTATION_MINOR = 2
 
-const GxB_IMPLEMENTATION_SUB = 0
+const GxB_IMPLEMENTATION_SUB = 1
 
 const GxB_SPEC_DATE = "Nov 15, 2021"
 
@@ -2860,11 +2940,11 @@ const GRB_SUBVERSION = GxB_SPEC_MINOR
 const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTATION_MINOR, GxB_IMPLEMENTATION_SUB)
 
 # Skipping MacroDefinition: GxB_IMPLEMENTATION_ABOUT \
-#"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved." \
+#"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved." \
 #"\nhttp://suitesparse.com  Dept of Computer Sci. & Eng, Texas A&M University.\n"
 
 # Skipping MacroDefinition: GxB_IMPLEMENTATION_LICENSE \
-#"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2021, All Rights Reserved." \
+#"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved." \
 #"\nLicensed under the Apache License, Version 2.0 (the \"License\"); you may\n" \
 #"not use SuiteSparse:GraphBLAS except in compliance with the License.  You\n" \
 #"may obtain a copy of the License at\n\n" \

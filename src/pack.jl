@@ -15,11 +15,11 @@ end
 
 function _packcscmatrix!(
     A::GBVecOrMat{T},
-    colptr::Vector{libgb.GrB_Index},
-    rowidx::Vector{libgb.GrB_Index},
+    colptr::Vector{Ti},
+    rowidx::Vector{Ti},
     values::Vector{T};
     desc = nothing
-    ) where {T}
+    ) where {T, Ti}
     colptr .-= 1
     rowidx .-= 1
     colptrsize = length(colptr) * sizeof(libgb.GrB_Index)
@@ -47,11 +47,11 @@ end
 
 function _packcsrmatrix!(
     A::GBVecOrMat{T},
-    rowptr::Vector{libgb.GrB_Index},
-    colidx::Vector{libgb.GrB_Index},
+    rowptr::Vector{Ti},
+    colidx::Vector{Ti},
     values::Vector{T};
     desc = nothing
-    ) where {T}
+    ) where {T, Ti}
     rowptr .-= 1
     colidx .-= 1
     rowptrsize = length(rowptr) * sizeof(libgb.GrB_Index)
@@ -75,4 +75,8 @@ function _packcsrmatrix!(
         desc
     )
     return A
+end
+
+function _makeshallow!(A::GBVecOrMat)
+    ccall((:GB_make_shallow, libgraphblas), Cvoid, (libgb.GrB_Matrix,), A)
 end
