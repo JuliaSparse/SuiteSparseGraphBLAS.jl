@@ -35,6 +35,7 @@ include("gbtypes.jl")
 
 
 include("constants.jl")
+include("wait.jl")
 
 include("operators/operatorutils.jl")
 include("operators/unaryops.jl")

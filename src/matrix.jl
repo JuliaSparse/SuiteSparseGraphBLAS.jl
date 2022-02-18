@@ -76,12 +76,6 @@ function build(A::GBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where
     return A
 end
 
-function wait(A::GBArray)
-    waitmode = libgb.GrB_MATERIALIZE
-    libgb.GrB_Matrix_wait(A, waitmode)
-    return nothing
-end
-
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
