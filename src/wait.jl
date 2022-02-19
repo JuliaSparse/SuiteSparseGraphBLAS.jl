@@ -16,7 +16,7 @@ function wait(A::libgb.GrB_BinaryOp)
     return nothing
 end
 
-function wait(A::libgb.GrB_SelectOp)
+function wait(A::libgb.GxB_SelectOp)
     waitmode = libgb.GrB_MATERIALIZE
     libgb.GrB_SelectOp_wait(A, waitmode)
     return nothing
