@@ -31,7 +31,8 @@ function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator{F
             end
             opref = Ref{libgb.GrB_UnaryOp}()
             unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{Z}, Ref{X}))
-            libgb.GB_UnaryOp_new(opref, unaryopfn_C, toGBType(Z), toGBType(X), string(fn))
+            # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
+            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(fn), "")
             op.p = opref[]
         end
         op.loaded = true
@@ -72,7 +73,7 @@ function Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator
             end
             opref = Ref{libgb.GrB_BinaryOp}()
             binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{Z}, Ref{X}, Ref{Y}))
-            libgb.GB_BinaryOp_new(opref, binaryopfn_C, toGBType(Z), toGBType(X), toGBType(Y), string(fn))
+            libgb.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
             op.p = opref[]
         end
         op.loaded = true

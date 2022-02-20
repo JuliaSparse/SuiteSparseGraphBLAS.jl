@@ -1,7 +1,7 @@
 module BinaryOps
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp, GBType,
-    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
+    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
     Ntypes, Ttypes, suffix, valid_union
 using ..libgb
 export BinaryOp, @binop
@@ -108,7 +108,6 @@ macro binop(expr...)
         ytypes = xtypes
     end
     outtypes = symtotype(types.args[3])
-    println(outtypes)
     constquote = typedbinopexprs(jlfunc, builtin, name, xtypes, ytypes, outtypes)
     dispatchquote = Base.remove_linenums!(quote
         $newfunc

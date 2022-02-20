@@ -25,6 +25,10 @@ include("abstracts.jl")
 include("libutils.jl")
 include("lib/LibGraphBLAS.jl")
 using .libgb
+
+include("lib/LibGraphBLAS_gen.jl")
+using .LibGraphBLAS
+
 include("operators/libgbops.jl")
 
 # Globals
@@ -124,11 +128,10 @@ function __init__()
         #The artifact does dlopen for us.
         libgraphblas_handle[] = SSGraphBLAS_jll.libgraphblas_handle
     end
-    _load_globaltypes()
     # We initialize GraphBLAS by giving it Julia's GC wrapped memory management functions.
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
-    libgb.GxB_init(libgb.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
+    @wraperror LibGraphBLAS.GxB_init(LibGraphBLAS.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
     gbset(:nthreads, Sys.CPU_THREADS ÷ 2)
     # Eagerly load selectops constants.
     _loadselectops()
@@ -136,7 +139,7 @@ function __init__()
     gbset(BASE1, 1)
     atexit() do
         # Finalize the lib, for now only frees a small internal memory pool.
-        libgb.GrB_finalize()
+        @wraperror LibGraphBLAS.GrB_finalize()
         @static if artifact_or_path != "default"
             dlclose(libgraphblas_handle[])
         end

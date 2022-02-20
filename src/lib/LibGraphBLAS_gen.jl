@@ -1,5 +1,5 @@
 module LibGraphBLAS
-
+import ..libgraphblas
 const GxB_FC64_t = ComplexF32
 
 const GxB_FC32_t = ComplexF32
@@ -2911,9 +2911,9 @@ end
 
 # Skipping MacroDefinition: GB_PUBLIC extern
 
-const GxB_STDC_VERSION = __STDC_VERSION__
+# const GxB_STDC_VERSION = __STDC_VERSION__
 
-const GB_restrict = restrict
+# const GB_restrict = restrict
 
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
@@ -2937,7 +2937,7 @@ const GRB_VERSION = GxB_SPEC_MAJOR
 
 const GRB_SUBVERSION = GxB_SPEC_MINOR
 
-const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTATION_MINOR, GxB_IMPLEMENTATION_SUB)
+# const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTATION_MINOR, GxB_IMPLEMENTATION_SUB)
 
 # Skipping MacroDefinition: GxB_IMPLEMENTATION_ABOUT \
 #"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved." \
@@ -2955,7 +2955,7 @@ const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTAT
 #"See the License for the specific language governing permissions and\n" \
 #"limitations under the License.\n"
 
-const GxB_SPEC_VERSION = GxB_VERSION(GxB_SPEC_MAJOR, GxB_SPEC_MINOR, GxB_SPEC_SUB)
+# const GxB_SPEC_VERSION = GxB_VERSION(GxB_SPEC_MAJOR, GxB_SPEC_MINOR, GxB_SPEC_SUB)
 
 # Skipping MacroDefinition: GxB_SPEC_ABOUT \
 #"GraphBLAS C API, by Aydin Buluc, Timothy Mattson, Scott McMillan,\n" \
@@ -2963,7 +2963,7 @@ const GxB_SPEC_VERSION = GxB_VERSION(GxB_SPEC_MAJOR, GxB_SPEC_MINOR, GxB_SPEC_SU
 #"Mathematics by Jeremy Kepner.  See also 'Graph Algorithms in the Language\n" \
 #"of Linear Algebra,' edited by J. Kepner and J. Gilbert, SIAM, 2011.\n"
 
-const GrB_INDEX_MAX = (GrB_Index(Culonglong(1) << 60))(-1)
+const GrB_INDEX_MAX = GrB_Index(Culonglong(1) << 60) * (-1)
 
 const GxB_INDEX_MAX = GrB_Index(Culonglong(1) << 60)
 
@@ -2995,15 +2995,15 @@ const GxB_ANY_SPARSITY = GxB_HYPERSPARSE + GxB_SPARSE + GxB_BITMAP + GxB_FULL
 
 const GxB_AUTO_SPARSITY = GxB_ANY_SPARSITY
 
-const GrB_NULL = NULL
+const GrB_NULL = C_NULL
 
-const GrB_INVALID_HANDLE = NULL
+const GrB_INVALID_HANDLE = C_NULL
 
-const GxB_RANGE = INT64_MAX
+const GxB_RANGE = typemax(Int64)
 
-const GxB_STRIDE = INT64_MAX - 1
+const GxB_STRIDE = typemax(Int64) - 1
 
-const GxB_BACKWARDS = INT64_MAX - 2
+const GxB_BACKWARDS = typemax(Int64) - 2
 
 const GxB_BEGIN = 0
 

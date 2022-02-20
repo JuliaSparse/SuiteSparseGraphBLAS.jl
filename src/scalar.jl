@@ -1,6 +1,6 @@
 # Constructors:
 ###############
-GBScalar{T}() where {T} = GBScalar{T}(libgb.GxB_Scalar_new(toGBType(T)))
+GBScalar{T}() where {T} = GBScalar{T}(libgb.GxB_Scalar_new(gbtype(T)))
 
 function GBScalar(v::T) where {T <: valid_union}
     x = GBScalar{T}()

@@ -11,17 +11,17 @@ function _importcscmat(
     desc = nothing,
     iso = false
 ) where {T}
-    A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
-    m = libgb.GrB_Index(m) #nrows
-    n = libgb.GrB_Index(n) #ncols
+    A = Ref{LibGraphBLAS.GrB_Matrix}() #Pointer to new GBMatrix
+    m = LibGraphBLAS.GrB_Index(m) #nrows
+    n = LibGraphBLAS.GrB_Index(n) #ncols
     desc = _handledescriptor(desc)
-    libgb.GxB_Matrix_import_CSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_import_CSC(
         A,
-        toGBType(T),
+        gbtype(T),
         m,
         n,
-        Ref{Ptr{libgb.GrB_Index}}(colptr),
-        Ref{Ptr{libgb.GrB_Index}}(rowindices),
+        Ref{Ptr{LibGraphBLAS.GrB_Index}}(colptr),
+        Ref{Ptr{LibGraphBLAS.GrB_Index}}(rowindices),
         Ref{Ptr{Cvoid}}(values),
         colsize,
         rowsize,
@@ -47,12 +47,12 @@ function _importcscmat(
     # Cannot directly pass Julia arrays to GraphBLAS, it expects malloc'd arrays.
     # Instead we'll malloc some memory for each of the three vectors, and unsafe_copyto!
     # into them.
-    colsize = libgb.GrB_Index(sizeof(colptr)) #Size of colptr vector
-    rowsize = libgb.GrB_Index(sizeof(rowindices)) #Size of rowindex vector
-    valsize = libgb.GrB_Index(sizeof(values)) #Size of nzval vector
-    col = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), colsize)
+    colsize = LibGraphBLAS.GrB_Index(sizeof(colptr)) #Size of colptr vector
+    rowsize = LibGraphBLAS.GrB_Index(sizeof(rowindices)) #Size of rowindex vector
+    valsize = LibGraphBLAS.GrB_Index(sizeof(values)) #Size of nzval vector
+    col = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), colsize)
     unsafe_copyto!(col, Ptr{UInt64}(pointer(colptr .- 1)), length(colptr))
-    row = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), rowsize)
+    row = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), rowsize)
     unsafe_copyto!(row, Ptr{UInt64}(pointer(rowindices .- 1)), length(rowindices))
     val = ccall(:jl_malloc, Ptr{T}, (UInt, ), valsize)
     unsafe_copyto!(val, pointer(values), length(values))
@@ -89,14 +89,14 @@ function _importcscvec(
     n::Integer, vi::Ptr{UInt64}, vi_size, vx::Ptr{T}, vx_size, nnz;
     jumbled::Bool = false, desc = nothing, iso = false
 ) where {T}
-    v = Ref{libgb.GrB_Vector}()
-    n = libgb.GrB_Index(n)
+    v = Ref{LibGraphBLAS.GrB_Vector}()
+    n = LibGraphBLAS.GrB_Index(n)
     desc = _handledescriptor(desc)
-    libgb.GxB_Vector_import_CSC(
+    @wraperror LibGraphBLAS.GxB_Vector_import_CSC(
         v,
-        toGBType(T),
+        gbtype(T),
         n,
-        Ref{Ptr{libgb.GrB_Index}}(vi),
+        Ref{Ptr{LibGraphBLAS.GrB_Index}}(vi),
         Ref{Ptr{Cvoid}}(vx),
         vi_size,
         vx_size,
@@ -112,9 +112,9 @@ function _importcscvec(
     n::Integer, vi::Vector{U}, vx::Vector{T}, nnz;
     jumbled::Bool = false, desc = nothing, iso = false
 ) where {U,T}
-    vi_size = libgb.GrB_Index(sizeof(vi))
-    vx_size = libgb.GrB_Index(sizeof(vx))
-    indices = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), vi_size)
+    vi_size = LibGraphBLAS.GrB_Index(sizeof(vi))
+    vx_size = LibGraphBLAS.GrB_Index(sizeof(vx))
+    indices = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), vi_size)
     unsafe_copyto!(indices, Ptr{UInt64}(pointer(vi .- 1)), length(vi))
     values = ccall(:jl_malloc, Ptr{T}, (UInt, ), vx_size)
     unsafe_copyto!(values, pointer(vx), length(vx))
@@ -134,17 +134,17 @@ function _importcsrmat(
     desc = nothing,
     iso = false
 ) where {U, T}
-    A = Ref{libgb.GrB_Matrix}() #Pointer to new GBMatrix
-    m = libgb.GrB_Index(m) #nrows
-    n = libgb.GrB_Index(n) #ncols
+    A = Ref{LibGraphBLAS.GrB_Matrix}() #Pointer to new GBMatrix
+    m = LibGraphBLAS.GrB_Index(m) #nrows
+    n = LibGraphBLAS.GrB_Index(n) #ncols
     desc = _handledescriptor(desc)
-    libgb.GxB_Matrix_import_CSR(
+    @wraperror LibGraphBLAS.GxB_Matrix_import_CSR(
         A,
-        toGBType(T),
+        gbtype(T),
         m,
         n,
-        Ref{Ptr{libgb.GrB_Index}}(rowptr),
-        Ref{Ptr{libgb.GrB_Index}}(colindices),
+        Ref{Ptr{LibGraphBLAS.GrB_Index}}(rowptr),
+        Ref{Ptr{LibGraphBLAS.GrB_Index}}(colindices),
         Ref{Ptr{Cvoid}}(values),
         rowsize,
         colsize,
@@ -166,9 +166,9 @@ function _importcsrmat(
     desc = nothing,
     iso = false
 ) where {T}
-    rowsize = libgb.GrB_Index(sizeof(rowptr)) #Size of colptr vector
-    colsize = libgb.GrB_Index(sizeof(colindices)) #Size of rowindex vector
-    valsize = libgb.GrB_Index(sizeof(values)) #Size of nzval vector
+    rowsize = LibGraphBLAS.GrB_Index(sizeof(rowptr)) #Size of colptr vector
+    colsize = LibGraphBLAS.GrB_Index(sizeof(colindices)) #Size of rowindex vector
+    valsize = LibGraphBLAS.GrB_Index(sizeof(values)) #Size of nzval vector
 
     # This section comes after some chatting with Keno Fisher.
     # Cannot directly pass Julia arrays to GraphBLAS, it expects malloc'd arrays.
@@ -176,9 +176,9 @@ function _importcsrmat(
     # into them.
     #NOTE: The use of `:jl_malloc` instead of `Libc.malloc` is because *GraphBLAS* will free
     # this memory using `:jl_free`. These functions have to match.
-    row = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), rowsize)
+    row = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), rowsize)
     unsafe_copyto!(row, Ptr{UInt64}(pointer(colptr .- 1)), length(rowptr))
-    col = ccall(:jl_malloc, Ptr{libgb.GrB_Index}, (UInt, ), colsize)
+    col = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), colsize)
     unsafe_copyto!(col, Ptr{UInt64}(pointer(rowindices .- 1)), length(colindices))
     val = ccall(:jl_malloc, Ptr{T}, (UInt, ), valsize)
     unsafe_copyto!(val, pointer(values), length(values))
@@ -190,13 +190,13 @@ function _importdensematrix(
     m::Integer, n::Integer, A::Ptr{T}, Asize;
     desc = nothing, iso = false
 ) where {T}
-    C = Ref{libgb.GrB_Matrix}()
-    m = libgb.GrB_Index(m)
-    n = libgb.GrB_Index(n)
+    C = Ref{LibGraphBLAS.GrB_Matrix}()
+    m = LibGraphBLAS.GrB_Index(m)
+    n = LibGraphBLAS.GrB_Index(n)
     desc = _handledescriptor(desc)
-    libgb.GxB_Matrix_import_FullC(
+    @wraperror LibGraphBLAS.GxB_Matrix_import_FullC(
         C,
-        toGBType(T),
+        gbtype(T),
         m,
         n,
         Ref{Ptr{Cvoid}}(A),
@@ -211,9 +211,9 @@ function _importdensematrix(
     m::Integer, n::Integer, A::VecOrMat{T};
     desc = nothing, iso = false
 ) where {T}
-    m = libgb.GrB_Index(m)
-    n = libgb.GrB_Index(n)
-    Asize = libgb.GrB_Index(sizeof(A))
+    m = LibGraphBLAS.GrB_Index(m)
+    n = LibGraphBLAS.GrB_Index(n)
+    Asize = LibGraphBLAS.GrB_Index(sizeof(A))
     Ax = ccall(:jl_malloc, Ptr{T}, (UInt, ), Asize)
     unsafe_copyto!(Ax, pointer(A), length(A))
     return _importdensematrix(m, n, Ax, Asize; desc, iso)
@@ -250,12 +250,12 @@ function _importdensevec(
     n::Integer, v::Ptr{T}, vsize;
     desc = nothing, iso = false
 ) where {T}
-    w = Ref{libgb.GrB_Vector}()
-    n = libgb.GrB_Index(n)
+    w = Ref{LibGraphBLAS.GrB_Vector}()
+    n = LibGraphBLAS.GrB_Index(n)
     desc = _handledescriptor(desc)
-    libgb.GxB_Vector_import_Full(
+    @wraperror LibGraphBLAS.GxB_Vector_import_Full(
         w,
-        toGBType(T),
+        gbtype(T),
         n,
         Ref{Ptr{Cvoid}}(v),
         vsize,
@@ -270,8 +270,8 @@ function _importdensevec(
     n::Integer, v::Vector{T};
     desc = nothing, iso = false
 ) where {T}
-    n = libgb.GrB_Index(n)
-    vsize = libgb.GrB_Index(sizeof(v))
+    n = LibGraphBLAS.GrB_Index(n)
+    vsize = LibGraphBLAS.GrB_Index(sizeof(v))
     # We have to do this instead of Libc.malloc because GraphBLAS will use :jl_free, not Libc.free
     vx = ccall(:jl_malloc, Ptr{T}, (UInt, ), vsize)
     unsafe_copyto!(vx, pointer(v), length(v))

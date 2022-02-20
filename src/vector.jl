@@ -4,7 +4,7 @@
     GBVector{T}(n = libgb.GxB_INDEX_MAX)
 """
 function GBVector{T}(n = libgb.GxB_INDEX_MAX) where {T}
-    v = GBVector{T}(libgb.GrB_Matrix_new(toGBType(T),n, 1))
+    v = GBVector{T}(libgb.GrB_Matrix_new(gbtype(T),n, 1))
     gbset(v, FORMAT, BYCOL)
     return v
 end

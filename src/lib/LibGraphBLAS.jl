@@ -56,39 +56,6 @@ macro wraperror(code)
     end
 end
 
-macro check(code)
-    MacroTools.@q begin
-        info = $(esc(code))
-        if info == GrB_UNINITIALIZED_OBJECT
-            throw(UninitializedObjectError)
-        elseif info == GrB_INVALID_OBJECT
-            throw(InvalidObjectError)
-        elseif info == GrB_NULL_POINTER
-            throw(NullPointerError)
-        elseif info == GrB_INVALID_VALUE
-            throw(InvalidValueError)
-        elseif info == GrB_INVALID_INDEX
-            throw(InvalidIndexError)
-        elseif info == GrB_DOMAIN_MISMATCH
-            throw(DomainError(nothing, "GraphBLAS Domain Mismatch"))
-        elseif info == GrB_DIMENSION_MISMATCH
-            throw(DimensionMismatch())
-        elseif info == GrB_OUTPUT_NOT_EMPTY
-            throw(OutputNotEmptyError)
-        elseif info == GrB_OUT_OF_MEMORY
-            throw(OutOfMemoryError())
-        elseif info == GrB_INSUFFICIENT_SPACE
-            throw(InsufficientSpaceError)
-        elseif info == GrB_INDEX_OUT_OF_BOUNDS
-            throw(BoundsError())
-        elseif info == GrB_PANIC
-            throw(PANIC)
-        else
-            throw(ErrorException("Unreachable Reached."))
-        end
-    end
-end
-
 function tozerobased(I)
     I isa Vector && (return I .- 1)
     I isa Integer && (return I - 1)
