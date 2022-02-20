@@ -48,7 +48,7 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     if builtin
         constquote = :(const $(esc(namesym)) = TypedBinaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_BinaryOp(), $(esc(jlfunc))))
     else
-        constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)) $(esc(outsym))))
+        constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))))
     end
     dispatchquote = if xtype === :Any && ytype === :Any
         :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type, ::Type) = $(esc(namesym)))
@@ -108,6 +108,7 @@ macro binop(expr...)
         ytypes = xtypes
     end
     outtypes = symtotype(types.args[3])
+    println(outtypes)
     constquote = typedbinopexprs(jlfunc, builtin, name, xtypes, ytypes, outtypes)
     dispatchquote = Base.remove_linenums!(quote
         $newfunc
