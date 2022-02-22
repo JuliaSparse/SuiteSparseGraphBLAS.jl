@@ -51,13 +51,18 @@ end
 
 function decrement(I)
     I isa Vector && (return I .- 1)
-    I isa Integer && (return I - 1)
+end
+
+@inline function decrement(I::Integer)
+    return I - 1
 end
 
 function increment(I)
     I isa Vector && (return I .+ 1)
-    I isa Integer && (return I + 1)
-    return I
+end
+
+@inline function increment(I::Integer)
+    return I + 1
 end
 
 function decrement!(I)

@@ -3,8 +3,10 @@
 """
     GBVector{T}(n = libgb.GxB_INDEX_MAX)
 """
-function GBVector{T}(n = libgb.GxB_INDEX_MAX) where {T}
-    v = GBVector{T}(libgb.GrB_Matrix_new(gbtype(T),n, 1))
+function GBVector{T}(n = LibGraphBLAS.GxB_INDEX_MAX) where {T}
+    m = Ref{GrB_Matrix}()
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
+    v = GBVector{T}(m[])
     gbset(v, FORMAT, BYCOL)
     return v
 end
@@ -55,14 +57,18 @@ end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
-Base.unsafe_convert(::Type{libgb.GrB_Matrix}, v::GBVector) = v.p
+Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, v::GBVector) = v.p
 
-function Base.copy(v::GBVector{T}) where {T}
-    return GBVector{T}(libgb.GrB_Matrix_dup(v))
+function Base.copy(A::GBVector{T}) where {T}
+    C = Ref{LibGraphBLAS.GrB_Matrix}()
+    LibGraphBLAS.GrB_Matrix_dup(C, A)
+    return GBVector{T}(C[])
 end
 
 function Base.size(v::GBVector)
-    return (Int64(libgb.GrB_Matrix_nrows(v)),)
+    nrows = Ref{LibGraphBLAS.GrB_Index}()
+    @wraperror LibGraphBLAS.GrB_Matrix_nrows(nrows, A)
+    return (Int64(nrows[]),)
 end
 
 Base.eltype(::Type{GBVector{T}}) where{T} = T
@@ -82,12 +88,12 @@ function Base.similar(
 end
 
 function Base.deleteat!(v::GBVector, i)
-    libgb.GrB_Matrix_removeElement(v, i, 1)
+    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(v, decrement(i), 1)
     return v
 end
 
 function Base.resize!(v::GBVector, n)
-    libgb.GrB_Matrix_resize(v, n, 1)
+    @wraperror LibGraphBLAS.GrB_Matrix_resize(v, n, 1)
     return v
 end
 
@@ -105,7 +111,7 @@ function LinearAlgebra.diag(A::GBMatOrTranspose{T}, k::Integer = 0; desc = nothi
     if A isa Transpose
         k = -k
     end
-    GBVector{T}(libgb.GxB_Vector_diag(libgb.GrB_Vector(v.p), parent(A), k, desc))
+    @wraperror LibGraphBLAS.GxB_Vector_diag(LibGraphBLAS.GrB_Vector(v.p), parent(A), k, desc)
     return v
 end
 
@@ -134,10 +140,19 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_build_, suffix(T))
     @eval begin
         function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = +)
-            nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
+            nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
             dup = BinaryOp(dup)($T)
-            libgb.$func(Ptr{libgb.GrB_Vector}(v.p), Vector{libgb.GrB_Index}(I) .- 1, zeros(libgb.GrB_Index, length(I)), X, length(X), dup)
+            decrement!(I)
+            @wraperror LibGraphBLAS.$func(
+                Ptr{LibGraphBLAS.GrB_Vector}(v.p), 
+                Vector{LibGraphBLAS.GrB_Index}(I), 
+                zeros(LibGraphBLAS.GrB_Index, length(I)), 
+                X, 
+                length(X), 
+                dup
+            )
+            increment!(I)
         end
     end
     # Setindex functions
@@ -145,7 +160,7 @@ for T ∈ valid_vec
     @eval begin
         function Base.setindex!(v::GBVector{$T}, x, i::Integer)
             x = convert($T, x)
-            return libgb.$func(v, x, libgb.GrB_Index(i) - 1, 0)
+            return LibGraphBLAS.$func(v, x, LibGraphBLAS.GrB_Index(decrement(i)), 0)
         end
     end
     # Getindex functions
@@ -153,13 +168,13 @@ for T ∈ valid_vec
     @eval begin
         function Base.getindex(v::GBVector{$T}, i::Integer)
             x = Ref{$T}()
-            result = libgb.$func(x, v, libgb.GrB_Index(i) - 1, 0)
-            if result == libgb.GrB_SUCCESS
+            result = LibGraphBLAS.$func(x, v, LibGraphBLAS.GrB_Index(decrement(i)), 0)
+            if result == LibGraphBLAS.GrB_SUCCESS
                 return x[]
-            elseif result == libgb.GrB_NO_VALUE
+            elseif result == LibGraphBLAS.GrB_NO_VALUE
                 return nothing
             else
-                throw(ErrorException("Invalid extractElement return value."))
+                @wraperror result
             end
         end
     end
@@ -167,41 +182,44 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_extractTuples_, suffix(T))
     @eval begin
         function SparseArrays.findnz(v::GBVector{$T})
-            nvals = Ref{libgb.GrB_Index}(nnz(v))
-            I = Vector{libgb.GrB_Index}(undef, nvals[])
+            nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
+            I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
             X = Vector{$T}(undef, nvals[])
-            libgb.$func(I, C_NULL, X, nvals, v)
+            @wraperror LibGraphBLAS.$func(I, C_NULL, X, nvals, v)
             nvals[] == length(I) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
-            return I .+ 1, X
+            return increment!(I), X
         end
         function SparseArrays.nonzeros(v::GBVector{$T})
-            nvals = Ref{libgb.GrB_Index}(nnz(v))
+            nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
             X = Vector{$T}(undef, nvals[])
-            libgb.$func(C_NULL, C_NULL, X, nvals, v)
+            @wraperror LibGraphBLAS.$func(C_NULL, C_NULL, X, nvals, v)
             nvals[] == length(X) || throw(DimensionMismatch(""))
             return X
         end
         function SparseArrays.nonzeroinds(v::GBVector{$T})
-            nvals = Ref{libgb.GrB_Index}(nnz(v))
-            I = Vector{libgb.GrB_Index}(undef, nvals[])
+            nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
+            I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
             wait(v)
-            libgb.$func(I, C_NULL, C_NULL, nvals, v)
+            @wraperror LibGraphBLAS.$func(I, C_NULL, C_NULL, nvals, v)
             nvals[] == length(I) || throw(DimensionMismatch(""))
-            return I .+ 1
+            return increment!(I)
         end
     end
 end
 
 function build(v::GBVector{T}, I::Vector, x::T) where {T}
-    nnz(v) == 0 || throw(libgb.OutputNotEmptyError("Cannot build vector with existing elements"))
+    nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
     x = GBScalar(x)
-    return libgb.GxB_Matrix_build_Scalar(
+    decrement!(I)
+    @wraperror LibGraphBLAS.GxB_Matrix_build_Scalar(
             v,
-            Vector{libgb.GrB_Index}(I),
-            zeros(libgb.GrB_Index, length(I)),
+            Vector{LibGraphBLAS.GrB_Index}(I),
+            zeros(LibGraphBLAS.GrB_Index, length(I)),
             x,
             length(I)
         )
+    increment!(I)
+    return v
 end
 
 # Indexing functions:
@@ -230,20 +248,9 @@ end
 
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
-function subassign!(
-    w::GBVector, u, I;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    desc = _handledescriptor(desc)
-    I, ni = idx(I)
-    u isa Vector && (u = GBVector(u))
-    mask === nothing && (mask = C_NULL)
-    if u isa GBVector
-        libgb.GxB_Matrix_subassign(w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
-    else
-        libgb.scalarmatsubassign[eltype(u)](w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
-    end
-    return nothing
+
+function subassign!(w::GBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
+    return subassign!(GBMatrix{T}(w), u, I, UInt64[1]; mask, accum, desc)
 end
 
 """

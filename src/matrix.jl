@@ -6,7 +6,9 @@
 Create a GBMatrix of the specified size, defaulting to the maximum on each dimension, 2^60.
 """
 function GBMatrix{T}(nrows = LibGraphBLAS.GxB_INDEX_MAX, ncols = LibGraphBLAS.GxB_INDEX_MAX) where {T}
-    GBMatrix{T}(@wraperror LibGraphBLAS.GrB_Matrix_new(gbtype(T),nrows, ncols))
+    m = Ref{GrB_Matrix}()
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
+    return GBMatrix{T}(m[])
 end
 
 GBMatrix{T}(dims::Dims{2}) where {T} = GBMatrix{T}(dims...)
@@ -172,7 +174,7 @@ for T ∈ valid_vec
                 DimensionMismatch("I, J and X must have the same length")
             decrement!(I)
             decrement!(J)
-            libgb.$func(
+            @wraperror LibGraphBLAS.$func(
                 A,
                 Vector{LibGraphBLAS.GrB_Index}(I),
                 Vector{LibGraphBLAS.GrB_Index}(J),
@@ -188,10 +190,9 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_setElement_, suffix(T))
     @eval begin
         function Base.setindex!(A::GBMatrix{$T}, x, i::Integer, j::Integer)
-            decrement(i)
-            decrement(j)
             x = convert($T, x)
-            return LibGraphBLAS.$func(A, x, LibGraphBLAS.GrB_Index(i), LibGraphBLAS.GrB_Index(j))
+            @wraperror LibGraphBLAS.$func(A, x, LibGraphBLAS.GrB_Index(decrement(i)), LibGraphBLAS.GrB_Index(decrement(j)))
+            return x
         end
     end
     # Getindex functions
@@ -205,7 +206,7 @@ for T ∈ valid_vec
             elseif result == LibGraphBLAS.GrB_NO_VALUE
                 return nothing
             else
-                throw(ErrorException("Invalid  extractElement return value"))
+                @wraperror result
             end
         end
         # Fix ambiguity
@@ -221,14 +222,14 @@ for T ∈ valid_vec
             I = Vector{libgb.GrB_Index}(undef, nvals[])
             J = Vector{libgb.GrB_Index}(undef, nvals[])
             X = Vector{$T}(undef, nvals[])
-            libgb.$func(I, J, X, nvals, A)
+            @wraperror LibGraphBLAS.$func(I, J, X, nvals, A)
             nvals[] == length(I) == length(J) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
-            return I .+ 1, J .+ 1, X
+            return increment!(I), increment!(J), X
         end
         function SparseArrays.nonzeros(A::GBMatrix{$T})
             nvals = Ref{libgb.GrB_Index}(nnz(A))
             X = Vector{$T}(undef, nvals[])
-            libgb.$func(C_NULL, C_NULL, X, nvals, A)
+            @wraperror LibGraphBLAS.$func(C_NULL, C_NULL, X, nvals, A)
             nvals[] == length(X) || throw(DimensionMismatch(""))
             return X
         end
@@ -237,9 +238,9 @@ for T ∈ valid_vec
             I = Vector{libgb.GrB_Index}(undef, nvals[])
             J = Vector{libgb.GrB_Index}(undef, nvals[])
             wait(A)
-            libgb.$func(I, J, C_NULL, nvals, A)
+            @wraperror libgb.$func(I, J, C_NULL, nvals, A)
             nvals[] == length(I) == length(J) || throw(DimensionMismatch(""))
-            return I .+ 1, J .+ 1
+            return increment!(I), increment!(J)
         end
     end
 end
@@ -300,6 +301,28 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 # Throws
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
+
+for T ∈ valid_vec
+    func = Symbol(:GxB_Matrix_subassign_, suffix(T))
+    @eval begin
+        function _subassign(C::GBMatrix{$T}, x, I, J, mask, accum, desc)
+            @wraperror libgb.$func(C, mask, accum, x, I, ni, J, nj, desc)
+            return x
+        end
+    end
+    if T ∈ gxb_vec
+        prefix = :GxB
+    else
+        prefix = :GrB
+    end
+    func = Symbol(prefix, :_Matrix_assign_, suffix(T))
+    @eval begin
+        function _assign(C::GBMatrix{$T}, x, I, J, mask, accum, desc)
+            @wraperror libgb.$func(C, mask, accum, x, I, ni, J, nj, desc)
+            return x
+        end
+    end
+end
 function subassign!(
     C::GBMatrix, A, I, J;
     mask = nothing, accum = nothing, desc = nothing
@@ -313,12 +336,14 @@ function subassign!(
         A = GBMatrix(A)
     end
     mask === nothing && (mask = C_NULL)
+    I isa Vector ? decrement!(I) : (I = decrement(I))
+    J isa Vector ? decrement!(J) : (J = decrement(J))
     if A isa GBArray
         desc = _handledescriptor(desc; in1 = A)
-        libgb.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
+        @wraperror LibGraphBLAS.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     else
         desc = _handledescriptor(desc)
-        libgb.scalarmatsubassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+        _subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
     return A
 end
@@ -359,13 +384,15 @@ function assign!(
     elseif A isa AbstractMatrix
         A = GBMatrix(A)
     end
+    I isa Vector ? decrement!(I) : (I = decrement(I))
+    J isa Vector ? decrement!(J) : (J = decrement(J))
     mask === nothing && (mask = C_NULL)
     if A isa GBArray
         desc = _handledescriptor(desc; in1 = A)
-        libgb.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     else
         desc = _handledescriptor(desc)
-        libgb.scalarmatassign[eltype(A)](C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+        _assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
     end
     return A
 end
