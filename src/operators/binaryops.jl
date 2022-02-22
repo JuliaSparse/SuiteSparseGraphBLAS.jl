@@ -108,7 +108,6 @@ macro binop(expr...)
         ytypes = xtypes
     end
     outtypes = symtotype(types.args[3])
-    println(outtypes)
     constquote = typedbinopexprs(jlfunc, builtin, name, xtypes, ytypes, outtypes)
     dispatchquote = Base.remove_linenums!(quote
         $newfunc
