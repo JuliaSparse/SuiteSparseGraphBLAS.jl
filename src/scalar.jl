@@ -1,8 +1,12 @@
 # Constructors:
 ###############
-GBScalar{T}() where {T} = GBScalar{T}(libgb.GxB_Scalar_new(gbtype(T)))
+function GBScalar{T}() where {T}
+    s = Ref{LibGraphBLAS.GxB_Scalar}()
+    @wraperror LibGraphBLAS.GxB_Scalar_new(s, toGBType(T))
+    return GBScalar{T}(s[])
+end
 
-function GBScalar(v::T) where {T <: valid_union}
+function GBScalar(v::T) where {T}
     x = GBScalar{T}()
     x[] = v
     return x
@@ -10,26 +14,33 @@ end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
-Base.unsafe_convert(::Type{libgb.GxB_Scalar}, s::GBScalar) = s.p
+Base.unsafe_convert(::Type{LibGraphBLAS.GxB_Scalar}, s::GBScalar) = s.p
 
 function Base.copy(s::GBScalar{T}) where {T}
-    return GBScalar{T}(libgb.GxB_Scalar_dup(s))
+    s2 = Ref{LibGraphBLAS.GxB_Scalar}()
+    @wraperror LibGraphBLAS.GxB_Scalar_dup(s2, s)
+    return GBScalar{T}(s2[])
 end
 
-clear!(s::GBScalar) = libgb.GxB_Scalar_clear(s)
+function clear!(s::GBScalar)
+    @wraperror LibGraphBLAS.GxB_Scalar_clear(s)
+end
 
 # Type dependent functions setindex and getindex:
 for T ∈ valid_vec
     func = Symbol(:GxB_Scalar_setElement_, suffix(T))
     @eval begin
         function Base.setindex!(value::GBScalar{$T}, s::$T)
-            libgb.$func(value, s)
+            @wraperror LibGraphBLAS.$func(value, s)
+            return s
         end
     end
     func = Symbol(:GxB_Scalar_extractElement_, suffix(T))
     @eval begin
         function Base.getindex(value::GBScalar{$T})
-            libgb.$func(value)
+            x = Ref{$T}()
+            @wraperror LibGraphBLAS.$func(x, value)
+            return x[]
         end
     end
 end
@@ -40,4 +51,8 @@ function Base.show(io::IO, ::MIME"text/plain", s::GBScalar)
     gxbprint(io, s)
 end
 
-SparseArrays.nnz(v::GBScalar) = Int64(libgb.GrB_Scalar_nvals(v))
+function SparseArrays.nnz(v::GBScalar)
+    n = Ref{LibGraphBLAS.GrB_Index}()
+    @wraperror LibGraphBLAS.GrB_Scalar_nvals(n, v)
+    return n[]
+end

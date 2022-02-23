@@ -7,7 +7,7 @@ Create a GBMatrix of the specified size, defaulting to the maximum on each dimen
 """
 function GBMatrix{T}(nrows = LibGraphBLAS.GxB_INDEX_MAX, ncols = LibGraphBLAS.GxB_INDEX_MAX) where {T}
     m = Ref{GrB_Matrix}()
-    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, toGBType(T),nrows, ncols)
     return GBMatrix{T}(m[])
 end
 
@@ -140,7 +140,7 @@ function LinearAlgebra.Diagonal(v::GBVector, k::Integer=0; desc = nothing)
     desc = _handledescriptor(desc)
     # Switch ptr to a Vector to trick GraphBLAS.
     # This is allowed since GrB_Vector is a GrB_Matrix internally.
-    @wraperror LibGraphBLAS.GxB_Matrix_diag(C, Ptr{libgb.GrB_Vector}(v.p), k, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_diag(C, Ptr{LibGraphBLAS.GrB_Vector}(v.p), k, desc)
     return C
 end
 
@@ -218,27 +218,27 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_extractTuples_, suffix(T))
     @eval begin
         function SparseArrays.findnz(A::GBMatrix{$T})
-            nvals = Ref{libgb.GrB_Index}(nnz(A))
-            I = Vector{libgb.GrB_Index}(undef, nvals[])
-            J = Vector{libgb.GrB_Index}(undef, nvals[])
+            nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+            I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+            J = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
             X = Vector{$T}(undef, nvals[])
             @wraperror LibGraphBLAS.$func(I, J, X, nvals, A)
             nvals[] == length(I) == length(J) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
             return increment!(I), increment!(J), X
         end
         function SparseArrays.nonzeros(A::GBMatrix{$T})
-            nvals = Ref{libgb.GrB_Index}(nnz(A))
+            nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
             X = Vector{$T}(undef, nvals[])
             @wraperror LibGraphBLAS.$func(C_NULL, C_NULL, X, nvals, A)
             nvals[] == length(X) || throw(DimensionMismatch(""))
             return X
         end
         function SparseArrays.nonzeroinds(A::GBMatrix{$T})
-            nvals = Ref{libgb.GrB_Index}(nnz(A))
-            I = Vector{libgb.GrB_Index}(undef, nvals[])
-            J = Vector{libgb.GrB_Index}(undef, nvals[])
+            nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+            I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+            J = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
             wait(A)
-            @wraperror libgb.$func(I, J, C_NULL, nvals, A)
+            @wraperror LibGraphBLAS.$func(I, J, C_NULL, nvals, A)
             nvals[] == length(I) == length(J) || throw(DimensionMismatch(""))
             return increment!(I), increment!(J)
         end
@@ -306,7 +306,7 @@ for T ∈ valid_vec
     func = Symbol(:GxB_Matrix_subassign_, suffix(T))
     @eval begin
         function _subassign(C::GBMatrix{$T}, x, I, J, mask, accum, desc)
-            @wraperror libgb.$func(C, mask, accum, x, I, ni, J, nj, desc)
+            @wraperror LibGraphBLAS.$func(C, mask, accum, x, I, ni, J, nj, desc)
             return x
         end
     end
@@ -318,7 +318,7 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_assign_, suffix(T))
     @eval begin
         function _assign(C::GBMatrix{$T}, x, I, J, mask, accum, desc)
-            @wraperror libgb.$func(C, mask, accum, x, I, ni, J, nj, desc)
+            @wraperror LibGraphBLAS.$func(C, mask, accum, x, I, ni, J, nj, desc)
             return x
         end
     end

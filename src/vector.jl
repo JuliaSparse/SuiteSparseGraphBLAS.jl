@@ -1,11 +1,11 @@
 # Constructors:
 ###############
 """
-    GBVector{T}(n = libgb.GxB_INDEX_MAX)
+    GBVector{T}(n = LibGraphBLAS.GxB_INDEX_MAX)
 """
 function GBVector{T}(n = LibGraphBLAS.GxB_INDEX_MAX) where {T}
     m = Ref{GrB_Matrix}()
-    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, toGBType(T),nrows, ncols)
     v = GBVector{T}(m[])
     gbset(v, FORMAT, BYCOL)
     return v
@@ -248,7 +248,6 @@ end
 
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
-
 function subassign!(w::GBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
     return subassign!(GBMatrix{T}(w), u, I, UInt64[1]; mask, accum, desc)
 end
@@ -258,20 +257,8 @@ end
 
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
-function assign!(
-    w::GBVector, u, I;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    desc = _handledescriptor(desc)
-    I, ni = idx(I)
-    u isa Vector && (u = GBVector(u))
-    mask === nothing && (mask = C_NULL)
-    if u isa GBVector
-        libgb.GrB_Matrix_assign(w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
-    else
-        libgb.scalarmatassign[eltype(u)](w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
-    end
-    return nothing
+function assign!(w::GBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
+    return assign!(GBMatrix{T}(w), u, I, UInt64[1]; mask, accum, desc)
 end
 
 function Base.setindex!(

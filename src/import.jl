@@ -17,7 +17,7 @@ function _importcscmat(
     desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Matrix_import_CSC(
         A,
-        gbtype(T),
+        toGBType(T),
         m,
         n,
         Ref{Ptr{LibGraphBLAS.GrB_Index}}(colptr),
@@ -94,7 +94,7 @@ function _importcscvec(
     desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Vector_import_CSC(
         v,
-        gbtype(T),
+        toGBType(T),
         n,
         Ref{Ptr{LibGraphBLAS.GrB_Index}}(vi),
         Ref{Ptr{Cvoid}}(vx),
@@ -140,7 +140,7 @@ function _importcsrmat(
     desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Matrix_import_CSR(
         A,
-        gbtype(T),
+        toGBType(T),
         m,
         n,
         Ref{Ptr{LibGraphBLAS.GrB_Index}}(rowptr),
@@ -196,7 +196,7 @@ function _importdensematrix(
     desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Matrix_import_FullC(
         C,
-        gbtype(T),
+        toGBType(T),
         m,
         n,
         Ref{Ptr{Cvoid}}(A),
@@ -255,7 +255,7 @@ function _importdensevec(
     desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Vector_import_Full(
         w,
-        gbtype(T),
+        toGBType(T),
         n,
         Ref{Ptr{Cvoid}}(v),
         vsize,

@@ -46,7 +46,7 @@ mutable struct GBType{T} <: AbstractGBType
 end
 
 function gbtype end
-macro gbtype(expr...)
+macro toGBType(expr...)
 
     jtype = expr[1]
     if length(expr) == 2

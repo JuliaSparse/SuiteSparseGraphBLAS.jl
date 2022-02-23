@@ -23,8 +23,6 @@ using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
 include("abstracts.jl")
 include("libutils.jl")
-include("lib/LibGraphBLAS.jl")
-using .libgb
 
 include("lib/LibGraphBLAS_gen.jl")
 using .LibGraphBLAS
@@ -92,7 +90,7 @@ include("asjulia.jl")
 include("spmgb/sparsemat.jl")
 
 export SparseArrayCompat
-export libgb
+export LibGraphBLAS
 export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types

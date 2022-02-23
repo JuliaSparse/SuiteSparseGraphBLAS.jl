@@ -3,7 +3,7 @@ function _packdensematrix!(A::GBVecOrMat{T}, M::DenseVecOrMat; desc = nothing) w
     Csize = length(A) * sizeof(T)
     values = Ref{Ptr{Cvoid}}(pointer(M))
     isuniform = false
-    libgb.GxB_Matrix_pack_FullC(
+    @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
         A.p,
         values,
         Csize,
@@ -22,15 +22,15 @@ function _packcscmatrix!(
     ) where {T, Ti}
     colptr .-= 1
     rowidx .-= 1
-    colptrsize = length(colptr) * sizeof(libgb.GrB_Index)
-    rowidxsize = length(rowidx) * sizeof(libgb.GrB_Index)
+    colptrsize = length(colptr) * sizeof(LibGraphBLAS.GrB_Index)
+    rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index)
     valsize = length(values) * sizeof(T)
-    colptr = Ref{Ptr{libgb.GrB_Index}}(pointer(colptr))
-    rowidx = Ref{Ptr{libgb.GrB_Index}}(pointer(rowidx))
+    colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colptr))
+    rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
     desc = _handledescriptor(desc)
 
-    x = libgb.GxB_Matrix_pack_CSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_pack_CSC(
         A,
         colptr,
         rowidx,
@@ -54,15 +54,15 @@ function _packcsrmatrix!(
     ) where {T, Ti}
     rowptr .-= 1
     colidx .-= 1
-    rowptrsize = length(rowptr) * sizeof(libgb.GrB_Index)
-    colidxsize = length(colidx) * sizeof(libgb.GrB_Index)
+    rowptrsize = length(rowptr) * sizeof(LibGraphBLAS.GrB_Index)
+    colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index)
     valsize = length(values) * sizeof(T)
-    rowptr = Ref{Ptr{libgb.GrB_Index}}(pointer(rowptr))
-    colidx = Ref{Ptr{libgb.GrB_Index}}(pointer(colidx))
+    rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowptr))
+    colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
     desc = _handledescriptor(desc)
 
-    libgb.GxB_Matrix_pack_CSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_pack_CSC(
         A,
         rowptr,
         colidx,
@@ -78,5 +78,5 @@ function _packcsrmatrix!(
 end
 
 function _makeshallow!(A::GBVecOrMat)
-    ccall((:GB_make_shallow, libgraphblas), Cvoid, (libgb.GrB_Matrix,), A)
+    ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), A)
 end

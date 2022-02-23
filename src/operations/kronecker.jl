@@ -17,11 +17,11 @@ function LinearAlgebra.kron!(
     op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
-        libgb.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
     elseif op isa TypedMonoid
-        libgb.GrB_Matrix_kronecker_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_kronecker_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
     elseif op isa TypedSemiring
-        libgb.GrB_Matrix_kronecker_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_kronecker_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
     else
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
     end

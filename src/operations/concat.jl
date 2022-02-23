@@ -1,5 +1,5 @@
 function hvcat!(C, Tiles)
-    libgb.GxB_Matrix_concat(C, Tiles, size(Tiles,1), size(Tiles,2), C_NULL)
+    @wraperror LibGraphBLAS.GxB_Matrix_concat(C, Tiles, size(Tiles,1), size(Tiles,2), C_NULL)
     return C
 end
 
