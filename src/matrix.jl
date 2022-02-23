@@ -7,7 +7,7 @@ Create a GBMatrix of the specified size, defaulting to the maximum on each dimen
 """
 function GBMatrix{T}(nrows = LibGraphBLAS.GxB_INDEX_MAX, ncols = LibGraphBLAS.GxB_INDEX_MAX) where {T}
     m = Ref{LibGraphBLAS.GrB_Matrix}()
-    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
     return GBMatrix{T}(m[])
 end
 
@@ -125,7 +125,7 @@ function Base.similar(
 end
 
 function Base.deleteat!(A::GBMatrix, i, j)
-    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(A, decrement(i), decrement(j))
+    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(A, decrement!(i), decrement!(j))
     return A
 end
 
@@ -191,7 +191,7 @@ for T ∈ valid_vec
     @eval begin
         function Base.setindex!(A::GBMatrix{$T}, x, i::Integer, j::Integer)
             x = convert($T, x)
-            @wraperror LibGraphBLAS.$func(A, x, LibGraphBLAS.GrB_Index(decrement(i)), LibGraphBLAS.GrB_Index(decrement(j)))
+            @wraperror LibGraphBLAS.$func(A, x, LibGraphBLAS.GrB_Index(decrement!(i)), LibGraphBLAS.GrB_Index(decrement!(j)))
             return x
         end
     end
@@ -200,7 +200,7 @@ for T ∈ valid_vec
     @eval begin
         function Base.getindex(A::GBMatrix{$T}, i::Int, j::Int)
             x = Ref{$T}()
-            result = LibGraphBLAS.$func(x, A, decrement(i), decrement(j))
+            result = LibGraphBLAS.$func(x, A, decrement!(i), decrement!(j))
             if result == LibGraphBLAS.GrB_SUCCESS
                 return x[]
             elseif result == LibGraphBLAS.GrB_NO_VALUE
@@ -305,7 +305,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 for T ∈ valid_vec
     func = Symbol(:GxB_Matrix_subassign_, suffix(T))
     @eval begin
-        function _subassign(C::GBMatrix{$T}, x, I, J, mask, accum, desc)
+        function _subassign(C::GBMatrix{$T}, x, I, ni, J, nj, mask, accum, desc)
             @wraperror LibGraphBLAS.$func(C, mask, accum, x, I, ni, J, nj, desc)
             return x
         end
@@ -317,7 +317,7 @@ for T ∈ valid_vec
     end
     func = Symbol(prefix, :_Matrix_assign_, suffix(T))
     @eval begin
-        function _assign(C::GBMatrix{$T}, x, I, J, mask, accum, desc)
+        function _assign(C::GBMatrix{$T}, x, I, ni, J, nj, mask, accum, desc)
             @wraperror LibGraphBLAS.$func(C, mask, accum, x, I, ni, J, nj, desc)
             return x
         end
@@ -327,6 +327,7 @@ function subassign!(
     C::GBMatrix, A, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
+    A1 = A
     I, ni = idx(I)
     J, nj = idx(J)
     if A isa GBArray
@@ -336,16 +337,18 @@ function subassign!(
         A = GBMatrix(A)
     end
     mask === nothing && (mask = C_NULL)
-    I isa Vector ? decrement!(I) : (I = decrement(I))
-    J isa Vector ? decrement!(J) : (J = decrement(J))
+    I = decrement!(I)
+    J = decrement!(J)
     if A isa GBArray
         desc = _handledescriptor(desc; in1 = A)
         @wraperror LibGraphBLAS.GxB_Matrix_subassign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     else
         desc = _handledescriptor(desc)
-        _subassign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+        _subassign(C, A, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     end
-    return A
+    increment!(I)
+    increment!(J)
+    return A1
 end
 
 """
@@ -384,16 +387,18 @@ function assign!(
     elseif A isa AbstractMatrix
         A = GBMatrix(A)
     end
-    I isa Vector ? decrement!(I) : (I = decrement(I))
-    J isa Vector ? decrement!(J) : (J = decrement(J))
+    I = decrement!(I)
+    J = decrement!(J)
     mask === nothing && (mask = C_NULL)
     if A isa GBArray
         desc = _handledescriptor(desc; in1 = A)
         @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
     else
         desc = _handledescriptor(desc)
-        _assign(C, mask, getaccum(accum, eltype(C)), A, I, ni, J, nj, desc)
+        _assign(C, A, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     end
+    increment!(I)
+    increment!(J)
     return A
 end
 

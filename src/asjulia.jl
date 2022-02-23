@@ -33,13 +33,11 @@ function asCSCVectors(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
     result = try
         f(colptr, rowidx, values, A)
     finally
-        println("I'm finally")
         if freeunpacked
             ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(colptr))
             ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(rowidx))
             ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
         else
-            println("I repacked!")
             _packcscmatrix!(A, colptr, rowidx, values)
         end
     end

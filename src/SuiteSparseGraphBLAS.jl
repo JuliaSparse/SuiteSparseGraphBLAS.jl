@@ -131,6 +131,7 @@ function __init__()
     gbset(:nthreads, Sys.CPU_THREADS ÷ 2)
     # Eagerly load selectops constants.
     _loadselectops()
+    ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)
     # Set printing done by SuiteSparse:GraphBLAS to base-1 rather than base-0.
     gbset(BASE1, 1)
     atexit() do

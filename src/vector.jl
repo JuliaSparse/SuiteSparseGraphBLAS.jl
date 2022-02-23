@@ -4,8 +4,8 @@
     GBVector{T}(n = LibGraphBLAS.GxB_INDEX_MAX)
 """
 function GBVector{T}(n = LibGraphBLAS.GxB_INDEX_MAX) where {T}
-    m = Ref{GrB_Matrix}()
-    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
+    m = Ref{LibGraphBLAS.GrB_Matrix}()
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), n, 1)
     v = GBVector{T}(m[])
     gbset(v, FORMAT, BYCOL)
     return v
@@ -67,7 +67,7 @@ end
 
 function Base.size(v::GBVector)
     nrows = Ref{LibGraphBLAS.GrB_Index}()
-    @wraperror LibGraphBLAS.GrB_Matrix_nrows(nrows, A)
+    @wraperror LibGraphBLAS.GrB_Matrix_nrows(nrows, v)
     return (Int64(nrows[]),)
 end
 
@@ -88,7 +88,7 @@ function Base.similar(
 end
 
 function Base.deleteat!(v::GBVector, i)
-    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(v, decrement(i), 1)
+    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(v, decrement!(i), 1)
     return v
 end
 
@@ -160,7 +160,7 @@ for T ∈ valid_vec
     @eval begin
         function Base.setindex!(v::GBVector{$T}, x, i::Integer)
             x = convert($T, x)
-            return LibGraphBLAS.$func(v, x, LibGraphBLAS.GrB_Index(decrement(i)), 0)
+            return LibGraphBLAS.$func(v, x, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
         end
     end
     # Getindex functions
@@ -168,7 +168,7 @@ for T ∈ valid_vec
     @eval begin
         function Base.getindex(v::GBVector{$T}, i::Integer)
             x = Ref{$T}()
-            result = LibGraphBLAS.$func(x, v, LibGraphBLAS.GrB_Index(decrement(i)), 0)
+            result = LibGraphBLAS.$func(x, v, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
             if result == LibGraphBLAS.GrB_SUCCESS
                 return x[]
             elseif result == LibGraphBLAS.GrB_NO_VALUE
@@ -249,7 +249,7 @@ end
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
 function subassign!(w::GBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
-    return subassign!(GBMatrix{T}(w), u, I, UInt64[1]; mask, accum, desc)
+    return subassign!(GBMatrix{T}(w.p; aliased=true), u, I, UInt64[1]; mask, accum, desc)
 end
 
 """
@@ -258,7 +258,7 @@ end
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
 function assign!(w::GBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
-    return assign!(GBMatrix{T}(w), u, I, UInt64[1]; mask, accum, desc)
+    return assign!(GBMatrix{T}(w.p; aliased=true), u, I, UInt64[1]; mask, accum, desc)
 end
 
 function Base.setindex!(

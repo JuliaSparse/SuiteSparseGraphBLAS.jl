@@ -225,12 +225,16 @@ See also: [`GBMatrix`](@ref).
 """
 mutable struct GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
     p::LibGraphBLAS.GrB_Matrix
-    function GBVector{T}(p::LibGraphBLAS.GrB_Matrix) where {T}
+    function GBVector{T}(p::LibGraphBLAS.GrB_Matrix; aliased=false) where {T}
         v = new(p)
         function f(vector)
             @wraperror LibGraphBLAS.GrB_Matrix_free(Ref(vector.p))
         end
-        return finalizer(f, v)
+        if aliased
+            return v
+        else
+            return finalizer(f, v)
+        end
     end
 end
 
@@ -250,11 +254,15 @@ The storage type is automatically determined by the library.
 """
 mutable struct GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
     p::LibGraphBLAS.GrB_Matrix
-    function GBMatrix{T}(p::LibGraphBLAS.GrB_Matrix) where {T}
+    function GBMatrix{T}(p::LibGraphBLAS.GrB_Matrix; aliased=false) where {T}
         A = new(p)
         function f(matrix)
             @wraperror LibGraphBLAS.GrB_Matrix_free(Ref(matrix.p))
         end
-        return finalizer(f, A)
+        if aliased
+            return A
+        else
+            return finalizer(f, A)
+        end
     end
 end

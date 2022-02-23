@@ -32,3 +32,5 @@ const OperatorUnion = Union{
     AbstractOp,
     GrBOp
 }
+
+const ALL = GBAllType(C_NULL)

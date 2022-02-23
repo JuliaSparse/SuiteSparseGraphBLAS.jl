@@ -65,11 +65,15 @@ end
     return I + 1
 end
 
-function decrement!(I)
+@inline function decrement!(I)
     I isa Vector && (return I .-= 1)
+    I isa Number && (return I - 1)
+    return I # don't need to modify here, likely an AllType.
 end
-function increment!(I)
+@inline function increment!(I)
     I isa Vector && (return I .+= 1)
+    I isa Number && (return I + 1)
+    return I # don't need to modify here, likely an AllType.
 end
 
 function suffix(T::Symbol)

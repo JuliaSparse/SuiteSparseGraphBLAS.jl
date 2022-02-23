@@ -94,7 +94,7 @@ function Base.show(io::IO, ::MIME"text/plain", t::GBType{T}) where T
     gxbprint(io, t)
 end
 
-struct GBAllType <: AbstractGBType
+mutable struct GBAllType <: AbstractGBType
     p::Ptr{LibGraphBLAS.GrB_Index}
 end
 Base.show(io::IO, ::MIME"text/plain", t::GBAllType) = print(io, "GraphBLAS type: GrB_ALL")
