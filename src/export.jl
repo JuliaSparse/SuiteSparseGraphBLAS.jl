@@ -11,7 +11,7 @@ function _exportdensematrix!(
     isuniform = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_export_FullC(
         Ref(A.p),
-        Ref(toGBType(T).p),
+        Ref(gbtype(T).p),
         nrows,
         ncols,
         values,
@@ -34,7 +34,7 @@ function _exportcscmatrix!(
     desc = _handledescriptor(desc)
     nrows = Ref{LibGraphBLAS.GrB_Index}(size(A, 1))
     ncols = Ref{LibGraphBLAS.GrB_Index}(size(A, 2))
-    t = Ref{LibGraphBLAS.GrB_Type}(toGBType(T).p)
+    t = Ref{LibGraphBLAS.GrB_Type}(gbtype(T).p)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
@@ -100,7 +100,7 @@ function _exportdensevec!(
     isuniform = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Vector_export_Full(
         Ref(v.p),
-        Ref(toGBType(T).p),
+        Ref(gbtype(T).p),
         n,
         values,
         vsize,

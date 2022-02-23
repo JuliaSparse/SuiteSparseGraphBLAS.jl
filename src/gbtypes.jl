@@ -45,8 +45,16 @@ mutable struct GBType{T} <: AbstractGBType
     end
 end
 
+"""
+    gbtype(x)
+
+Determine the GBType equivalent of a Julia primitive type.
+
+See also: [`juliatype`](@ref)
+"""
 function gbtype end
-macro toGBType(expr...)
+
+macro gbtype(expr...)
 
     jtype = expr[1]
     if length(expr) == 2
@@ -98,18 +106,9 @@ Base.length(::GBAllType) = 0 #Allow indexing with ALL
 
 Determine the Julia equivalent of a GBType.
 
-See also: [`toGBType`](@ref)
+See also: [`gbtype`](@ref)
 """
 juliatype(::GBType{T}) where {T} = T
-
-
-"""
-    toGBType(x)
-
-Determine the GBType equivalent of a Julia primitive type.
-
-See also: [`juliatype`](@ref)
-"""
 
 @gbtype Bool GrB_BOOL
 @gbtype Int8 GrB_INT8
@@ -125,34 +124,3 @@ See also: [`juliatype`](@ref)
 @gbtype ComplexF32 GxB_FC32
 @gbtype ComplexF64 GxB_FC64
 
-function toGBType(x)
-    if x == Bool
-        return BOOL
-    elseif x == Int8
-        return INT8
-    elseif x == UInt8
-        return UINT8
-    elseif x == Int16
-        return INT16
-    elseif x == UInt16
-        return UINT16
-    elseif x == Int32
-        return INT32
-    elseif x == UInt32
-        return UINT32
-    elseif x == Int64
-        return INT64
-    elseif x == UInt64
-        return UINT64
-    elseif x == Float32
-        return FP32
-    elseif x == Float64
-        return FP64
-    elseif x == ComplexF32
-        return FC32
-    elseif x == ComplexF64
-        return FC64
-    else
-        throw(ArgumentError("Not a valid GrB data type"))
-    end
-end

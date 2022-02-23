@@ -5,7 +5,7 @@
 """
 function GBVector{T}(n = LibGraphBLAS.GxB_INDEX_MAX) where {T}
     m = Ref{GrB_Matrix}()
-    @wraperror LibGraphBLAS.GrB_Matrix_new(m, toGBType(T),nrows, ncols)
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
     v = GBVector{T}(m[])
     gbset(v, FORMAT, BYCOL)
     return v

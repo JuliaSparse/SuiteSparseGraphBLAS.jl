@@ -11,60 +11,10 @@ Set an option either for a specific GBArray, or globally. The commonly used opti
     single GBArray.
 """
 gbset
-
+using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Field, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
+GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT, GxB_DESCRIPTOR_CHUNK, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH,
+GxB_GLOBAL_CHUNK, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL, GxB_GLOBAL_NTHREADS
 # manually wrapping these. They use `...` so aren't picked up by Clang.
-function GxB_Desc_get(desc, field)
-    if field ∈ [GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1]
-        T = GrB_Desc_Value
-    elseif field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT]
-        T = Cint
-    elseif field ∈ [GxB_DESCRIPTOR_CHUNK]
-        T = Cdouble
-    else
-        error("Not a valid Descriptor option.")
-    end
-    v = Ref{T}()
-    ccall(
-        (:GxB_Desc_get, libgraphblas),
-        GrB_Info,
-        (GrB_Descriptor, UInt32, Ptr{Cvoid}),
-        desc,
-        field,
-        v
-    )
-    return v[]
-end
-
-function GxB_Desc_set(d, field, value)
-    if field ∈ [GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1]
-        ccall(
-            (:GxB_Desc_set, libgraphblas),
-            GrB_Info,
-            (GrB_Descriptor, GrB_Desc_Field, GrB_Desc_Value),
-            d,
-            field,
-            value
-        )
-    elseif field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT]
-        ccall(
-            (:GxB_Desc_set, libgraphblas),
-            GrB_Info,
-            (GrB_Descriptor, GrB_Desc_Field, Cint),
-            d,
-            field,
-            value
-        )
-    elseif field ∈ [GxB_DESCRIPTOR_CHUNK]
-        ccall(
-            (:GxB_Desc_set, libgraphblas),
-            GrB_Info,
-            (GrB_Descriptor, GrB_Desc_Field, Cdouble),
-            d,
-            field,
-            value
-        )
-    end
-end
 
 function GxB_Global_Option_get(field)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
@@ -117,7 +67,7 @@ function GxB_Matrix_Option_get(A, field)
     ccall(
         (:GxB_Matrix_Option_get, libgraphblas),
         Cvoid,
-        (GrB_Matrix, UInt32, Ptr{Cvoid}),
+        (LibGraphBLAS.GrB_Matrix, UInt32, Ptr{Cvoid}),
         A,
         field,
         v
@@ -130,7 +80,7 @@ function GxB_Matrix_Option_set(A, field, value)
         ccall(
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
-            (GrB_Matrix, UInt32, Cdouble),
+            (LibGraphBLAS.GrB_Matrix, UInt32, Cdouble),
             A,
             field,
             value
@@ -139,7 +89,7 @@ function GxB_Matrix_Option_set(A, field, value)
         ccall(
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
-            (GrB_Matrix, UInt32, UInt32),
+            (LibGraphBLAS.GrB_Matrix, UInt32, UInt32),
             A,
             field,
             value
@@ -159,7 +109,7 @@ function GxB_Vector_Option_get(A, field)
     ccall(
         (:GxB_Vector_Option_get, libgraphblas),
         Cvoid,
-        (GrB_Vector, UInt32, Ptr{Cvoid}),
+        (LibGraphBLAS.GrB_Vector, UInt32, Ptr{Cvoid}),
         A,
         field,
         v
@@ -172,7 +122,7 @@ function GxB_Vector_Option_set(A, field, value)
         ccall(
             (:GxB_Vector_Option_set, libgraphblas),
             Cvoid,
-            (GrB_Vector, UInt32, Cdouble),
+            (LibGraphBLAS.GrB_Vector, UInt32, Cdouble),
             A,
             field,
             value
@@ -181,7 +131,7 @@ function GxB_Vector_Option_set(A, field, value)
         ccall(
             (:GxB_Vector_Option_set, libgraphblas),
             Cvoid,
-            (GrB_Vector, UInt32, UInt32),
+            (LibGraphBLAS.GrB_Vector, UInt32, UInt32),
             A,
             field,
             value
@@ -190,7 +140,7 @@ function GxB_Vector_Option_set(A, field, value)
         ccall(
             (:GxB_Vector_Option_set, libgraphblas),
             Cvoid,
-            (GrB_Vector, UInt32, Cint),
+            (LibGraphBLAS.GrB_Vector, UInt32, Cint),
             A,
             field,
             value
@@ -225,13 +175,13 @@ end
 function gbset(A::GBVector, option, value)
     option = option_toconst(option)
     value = option_toconst(value)
-    GxB_Matrix_Option_set(A, option, value)
+    GxB_Matrix_Option_set(A.p, option, value)
     return nothing
 end
 
 function gbget(A::GBVector, option)
     option = option_toconst(option)
-    return GxB_Matrix_Option_get(A, option)
+    return GxB_Matrix_Option_get(A.p, option)
 end
 
 function format(A::GBVecOrMat)

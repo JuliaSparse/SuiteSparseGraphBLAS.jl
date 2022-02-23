@@ -7,7 +7,7 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBT
     BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.fmod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
     BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
     BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj, xtype, ytype, ztype
-using ..libgb
+using ..LibGraphBLAS
 export Semiring, @rig
 
 struct Semiring{FM, FA} <: AbstractSemiring
@@ -49,7 +49,7 @@ function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, out
         :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
     end
     return quote
-        const $(esc(namesym)) = TypedSemiring($builtin, false, $namestr, libgb.GrB_Semiring(), Monoid($(esc(addfunc)))($(esc(outsym))), BinaryOp($(esc(mulfunc)))($(esc(xsym)), $(esc(ysym))))
+        const $(esc(namesym)) = TypedSemiring($builtin, false, $namestr, LibGraphBLAS.GrB_Semiring(), Monoid($(esc(addfunc)))($(esc(outsym))), BinaryOp($(esc(mulfunc)))($(esc(xsym)), $(esc(ysym))))
         $(dispatchquote)
     end
 end

@@ -39,11 +39,11 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Descriptor}, d::Descriptor) = d.p
 # Todo: improve these. They can't be wrapped by ccall because they're "generic"?
 # Or at least not wrapped by Clang.jl
 function GxB_Desc_get(desc, field)
-    if field ∈ [GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1]
+    if field ∈ [LibGraphBLAS.GrB_OUTP, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_INP0, LibGraphBLAS.GrB_INP1]
         T = LibGraphBLAS.GrB_Desc_Value
-    elseif field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT]
+    elseif field ∈ [LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS, LibGraphBLAS.GxB_AxB_METHOD, LibGraphBLAS.GxB_SORT]
         T = Cint
-    elseif field ∈ [GxB_DESCRIPTOR_CHUNK]
+    elseif field ∈ [LibGraphBLAS.GxB_DESCRIPTOR_CHUNK]
         T = Cdouble
     else
         error("Not a valid Descriptor option.")
@@ -61,7 +61,7 @@ function GxB_Desc_get(desc, field)
 end
 
 function GxB_Desc_set(d, field, value)
-    if field ∈ [GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1]
+    if field ∈ [LibGraphBLAS.GrB_OUTP, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_INP0, LibGraphBLAS.GrB_INP1]
         @wraperror ccall(
             (:GxB_Desc_set, libgraphblas),
             LibGraphBLAS.GrB_Info,
@@ -70,7 +70,7 @@ function GxB_Desc_set(d, field, value)
             field,
             value
         )
-    elseif field ∈ [GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT]
+    elseif field ∈ [LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS, LibGraphBLAS.GxB_AxB_METHOD, LibGraphBLAS.GxB_SORT]
         @wraperror ccall(
             (:GxB_Desc_set, libgraphblas),
             LibGraphBLAS.GrB_Info,
@@ -79,7 +79,7 @@ function GxB_Desc_set(d, field, value)
             field,
             value
         )
-    elseif field ∈ [GxB_DESCRIPTOR_CHUNK]
+    elseif field ∈ [LibGraphBLAS.GxB_DESCRIPTOR_CHUNK]
         @wraperror ccall(
             (:GxB_Desc_set, libgraphblas),
             LibGraphBLAS.GrB_Info,

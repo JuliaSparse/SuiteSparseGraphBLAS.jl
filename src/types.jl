@@ -32,7 +32,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
             opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
             unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{Z}, Ref{X}))
             # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
-            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, toGBType(Z), toGBType(X), string(fn), "")
+            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(fn), "")
             op.p = opref[]
         end
         op.loaded = true
@@ -73,7 +73,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryO
             end
             opref = Ref{LibGraphBLAS.GrB_BinaryOp}()
             binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{Z}, Ref{X}, Ref{Y}))
-            @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, toGBType(Z), toGBType(X), toGBType(Y), string(fn))
+            @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
             op.p = opref[]
         end
         op.loaded = true
@@ -111,7 +111,7 @@ for Z ∈ valid_vec
     func = Symbol(prefix, :_Monoid_new_, suffix(Z))
     functerm = Symbol(:GxB_Monoid_terminal_new_, suffix(Z))
     @eval begin
-        function _monoidnew!(op::TypedMonoid{F, $Z, T}) where {F, $Z, T}
+        function _monoidnew!(op::TypedMonoid{F, $Z, T}) where {F, T}
             opref = Ref{LibGraphBLAS.GrB_Monoid}()
             if op.terminal === nothing
                 if Z ∈ valid_union

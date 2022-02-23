@@ -29,11 +29,9 @@ using .LibGraphBLAS
 
 include("operators/libgbops.jl")
 
-# Globals
-
-
-include("types.jl")
 include("gbtypes.jl")
+include("types.jl")
+
 
 
 include("constants.jl")

@@ -3,7 +3,7 @@ import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
     Ntypes, Ttypes, suffix, valid_union
-using ..libgb
+using ..LibGraphBLAS
 export BinaryOp, @binop
 
 export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor, fmod, 
@@ -46,7 +46,7 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     ysym = Symbol(ytype)
     outsym = Symbol(outtype)
     if builtin
-        constquote = :(const $(esc(namesym)) = TypedBinaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_BinaryOp(), $(esc(jlfunc))))
+        constquote = :(const $(esc(namesym)) = TypedBinaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))}(true, false, $namestr, LibGraphBLAS.GrB_BinaryOp(), $(esc(jlfunc))))
     else
         constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))))
     end

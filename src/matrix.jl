@@ -7,7 +7,7 @@ Create a GBMatrix of the specified size, defaulting to the maximum on each dimen
 """
 function GBMatrix{T}(nrows = LibGraphBLAS.GxB_INDEX_MAX, ncols = LibGraphBLAS.GxB_INDEX_MAX) where {T}
     m = Ref{GrB_Matrix}()
-    @wraperror LibGraphBLAS.GrB_Matrix_new(m, toGBType(T),nrows, ncols)
+    @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T),nrows, ncols)
     return GBMatrix{T}(m[])
 end
 

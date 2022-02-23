@@ -2,7 +2,7 @@
 ###############
 function GBScalar{T}() where {T}
     s = Ref{LibGraphBLAS.GxB_Scalar}()
-    @wraperror LibGraphBLAS.GxB_Scalar_new(s, toGBType(T))
+    @wraperror LibGraphBLAS.GxB_Scalar_new(s, gbtype(T))
     return GBScalar{T}(s[])
 end
 
