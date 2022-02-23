@@ -14,8 +14,7 @@ macro wraperror(code)
     MacroTools.@q begin
         info = $(esc(code))
         if info == LibGraphBLAS.GrB_SUCCESS
-        elseif info == LibGraphBLAS.GrB_NO_VALUE
-            return nothing
+        # We do GrB_NO_VALUE manually to ensure inference is happy, and avoid an extra branch. 
         else
             if info == LibGraphBLAS.GrB_UNINITIALIZED_OBJECT
                 throw(UninitializedObjectError)
@@ -47,7 +46,6 @@ macro wraperror(code)
         end
     end
 end
-
 
 function decrement(I)
     I isa Vector && (return I .- 1)
