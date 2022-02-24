@@ -1,9 +1,9 @@
 function Base.resize!(A::GBMatrix, nrows::Integer, ncols::Integer)
-    libgb.GrB_Matrix_resize(A, libgb.GrB_Index(nrows), libgb.GrB_Index(ncols))
+    @wraperror LibGraphBLAS.GrB_Matrix_resize(A, LibGraphBLAS.GrB_Index(nrows), LibGraphBLAS.GrB_Index(ncols))
     return A
 end
 
 function Base.resize!(v::GBVector, nrows::Integer)
-    libgb.GrB_Matrix_resize(v, libgb.GrB_Index(nrows), 1)
+    @wraperror LibGraphBLAS.GrB_Matrix_resize(v, LibGraphBLAS.GrB_Index(nrows), 1)
     return v
 end

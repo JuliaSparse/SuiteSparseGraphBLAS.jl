@@ -11,41 +11,177 @@ Set an option either for a specific GBArray, or globally. The commonly used opti
     single GBArray.
 """
 gbset
+using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Field, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
+GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT, GxB_DESCRIPTOR_CHUNK, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH,
+GxB_GLOBAL_CHUNK, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL, GxB_GLOBAL_NTHREADS
+# manually wrapping these. They use `...` so aren't picked up by Clang.
+
+function GxB_Global_Option_get(field)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        T = Cdouble
+    elseif field ∈ [GxB_FORMAT]
+        T = UInt32
+    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
+        T = Cint
+    elseif field ∈ [GxB_BURBLE]
+        T = Bool
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Global_Option_get, libgraphblas),
+        Cvoid,
+        (UInt32, Ptr{Cvoid}),
+        field,
+        v
+    )
+    return v[]
+end
+
+function GxB_Global_Option_set(field, value)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH, GxB_GLOBAL_CHUNK]
+        ccall(
+            (:GxB_Global_Option_set, libgraphblas),
+            Cvoid,
+            (UInt32, Cdouble),
+            field,
+            value
+        )
+    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT]
+        ccall(
+            (:GxB_Global_Option_set, libgraphblas),
+            Cvoid,
+            (UInt32, Cint),
+            field,
+            value
+        )
+    end
+end
+
+function GxB_Matrix_Option_get(A, field)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        T = Cdouble
+    elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
+        T = Cint
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Matrix_Option_get, libgraphblas),
+        Cvoid,
+        (LibGraphBLAS.GrB_Matrix, UInt32, Ptr{Cvoid}),
+        A,
+        field,
+        v
+    )
+    return v[]
+end
+
+function GxB_Matrix_Option_set(A, field, value)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        ccall(
+            (:GxB_Matrix_Option_set, libgraphblas),
+            Cvoid,
+            (LibGraphBLAS.GrB_Matrix, UInt32, Cdouble),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_CONTROL]
+        ccall(
+            (:GxB_Matrix_Option_set, libgraphblas),
+            Cvoid,
+            (LibGraphBLAS.GrB_Matrix, UInt32, UInt32),
+            A,
+            field,
+            value
+        )
+    end
+end
+
+function GxB_Vector_Option_get(A, field)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        T = Cdouble
+    elseif field ∈ [GxB_FORMAT]
+        T = UInt32
+    elseif field ∈ [GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
+        T = Cint
+    end
+    v = Ref{T}()
+    ccall(
+        (:GxB_Vector_Option_get, libgraphblas),
+        Cvoid,
+        (LibGraphBLAS.GrB_Vector, UInt32, Ptr{Cvoid}),
+        A,
+        field,
+        v
+    )
+    return v[]
+end
+
+function GxB_Vector_Option_set(A, field, value)
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+        ccall(
+            (:GxB_Vector_Option_set, libgraphblas),
+            Cvoid,
+            (LibGraphBLAS.GrB_Vector, UInt32, Cdouble),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_FORMAT]
+        ccall(
+            (:GxB_Vector_Option_set, libgraphblas),
+            Cvoid,
+            (LibGraphBLAS.GrB_Vector, UInt32, UInt32),
+            A,
+            field,
+            value
+        )
+    elseif field ∈ [GxB_SPARSITY_CONTROL]
+        ccall(
+            (:GxB_Vector_Option_set, libgraphblas),
+            Cvoid,
+            (LibGraphBLAS.GrB_Vector, UInt32, Cint),
+            A,
+            field,
+            value
+        )
+    end
+end
 
 function gbset(option, value)
     option = option_toconst(option)
     value = option_toconst(value)
-    libgb.GxB_Global_Option_set(option, value)
+    GxB_Global_Option_set(option, value)
     return nothing
 end
 
 function gbget(option)
     option = option_toconst(option)
-    return libgb.GxB_Global_Option_get(option)
+    return GxB_Global_Option_get(option)
 end
 
 function gbset(A::GBMatrix, option, value)
     option = option_toconst(option)
     value = option_toconst(value)
-    libgb.GxB_Matrix_Option_set(A, option, value)
+    GxB_Matrix_Option_set(A, option, value)
     return nothing
 end
 
 function gbget(A::GBMatrix, option)
     option = option_toconst(option)
-    return libgb.GxB_Matrix_Option_get(A, option)
+    return GxB_Matrix_Option_get(A, option)
 end
 
 function gbset(A::GBVector, option, value)
     option = option_toconst(option)
     value = option_toconst(value)
-    libgb.GxB_Matrix_Option_set(A, option, value)
+    GxB_Matrix_Option_set(A.p, option, value)
     return nothing
 end
 
 function gbget(A::GBVector, option)
     option = option_toconst(option)
-    return libgb.GxB_Matrix_Option_get(A, option)
+    return GxB_Matrix_Option_get(A.p, option)
 end
 
 function format(A::GBVecOrMat)
@@ -54,17 +190,17 @@ function format(A::GBVecOrMat)
     return (GBSparsity(t), GBFormat(f))
 end
 
-const HYPER_SWITCH = libgb.GxB_HYPER_SWITCH
-const BITMAP_SWITCH = libgb.GxB_BITMAP_SWITCH
-const FORMAT = libgb.GxB_FORMAT
-const SPARSITY_STATUS = libgb.GxB_SPARSITY_STATUS
-const SPARSITY_CONTROL = libgb.GxB_SPARSITY_CONTROL
-const BASE1 = libgb.GxB_PRINT_1BASED
-const NTHREADS = libgb.GxB_GLOBAL_NTHREADS
-const BURBLE = libgb.GxB_BURBLE
+const HYPER_SWITCH = LibGraphBLAS.GxB_HYPER_SWITCH
+const BITMAP_SWITCH = LibGraphBLAS.GxB_BITMAP_SWITCH
+const FORMAT = LibGraphBLAS.GxB_FORMAT
+const SPARSITY_STATUS = LibGraphBLAS.GxB_SPARSITY_STATUS
+const SPARSITY_CONTROL = LibGraphBLAS.GxB_SPARSITY_CONTROL
+const BASE1 = LibGraphBLAS.GxB_PRINT_1BASED
+const NTHREADS = LibGraphBLAS.GxB_GLOBAL_NTHREADS
+const BURBLE = LibGraphBLAS.GxB_BURBLE
 
-const BYROW = libgb.GxB_BY_ROW
-const BYCOL = libgb.GxB_BY_COL
+const BYROW = LibGraphBLAS.GxB_BY_ROW
+const BYCOL = LibGraphBLAS.GxB_BY_COL
 
 #only translate if it's a symbol
 option_toconst(option) = option
@@ -87,12 +223,12 @@ end
 Sparsity options for GraphBLAS. values can be summed to produce additional options.
 """
 @enum GBSparsity::Int32 begin
-    GBDENSE = 8 #libgb.GxB_FULL
-    GBBITMAP = 4 #libgb.GxB_BITMAP
-    GBSPARSE = 2 #libgb.GxB_SPARSE
-    GBHYPER = 1 #libgb.GxB_HYPERSPARSE
-    GBANYSPARSITY = 15 #libgb.GxB_ANY_SPARSITY
-    GBDENSE_OR_BITMAP = 12 #libgb.GxB_FULL + libgb.GXB_BITMAP
-    GBSPARSE_OR_HYPER = 3 #libgb.GxB_SPARSE + libgb.GXB_HYPERSPARSE
+    GBDENSE = 8 #LibGraphBLAS.GxB_FULL
+    GBBITMAP = 4 #LibGraphBLAS.GxB_BITMAP
+    GBSPARSE = 2 #LibGraphBLAS.GxB_SPARSE
+    GBHYPER = 1 #LibGraphBLAS.GxB_HYPERSPARSE
+    GBANYSPARSITY = 15 #LibGraphBLAS.GxB_ANY_SPARSITY
+    GBDENSE_OR_BITMAP = 12 #LibGraphBLAS.GxB_FULL + LibGraphBLAS.GXB_BITMAP
+    GBSPARSE_OR_HYPER = 3 #LibGraphBLAS.GxB_SPARSE + LibGraphBLAS.GXB_HYPERSPARSE
     #... Probably don't need others
 end

@@ -65,8 +65,17 @@ ChainRulesTestUtils.rand_tangent(::AbstractRNG, ::SuiteSparseGraphBLAS.AbstractO
 println("Testing SuiteSparseGraphBLAS.jl")
 @testset "SuiteSparseGraphBLAS" begin
 
+    
+
     include_test("gbarray.jl")
-    include_test("operations.jl")
+    include_test("operations/ewise.jl")
+    include_test("operations/kron.jl")
+    include_test("operations/map.jl")
+    include_test("operations/mul.jl")
+    include_test("operations/reduce.jl")
+    include_test("operations/select.jl")
+    include_test("operations/transpose.jl")
+    include_test("operations/broadcasting.jl")
     include_test("chainrules/chainrulesutils.jl")
     include_test("chainrules/mulrules.jl")
     include_test("chainrules/ewiserules.jl")

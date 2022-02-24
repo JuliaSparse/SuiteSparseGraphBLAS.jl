@@ -15,7 +15,7 @@ function select!(
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
-    libgb.GxB_Matrix_select(C, mask, accum, op, parent(A), thunk, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, parent(A), thunk, desc)
     return C
 end
 

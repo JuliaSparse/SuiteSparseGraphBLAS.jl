@@ -2,8 +2,8 @@ module UnaryOps
 
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp, GBType,
-    valid_vec, juliaop, toGBType, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
-using ..libgb
+    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
+using ..LibGraphBLAS
 export UnaryOp, @unop
 
 export positioni, positionj, frexpx, frexpe
@@ -42,7 +42,7 @@ function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     insym = Symbol(intype)
     outsym = Symbol(outtype)
     if builtin
-        constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(insym)), $(esc(outsym))}(true, false, $namestr, libgb.GrB_UnaryOp(), $(esc(jlfunc))))
+        constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(insym)), $(esc(outsym))}(true, false, $namestr, LibGraphBLAS.GrB_UnaryOp(), $(esc(jlfunc))))
     else
         constquote = :(const $(esc(namesym)) = TypedUnaryOperator($(esc(jlfunc)), $(esc(insym)), $(esc(outsym))))
     end

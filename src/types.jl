@@ -2,26 +2,26 @@ mutable struct TypedUnaryOperator{F, X, Z} <: AbstractTypedOp{Z}
     builtin::Bool
     loaded::Bool
     typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
-    p::libgb.GrB_UnaryOp
+    p::LibGraphBLAS.GrB_UnaryOp
     fn::F
     function TypedUnaryOperator{F, X, Z}(builtin, loaded, typestr, p, fn) where {F, X, Z}
         unop = new(builtin, loaded, typestr, p, fn)
         return finalizer(unop) do op
-            libgb.GrB_UnaryOp_free(Ref(op.p))
+            @wraperror LibGraphBLAS.GrB_UnaryOp_free(Ref(op.p))
         end
     end
 end
 
 function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
-    return TypedUnaryOperator{F, X, Z}(false, false, string(fn), libgb.GrB_UnaryOp(), fn)
+    return TypedUnaryOperator{F, X, Z}(false, false, string(fn), LibGraphBLAS.GrB_UnaryOp(), fn)
 end
 
-function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
     # We can lazily load the built-ins since they are already constants. 
     # Could potentially do this with UDFs, but probably not worth the effort.
     if !op.loaded
         if op.builtin
-            op.p = load_global(op.typestr, libgb.GrB_UnaryOp)
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
             
         else
             fn = op.fn
@@ -29,9 +29,10 @@ function Base.unsafe_convert(::Type{libgb.GrB_UnaryOp}, op::TypedUnaryOperator{F
                 unsafe_store!(z, fn(x))
                 return nothing
             end
-            opref = Ref{libgb.GrB_UnaryOp}()
+            opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
             unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{Z}, Ref{X}))
-            libgb.GB_UnaryOp_new(opref, unaryopfn_C, toGBType(Z), toGBType(X), string(fn))
+            # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
+            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(fn), "")
             op.p = opref[]
         end
         op.loaded = true
@@ -47,32 +48,32 @@ mutable struct TypedBinaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
     builtin::Bool
     loaded::Bool
     typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
-    p::libgb.GrB_BinaryOp
+    p::LibGraphBLAS.GrB_BinaryOp
     fn::F
     function TypedBinaryOperator{F, X, Y, Z}(builtin, loaded, typestr, p, fn::F) where {F, X, Y, Z}
         binop = new(builtin, loaded, typestr, p, fn)
         return finalizer(binop) do op
-            libgb.GrB_BinaryOp_free(Ref(op.p))
+            @wraperror LibGraphBLAS.GrB_BinaryOp_free(Ref(op.p))
         end
     end
 end
 function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
-    return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), libgb.GrB_BinaryOp(), fn)
+    return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), LibGraphBLAS.GrB_BinaryOp(), fn)
 end
 
-function Base.unsafe_convert(::Type{libgb.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
     if !op.loaded
         if op.builtin
-            op.p = load_global(op.typestr, libgb.GrB_UnaryOp)
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
         else
             fn = op.fn
             function binaryopfn(z, x, y)
                 unsafe_store!(z, fn(x, y))
                 return nothing
             end
-            opref = Ref{libgb.GrB_BinaryOp}()
+            opref = Ref{LibGraphBLAS.GrB_BinaryOp}()
             binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{Z}, Ref{X}, Ref{Y}))
-            libgb.GB_BinaryOp_new(opref, binaryopfn_C, toGBType(Z), toGBType(X), toGBType(Y), string(fn))
+            @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
             op.p = opref[]
         end
         op.loaded = true
@@ -88,38 +89,53 @@ mutable struct TypedMonoid{F, Z, T} <: AbstractTypedOp{Z}
     builtin::Bool
     loaded::Bool
     typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
-    p::libgb.GrB_Monoid
+    p::LibGraphBLAS.GrB_Monoid
     binaryop::TypedBinaryOperator{F, Z, Z, Z}
     identity::Z
     terminal::T
     function TypedMonoid(builtin, loaded, typestr, p, binaryop::TypedBinaryOperator{F, Z, Z, Z}, identity::Z, terminal::T) where {F, Z, T<:Union{Z, Nothing}}
         monoid = new{F, Z, T}(builtin, loaded, typestr, p, binaryop, identity, terminal)
         return finalizer(monoid) do op
-            libgb.GrB_Monoid_free(Ref(op.p))
+            @wraperror LibGraphBLAS.GrB_Monoid_free(Ref(op.p))
         end
     end
 end
 
-function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid{Z, T}) where {Z, T}
-    if !op.loaded
-        if op.builtin
-            op.p = load_global(op.typestr, libgb.GrB_Monoid)
-        else
-            opref = Ref{libgb.GrB_Monoid}()
+for Z ∈ valid_vec
+    if Z ∈ gxb_vec
+        prefix = :GxB
+    else
+        prefix = :GrB
+    end
+    # Build functions
+    func = Symbol(prefix, :_Monoid_new_, suffix(Z))
+    functerm = Symbol(:GxB_Monoid_terminal_new_, suffix(Z))
+    @eval begin
+        function _monoidnew!(op::TypedMonoid{F, $Z, T}) where {F, T}
+            opref = Ref{LibGraphBLAS.GrB_Monoid}()
             if op.terminal === nothing
                 if Z ∈ valid_union
-                    libgb.monoididnew[Z](opref, op.binop, op.identity)
+                    @wraperror LibGraphBLAS.$func(opref, op.binop, op.identity)
                 else
-                    libgb.monoididnew[Any](opref, op.binop, Ref(op.identity))
+                    @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binop, Ref(op.identity))
                 end
             else
                 if Z ∈ valid_union
-                    libgb.monoidtermnew[Z](opref, op.binop, op.identity, op.terminal)
+                    @wraperror LibGraphBLAS.$functerm(opref, op.binop, op.identity, op.terminal)
                 else
-                    libgb.monoidtermnew[Any](opref, op.binop, Ref(op.identity), Ref(op.terminal))
+                    @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binop, Ref(op.identity), Ref(op.terminal))
                 end
             end
             op.p = opref[]
+        end
+    end
+end
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Monoid}, op::TypedMonoid{F, Z, T}) where {F, Z, T}
+    if !op.loaded
+        if op.builtin
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_Monoid)
+        else
+            _monoidnew!(op)
         end
         op.loaded = true
     end
@@ -131,11 +147,11 @@ function Base.unsafe_convert(::Type{libgb.GrB_Monoid}, op::TypedMonoid{Z, T}) wh
 end
 
 function _builtinMonoid(typestr, binaryop::TypedBinaryOperator{F, Z, Z, Z}, identity, terminal::T) where {F, Z, T}
-    return TypedMonoid(true, false, typestr, libgb.GrB_Monoid(), binaryop, identity, terminal)
+    return TypedMonoid(true, false, typestr, LibGraphBLAS.GrB_Monoid(), binaryop, identity, terminal)
 end
 
 function TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Z, terminal::T) where {F, Z, T}
-    return TypedMonoid(false, false, string(fn), libgb.GrB_Monoid(), binop, identity, terminal)
+    return TypedMonoid(false, false, string(fn), LibGraphBLAS.GrB_Monoid(), binop, identity, terminal)
 end
 
 #Enable use of functions for determining identity and terminal values. Could likely be pared down to 2 functions somehow.
@@ -154,24 +170,24 @@ mutable struct TypedSemiring{FA, FM, X, Y, Z, T} <: AbstractTypedOp{Z}
     builtin::Bool
     loaded::Bool
     typestr::String
-    p::libgb.GrB_Semiring
+    p::LibGraphBLAS.GrB_Semiring
     addop::TypedMonoid{FA, Z, T}
     mulop::TypedBinaryOperator{FM, X, Y, Z}
     function TypedSemiring(builtin, loaded, typestr, p, addop::TypedMonoid{FA, Z, T}, mulop::TypedBinaryOperator{FM, X, Y, Z}) where {FA, FM, X, Y, Z, T}
         semiring = new{FA, FM, X, Y, Z, T}(builtin, loaded, typestr, p, addop, mulop)
         return finalizer(semiring) do rig
-            libgb.GrB_Semiring_free(Ref(rig.p))
+            @wraperror LibGraphBLAS.GrB_Semiring_free(Ref(rig.p))
         end
     end
 end
 
-function Base.unsafe_convert(::Type{libgb.GrB_Semiring}, op::TypedSemiring)
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Semiring}, op::TypedSemiring)
     if !op.loaded
         if op.builtin
-            op.p = load_global(op.typestr, libgb.GrB_Semiring)
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_Semiring)
         else
-            opref = Ref{libgb.GrB_Semiring}()
-            libgb.GrB_Semiring_new(opref, op.addop, op.mulop)
+            opref = Ref{LibGraphBLAS.GrB_Semiring}()
+            @wraperror LibGraphBLAS.GrB_Semiring_new(opref, op.addop, op.mulop)
             op.p = opref[]
         end
         op.loaded = true
@@ -183,16 +199,16 @@ function Base.unsafe_convert(::Type{libgb.GrB_Semiring}, op::TypedSemiring)
     end
 end
 
-TypedSemiring(addop, mulop) = TypedSemiring(false, false, "", libgb.GrB_Semiring(), addop, mulop)
+TypedSemiring(addop, mulop) = TypedSemiring(false, false, "", LibGraphBLAS.GrB_Semiring(), addop, mulop)
 
 """
 """
 mutable struct GBScalar{T}
-    p::libgb.GxB_Scalar
-    function GBScalar{T}(p::libgb.GxB_Scalar) where {T}
+    p::LibGraphBLAS.GxB_Scalar
+    function GBScalar{T}(p::LibGraphBLAS.GxB_Scalar) where {T}
         s = new(p)
         function f(scalar)
-            libgb.GxB_Scalar_free(Ref(scalar.p))
+            @wraperror LibGraphBLAS.GxB_Scalar_free(Ref(scalar.p))
         end
         return finalizer(f, s)
     end
@@ -208,13 +224,17 @@ compressed sparse vector.
 See also: [`GBMatrix`](@ref).
 """
 mutable struct GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
-    p::libgb.GrB_Matrix
-    function GBVector{T}(p::libgb.GrB_Matrix) where {T}
+    p::LibGraphBLAS.GrB_Matrix
+    function GBVector{T}(p::LibGraphBLAS.GrB_Matrix; aliased=false) where {T}
         v = new(p)
         function f(vector)
-            libgb.GrB_Matrix_free(Ref(vector.p))
+            @wraperror LibGraphBLAS.GrB_Matrix_free(Ref(vector.p))
         end
-        return finalizer(f, v)
+        if aliased
+            return v
+        else
+            return finalizer(f, v)
+        end
     end
 end
 
@@ -233,12 +253,16 @@ row or column orientation:
 The storage type is automatically determined by the library.
 """
 mutable struct GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
-    p::libgb.GrB_Matrix
-    function GBMatrix{T}(p::libgb.GrB_Matrix) where {T}
+    p::LibGraphBLAS.GrB_Matrix
+    function GBMatrix{T}(p::LibGraphBLAS.GrB_Matrix; aliased=false) where {T}
         A = new(p)
         function f(matrix)
-            libgb.GrB_Matrix_free(Ref(matrix.p))
+            @wraperror LibGraphBLAS.GrB_Matrix_free(Ref(matrix.p))
         end
-        return finalizer(f, A)
+        if aliased
+            return A
+        else
+            return finalizer(f, A)
+        end
     end
 end

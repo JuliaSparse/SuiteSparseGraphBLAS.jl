@@ -36,13 +36,13 @@ function emul!(
     op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedSemiring
-        libgb.GrB_Matrix_eWiseMult_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     elseif op isa TypedMonoid
-        libgb.GrB_Matrix_eWiseMult_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     elseif op isa TypedBinaryOperator
-        libgb.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     else
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
@@ -131,13 +131,13 @@ function eadd!(
     op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedSemiring
-        libgb.GrB_Matrix_eWiseAdd_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     elseif op isa TypedMonoid
-        libgb.GrB_Matrix_eWiseAdd_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     elseif op isa TypedBinaryOperator
-        libgb.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     else
         throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
@@ -226,7 +226,7 @@ function eunion!(
     op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
-        libgb.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
+        @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
         return C
     else
         throw(ArgumentError("$op is not a valid binary op."))

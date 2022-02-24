@@ -8,7 +8,7 @@ function Base.map!(
     desc = _handledescriptor(desc; in1=A)
     op = UnaryOp(op)(eltype(A))
     accum = getaccum(accum, eltype(C))
-    libgb.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
     return C
 end
 
@@ -57,7 +57,7 @@ function Base.map!(
     desc = _handledescriptor(desc; in2=A)
     op = BinaryOp(op)(eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
-    libgb.scalarmatapply1st[optype(typeof(x), eltype(A))](C, mask, accum, op, x, parent(A), desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(C, mask, accum, op, GBScalar(x), parent(A), desc)
     return C
 end
 
@@ -84,7 +84,7 @@ function Base.map!(
     desc = _handledescriptor(desc; in1=A)
     op = BinaryOp(op)(eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
-    libgb.scalarmatapply2nd[optype(typeof(x), eltype(A))](C, mask, accum, op, parent(A), x, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp2nd(C, mask, accum, op, parent(A), GBScalar(x), desc)
     return C
 end
 

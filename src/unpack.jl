@@ -1,9 +1,9 @@
 function _unpackdensematrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     desc = _handledescriptor(desc)
-    Csize = Ref{libgb.GrB_Index}(length(A) * sizeof(T))
+    Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
-    libgb.GxB_Matrix_unpack_FullC(
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
         A.p,
         values,
         Csize,
@@ -15,15 +15,15 @@ end
 
 function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     desc = _handledescriptor(desc)
-    colptr = Ref{Ptr{libgb.GrB_Index}}()
-    rowidx = Ref{Ptr{libgb.GrB_Index}}()
+    colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
+    rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
-    colptrsize = Ref{libgb.GrB_Index}()
-    rowidxsize = Ref{libgb.GrB_Index}()
-    valsize = Ref{libgb.GrB_Index}()
+    colptrsize = Ref{LibGraphBLAS.GrB_Index}()
+    rowidxsize = Ref{LibGraphBLAS.GrB_Index}()
+    valsize = Ref{LibGraphBLAS.GrB_Index}()
     isiso = Ref{Bool}(false)
     isjumbled = Ref{Bool}(false)
-    libgb.GxB_Matrix_unpack_CSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
         A.p,
         colptr,
         rowidx,
@@ -35,8 +35,8 @@ function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         isjumbled,
         desc
     )
-    colptr = unsafe_wrap(Array{libgb.GrB_Index}, colptr[], colptrsize[] ÷ sizeof(libgb.GrB_Index))
-    rowidx = unsafe_wrap(Array{libgb.GrB_Index}, rowidx[], rowidxsize[] ÷ sizeof(libgb.GrB_Index))
+    colptr = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, colptr[], colptrsize[] ÷ sizeof(LibGraphBLAS.GrB_Index))
+    rowidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, rowidx[], rowidxsize[] ÷ sizeof(LibGraphBLAS.GrB_Index))
     colptr .+= 1
     rowidx .+= 1
     return colptr,
@@ -46,15 +46,15 @@ end
 
 function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     desc = _handledescriptor(desc)
-    rowptr = Ref{Ptr{libgb.GrB_Index}}()
-    colidx = Ref{Ptr{libgb.GrB_Index}}()
+    rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
+    colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
-    colidxsize = Ref{libgb.GrB_Index}()
-    rowptrsize = Ref{libgb.GrB_Index}()
-    valsize = Ref{libgb.GrB_Index}()
+    colidxsize = Ref{LibGraphBLAS.GrB_Index}()
+    rowptrsize = Ref{LibGraphBLAS.GrB_Index}()
+    valsize = Ref{LibGraphBLAS.GrB_Index}()
     isiso = Ref{Bool}(false)
     isjumbled = Ref{Bool}(false)
-    libgb.GxB_Matrix_unpack_CSR(
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
         A.p,
         rowptr,
         colidx,
@@ -66,8 +66,8 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         isjumbled,
         desc
     )
-    rowptr = unsafe_wrap(Array{libgb.GrB_Index}, rowptr[], rowptrsize[] ÷ sizeof(libgb.GrB_Index))
-    colidx = unsafe_wrap(Array{libgb.GrB_Index}, colidx[], colidxsize[] ÷ sizeof(libgb.GrB_Index))
+    rowptr = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, rowptr[], rowptrsize[] ÷ sizeof(LibGraphBLAS.GrB_Index))
+    colidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, colidx[], colidxsize[] ÷ sizeof(LibGraphBLAS.GrB_Index))
     rowptr .+= 1
     colidx .+= 1
     return rowptr,

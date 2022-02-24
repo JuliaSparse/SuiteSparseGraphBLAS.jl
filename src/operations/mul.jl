@@ -15,7 +15,7 @@ function LinearAlgebra.mul!(
     op = Semiring(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    libgb.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
+    @wraperror LibGraphBLAS.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
 

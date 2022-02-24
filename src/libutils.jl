@@ -1,4 +1,78 @@
 
+# exceptions: 
+
+struct UninitializedObjectError <: Exception end
+struct InvalidObjectError <: Exception end
+struct NullPointerError <: Exception end
+struct InvalidValueError <: Exception end
+struct InvalidIndexError <: Exception end
+struct OutputNotEmptyError <: Exception end
+struct InsufficientSpaceError <: Exception end
+struct PANIC <: Exception end
+
+macro wraperror(code)
+    MacroTools.@q begin
+        info = $(esc(code))
+        if info == LibGraphBLAS.GrB_SUCCESS
+        # We do GrB_NO_VALUE manually to ensure inference is happy, and avoid an extra branch. 
+        else
+            if info == LibGraphBLAS.GrB_UNINITIALIZED_OBJECT
+                throw(UninitializedObjectError)
+            elseif info == LibGraphBLAS.GrB_INVALID_OBJECT
+                throw(InvalidObjectError)
+            elseif info == LibGraphBLAS.GrB_NULL_POINTER
+                throw(NullPointerError)
+            elseif info == LibGraphBLAS.GrB_INVALID_VALUE
+                throw(InvalidValueError)
+            elseif info == LibGraphBLAS.GrB_INVALID_INDEX
+                throw(InvalidIndexError)
+            elseif info == LibGraphBLAS.GrB_DOMAIN_MISMATCH
+                throw(DomainError(nothing, "GraphBLAS Domain Mismatch"))
+            elseif info == LibGraphBLAS.GrB_DIMENSION_MISMATCH
+                throw(DimensionMismatch())
+            elseif info == LibGraphBLAS.GrB_OUTPUT_NOT_EMPTY
+                throw(OutputNotEmptyError)
+            elseif info == LibGraphBLAS.GrB_OUT_OF_MEMORY
+                throw(OutOfMemoryError())
+            elseif info == LibGraphBLAS.GrB_INSUFFICIENT_SPACE
+                throw(InsufficientSpaceError)
+            elseif info == LibGraphBLAS.GrB_INDEX_OUT_OF_BOUNDS
+                throw(BoundsError())
+            elseif info == LibGraphBLAS.GrB_PANIC
+                throw(PANIC)
+            else
+                throw(ErrorException("Unreachable Reached."))
+            end
+        end
+    end
+end
+
+function decrement(I)
+    I isa Vector && (return I .- 1)
+end
+
+@inline function decrement(I::Integer)
+    return I - 1
+end
+
+function increment(I)
+    I isa Vector && (return I .+ 1)
+end
+
+@inline function increment(I::Integer)
+    return I + 1
+end
+
+@inline function decrement!(I)
+    I isa Vector && (return I .-= 1)
+    I isa Number && (return I - 1)
+    return I # don't need to modify here, likely an AllType.
+end
+@inline function increment!(I)
+    I isa Vector && (return I .+= 1)
+    I isa Number && (return I + 1)
+    return I # don't need to modify here, likely an AllType.
+end
 
 function suffix(T::Symbol)
     if T === :Bool

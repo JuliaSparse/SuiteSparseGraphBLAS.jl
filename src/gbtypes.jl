@@ -32,103 +32,95 @@ const valid_vec = [
 const gxb_union = Union{ComplexF32, ComplexF64}
 const gxb_vec = [ComplexF32, ComplexF64]
 
-struct GBType{T} <: AbstractGBType
-    p::libgb.GrB_Type
+mutable struct GBType{T} <: AbstractGBType
+    builtin::Bool
+    loaded::Bool
+    p::LibGraphBLAS.GrB_Type
+    typestr::String
+    function GBType{T}(builtin, loaded, p, typestr) where {T}
+        type = new{T}(builtin, loaded, p, typestr)
+        return finalizer(type) do t
+            @wraperror LibGraphBLAS.GrB_Type_free(Ref(t.p))
+        end
+    end
 end
 
-Base.unsafe_convert(::Type{libgb.GrB_Type}, s::AbstractGBType) = s.p
+"""
+    gbtype(x)
 
-GBType{T}(name::AbstractString) where {T<:valid_union} = GBType{T}(load_global(name))
+Determine the GBType equivalent of a Julia primitive type.
+
+See also: [`juliatype`](@ref)
+"""
+function gbtype end
+
+macro gbtype(expr...)
+
+    jtype = expr[1]
+    if length(expr) == 2
+        namestr = string(expr[2])
+    else
+        namestr = uppercase(string(jtype))
+    end
+    builtin = isGxB(namestr) || isGrB(namestr)
+    namesym = Symbol(builtin ? namestr[5:end] : namestr)
+    return quote
+        const $(esc(namesym)) = GBType{$(esc(jtype))}($builtin, false, LibGraphBLAS.GrB_Type(), $namestr)
+        $(esc(:(SuiteSparseGraphBLAS.gbtype)))(::Type{$(esc(jtype))}) = $(esc(namesym))
+    end
+end
+
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Type}, s::GBType{T}) where {T}
+    if !s.loaded
+        if s.builtin
+            s.p = load_global(s.typestr, LibGraphBLAS.GrB_Type)
+        else
+            typeref = Ref{LibGraphBLAS.GrB_Type}()
+            @wraperror LibGraphBLAS.GxB_Type_new(typeref, sizeof(T), string(T), "")
+            s.p = typeref[]
+        end
+        s.loaded = true
+        ptrtogbtype[s.p] = s
+    end
+    if !s.loaded
+        error("This type could not be loaded, and is invalid.")
+    else
+        return s.p
+    end
+end
 
 function Base.show(io::IO, ::MIME"text/plain", t::GBType{T}) where T
     print(io, "GBType(" * string(T) * "): ")
     gxbprint(io, t)
 end
 
-struct GBAllType <: AbstractGBType
-    p::Ptr{libgb.GrB_Index}
+mutable struct GBAllType <: AbstractGBType
+    p::Ptr{LibGraphBLAS.GrB_Index}
 end
 Base.show(io::IO, ::MIME"text/plain", t::GBAllType) = print(io, "GraphBLAS type: GrB_ALL")
-Base.unsafe_convert(::Type{Ptr{libgb.GrB_Index}}, s::GBAllType) = s.p
+Base.unsafe_convert(::Type{Ptr{LibGraphBLAS.GrB_Index}}, s::GBAllType) = s.p
 Base.length(::GBAllType) = 0 #Allow indexing with ALL
-
-function _load_globaltypes()
-    global BOOL = GBType{Bool}("GrB_BOOL")
-    ptrtogbtype[BOOL.p] = BOOL
-    global INT8 = GBType{Int8}("GrB_INT8")
-    ptrtogbtype[INT8.p] = INT8
-    global UINT8 = GBType{UInt8}("GrB_UINT8")
-    ptrtogbtype[UINT8.p] = UINT8
-    global INT16 = GBType{Int16}("GrB_INT16")
-    ptrtogbtype[INT16.p] = INT16
-    global UINT16 = GBType{UInt16}("GrB_UINT16")
-    ptrtogbtype[UINT16.p] = UINT16
-    global INT32 = GBType{Int32}("GrB_INT32")
-    ptrtogbtype[INT32.p] = INT32
-    global UINT32 = GBType{UInt32}("GrB_UINT32")
-    ptrtogbtype[UINT32.p] = UINT32
-    global INT64 = GBType{Int64}("GrB_INT64")
-    ptrtogbtype[INT64.p] = INT64
-    global UINT64 = GBType{UInt64}("GrB_UINT64")
-    ptrtogbtype[UINT64.p] = UINT64
-    global FP32 = GBType{Float32}("GrB_FP32")
-    ptrtogbtype[FP32.p] = FP32
-    global FP64 = GBType{Float64}("GrB_FP64")
-    ptrtogbtype[FP64.p] = FP64
-    global FC32 = GBType{ComplexF32}("GxB_FC32")
-    ptrtogbtype[FC32.p] = FC32
-    global FC64 = GBType{ComplexF32}("GxB_FC64")
-    ptrtogbtype[FC64.p] = FC64
-    global NULL = GBType{Nothing}(C_NULL)
-    ptrtogbtype[NULL.p] = NULL
-    global ALL = GBAllType(load_global("GrB_ALL", libgb.GrB_Index))
-    ptrtogbtype[ALL.p] = ALL
-end
 
 """
     tojuliatype(x::GBType)
 
 Determine the Julia equivalent of a GBType.
 
-See also: [`toGBType`](@ref)
+See also: [`gbtype`](@ref)
 """
-tojuliatype(::GBType{T}) where {T} = T
+juliatype(::GBType{T}) where {T} = T
 
-"""
-    toGBType(x)
+@gbtype Bool GrB_BOOL
+@gbtype Int8 GrB_INT8
+@gbtype UInt8 GrB_UINT8
+@gbtype Int16 GrB_INT16
+@gbtype UInt16 GrB_UINT16
+@gbtype Int32 GrB_INT32
+@gbtype UInt32 GrB_UINT32
+@gbtype Int64 GrB_INT64
+@gbtype UInt64 GrB_UINT64
+@gbtype Float32 GrB_FP32
+@gbtype Float64 GrB_FP64
+@gbtype ComplexF32 GxB_FC32
+@gbtype ComplexF64 GxB_FC64
 
-Determine the GBType equivalent of a Julia primitive type.
-
-See also: [`juliatype`](@ref)
-"""
-function toGBType(x)
-    if x == Bool
-        return BOOL
-    elseif x == Int8
-        return INT8
-    elseif x == UInt8
-        return UINT8
-    elseif x == Int16
-        return INT16
-    elseif x == UInt16
-        return UINT16
-    elseif x == Int32
-        return INT32
-    elseif x == UInt32
-        return UINT32
-    elseif x == Int64
-        return INT64
-    elseif x == UInt64
-        return UINT64
-    elseif x == Float32
-        return FP32
-    elseif x == Float64
-        return FP64
-    elseif x == ComplexF32
-        return FC32
-    elseif x == ComplexF64
-        return FC64
-    else
-        throw(ArgumentError("Not a valid GrB data type"))
-    end
-end
