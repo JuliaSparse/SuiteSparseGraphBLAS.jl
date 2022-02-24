@@ -1,4 +1,3 @@
-using FiniteDifferences
 import LinearAlgebra
 import ChainRulesCore: frule, rrule
 using ChainRulesCore
