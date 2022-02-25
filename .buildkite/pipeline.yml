@@ -20,7 +20,7 @@ steps:
     commands: |
       git clone --branch master https://github.com/DrTimothyAldenDavis/GraphBLAS.git
       cd GraphBLAS
-      make JOBS=16
+      make -j16
       cd ../benchmarks
       julia --project -e ' using Pkg; Pkg.instantiate(); using SuiteSparseGraphBLAS; SuiteSparseGraphBLAS.set_lib!("../GraphBLAS/build/libgraphblas.so"); exit()'
       julia benchmarks.jl mtx.txt
