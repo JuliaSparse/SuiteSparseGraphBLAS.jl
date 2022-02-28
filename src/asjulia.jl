@@ -1,4 +1,4 @@
-function asArray(f::Function, A::GBVecOrMat{T}; dropzeros=false, freeunpacked=false) where {T}
+function as(f::Function, ::Type{<:Union{Matrix, Vector}}, A::GBVecOrMat{T}; dropzeros=false, freeunpacked=false) where {T}
     if gbget(A, SPARSITY_STATUS) != GBDENSE
         X = similar(A)
         if X isa GBVector
@@ -6,9 +6,9 @@ function asArray(f::Function, A::GBVecOrMat{T}; dropzeros=false, freeunpacked=fa
         else
             X[:,:] = zero(T)
         end
-        #I don't like this, it defeats the purpose of this method, which is to make no copies.
+        # I don't like this, it defeats the purpose of this method, which is to make no copies.
         # But somehow maintaining the input A in its original form is key to the to_vec implementation
-        # for ChainRules. Temporarily it's fine, it's no worse than it originally was.
+        # for ChainRules/FiniteDiff. Temporarily it's fine, it's no worse than it originally was.
         # TODO: fix this issue with the ChainRules code.
         A = eadd(X, A)
     end
@@ -28,39 +28,7 @@ function asArray(f::Function, A::GBVecOrMat{T}; dropzeros=false, freeunpacked=fa
     return result
 end
 
-function asCSCVectors(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
-    colptr, rowidx, values =  _unpackcscmatrix!(A)
-    result = try
-        f(colptr, rowidx, values, A)
-    finally
-        if freeunpacked
-            ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(colptr))
-            ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(rowidx))
-            ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
-        else
-            _packcscmatrix!(A, colptr, rowidx, values)
-        end
-    end
-    return result
-end
-
-function asCSRVectors(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
-    rowptr, colidx, values =  _unpackcsrmatrix!(A)
-    result = try
-        f(rowptr, colidx, values, A)
-    finally
-        if freeunpacked
-            ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(rowptr))
-            ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(colidx))
-            ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
-        else
-            _packcsrmatrix!(A, rowptr, colidx, values)
-        end
-    end
-    return result
-end
-
-function asSparseMatrixCSC(f::Function, A::GBMatrix{T}; freeunpacked=false) where {T}
+function as(f::Function, ::SparseMatrixCSC, A::GBMatrix{T}; freeunpacked=false) where {T}
     colptr, rowidx, values =  _unpackcscmatrix!(A)
     array = SparseMatrixCSC{T, LibGraphBLAS.GrB_Index}(size(A, 1), size(A, 2), colptr, rowidx, values)
     result = try
@@ -77,7 +45,7 @@ function asSparseMatrixCSC(f::Function, A::GBMatrix{T}; freeunpacked=false) wher
     return result
 end
 
-function asSparseVector(f::Function, A::GBVector{T}; freeunpacked=false) where {T}
+function as(f::Function, ::SparseVector, A::GBVector{T}; freeunpacked=false) where {T}
     colptr, rowidx, values =  _unpackcscmatrix!(A)
     vector = SparseVector{T, LibGraphBLAS.GrB_Index}(size(A, 1), rowidx, values)
     result = try
@@ -96,37 +64,37 @@ end
 
 
 function Base.Matrix(A::GBMatrix)
-    return asArray(A) do arr, _
+    return as(Matrix, A) do arr, _
         return copy(arr)
     end
 end
 
 function Matrix!(A::GBMatrix)
-    return asArray(A; freeunpacked=true) do arr, _
+    return as(Matrix, A; freeunpacked=true) do arr, _
         return copy(arr)
     end
 end
 
 function Base.Vector(v::GBVector)
-    return asArray(v) do vec, _
+    return as(Vector, v) do vec, _
         return copy(vec)
     end
 end
 
 function Vector!(v::GBVector)
-    return asArray(v; freeunpacked=true) do vec, _
+    return as(Vector, v; freeunpacked=true) do vec, _
         return copy(vec)
     end
 end
 
 function SparseArrays.SparseMatrixCSC(A::GBMatrix)
-    return asArray(A) do arr, _
+    return as(SparseMatrixCSC, A) do arr, _
         return copy(arr)
     end
 end
 
 function SparseArrays.SparseVector(v::GBVector)
-    return asArray(v) do arr, _
+    return as(SparseVector, v) do arr, _
         return copy(arr)
     end
 end
