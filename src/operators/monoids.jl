@@ -11,6 +11,7 @@ struct Monoid{F} <: AbstractMonoid
 end
 SuiteSparseGraphBLAS.juliaop(op::Monoid) = juliaop(op.binaryop)
 Monoid(f::Function) = Monoid(BinaryOp(f))
+Monoid(op::TypedMonoid) = op
 
 # Can't really do ephemeral monoid fallbacks... Need the identity and possibly terminal.
 

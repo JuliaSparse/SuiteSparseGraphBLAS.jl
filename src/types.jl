@@ -12,6 +12,14 @@ mutable struct TypedUnaryOperator{F, X, Z} <: AbstractTypedOp{Z}
     end
 end
 
+function (op::TypedUnaryOperator{F, X, Z})(::Type{T}) where {F, X, Z, T}
+    if X == T
+        return op
+    else
+        throw(ArgumentError("This TypedUnaryOperator does not operate over $(T)."))
+    end
+end
+
 function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
     return TypedUnaryOperator{F, X, Z}(false, false, string(fn), LibGraphBLAS.GrB_UnaryOp(), fn)
 end
@@ -61,6 +69,14 @@ function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X
     return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), LibGraphBLAS.GrB_BinaryOp(), fn)
 end
 
+function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
+    if X == T1 && Y == T2
+        return op
+    else
+        throw(ArgumentError("This TypedBinaryOperator does not operate over $(T1) and $(T2)."))
+    end
+end
+
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
     if !op.loaded
         if op.builtin
@@ -98,6 +114,14 @@ mutable struct TypedMonoid{F, Z, T} <: AbstractTypedOp{Z}
         return finalizer(monoid) do op
             @wraperror LibGraphBLAS.GrB_Monoid_free(Ref(op.p))
         end
+    end
+end
+
+function (op::TypedMonoid{F, Z, T})(::Type{X}) where {F, X, Z, T}
+    if X == Z
+        return op
+    else
+        throw(ArgumentError("This TypedMonoid does not operate over $(X)."))
     end
 end
 
@@ -178,6 +202,15 @@ mutable struct TypedSemiring{FA, FM, X, Y, Z, T} <: AbstractTypedOp{Z}
         return finalizer(semiring) do rig
             @wraperror LibGraphBLAS.GrB_Semiring_free(Ref(rig.p))
         end
+    end
+end
+
+
+function (op::TypedSemiring{FA, FM, X, Y, Z, T})(::Type{T1}, ::Type{T2}) where {FA, FM, X, Y, Z, T, T1, T2}
+    if X == T1 && Y == T2
+        return op
+    else
+        throw(ArgumentError("This TypedBinaryOperator does not operate over $(T1) and $(T2)."))
     end
 end
 

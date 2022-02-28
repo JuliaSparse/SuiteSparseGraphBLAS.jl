@@ -23,9 +23,8 @@ end
 function SparseMatrixGB(
     m::Integer, n::Integer, colptr::Vector, rowval::Vector, nzval::Vector{T}, fill=zero(T)
 ) where {T}
-    gbmat = GBMatrix{eltype(nzval)}(
-        SuiteSparseGraphBLAS._importcscmat(m, n, colptr, rowval, nzval)
-    )
+    gbmat = GBMatrix{eltype(nzval)}(m, n)
+    SuiteSparseGraphBLAS._packcscmatrix!(gbmat, colptr, rowval, nzval)
     SparseMatrixGB{eltype(nzval)}(gbmat, fill)
 end
 SparseMatrixGB{T}(m::Integer, n::Integer, fill=zero(T)) where {T} =

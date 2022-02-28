@@ -16,6 +16,7 @@ struct Semiring{FM, FA} <: AbstractSemiring
 end
 Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),BinaryOp(mulop))
 Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
+Semiring(op::TypedSemiring) = op
 
 function (rig::Semiring)(T, U) #fallback
     mulop = rig.mulop(T, U)

@@ -62,11 +62,18 @@ function FiniteDifferences.to_vec(M::SparseVector)
 end
 ChainRulesTestUtils.rand_tangent(::AbstractRNG, ::SuiteSparseGraphBLAS.AbstractOp) = NoTangent()
 
+# for testing @unop macro in ops.jl
+foo(x) = x + 3.5
+SuiteSparseGraphBLAS.@unop foo F=>F
+
 println("Testing SuiteSparseGraphBLAS.jl")
 @testset "SuiteSparseGraphBLAS" begin
 
     
     include_test("asjulia.jl")
+    include_test("libutils.jl")
+    include_test("operatorutils.jl")
+    include_test("ops.jl")
     include_test("gbarray.jl")
     include_test("operations/ewise.jl")
     include_test("operations/kron.jl")
@@ -84,4 +91,5 @@ println("Testing SuiteSparseGraphBLAS.jl")
     include_test("chainrules/maprules.jl")
     include_test("spmgb/sparsemat.jl")
     include_test("spmgb/higherorderfns.jl")
+    
 end

@@ -75,7 +75,7 @@ end
 
 function Matrix!(A::GBMatrix)
     # we use nomodstructure here to avoid the pitfall of densifying A. 
-    return as(Matrix, A; freeunpacked=true, nomodstructure=true) do arr
+    return as(Matrix, A; freeunpacked=true) do arr
         return copy(arr)
     end
 end
@@ -89,7 +89,7 @@ end
 
 function Vector!(v::GBVector)
     # we use nomodstructure here to avoid the pitfall of densifying A. 
-    return as(Vector, v; freeunpacked=true, nomodstructure=true) do vec
+    return as(Vector, v; freeunpacked=true) do vec
         return copy(vec)
     end
 end
