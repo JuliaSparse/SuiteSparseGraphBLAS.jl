@@ -67,6 +67,7 @@ include("operations/reduce.jl")
 include("operations/kronecker.jl")
 include("operations/concat.jl")
 include("operations/resize.jl")
+include("operations/sort.jl")
 # 
 include("print.jl")
 include("import.jl")
@@ -74,7 +75,7 @@ include("export.jl")
 include("pack.jl")
 include("unpack.jl")
 include("options.jl")
-#EXPERIMENTAL
+
 include("operations/broadcasts.jl")
 include("chainrules/chainruleutils.jl")
 include("chainrules/mulrules.jl")
@@ -83,6 +84,8 @@ include("chainrules/maprules.jl")
 include("chainrules/reducerules.jl")
 include("chainrules/selectrules.jl")
 include("chainrules/constructorrules.jl")
+
+#EXPERIMENTAL
 include("misc.jl")
 include("asjulia.jl")
 include("spmgb/sparsemat.jl")

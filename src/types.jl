@@ -254,6 +254,8 @@ The storage type is automatically determined by the library.
 """
 mutable struct GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
     p::LibGraphBLAS.GrB_Matrix
+    # NOTE WELL: The alias kwarg IS NOT for public use.
+    # It is used in very few places to convert a GBVector to a GBMatrix internally.
     function GBMatrix{T}(p::LibGraphBLAS.GrB_Matrix; aliased=false) where {T}
         A = new(p)
         function f(matrix)
