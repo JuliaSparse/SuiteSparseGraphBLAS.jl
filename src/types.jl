@@ -76,6 +76,7 @@ function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F,
         throw(ArgumentError("This TypedBinaryOperator does not operate over $(T1) and $(T2)."))
     end
 end
+(op::TypedBinaryOperator)(T) = op(T, T)
 
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
     if !op.loaded
