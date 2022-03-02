@@ -2,7 +2,7 @@
 #######################
 
 # YOU SHALL NOT PASS:
-# For real though, some of this is far from pretty.
+# For real though, some of this is far from pretty and is badly in need of a rewrite to use dispatch.
 
 #All binary ops will default to emul
 defaultadd(f) = emul
@@ -96,9 +96,11 @@ mutatingop(::typeof(map)) = map!
             C[:,:, accum=second] = x
             return C
         end
+        if x isa Broadcast.Broadcasted
+            x = copy(x)
+        end
         return map!(bc.f, C, x; accum=second)
     else
-
         left = first(bc.args)
         right = last(bc.args)
         # handle annoyances with the pow operator

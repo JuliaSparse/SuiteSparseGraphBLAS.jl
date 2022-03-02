@@ -111,7 +111,7 @@ function Base.getproperty(d::Descriptor, s::Symbol)
         end
     elseif s === :structural_mask
         x = GxB_Desc_get(d, LibGraphBLAS.GrB_MASK)
-        if x == LibGraphBLAS.GrB_STRUCTURE || x == LibGraphBLAS.GrB_STRUCT_COMP
+        if x == LibGraphBLAS.GrB_STRUCTURE || x == (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
             return true
         else
             return false

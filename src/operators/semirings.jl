@@ -17,7 +17,7 @@ end
 Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),BinaryOp(mulop))
 Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
 Semiring(op::TypedSemiring) = op
-
+(rig::Semiring)(type) = rig(type, type)
 function (rig::Semiring)(T, U) #fallback
     mulop = rig.mulop(T, U)
     Z = ztype(mulop)
@@ -410,6 +410,6 @@ end
 @rig (any, secondj0) GxB_ANY_SECONDJ Any=>N
 end
 
-ztype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = Z
-xtype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = X
-ytype(::TypedSemiring{X, Y, Z}) where {X, Y, Z} = YTypedSemiring
+ztype(::TypedSemiring{FA, FM, X, Y, Z, T}) where {FA, FM, X, Y, Z, T} = Z
+xtype(::TypedSemiring{FA, FM, X, Y, Z, T}) where {FA, FM, X, Y, Z, T} = X
+ytype(::TypedSemiring{FA, FM, X, Y, Z, T}) where {FA, FM, X, Y, Z, T} = Y
