@@ -1,9 +1,7 @@
-
-
-function Base.map!(
-    op, C::GBArray, A::GBArray;
+function apply!(
+    op, C::GBVecOrMat, A::GBArray{T};
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
     op = UnaryOp(op)(eltype(A))
@@ -12,17 +10,17 @@ function Base.map!(
     return C
 end
 
-function Base.map!(
-    op, A::GBArray;
+function apply!(
+    op, A::GBArray{T};
     mask = nothing, accum = nothing, desc = nothing
-)
-    return map!(op, A, A; mask, accum, desc)
+) where {T}
+    return apply!(op, A, A; mask, accum, desc)
 end
 
 """
-    map(op::Union{Function, AbstractUnaryOp}, A::GBArray; kwargs...)::GBArray
-    map(op::Union{Function, AbstractBinaryOp}, A::GBArray, x; kwargs...)::GBArray
-    map(op::Union{Function, AbstractBinaryOp}, x, A::GBArray, kwargs...)::GBArray
+    apply(op::Union{Function, AbstractUnaryOp}, A::GBArray; kwargs...)::GBArray
+    apply(op::Union{Function, AbstractBinaryOp}, A::GBArray, x; kwargs...)::GBArray
+    apply(op::Union{Function, AbstractBinaryOp}, x, A::GBArray, kwargs...)::GBArray
 
 Transform a GBArray by applying `op` to each element.
 
@@ -41,18 +39,18 @@ BinaryOps and two argument functions require the additional argument `x` which i
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
-function Base.map(
-    op, A::GBArray;
+function apply(
+    op, A::GBArray{T};
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
     t = inferunarytype(eltype(A), op)
-    return map!(op, similar(A, t), A; mask, accum, desc)
+    return apply!(op, similar(A, t), A; mask, accum, desc)
 end
 
-function Base.map!(
-    op, C::GBArray, x, A::GBArray;
+function apply!(
+    op, C::GBVecOrMat, x, A::GBArray{T};
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in2=A)
     op = BinaryOp(op)(eltype(A), typeof(x))
@@ -61,25 +59,25 @@ function Base.map!(
     return C
 end
 
-function Base.map!(
-    op, x, A::GBArray;
+function apply!(
+    op, x, A::GBArray{T};
     mask = nothing, accum = nothing, desc = nothing
-)
-    return map!(op, A, x, A; mask, accum, desc)
+) where {T}
+    return apply!(op, A, x, A; mask, accum, desc)
 end
 
-function Base.map(
-    op, x, A::GBArray;
+function apply(
+    op, x, A::GBArray{T};
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
     t = inferbinarytype(typeof(x), eltype(A), op)
-    return map!(op, similar(A, t), x, A; mask, accum, desc)
+    return apply!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
-function Base.map!(
-    op, C::GBArray, A::GBArray, x;
+function apply!(
+    op, C::GBVecOrMat, A::GBArray{T}, x;
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
     op = BinaryOp(op)(eltype(A), typeof(x))
@@ -88,37 +86,37 @@ function Base.map!(
     return C
 end
 
-function Base.map!(
-    op, A::GBArray, x;
+function apply!(
+    op, A::GBArray{T}, x;
     mask = nothing, accum = nothing, desc = nothing
-)
-    return map!(op, A, A, x; mask, accum, desc)
+) where {T}
+    return apply!(op, A, A, x; mask, accum, desc)
 end
 
-function Base.map(
-    op, A::GBArray, x;
+function apply(
+    op, A::GBArray{T}, x;
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
     t = inferbinarytype(eltype(A), typeof(x), op)
-    return map!(op, similar(A, t), A, x; mask, accum, desc)
+    return apply!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-Base.:+(x, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(+, x, u; mask, accum, desc)
-Base.:+(u::GBArray, x; mask = nothing, accum = nothing, desc = nothing) =
-    map(+, u, x; mask, accum, desc)
+function Base.map(f, A::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+    apply(f, A; mask, accum, desc)
+end
+function Base.map!(f, C::GBArray, A::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+    apply!(f, C, A; mask, accum, desc)
+end
+function Base.map!(f, A::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+    apply!(f, C, A; mask, accum, desc)
+end
 
-Base.:*(x, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(*, x, u; mask, accum, desc)
-Base.:*(u::GBArray, x; mask = nothing, accum = nothing, desc = nothing) =
-    map(*, u, x; mask, accum, desc)
+Base.:*(x, u::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T} =
+    apply(*, x, u; mask, accum, desc)
+Base.:*(u::GBArray{T}, x; mask = nothing, accum = nothing, desc = nothing) where {T} =
+    apply(*, u, x; mask, accum, desc)
 
-Base.:-(x, u::GBArray; mask = nothing, accum = nothing, desc = nothing) =
-    map(-, x, u; mask, accum, desc)
-Base.:-(u::GBArray, x; mask = nothing, accum = nothing, desc = nothing) =
-    map(-, u, x; mask, accum, desc)
-
-Base.:-(u::GBArray) = map(-, u)
+Base.:-(u::GBArray) = apply(-, u)
 
 """
     mask!(C::GBArray, A::GBArray, mask::GBArray)
@@ -130,7 +128,7 @@ function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, comple
     desc = Descriptor()
     structural && (desc.structural_mask=true)
     complement && (desc.complement_mask=true)
-    map!(identity, C, A; mask, desc)
+    apply!(identity, C, A; mask, desc)
     return C
 end
 

@@ -13,16 +13,19 @@ using SpecialFunctions
 struct UnaryOp{F} <: AbstractUnaryOp
     juliaop::F
 end
+
+UnaryOp(op::TypedUnaryOperator) = op
+
 SuiteSparseGraphBLAS.juliaop(op::UnaryOp) = op.juliaop
 
 # fallback
 # This is a fallback since creating these every time is incredibly costly.
 function (op::UnaryOp)(::Type{T}) where {T}
-    resulttypes = Base.return_types(op.juliaop, (T,))
-    if length(resulttypes) != 1
-        throw(ArgumentError("Inferred more than one result type for function $(string(op.juliaop)) on type $T."))
+    resulttype = Base._return_type(op.juliaop, Tuple{T})
+    if resulttype <: Tuple
+        throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
     end
-    return TypedUnaryOperator(op.juliaop, T, resulttypes[1])
+    return TypedUnaryOperator(op.juliaop, T, resulttype)
 end
 function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     # Complex ops must always be GxB prefixed

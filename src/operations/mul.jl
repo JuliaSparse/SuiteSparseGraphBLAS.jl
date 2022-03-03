@@ -19,6 +19,36 @@ function LinearAlgebra.mul!(
     return C
 end
 
+function LinearAlgebra.mul!(
+    C::GBVecOrMat,
+    A::VecOrMat,
+    B::GBArray,
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    AGB = GBMatrix{eltype(A)}(size(A, 1), size(A, 2))
+    _packdensematrix!(AGB, A)
+    _makeshallow!(AGB)
+    return mul!(C, AGB, B, op; mask, accum, desc)
+end
+
+function LinearAlgebra.mul!(
+    C::GBVecOrMat,
+    A::GBArray,
+    B::VecOrMat,
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    BGB = GBMatrix{eltype(A)}(size(B, 1), size(B, 2))
+    _packdensematrix!(BGB, B)
+    _makeshallow!(BGB)
+    return mul!(C, A, BGB, op; mask, accum, desc)
+end
+
 """
     mul(A::GBArray, B::GBArray, op=(+,*); kwargs...)::GBArray
 
@@ -65,6 +95,34 @@ function mul(
     return C
 end
 
+function mul(
+    A::VecOrMat,
+    B::GBArray,
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    AGB = GBMatrix{eltype(A)}(size(A, 1), size(A, 2))
+    _packdensematrix!(AGB, A)
+    _makeshallow!(AGB)
+    return mul(AGB, B, op; mask, accum, desc)
+end
+
+function mul(
+    A::GBArray,
+    B::VecOrMat,
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    BGB = GBMatrix{eltype(B)}(size(B, 1), size(B, 2))
+    _packdensematrix!(BGB, B)
+    _makeshallow!(BGB)
+    return mul(A, BGB, op; mask, accum, desc)
+end
+
 function Base.:*(
     A::GBArray,
     B::GBArray;
@@ -75,6 +133,25 @@ function Base.:*(
     return mul(A, B, (+, *); mask, accum, desc)
 end
 
+function Base.:*(
+    A::VecOrMat,
+    B::GBArray;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return mul(A, B, (+, *); mask, accum, desc)
+end
+
+function Base.:*(
+    A::GBArray,
+    B::VecOrMat;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    return mul(A, B, (+, *); mask, accum, desc)
+end
 
 function Base.:*((⊕)::Function, (⊗)::Function)
     return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)

@@ -15,13 +15,18 @@ end
 SuiteSparseGraphBLAS.juliaop(op::BinaryOp) = op.juliaop
 (op::BinaryOp)(T) = op(T, T)
 
+BinaryOp(op::TypedBinaryOperator) = op
+
 function (op::BinaryOp)(::Type{T}, ::Type{U}) where {T, U} #fallback
     promoted = optype(T, U)
     return try
         invoke(op, Tuple{Type{promoted}, Type{promoted}}, promoted, promoted)
     catch
-        resulttypes = Base._return_type(op.juliaop, Tuple{T, U})
-        TypedBinaryOperator(op.juliaop, T, U, resulttypes)
+        resulttype = Base._return_type(op.juliaop, Tuple{T, U})
+        if resulttype <: Tuple
+            throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
+        end
+        TypedBinaryOperator(op.juliaop, T, U, resulttype)
     end
 end
 

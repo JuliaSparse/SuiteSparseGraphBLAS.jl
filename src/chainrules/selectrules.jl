@@ -1,6 +1,6 @@
 
 function frule(
-    (_, _, ΔA),
+    (_, _, ΔA)::Tuple,
     ::typeof(select),
     op::Union{Function, SelectUnion},
     A::GBArray
@@ -12,7 +12,7 @@ end
 
 
 function frule(
-    (_, _, ΔA, _),
+    (_, _, ΔA, _)::Tuple,
     ::typeof(select),
     op::Union{Function, SelectUnion},
     A::GBArray,

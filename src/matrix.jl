@@ -5,13 +5,14 @@
 
 Create a GBMatrix of the specified size, defaulting to the maximum on each dimension, 2^60.
 """
-function GBMatrix{T}(nrows = LibGraphBLAS.GxB_INDEX_MAX, ncols = LibGraphBLAS.GxB_INDEX_MAX) where {T}
+function GBMatrix{T}(nrows::Integer = LibGraphBLAS.GxB_INDEX_MAX, ncols::Integer = LibGraphBLAS.GxB_INDEX_MAX) where {T}
     m = Ref{LibGraphBLAS.GrB_Matrix}()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
     return GBMatrix{T}(m[])
 end
 
 GBMatrix{T}(dims::Dims{2}) where {T} = GBMatrix{T}(dims...)
+GBMatrix{T}(dims::Tuple{<:Integer}) where {T} = GBMatrix{T}(dims...)
 GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}) where {T} =
     GBMatrix{T}(size[1].stop, size[2].stop)
 

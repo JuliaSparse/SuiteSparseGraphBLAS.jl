@@ -113,7 +113,7 @@ export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
 export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!,
-gbrand, eunion, eunion!, mask, mask!
+gbrand, eunion, eunion!, mask, mask!, apply, apply!
 # Reexports from LinAlg
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
 

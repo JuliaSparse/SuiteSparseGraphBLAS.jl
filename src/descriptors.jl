@@ -79,15 +79,16 @@ function GxB_Desc_set(d, field, value)
             field,
             value
         )
-    elseif field ∈ [LibGraphBLAS.GxB_DESCRIPTOR_CHUNK]
-        @wraperror ccall(
-            (:GxB_Desc_set, libgraphblas),
-            LibGraphBLAS.GrB_Info,
-            (LibGraphBLAS.GrB_Descriptor, LibGraphBLAS.GrB_Desc_Field, Cdouble),
-            d,
-            field,
-            value
-        )
+    # chunk is broken, not clear why...
+    # elseif field ∈ [LibGraphBLAS.GxB_DESCRIPTOR_CHUNK]
+    #     @wraperror ccall(
+    #         (:GxB_Desc_set, libgraphblas),
+    #         LibGraphBLAS.GrB_Info,
+    #         (LibGraphBLAS.GrB_Descriptor, LibGraphBLAS.GrB_Desc_Field, Cdouble),
+    #         d,
+    #         field,
+    #         value
+    #     )
     end
 end
 
@@ -110,7 +111,7 @@ function Base.getproperty(d::Descriptor, s::Symbol)
         end
     elseif s === :structural_mask
         x = GxB_Desc_get(d, LibGraphBLAS.GrB_MASK)
-        if x == LibGraphBLAS.GrB_STRUCTURE || x == LibGraphBLAS.GrB_STRUCT_COMP
+        if x == LibGraphBLAS.GrB_STRUCTURE || x == (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
             return true
         else
             return false

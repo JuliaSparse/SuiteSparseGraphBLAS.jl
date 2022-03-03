@@ -1,6 +1,6 @@
 #emul TIMES
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(emul),
     A::GBArray,
     B::GBArray,
@@ -10,7 +10,7 @@ function frule(
     ∂Ω = emul(unthunk(ΔA), B, *) + emul(unthunk(ΔB), A, *)
     return Ω, ∂Ω
 end
-function frule((_, ΔA, ΔB), ::typeof(emul), A::GBArray, B::GBArray)
+function frule((_, ΔA, ΔB)::Tuple, ::typeof(emul), A::GBArray, B::GBArray)
     return frule((nothing, ΔA, ΔB, nothing), emul, A, B, *)
 end
 
@@ -37,7 +37,7 @@ end
 ######
 
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(eadd),
     A::GBArray,
     B::GBArray,
@@ -47,7 +47,7 @@ function frule(
     ∂Ω = eadd(unthunk(ΔA), unthunk(ΔB), +)
     return Ω, ∂Ω
 end
-function frule((_, ΔA, ΔB), ::typeof(eadd), A::GBArray, B::GBArray)
+function frule((_, ΔA, ΔB)::Tuple, ::typeof(eadd), A::GBArray, B::GBArray)
     return frule((nothing, ΔA, ΔB, nothing), eadd, A, B, +)
 end
 

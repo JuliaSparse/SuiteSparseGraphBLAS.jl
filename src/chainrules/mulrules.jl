@@ -1,7 +1,7 @@
 #PLUS REDUCERS:
 ###############
 function frule(
-    (_, ΔA, ΔB),
+    (_, ΔA, ΔB)::Tuple,
     ::typeof(mul),
     A::GBArray,
     B::GBArray
@@ -9,7 +9,7 @@ function frule(
     frule((nothing, ΔA, ΔB, nothing), mul, A, B, (+, *))
 end
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(mul),
     A::GBArray,
     B::GBArray,
@@ -64,7 +64,7 @@ end
 
 # PLUS_PLUS:
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(mul),
     A::GBArray,
     B::GBArray,
@@ -91,7 +91,7 @@ end
 
 # PLUS_MINUS:
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(mul),
     A::GBArray,
     B::GBArray,
@@ -118,7 +118,7 @@ end
 
 # PLUS_FIRST:
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(mul),
     A::GBArray,
     B::GBArray,
@@ -145,7 +145,7 @@ end
 
 # PLUS_SECOND:
 function frule(
-    (_, ΔA, ΔB, _),
+    (_, ΔA, ΔB, _)::Tuple,
     ::typeof(mul),
     A::GBArray,
     B::GBArray,

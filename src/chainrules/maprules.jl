@@ -1,84 +1,84 @@
-# Per Lyndon. Needs adaptation, and/or needs redefinition of map to use functions rather
+# Per Lyndon. Needs adaptation, and/or needs redefinition of apply to use functions rather
 # than AbstractOp.
-#function rrule(map, f, xs)
-#    # Rather than 3 maps really want 1 multimap
-#    ys_and_pullbacks = map(x->rrule(f, x), xs) #Take this to ys = map(f, x)
-#    ys = map(first, ys_and_pullbacks)
-#    pullbacks = map(last, ys_and_pullbacks)
-#    function map_pullback(dys)
+#function rrule(apply, f, xs)
+#    # Rather than 3 applys really want 1 multiapply
+#    ys_and_pullbacks = apply(x->rrule(f, x), xs) #Take this to ys = apply(f, x)
+#    ys = apply(first, ys_and_pullbacks)
+#    pullbacks = apply(last, ys_and_pullbacks)
+#    function apply_pullback(dys)
 #        _call(f, x) = f(x)
-#        dfs_and_dxs = map(_call, pullbacks, dys)
+#        dfs_and_dxs = apply(_call, pullbacks, dys)
 #        # but in your case you know it will be NoTangent() so can  skip
 #        df = sum(first, dfs_and_dxs)
-#        dxs = map(last, dfs_and_dxs)
+#        dxs = apply(last, dfs_and_dxs)
 #        return NoTangent(), df, dxs
 #    end
-#    return ys, map_pullback
+#    return ys, apply_pullback
 #end
-macro scalarmaprule(func, derivative)
+macro scalarapplyrule(func, derivative)
     return ChainRulesCore.@strip_linenos quote
         function ChainRulesCore.frule(
-            (_, _, $(esc(:ΔA))),
-            ::typeof(Base.map),
+            (_, _, $(esc(:ΔA)))::Tuple,
+            ::typeof(apply),
             ::typeof($(func)),
             $(esc(:A))::GBArray
         )
-            $(esc(:Ω)) = map($(esc(func)), $(esc(:A)))
+            $(esc(:Ω)) = apply($(esc(func)), $(esc(:A)))
             return $(esc(:Ω)), $(esc(derivative)) .* unthunk($(esc(:ΔA)))
         end
         function ChainRulesCore.rrule(
-            ::typeof(Base.map),
+            ::typeof(apply),
             ::typeof($(func)),
             $(esc(:A))::GBArray
         )
-            $(esc(:Ω)) = map($(esc(func)), $(esc(:A)))
-            function mapback($(esc(:ΔA)))
+            $(esc(:Ω)) = apply($(esc(func)), $(esc(:A)))
+            function applyback($(esc(:ΔA)))
                 NoTangent(), NoTangent(), $(esc(derivative)) .* $(esc(:ΔA))
             end
-            return $(esc(:Ω)), mapback
+            return $(esc(:Ω)), applyback
         end
     end
 end
 
 function ChainRulesCore.frule(
-    (_,_,ΔA),
-    ::typeof(map),
+    (_,_,ΔA)::Tuple,
+    ::typeof(apply),
     ::typeof(sqrt),
     A::Array
 )
-    Ω = map(sqrt, A)
+    Ω = apply(sqrt, A)
     return Ω, inv.(2 .* Ω)
 end
 
 #Trig
-@scalarmaprule sin cos.(A)
-@scalarmaprule cos -sin.(A)
-@scalarmaprule tan @. 1 + (Ω ^ 2)
+@scalarapplyrule sin cos.(A)
+@scalarapplyrule cos -sin.(A)
+@scalarapplyrule tan @. 1 + (Ω ^ 2)
 
 #Hyperbolic Trig
-@scalarmaprule sinh cosh.(A)
-@scalarmaprule cosh sinh.(A)
-@scalarmaprule tanh @. 1 - (Ω ^ 2)
+@scalarapplyrule sinh cosh.(A)
+@scalarapplyrule cosh sinh.(A)
+@scalarapplyrule tanh @. 1 - (Ω ^ 2)
 
-@scalarmaprule inv -(Ω .^ 2)
-@scalarmaprule exp Ω
+@scalarapplyrule inv -(Ω .^ 2)
+@scalarapplyrule exp Ω
 
-@scalarmaprule abs sign.(A)
+@scalarapplyrule abs sign.(A)
 #Anything that uses MINV fails the isapprox tests :().
 # Since in the immortal words of Miha - "FiniteDiff is smarter than you", these shouldn't be enabled.
-#@scalarmaprule UnaryOps.ASIN @. inv(sqrt.(1 - A ^ 2))
-#@scalarmaprule UnaryOps.ACOS @. inv(sqrt.(1 - A ^ 2))
-#@scalarmaprule UnaryOps.ATAN @. inv(1 + A ^ 2)
-#@scalarmaprule UnaryOps.SQRT inv.(2 .* Ω)
+#@scalarapplyrule UnaryOps.ASIN @. inv(sqrt.(1 - A ^ 2))
+#@scalarapplyrule UnaryOps.ACOS @. inv(sqrt.(1 - A ^ 2))
+#@scalarapplyrule UnaryOps.ATAN @. inv(1 + A ^ 2)
+#@scalarapplyrule UnaryOps.SQRT inv.(2 .* Ω)
 
 function frule(
-    (_, _, ΔA),
-    ::typeof(map),
+    (_, _, ΔA)::Tuple,
+    ::typeof(apply),
     ::typeof(identity),
     A::GBArray
 )
     return (A, ΔA)
 end
-function rrule(::typeof(map), ::typeof(identity), A::GBArray)
+function rrule(::typeof(apply), ::typeof(identity), A::GBArray)
     return A, (ΔΩ) -> (NoTangent(), NoTangent(), ΔΩ)
 end

@@ -1,6 +1,6 @@
 # Dense vector construction
 function frule(
-    (_, Δv),
+    (_, Δv)::Tuple,
     ::Type{<:GBVector},
     v::Vector{T}
 ) where {T}
@@ -16,7 +16,7 @@ end
 
 # Dense matrix construction
 function frule(
-    (_, ΔA),
+    (_, ΔA)::Tuple,
     ::Type{<:GBMatrix},
     A::Matrix{T}
 ) where {T}
@@ -32,7 +32,7 @@ end
 
 # Dense matrix from vector (n x 1 matrix)
 function frule(
-    (_, ΔA),
+    (_, ΔA)::Tuple,
     ::Type{<:GBMatrix},
     A::Vector{T}
 ) where {T}
@@ -50,7 +50,7 @@ end
 
 # Sparse Vector
 function frule(
-    (_, _, Δv),
+    (_, _, Δv)::Tuple,
     ::Type{<:GBVector},
     I::AbstractVector{U},
     v::Vector{T}
@@ -67,7 +67,7 @@ end
 
 # Sparse Matrix
 function frule(
-    (_,_,_,Δv),
+    (_,_,_,Δv)::Tuple,
     ::Type{<:GBMatrix},
     I::AbstractVector{U},
     J::AbstractVector{U},
@@ -89,7 +89,7 @@ function rrule(
 end
 
 function frule(
-    (_,_,Δv),
+    (_,_,Δv)::Tuple,
     ::Type{<:GBMatrix},
     I::AbstractVector{U},
     v::Vector{T}
@@ -109,7 +109,7 @@ function rrule(
 end
 
 function frule(
-    (_,ΔS),
+    (_,ΔS)::Tuple,
     ::Type{GBMatrix},
     S::SparseMatrixCSC{T}
 ) where {T}
@@ -128,7 +128,7 @@ function rrule(
 end
 
 function frule(
-    (_,ΔS),
+    (_,ΔS)::Tuple,
     ::Type{GBMatrix},
     S::SparseVector{T}
 ) where {T}

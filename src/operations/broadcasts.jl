@@ -2,7 +2,7 @@
 #######################
 
 # YOU SHALL NOT PASS:
-# For real though, some of this is far from pretty.
+# For real though, some of this is far from pretty and is badly in need of a rewrite to use dispatch.
 
 #All binary ops will default to emul
 defaultadd(f) = emul
@@ -62,7 +62,7 @@ modifying(::typeof(emul)) = emul!
         if x isa Broadcast.Broadcasted
             x = copy(x)
         end
-        return map(f, x)
+        return apply(f, x)
     else
         left = first(bc.args)
         right = last(bc.args)
@@ -81,13 +81,13 @@ modifying(::typeof(emul)) = emul!
             add = defaultadd(f)
             return add(left, right, f)
         else
-            return map(f, left, right)
+            return apply(f, left, right)
         end
     end
 end
 mutatingop(::typeof(emul)) = emul!
 mutatingop(::typeof(eadd)) = eadd!
-mutatingop(::typeof(map)) = map!
+mutatingop(::typeof(apply)) = apply!
 @inline function Base.copyto!(C::GBArray, bc::Broadcast.Broadcasted{GBMatrixStyle})
     l = length(bc.args)
     if l == 1
@@ -96,9 +96,11 @@ mutatingop(::typeof(map)) = map!
             C[:,:, accum=second] = x
             return C
         end
-        return map!(bc.f, C, x; accum=second)
+        if x isa Broadcast.Broadcasted
+            x = copy(x)
+        end
+        return apply!(bc.f, C, x; accum=second)
     else
-
         left = first(bc.args)
         right = last(bc.args)
         # handle annoyances with the pow operator
@@ -125,7 +127,7 @@ mutatingop(::typeof(map)) = map!
                     if subarg isa Broadcast.Broadcasted
                         subarg = copy(subarg)
                     end
-                    return map!(f, C, subarg; accum)
+                    return apply!(f, C, subarg; accum)
                 else
                     # Otherwise we know there's two operands on the LHS so we have A .<op>= C .<op> B
                     # Or a generalization with any compound *lazy* RHS.
@@ -138,7 +140,7 @@ mutatingop(::typeof(map)) = map!
                         add = mutatingop(defaultadd(f))
                         return add(C, subargleft, subargright, f; accum)
                     else
-                        return map!(f, C, subargleft, subargright; accum)
+                        return apply!(f, C, subargleft, subargright; accum)
                     end
                 end
             end
@@ -155,7 +157,7 @@ mutatingop(::typeof(map)) = map!
                 add = mutatingop(defaultadd(f))
                 return add(C, left, right, f)
             else
-                return map!(C, f, left, right; accum=second)
+                return apply!(C, f, left, right; accum=second)
             end
         end
     end
@@ -169,7 +171,7 @@ end
         if x isa Broadcast.Broadcasted
             x = copy(x)
         end
-        return map(f, x)
+        return apply(f, x)
     else
         left = first(bc.args)
         right = last(bc.args)
@@ -188,7 +190,7 @@ end
             add = defaultadd(f)
             return add(left, right, f)
         else
-            return map(f, left, right)
+            return apply(f, left, right)
         end
     end
 end
