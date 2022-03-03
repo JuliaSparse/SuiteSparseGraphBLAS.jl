@@ -93,19 +93,19 @@ function Base.map!(op, C::SparseMatrixGB, A::SparseMatrixGB; mask = nothing, acc
     C.fillvalue = op(A.fillvalue)
 end
 
-function Base.map!(op, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing)
-    map!(op, A.gbmat, x; mask, accum, desc)
+function SuiteSparseGraphBLAS.apply!(op, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing)
+    SuiteSparseGraphBLAS.apply!(op, A.gbmat, x; mask, accum, desc)
     A.fillvalue = op(A.fillvalue, x)
 end
-function Base.map!(op, C::SparseMatrixGB, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing)
-    map!(op, C, A, x; mask, accum, desc)
+function SuiteSparseGraphBLAS.apply!(op, C::SparseMatrixGB, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing)
+    SuiteSparseGraphBLAS.apply!(op, C, A, x; mask, accum, desc)
     C.fillvalue = op(A.fillvalue, x)
 end
 
 Base.map(op, A::SparseMatrixGB; mask = nothing, accum = nothing, desc = nothing) =
     SparseMatrixGB(map(op, A.gbmat; mask, accum, desc), op(A.fillvalue))
-Base.map(op, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing) =
-    SparseMatrixGB(map(op, A.gbmat, x), op(A.fillvalue, x))
+SuiteSparseGraphBLAS.apply(op, A::SparseMatrixGB, x; mask = nothing, accum = nothing, desc = nothing) =
+    SparseMatrixGB(SuiteSparseGraphBLAS.apply(op, A.gbmat, x), op(A.fillvalue, x))
 
 function SuiteSparseGraphBLAS.eadd!(
     C::SparseMatrixGB, A::SparseMatrixGB, B::SparseMatrixGB, op::Function;
@@ -140,6 +140,8 @@ function SuiteSparseGraphBLAS.emul(
         op(A.fillvalue, B.fillvalue)
     )
 end
+
+# TODO UPDATE SPMGB BROADCASTING.
 
 # Broadcasting
 # There's probably a better way to do this, but < 100 loc duplication is fine.
