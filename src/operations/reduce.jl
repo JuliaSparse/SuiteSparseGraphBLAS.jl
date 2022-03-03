@@ -77,4 +77,4 @@ Base.maximum(f::Function, A::GBArray) = reduce(max, map(f, A))
 Base.minimum(A::GBArray) = reduce(min, A)
 Base.minimum(f::Function, A::GBArray) = reduce(min, map(f, A))
 
-Base.sum(A::GBArray) = reduce(+, A)
+Base.sum(A::GBArray; dims=:) = reduce(+, A; dims)
