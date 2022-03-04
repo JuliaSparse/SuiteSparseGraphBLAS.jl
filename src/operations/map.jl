@@ -132,6 +132,14 @@ function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, comple
     return C
 end
 
+function mask!(A::GBArray, mask::GBArray; structural = false, complement = false)
+    desc = Descriptor()
+    structural && (desc.structural_mask=true)
+    complement && (desc.complement_mask=true)
+    apply!(identity, A, A; mask, desc)
+    return A
+end
+
 """
     mask(A::GBArray, mask::GBArray)
 
