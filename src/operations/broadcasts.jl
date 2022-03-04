@@ -9,7 +9,8 @@ defaultadd(f) = emul
 # Default to eadd. We're limiting this to + and OR for now to enable easy graph unions.
 for op ∈ [
     :+,
-    :∨,
+    :|,
+    :∨
 ]
     funcquote = quote
         defaultadd(::typeof($op)) = eadd

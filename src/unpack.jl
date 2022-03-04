@@ -22,7 +22,8 @@ function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     rowidxsize = Ref{LibGraphBLAS.GrB_Index}()
     valsize = Ref{LibGraphBLAS.GrB_Index}()
     isiso = Ref{Bool}(false)
-    isjumbled = Ref{Bool}(false)
+    isjumbled = C_NULL
+    nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
         A.p,
         colptr,
@@ -35,16 +36,27 @@ function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         isjumbled,
         desc
     )
-    #TODO IMPROVE
-    # colptrsize isn't always exact. Or rather it can be bigger if GrB has allocated a bigger block.
-    # For now I'll unsafe_wrap based on size(A, 2) + 1
     colptr = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, colptr[], size(A, 2) + 1)
-    rowidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, rowidx[], rowidxsize[] ÷ sizeof(LibGraphBLAS.GrB_Index))
+    rowidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, rowidx[], nnonzeros)
+    
+    if isiso[]
+        val = unsafe_wrap(Array{T}, Ptr{T}(values[]), 1)[1]
+        vals = ccall(:jl_realloc, Ptr{Cvoid}, (Ptr{T}, Int64), Ptr{T}(values[]), nnonzeros * sizeof(T))
+        vals = unsafe_wrap(Array{T}, Ptr{T}(vals), nnonzeros)
+        vals .= val
+        valsize = nnonzeros * sizeof(T)
+    else
+        vals = unsafe_wrap(Array{T}, Ptr{T}(values[]), nnonzeros)
+        valsize = valsize[]
+    end
     colptr .+= 1
     rowidx .+= 1
     return colptr,
+    colptrsize[],
     rowidx,
-    unsafe_wrap(Array{T}, Ptr{T}(values[]), valsize[] ÷ sizeof(T))
+    rowidxsize[],
+    vals,
+    valsize
 end
 
 function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
@@ -56,7 +68,8 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     rowptrsize = Ref{LibGraphBLAS.GrB_Index}()
     valsize = Ref{LibGraphBLAS.GrB_Index}()
     isiso = Ref{Bool}(false)
-    isjumbled = Ref{Bool}(false)
+    isjumbled = C_NULL
+    nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
         A.p,
         rowptr,
@@ -73,10 +86,25 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     # rowptrsize isn't always exact. Or rather it can be bigger if GrB has allocated a bigger block.
     # For now I'll unsafe_wrap based on size(A, 1) + 1
     rowptr = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, rowptr[],size(A, 1) + 1)
-    colidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, colidx[], colidxsize[] ÷ sizeof(LibGraphBLAS.GrB_Index))
+    colidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, colidx[], nnonzeros)
+
+    if isiso[]
+        val = unsafe_wrap(Array{T}, Ptr{T}(values[]), 1)[1]
+        vals = ccall(:jl_realloc, Ptr{Cvoid}, (Ptr{T}, Int64), Ptr{T}(values[]), nnonzeros * sizeof(T))
+        vals = unsafe_wrap(Array{T}, Ptr{T}(vals), nnonzeros)
+        vals .= val
+        valsize = nnonzeros * sizeof(T)
+    else
+        vals = unsafe_wrap(Array{T}, Ptr{T}(values[]), nnonzeros)
+        valsize = valsize[]
+    end
+
     rowptr .+= 1
     colidx .+= 1
     return rowptr,
+    rowptrsize[],
     colidx,
-    unsafe_wrap(Array{T}, Ptr{T}(values[]), valsize[] ÷ sizeof(T))
+    colidxsize[],
+    vals,
+    valsize
 end

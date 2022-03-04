@@ -144,6 +144,9 @@ end
 @binop new isle GxB_ISLE R=>R
 @binop new (∨) GxB_LOR R=>R
 @binop new (∧) GxB_LAND R=>R
+(::BinaryOp{typeof(|)})(::Type{Bool}, ::Type{Bool}) = LOR_BOOL
+(::BinaryOp{typeof(&)})(::Type{Bool}, ::Type{Bool}) = LAND_BOOL
+
 @binop new lxor GxB_LXOR R=>R
 
 # T/R => Bool

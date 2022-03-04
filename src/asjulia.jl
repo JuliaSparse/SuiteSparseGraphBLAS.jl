@@ -32,7 +32,7 @@ function as(f::Function, type::Type{<:Union{Matrix, Vector}}, A::GBVecOrMat{T}; 
 end
 
 function as(f::Function, ::Type{SparseMatrixCSC}, A::GBMatrix{T}; freeunpacked=false) where {T}
-    colptr, rowidx, values =  _unpackcscmatrix!(A)
+    colptr, colptrsize, rowidx, rowidxsize, values, valsize =  _unpackcscmatrix!(A)
     array = SparseMatrixCSC{T, LibGraphBLAS.GrB_Index}(size(A, 1), size(A, 2), colptr, rowidx, values)
     result = try
         f(array)
@@ -42,14 +42,14 @@ function as(f::Function, ::Type{SparseMatrixCSC}, A::GBMatrix{T}; freeunpacked=f
             ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(rowidx))
             ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
         else
-            _packcscmatrix!(A, colptr, rowidx, values)
+            _packcscmatrix!(A, colptr, rowidx, values; colptrsize, rowidxsize, valsize)
         end
     end
     return result
 end
 
 function as(f::Function, ::Type{SparseVector}, A::GBVector{T}; freeunpacked=false) where {T}
-    colptr, rowidx, values =  _unpackcscmatrix!(A)
+    colptr, colptrsize, rowidx, rowidxsize, values, valsize =  _unpackcscmatrix!(A)
     vector = SparseVector{T, LibGraphBLAS.GrB_Index}(size(A, 1), rowidx, values)
     result = try
         f(vector)
@@ -59,7 +59,7 @@ function as(f::Function, ::Type{SparseVector}, A::GBVector{T}; freeunpacked=fals
             ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(rowidx))
             ccall(:jl_free, Cvoid, (Ptr{T},), pointer(values))
         else
-            _packcscmatrix!(A, colptr, rowidx, values)
+            _packcscmatrix!(A, colptr, rowidx, values; colptrsize, rowidxsize, valsize)
         end
     end
     return result

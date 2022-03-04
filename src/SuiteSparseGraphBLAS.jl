@@ -84,11 +84,12 @@ include("chainrules/maprules.jl")
 include("chainrules/reducerules.jl")
 include("chainrules/selectrules.jl")
 include("chainrules/constructorrules.jl")
-include("chainrules/utilityrules.jl")
+
 #EXPERIMENTAL
 include("misc.jl")
 include("asjulia.jl")
 include("spmgb/sparsemat.jl")
+include("mmread.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS

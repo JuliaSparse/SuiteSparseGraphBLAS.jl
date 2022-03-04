@@ -18,13 +18,13 @@ function _packcscmatrix!(
     colptr::Vector{Ti},
     rowidx::Vector{Ti},
     values::Vector{T};
-    desc = nothing
+    desc = nothing,
+    colptrsize = length(colptr) * sizeof(LibGraphBLAS.GrB_Index),
+    rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index),
+    valsize = length(values) * sizeof(T)
     ) where {T, Ti}
     colptr .-= 1
     rowidx .-= 1
-    colptrsize = length(colptr) * sizeof(LibGraphBLAS.GrB_Index)
-    rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index)
-    valsize = length(values) * sizeof(T)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colptr))
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
@@ -50,13 +50,13 @@ function _packcsrmatrix!(
     rowptr::Vector{Ti},
     colidx::Vector{Ti},
     values::Vector{T};
-    desc = nothing
+    desc = nothing,
+    rowptrsize = length(rowptr) * sizeof(LibGraphBLAS.GrB_Index),
+    colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index),
+    valsize = length(values) * sizeof(T)
     ) where {T, Ti}
     rowptr .-= 1
     colidx .-= 1
-    rowptrsize = length(rowptr) * sizeof(LibGraphBLAS.GrB_Index)
-    colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index)
-    valsize = length(values) * sizeof(T)
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowptr))
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
