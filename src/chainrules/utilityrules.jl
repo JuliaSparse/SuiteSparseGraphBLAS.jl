@@ -1,0 +1,5 @@
+function rrule(::typeof(build), I::AbstractVector, J::AbstractVector, J::AbstractVector, m, n, combine::typeof(+))
+    project_V = ProjectTo(V)
+    function sparse_pullback(ΔΩ)
+        ΔΩ = unthunk(ΔΩ)
+        ΔV = project_V()
