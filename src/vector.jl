@@ -21,9 +21,9 @@ GBVector{T}(nrows::Tuple{Base.OneTo,}) where {T} = GBVector{T}(first(nrows))
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
-function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; dup = +, nrows = maximum(I)) where {U<:Integer, T}
+function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; combine = +, nrows = maximum(I)) where {U<:Integer, T}
     x = GBVector{T}(nrows)
-    build(x, I, X, dup = dup)
+    build(x, I, X, combine = combine)
     return x
 end
 
@@ -139,10 +139,10 @@ for T ∈ valid_vec
     # Build functions
     func = Symbol(prefix, :_Matrix_build_, suffix(T))
     @eval begin
-        function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; dup = +)
+        function build(v::GBVector{$T}, I::Vector, X::Vector{$T}; combine = +)
             nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-            dup = BinaryOp(dup)($T)
+            combine = BinaryOp(combine)($T)
             decrement!(I)
             @wraperror LibGraphBLAS.$func(
                 Ptr{LibGraphBLAS.GrB_Vector}(v.p), 
@@ -150,7 +150,7 @@ for T ∈ valid_vec
                 zeros(LibGraphBLAS.GrB_Index, length(I)), 
                 X, 
                 length(X), 
-                dup
+                combine
             )
             increment!(I)
         end

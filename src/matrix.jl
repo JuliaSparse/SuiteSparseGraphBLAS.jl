@@ -17,17 +17,17 @@ GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}) where {T} =
     GBMatrix{T}(size[1].stop, size[2].stop)
 
 """
-    GBMatrix(I, J, X; dup = +, nrows = maximum(I), ncols = maximum(J))
+    GBMatrix(I, J, X; combine = +, nrows = maximum(I), ncols = maximum(J))
 
-Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The dup function defaults
+Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The combine function defaults
 to `|` for booleans and `+` for nonbooleans.
 """
 function GBMatrix(
     I::AbstractVector, J::AbstractVector, X::AbstractVector{T};
-    dup = +, nrows = maximum(I), ncols = maximum(J)
+    combine = +, nrows = maximum(I), ncols = maximum(J)
 ) where {T}
     A = GBMatrix{T}(nrows, ncols)
-    build(A, I, J, X; dup)
+    build(A, I, J, X; combine)
     return A
 end
 
@@ -161,9 +161,9 @@ for T ∈ valid_vec
     func = Symbol(prefix, :_Matrix_build_, suffix(T))
     @eval begin
         function build(A::GBMatrix{$T}, I::AbstractVector, J::AbstractVector, X::Vector{$T};
-                dup = +
+                combine = +
             )
-            dup = BinaryOp(dup)($T)
+            combine = BinaryOp(combine)($T)
             if !(I isa Vector)
                 I = Vector(I)
             end
@@ -181,7 +181,7 @@ for T ∈ valid_vec
                 Vector{LibGraphBLAS.GrB_Index}(J),
                 X,
                 length(X),
-                dup
+                combine
             )
             increment!(I)
             increment!(J)
@@ -274,6 +274,7 @@ function Base.getindex(
     return extract(A, i, j; mask, accum, desc)
 end
 
+# Linear indexing
 function Base.getindex(A::GBMatOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end
