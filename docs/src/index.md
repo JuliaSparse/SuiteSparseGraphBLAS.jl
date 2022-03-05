@@ -1,7 +1,7 @@
 # SuiteSparseGraphBLAS.jl
 
 SuiteSparseGraphBLAS.jl is a package for sparse linear algebra on arbitrary semirings, with a particular focus on graph computations.
-It aims to provide a Julian wrapper over Tim Davis' SuiteSparse reference implementation of the GraphBLAS C specification.
+It aims to provide a Julian wrapper over Tim Davis' SuiteSparse:GraphBLAS reference implementation of the GraphBLAS C specification.
 
 # Installation
 
@@ -21,23 +21,23 @@ Pkg.add("SuiteSparseGraphBLAS")
 The SuiteSparse:GraphBLAS binary is installed automatically as `SSGraphBLAS_jll`.
 
 Then in the REPL or script `using SuiteSparseGraphBLAS` will import the package.
+
 # Introduction
 
 GraphBLAS harnesses the well-understood duality between graphs and matrices.
-Specifically a graph can be represented by its [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix), [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix), or one of the many variations on those formats. 
-With this matrix representation in hand we have a method to operate on the graph using linear algebra operations on the matrix.
+Specifically a graph can be represented by the [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix) and/or [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix), or one of the many variations on those formats. 
+With this matrix representation in hand we have a method to operate on the graph with linear algebra.
 
 Below is an example of the adjacency matrix of a directed graph, and finding the neighbors of a single vertex using basic matrix-vector multiplication on the arithemtic semiring.
 
 ![BFS and Adjacency Matrix](./assets/AdjacencyBFS.png)
 
-# GraphBLAS Concepts
-
-The three primary components of GraphBLAS are: matrices, operators, and operations. Operators include monoids, binary operators, and semirings. Operations include the typical linear algebraic operations like matrix multiplication as well as indexing operations.
-
 ## GBArrays
 
-SuiteSparseGraphBLAS.jl provides `GBVector` and `GBMatrix` array types which are subtypes of `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively.
+The core SuiteSparseGraphBLAS.jl array types are `GBVector` and `GBMatrix` which are subtypes `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively.
+
+!!! note "GBArray"
+    These docs will often refer to the `GBArray` type, which is the union of `GBVector`, `GBMatrix` and their lazy Transpose objects.
 
 ```@setup intro
 using SuiteSparseGraphBLAS
@@ -45,25 +45,42 @@ using SparseArrays
 ```
 
 ```@repl intro
-GBVector{Float64}(13)
+# create a size 13 empty sparse vector with Float64 elements.
+v = GBVector{Float64}(13) 
 
-GBMatrix{ComplexF64}(1000, 1000)
+# create a 1000 x 1000 empty sparse matrix with ComplexF64 elements.
+A = GBMatrix{ComplexF64}(1000, 1000)
+
+A[1,5] === nothing
 ```
 
-GraphBLAS array types are opaque to the user in order to allow the library author to choose the best storage format.
-SuiteSparse:GraphBLAS takes advantage of this by storing matrices in one of four formats: dense, bitmap, sparse-compressed, or hypersparse-compressed; and in either row or column major orientation.
+Here we can already see several differences compared to `SparseArrays.SparseMatrixCSC`.
+
+The first is that `A` is stored in `hypersparse` format, and by row.
+
+`GBArrays` are (technically) opaque to the user in order to allow the library author to choose the best storage format.\
+GraphBLAS takes advantage of this by storing matrices in one of four formats: `dense`, `bitmap`, `sparse-compressed`, or `hypersparse-compressed`; and in either `row` or `column` major orientation.
 
 !!! warning "Default Orientation"
-    The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays, for greater speed
-    in certain operations. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
-    `Matrix` will be stored by-column. The orientation of a `GBMatrix` can be modified using
-    `gbset(A, :format, :byrow)` or `gbset(A, :format, :bycol)`.
+    The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
+    `Matrix` will be stored by-column.\
+    The orientation of a `GBMatrix` can be modified using
+    `gbset(A, :format, :byrow)` or `gbset(A, :format, :bycol)`, and queried by `gbget(A, :format)`
 
-The matrix and vector in the graphic above can be constructed as follows:
+Information about storage formats, orientation, conversion, construction and more can be found in [Arrays](@ref).
+
+The second difference is that a `GBArray` doesn't assume the fill-in value of a sparse array.\
+Since `A[1,5]` isn't stored in the matrix (it's been "compressed" out), we return `nothing`.\
+
+This matches the GraphBLAS spec, where `NO_VALUE` is returned, rather than `zero(eltype(A))`. 
+
+An empty matrix and vector won't do us much good, so let's see how to construct the matrix and vector from the graphic above. Both `A` and `v` below are constructed from coordinate format or COO.
 
 ```@repl intro
+#GBMatrix(I::Vector{<:Integer}, J::Vector{<:Integer}, V::Vector{T})
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
 
+#GBVector(I::Vector{<:Integer}, V::Vector{T})
 v = GBVector([4], [10])
 ```
 ## GraphBLAS Operations
