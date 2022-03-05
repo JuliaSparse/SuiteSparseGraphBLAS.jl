@@ -171,5 +171,9 @@ function rrule(
 end
 
 # TROPICAL REDUCERS:
+# These will require one of the following
+# 1. Rewrite (some subset of) mxm in Julia, and allow for an optional output of the reduction indices
+# 2. SSGrB adding indexBinaryOp as well as a pair UDT, and some other funky business.
+# 3. Enzyme
 
-# MAX_PLUS:
+# The latter is most likely to work in the short term.

@@ -1,6 +1,6 @@
 module LibGraphBLAS
 import ..libgraphblas
-const GxB_FC64_t = ComplexF32
+const GxB_FC64_t = ComplexF64
 
 const GxB_FC32_t = ComplexF32
 
