@@ -111,9 +111,9 @@ function Base.map!(f, A::GBArray{T}; mask = nothing, accum = nothing, desc = not
     apply!(f, C, A; mask, accum, desc)
 end
 
-Base.:*(x, u::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T} =
+Base.:*(x::V, u::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T}} =
     apply(*, x, u; mask, accum, desc)
-Base.:*(u::GBArray{T}, x; mask = nothing, accum = nothing, desc = nothing) where {T} =
+Base.:*(u::GBArray{T}, x::V; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T}} =
     apply(*, u, x; mask, accum, desc)
 
 Base.:-(u::GBArray) = apply(-, u)

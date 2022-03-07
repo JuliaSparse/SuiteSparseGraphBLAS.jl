@@ -1,9 +1,11 @@
-const GBVecOrMat{T} = Union{AbstractGBVector{T}, AbstractGBMatrix{T}}
-const GBMatOrTranspose{T} = Union{AbstractGBMatrix{T}, Transpose{T, AbstractGBMatrix{T}}}
-const GBVecOrTranspose{T} = Union{AbstractGBVector{T}, Transpose{T,AbstractGBVector{T}}}
-const GBArray{T} = Union{GBVecOrTranspose{T}, GBMatOrTranspose{T}}
+const GBVecOrMat{T} = Union{<:AbstractGBVector{T}, <:AbstractGBMatrix{T}}
+const GBMatOrTranspose{T} = Union{<:AbstractGBMatrix{T}, Transpose{T, <:AbstractGBMatrix{T}}}
+const GBVecOrTranspose{T} = Union{<:AbstractGBVector{T}, Transpose{T, <:AbstractGBVector{T}}}
+const GBArray{T} = Union{<:GBVecOrTranspose{T}, <:GBMatOrTranspose{T}}
 
-const AbsGBArrayOrTranspose = Union{AbstractGBArray{T}, Transpose{T, AbstractGBArray{T}}}
+const GBMatrixOrTranspose{T} = Union{<:GBMatrix{T}, Transpose{T, <:GBMatrix{T}}}
+const GBVectorOrTranspose{T} = Union{<:GBVector{T}, Transpose{T, <:GBVector{T}}}
+const AbsGBArrayOrTranspose{T} = Union{<:AbstractGBArray{T}, Transpose{T, <:AbstractGBArray{T}}}
 
 const ptrtogbtype = IdDict{Ptr, GBType}()
 

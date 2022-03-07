@@ -47,7 +47,7 @@ function LinearAlgebra.kron(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, (size(A, 1) * size(B, 1), size(A, 2) * size(B, 2)); fill = _promotefill(A.fill, B.fill))
+    C = similar(A, t, (size(A, 1) * size(B, 1), size(A, 2) * size(B, 2)); fill = _promotefill(parent(A).fill, parent(B).fill))
     kron!(C, A, B, op; mask, accum, desc)
     return C
 end

@@ -112,7 +112,7 @@ for T ∈ valid_vec
             end
         end
         # Fix ambiguity
-        function Base.getindex(A::Transpose{$T, AbstractGBMatrix{$T}}, i::Int, j::Int)
+        function Base.getindex(A::Transpose{$T, <:AbstractGBMatrix{$T}}, i::Int, j::Int)
             return getindex(parent(A), j, i)
         end
     end
@@ -153,7 +153,7 @@ for T ∈ valid_vec
     func = Symbol(:GxB_Matrix_subassign_, suffix(T))
     @eval begin
         function _subassign(C::AbstractGBMatrix{$T}, x, I, ni, J, nj, mask, accum, desc)
-            @wraperror LibGraphBLAS.$func(C, mask, accum, x, I, ni, J, nj, desc)
+            @wraperror LibGraphBLAS.$func(gbpointer(C), mask, accum, x, I, ni, J, nj, desc)
             return x
         end
     end
@@ -213,7 +213,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
 function subassign!(
-    C::AbstractGBMatrix, A::AbstractGBVector, I, J;
+    C::AbstractGBMatrix, A::GBArray, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -222,8 +222,8 @@ function subassign!(
     I = decrement!(I)
     J = decrement!(J)
     # we know A isn't adjoint/transpose on input
-    desc = _handledescriptor(desc)
-    @wraperror LibGraphBLAS.GxB_Matrix_subassign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(A), I, ni, J, nj, desc)
+    desc = _handledescriptor(desc; in1=A)
+    @wraperror LibGraphBLAS.GxB_Matrix_subassign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
     increment!(I)
     increment!(J)
     return A
@@ -237,9 +237,17 @@ function subassign!(C::AbstractGBArray, x, I, J;
     I = decrement!(I)
     J = decrement!(J)
     desc = _handledescriptor(desc)
+    mask, accum = _handlenothings(mask, accum)
     _subassign(C, x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
+end
+
+function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
+    mask = nothing, accum = nothing, desc = nothing)
+    as(GBMatrix, x) do array
+        subassign!(C, array, I, J; mask, accum, desc)
+    end
 end
 
 """
@@ -447,7 +455,7 @@ for T ∈ valid_vec
         function SparseArrays.nonzeros(v::GBVector{$T})
             nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
             X = Vector{$T}(undef, nvals[])
-            wait(A)
+            wait(v)
             @wraperror LibGraphBLAS.$func(C_NULL, C_NULL, X, nvals, gbpointer(v))
             nvals[] == length(X) || throw(DimensionMismatch(""))
             return X

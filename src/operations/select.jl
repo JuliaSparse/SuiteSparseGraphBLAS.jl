@@ -2,7 +2,7 @@
 
 "In place version of `select`."
 function select!(
-    op::SelectUnion,
+    op,
     C::GBVecOrMat,
     A::GBArray,
     thunk = nothing;
@@ -10,6 +10,7 @@ function select!(
     accum = nothing,
     desc = nothing
 )
+    op = SelectOp(op)
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
     thunk === nothing && (thunk = C_NULL)
@@ -19,18 +20,6 @@ function select!(
     end
     @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, gbpointer(parent(A)), thunk, desc)
     return C
-end
-
-function select!(
-    op,
-    C::GBVecOrMat,
-    A::GBArray,
-    thunk = nothing;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return select!(SelectOp(op), C, A, thunk; mask, accum, desc)
 end
 
 function select!(op, A::GBArray, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
@@ -62,23 +51,18 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 - `GBArray`: The output matrix whose `eltype` is determined by `A` and `op`.
 """
 function select(
-    op::SelectUnion,
+    op,
     A::GBArray,
     thunk = nothing;
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
+    op = SelectOp(op)
     mask, accum = _handlenothings(mask, accum)
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C
-end
-function select(
-    op::Function, A::GBArray, thunk;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    select(SelectOp(op), A, thunk; mask, accum, desc)
 end
 
 LinearAlgebra.tril(A::GBArray, k::Integer = 0) = select(tril, A, k)

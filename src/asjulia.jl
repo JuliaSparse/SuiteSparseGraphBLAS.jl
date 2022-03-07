@@ -1,3 +1,18 @@
+function as(f::Function, type::Type{<:Union{GBMatrix, GBVector}}, A::AbstractArray{T}) where {T}
+    if !(A isa DenseVecOrMat)
+        A = A isa AbstractVector ? collect(A) : Matrix(A)
+    end
+    if type <:AbstractGBMatrix
+        array = type{T}(size(A, 1), size(A, 2))
+    else
+        array = type{T}(size(A, 1))
+    end
+    _packdensematrix!(array, A)
+    _makeshallow!(array)
+    return f(array)
+end
+
+
 function as(f::Function, type::Type{<:Union{Matrix, Vector}}, A::AbstractGBArray{T}; dropzeros=false, freeunpacked=false, nomodstructure = false) where {T}
     (type == Matrix && !(A isa AbstractMatrix)) && throw(ArgumentError("Cannot wrap $(typeof(A)) in a Matrix."))
     (type == Vector && !(A isa AbstractVector)) && throw(ArgumentError("Cannot wrap $(typeof(A)) in a Vector."))

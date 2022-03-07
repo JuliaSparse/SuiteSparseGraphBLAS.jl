@@ -81,15 +81,49 @@ function Base.copy(A::GBMatrix{T, F}) where {T, F}
     return GBMatrix{T, F}(C, A.fill)
 end
 
+
+# because of the fill kwarg we have to redo a lot of the Base.similar dispatch stack.
 function Base.similar(
-    A::GBMatrix{T}, ::Type{TNew},
-    dims::Union{Dims{1}, Dims{2}}; fill::F = A.fill
-) where {T, TNew, F}
+    A::GBMatrixOrTranspose{T}, ::Type{TNew} = T,
+    dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill = parent(A).fill
+) where {T, TNew, N}
     if dims isa Dims{1}
         return GBVector{TNew}(dims...; fill)
     else
         return GBMatrix{TNew}(dims...; fill)
     end
+end
+
+function Base.similar(A::GBMatrixOrTranspose{T}, dims::Tuple; fill = parent(A).fill) where {T}
+    return similar(A, T, dims; fill)
+end
+
+function Base.similar(
+    A::GBMatrixOrTranspose{T}, ::Type{TNew},
+    dims::Integer; fill = parent(A).fill
+) where {T, TNew}
+    return similar(A, TNew, (dims,); fill)
+end
+
+function Base.similar(
+    A::GBMatrixOrTranspose{T}, ::Type{TNew},
+    dim1::Integer, dim2::Integer; fill = parent(A).fill
+) where {T, TNew}
+    return similar(A, TNew, (dim1, dim2); fill)
+end
+
+function Base.similar(
+    A::GBMatrixOrTranspose{T},
+    dims::Integer; fill = parent(A).fill
+) where {T}
+    return similar(A, (dims,); fill)
+end
+
+function Base.similar(
+    A::GBMatrixOrTranspose{T},
+    dim1::Integer, dim2::Integer; fill = parent(A).fill
+) where {T}
+    return similar(A, (dim1, dim2); fill)
 end
 
 # TODO: FIXME

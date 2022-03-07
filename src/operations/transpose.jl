@@ -15,24 +15,15 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `desc::Union{Nothing, Descriptor} = DEFAULTDESC`
 """
 function gbtranspose!(
-    C::AbstractGBArray, A::AbstractGBArray;
+    C::AbstractGBArray, A::GBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
     accum = getaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GrB_transpose(gbpointer(C), mask, accum, gbpointer(A), desc)
+    @wraperror LibGraphBLAS.GrB_transpose(gbpointer(C), mask, accum, gbpointer(parent(A)), desc)
     return C
 end
-
-function gbtranspose!(
-    C::AbstractGBArray, A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-    ) where {T}
-    desc = _handledescriptor(desc; in1=A)
-    gbtranspose!(C, parent(A); mask, accum, desc)
-end
-
 """
     gbtranspose(A::GBMatrix; kwargs...)::GBMatrix
 

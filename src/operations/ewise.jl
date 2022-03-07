@@ -76,7 +76,7 @@ function emul(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, size(A); fill=_promotefill(A.fill, B.fill))
+    C = similar(A, t, size(A); fill=_promotefill(parent(A).fill, parent(B).fill))
     return emul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -159,7 +159,7 @@ function eadd(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, size(A); fill=_promotefill(A.fill, B.fill))
+    C = similar(A, t, size(A); fill=_promotefill(parent(A).fill, parent(B).fill))
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
@@ -243,7 +243,7 @@ function eunion(
     desc = nothing
 ) where {T, U}
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, size(A); fill=_promotefill(A.fill, B.fill))
+    C = similar(A, t, size(A); fill=_promotefill(parent(A).fill, parent(B).fill))
     return eunion!(C, A, α, B, β, op; mask, accum, desc)
 end
 

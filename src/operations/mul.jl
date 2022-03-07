@@ -86,7 +86,7 @@ function mul(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    fill = _promotefill(A.fill, B.fill)
+    fill = _promotefill(parent(A).fill, parent(B).fill)
     if A isa GBMatOrTranspose && B isa AbstractGBVector
         C = similar(A, t, size(A, 1); fill)
     elseif A isa GBVector && B isa GBMatOrTranspose
@@ -137,6 +137,28 @@ function Base.:*(
 )
     return mul(A, B, (+, *); mask, accum, desc)
 end
+
+# clear up some ambiguities:
+function Base.:*(
+    A::AbstractGBVector{T},
+    B::Transpose{T, <:AbstractGBVector{T}};
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where {T <: Real}
+    return mul(A, B, (+, *); mask, accum, desc)
+end
+
+function Base.:*(
+    A::Transpose{T, <:AbstractGBVector{T}},
+    B::AbstractGBVector{T};
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where {T <: Real}
+    return mul(A, B, (+, *); mask, accum, desc)
+end
+
 
 function Base.:*(
     A::VecOrMat,
