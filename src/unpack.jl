@@ -1,10 +1,10 @@
-function _unpackdensematrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
+function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
-        A.p,
+        gbpointer(A),
         values,
         Csize,
         isiso,
@@ -13,7 +13,7 @@ function _unpackdensematrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     return unsafe_wrap(Array{T}, Ptr{T}(values[]), size(A))
 end
 
-function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
+function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     desc = _handledescriptor(desc)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -25,7 +25,7 @@ function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
-        A.p,
+        gbpointer(A),
         colptr,
         rowidx,
         values,
@@ -49,8 +49,8 @@ function _unpackcscmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         vals = unsafe_wrap(Array{T}, Ptr{T}(values[]), nnonzeros)
         valsize = valsize[]
     end
-    colptr .+= 1
-    rowidx .+= 1
+    increment!(colptr)
+    increment!(rowidx)
     return colptr,
     colptrsize[],
     rowidx,
@@ -71,7 +71,7 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
-        A.p,
+        gbpointer(A),
         rowptr,
         colidx,
         values,
@@ -98,9 +98,9 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         vals = unsafe_wrap(Array{T}, Ptr{T}(values[]), nnonzeros)
         valsize = valsize[]
     end
+    increment!(rowptr)
+    increment!(colidx)
 
-    rowptr .+= 1
-    colidx .+= 1
     return rowptr,
     rowptrsize[],
     colidx,

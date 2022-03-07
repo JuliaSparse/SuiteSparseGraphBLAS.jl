@@ -1,6 +1,6 @@
 function cat!(C::GBArray, tiles::AbstractArray{T}) where {T<:GBArray}
     tiles = permutedims(tiles)
-    @wraperror LibGraphBLAS.GxB_Matrix_concat(C, tiles, size(tiles,2), size(tiles,1), C_NULL)
+    @wraperror LibGraphBLAS.GxB_Matrix_concat(gbpointer(C), gbpointer.(tiles), size(tiles,2), size(tiles,1), C_NULL)
     return C
 end
 
@@ -10,7 +10,15 @@ end
 Create a new array formed from the contents of `tiles` in the sense of a block matrix
 This doesn't exactly match the Julia notion of `cat`.
 """
-function Base.cat(tiles::VecOrMat{T}) where {T<:GBArray}
+function Base.cat(tiles::VecOrMat{<:Union{AbstractGBMatrix{T, F}, AbstractGBVector{T, F}}}) where {T, F}
+    fills = getproperty.(tiles, :fill)
+    if F <: Union{Nothing, Missing}
+        fill = F()
+    elseif all(y->y==fills[1], fills)
+        fill = fills[1]
+    else
+        fill = zero(F)
+    end
     ncols = sum(size.(tiles[1,:], 2))
     nrows = sum(size.(tiles[:, 1], 1))
     types = eltype.(tiles)
@@ -18,11 +26,9 @@ function Base.cat(tiles::VecOrMat{T}) where {T<:GBArray}
     for type ∈ types[2:end]
         t = promote_type(t, type)
     end
-    if tiles isa AbstractArray{<:GBVector} && ncols == 1
-        C = GBVector{t}(nrows)
-    else
-        C = GBMatrix{t}(nrows,ncols)
-    end
+    sz = (tiles isa AbstractArray && ncols == 1) ? (nrows,) : (nrows, ncols)
+
+    C = similar(tiles[1], t, sz; fill)
     return cat!(C, tiles)
 end
 

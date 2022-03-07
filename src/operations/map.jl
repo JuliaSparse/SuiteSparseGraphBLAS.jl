@@ -6,7 +6,7 @@ function apply!(
     desc = _handledescriptor(desc; in1=A)
     op = UnaryOp(op)(eltype(A))
     accum = getaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_apply(gbpointer(C), mask, accum, op, gbpointer(parent(A)), desc)
     return C
 end
 
@@ -55,7 +55,7 @@ function apply!(
     desc = _handledescriptor(desc; in2=A)
     op = BinaryOp(op)(eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(C, mask, accum, op, GBScalar(x), parent(A), desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(gbpointer(C), mask, accum, op, GBScalar(x), gbpointer(parent(A)), desc)
     return C
 end
 
@@ -82,7 +82,7 @@ function apply!(
     desc = _handledescriptor(desc; in1=A)
     op = BinaryOp(op)(eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp2nd(C, mask, accum, op, parent(A), GBScalar(x), desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp2nd(gbpointer(C), mask, accum, op, gbpointer(parent(A)), GBScalar(x), desc)
     return C
 end
 
@@ -128,16 +128,13 @@ function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, comple
     desc = Descriptor()
     structural && (desc.structural_mask=true)
     complement && (desc.complement_mask=true)
+    mask = mask isa Transpose || mask isa Adjoint ? copy(mask) : mask
     apply!(identity, C, A; mask, desc)
     return C
 end
 
 function mask!(A::GBArray, mask::GBArray; structural = false, complement = false)
-    desc = Descriptor()
-    structural && (desc.structural_mask=true)
-    complement && (desc.complement_mask=true)
-    apply!(identity, A, A; mask, desc)
-    return A
+    mask!(A, A, mask; structural, complement)
 end
 
 """

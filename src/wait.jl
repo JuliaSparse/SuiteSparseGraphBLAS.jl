@@ -1,6 +1,6 @@
-function Base.wait(A::GBArray)
+function Base.wait(A::AbstractGBArray)
     waitmode = LibGraphBLAS.GrB_MATERIALIZE
-    @wraperror LibGraphBLAS.GrB_Matrix_wait(A, waitmode)
+    @wraperror LibGraphBLAS.GrB_Matrix_wait(gbpointer(A), waitmode)
     return nothing
 end
 

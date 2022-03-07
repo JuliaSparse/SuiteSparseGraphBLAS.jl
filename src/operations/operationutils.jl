@@ -46,3 +46,16 @@ function ytype end
 Determine type of the output of a typed operator.
 """
 function ztype end
+
+_promotefill(::Nothing, ::Nothing) = nothing
+_promotefill(::Nothing, x) = nothing
+_promotefill(x, ::Nothing) = nothing
+_promotefill(::Missing, ::Missing) = missing
+_promotefill(::Missing, x) = missing
+_promotefill(x, ::Missing) = missing
+# I'd prefer that this be nothing on x != y. But for type inference reasons this seems better.
+# It's not a serious issue for several reasons.
+# The first is that GrB methods don't know anything about fill, they don't care.
+# The second is that it's free to setfill(A, nothing). Methods that are sensitive to this can enforce that.
+# And third a future GBGraph type can manage this for the user.
+_promotefill(x::X, y::Y) where {X, Y} = x == y ? (return promote_type(X, Y)(x)) : (return zero(promote_type(X, Y)))

@@ -6,6 +6,7 @@ proper format for GraphBLAS indexing. Should *not* be used for functions that ta
 scalar index like [`extractElement`].
 """
 function idx(I)
+    # TODO. Do better here, and minimize manual idx management in rest of library.
     if I == ALL
         return I, 0 #ni doesn't matter if I=ALL
     elseif I isa UnitRange
@@ -19,7 +20,7 @@ function idx(I)
             return [I.start, I.stop, -I.step + 1], LibGraphBLAS.GxB_BACKWARDS
         end
     elseif I isa Vector
-        return Vector{LibGraphBLAS.GrB_Index}(I), length(I) #Assume ni = length(I) otherwise
+        return reinterpret(LibGraphBLAS.GrB_Index, I), length(I) #Assume ni = length(I) otherwise
     elseif I isa Integer
         return [UInt64(I)], 1
     elseif I isa CartesianIndex{1}

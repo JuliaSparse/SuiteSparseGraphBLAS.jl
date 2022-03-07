@@ -1,3 +1,5 @@
+# TODO: update to modern op system.
+
 "In place version of `select`."
 function select!(
     op::SelectUnion,
@@ -15,7 +17,7 @@ function select!(
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
-    @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, parent(A), thunk, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, gbpointer(parent(A)), thunk, desc)
     return C
 end
 
@@ -62,7 +64,7 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 function select(
     op::SelectUnion,
     A::GBArray,
-    thunk::Union{GBScalar, Nothing, valid_union} = nothing;
+    thunk = nothing;
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -77,17 +79,6 @@ function select(
     mask = nothing, accum = nothing, desc = nothing
 )
     select(SelectOp(op), A, thunk; mask, accum, desc)
-end
-
-function select(
-    op::Function,
-    A::GBArray,
-    thunk::Union{GBScalar, Nothing, Number} = nothing;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return select(SelectOp(op), A, thunk; mask, accum, desc)
 end
 
 LinearAlgebra.tril(A::GBArray, k::Integer = 0) = select(tril, A, k)

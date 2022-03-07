@@ -55,6 +55,7 @@ include("operations/extract.jl")
 include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
+include("abstractgbarray.jl")
 include("random.jl")
 # 
 include("operations/operationutils.jl")
@@ -71,7 +72,6 @@ include("operations/sort.jl")
 # 
 include("print.jl")
 include("import.jl")
-include("export.jl")
 include("pack.jl")
 include("unpack.jl")
 include("options.jl")
@@ -88,7 +88,7 @@ include("chainrules/constructorrules.jl")
 #EXPERIMENTAL
 include("misc.jl")
 include("asjulia.jl")
-include("spmgb/sparsemat.jl")
+# include("spmgb/sparsemat.jl")
 include("mmread.jl")
 
 export SparseArrayCompat

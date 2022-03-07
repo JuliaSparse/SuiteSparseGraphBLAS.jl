@@ -15,14 +15,22 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `desc::Union{Nothing, Descriptor} = DEFAULTDESC`
 """
 function gbtranspose!(
-    C::GBVecOrMat, A::GBArray;
+    C::AbstractGBArray, A::AbstractGBArray;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
     accum = getaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GrB_transpose(C, mask, accum, parent(A), desc)
+    @wraperror LibGraphBLAS.GrB_transpose(gbpointer(C), mask, accum, gbpointer(A), desc)
     return C
+end
+
+function gbtranspose!(
+    C::AbstractGBArray, A::GBArray;
+    mask = nothing, accum = nothing, desc = nothing
+    ) where {T}
+    desc = _handledescriptor(desc; in1=A)
+    gbtranspose!(C, parent(A); mask, accum, desc)
 end
 
 """
@@ -39,10 +47,7 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 # Returns
 - `C::GBMatrix`: output matrix.
 """
-function gbtranspose(
-    A::GBArray;
-    mask = nothing, accum = nothing, desc = nothing
-)
+function gbtranspose(A::GBArray; mask = nothing, accum = nothing, desc = nothing)
     C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
     return C
@@ -53,25 +58,21 @@ function LinearAlgebra.transpose(A::GBArray)
 end
 
 function Base.copy!(
-    C::GBMatrix, A::LinearAlgebra.Transpose{<:Any, <:GBArray};
+    C::GBVecOrMat, A::LinearAlgebra.Transpose{<:Any, <:GBVecOrMat};
     mask = nothing, accum = nothing, desc = nothing
 )
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
 
-
-
 function Base.copy(
-    A::LinearAlgebra.Transpose{<:Any, <:GBArray};
+    A::LinearAlgebra.Transpose{<:Any, <:GBVecOrMat};
     mask = nothing, accum = nothing, desc = nothing
 )
     return gbtranspose(parent(A); mask, accum, desc)
 end
 
 #This is ok per the GraphBLAS Slack channel. Should change its effect on Complex input.
-LinearAlgebra.adjoint(A::GBMatrix) = transpose(A)
-
-LinearAlgebra.adjoint(v::GBVector) = transpose(v)
+LinearAlgebra.adjoint(A::GBVecOrMat) = transpose(A)
 
 #arrrrgh, type piracy.
 LinearAlgebra.transpose(::Nothing) = nothing

@@ -1,12 +1,14 @@
 function reduce!(
-    op, w::GBVector, A::GBMatOrTranspose;
+    op, w::AbstractGBVector, A::GBMatOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
     op = Monoid(op)(eltype(w))
     accum = getaccum(accum, eltype(w))
-    @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(Ptr{LibGraphBLAS.GrB_Vector}(w.p), mask, accum, op, parent(A), desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(
+        Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(w)), mask, accum, op, gbpointer(parent(A)), desc
+        )
     return w
 end
 
@@ -26,12 +28,12 @@ function Base.reduce(
     end
 
     if dims == 2 && !(A isa GBVecOrTranspose)
-        w = GBVector{typeout}(size(A, 1))
+        w = similar(A, typeout, size(A, 1))
         reduce!(op, w, A; desc, accum, mask)
         return w
     elseif dims == 1 && !(A isa GBVecOrTranspose)
         desc.transpose_input1 = true
-        w = GBVector{typeout}(size(A, 2))
+        w = similar(A, typeout, size(A, 2))
         reduce!(op, w, A; desc, accum, mask)
         return w
     elseif dims == (1,2) || dims == Colon() || A isa GBVecOrTranspose
@@ -45,7 +47,7 @@ function Base.reduce(
         op = Monoid(op)(typec)
         desc = _handledescriptor(desc; in1=A)
         accum = getaccum(accum, typec)
-        @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, parent(A), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)
         return c[]
     end
 end

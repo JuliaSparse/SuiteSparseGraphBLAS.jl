@@ -4,7 +4,7 @@
 In-place version of [kron](@ref).
 """
 function LinearAlgebra.kron!(
-    C::GBArray,
+    C::GBVecOrMat,
     A::GBArray,
     B::GBArray,
     op = *;
@@ -16,15 +16,7 @@ function LinearAlgebra.kron!(
     desc = _handledescriptor(desc; in1=A, in2=B)
     op = BinaryOp(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
-    if op isa TypedBinaryOperator
-        @wraperror LibGraphBLAS.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
-    elseif op isa TypedMonoid
-        @wraperror LibGraphBLAS.GrB_Matrix_kronecker_Monoid(C, mask, accum, op, parent(A), parent(B), desc)
-    elseif op isa TypedSemiring
-        @wraperror LibGraphBLAS.GrB_Matrix_kronecker_Semiring(C, mask, accum, op, parent(A), parent(B), desc)
-    else
-        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
-    end
+    @wraperror LibGraphBLAS.GxB_kron(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
     return C
 end
 
@@ -55,7 +47,7 @@ function LinearAlgebra.kron(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = GBMatrix{t}(size(A,1) * size(B, 1), size(A, 2) * size(B, 2))
+    C = similar(A, t, (size(A, 1) * size(B, 1), size(A, 2) * size(B, 2)); fill = _promotefill(A.fill, B.fill))
     kron!(C, A, B, op; mask, accum, desc)
     return C
 end
