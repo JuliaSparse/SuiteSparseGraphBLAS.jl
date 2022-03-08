@@ -44,7 +44,7 @@ function gbrand(
     if !(type <: Complex)
         hermitian = false
     end
-
+    # TODO: switch from A[i, j] = x, to COO->build
     for _ ∈ 1:round(Int64, nrows * ncols * density)
         i = rand(rng, 1:nrows)
         j = rand(rng, 1:ncols)

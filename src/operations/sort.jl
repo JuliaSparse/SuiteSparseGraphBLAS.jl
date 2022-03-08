@@ -24,7 +24,7 @@ function Base.sort!(
     end
     desc = _handledescriptor(desc; in1=A)
     desc.transpose_input1 = transpose
-    @wraperror LibGraphBLAS.GxB_Matrix_sort(C, P, op, parent(A), desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_sort(C, P, op, gbpointer(parent(A)), desc)
     return C
 end
 

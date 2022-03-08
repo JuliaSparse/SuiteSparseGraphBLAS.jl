@@ -1,3 +1,7 @@
+# TODO:
+# vxm shouldn't be done "magically"
+# Instead it should be required that we have AdjTrans{<:GBVector} = AdjTrans{<:GBVector} * GBArray.
+
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
     A::GBArray,
@@ -15,7 +19,7 @@ function LinearAlgebra.mul!(
     op = Semiring(op)(eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    @wraperror LibGraphBLAS.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
+    @wraperror LibGraphBLAS.GrB_mxm(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
     return C
 end
 
@@ -82,14 +86,15 @@ function mul(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    if A isa GBMatOrTranspose && B isa GBVector
-        C = GBVector{t}(size(A, 1))
+    fill = _promotefill(parent(A).fill, parent(B).fill)
+    if A isa GBMatOrTranspose && B isa AbstractGBVector
+        C = similar(A, t, size(A, 1); fill)
     elseif A isa GBVector && B isa GBMatOrTranspose
-        C = GBVector{t}(size(B, 2))
+        C = similar(A, t, size(B, 2); fill)
     elseif A isa Transpose{<:Any, <:GBVector} && B isa GBVector
-        C = GBVector{t}(1)
+        C = similar(A, t, 1; fill)
     else
-        C = GBMatrix{t}(size(A, 1), size(B, 2))
+        C = similar(A, t, (size(A, 1), size(B, 2)); fill)
     end
     mul!(C, A, B, op; mask, accum, desc)
     return C
@@ -132,6 +137,28 @@ function Base.:*(
 )
     return mul(A, B, (+, *); mask, accum, desc)
 end
+
+# clear up some ambiguities:
+function Base.:*(
+    A::AbstractGBVector{T},
+    B::Transpose{T, <:AbstractGBVector{T}};
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where {T <: Real}
+    return mul(A, B, (+, *); mask, accum, desc)
+end
+
+function Base.:*(
+    A::Transpose{T, <:AbstractGBVector{T}},
+    B::AbstractGBVector{T};
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where {T <: Real}
+    return mul(A, B, (+, *); mask, accum, desc)
+end
+
 
 function Base.:*(
     A::VecOrMat,

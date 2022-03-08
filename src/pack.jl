@@ -1,10 +1,10 @@
-function _packdensematrix!(A::GBVecOrMat{T}, M::DenseVecOrMat; desc = nothing) where {T}
+function _packdensematrix!(A::AbstractGBArray{T}, M::DenseVecOrMat; desc = nothing) where {T}
     desc = _handledescriptor(desc)
     Csize = length(A) * sizeof(T)
     values = Ref{Ptr{Cvoid}}(pointer(M))
     isuniform = false
     @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
-        A.p,
+        gbpointer(A),
         values,
         Csize,
         isuniform,
@@ -23,15 +23,15 @@ function _packcscmatrix!(
     rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index),
     valsize = length(values) * sizeof(T)
     ) where {T, Ti}
-    colptr .-= 1
-    rowidx .-= 1
+    decrement!(colptr)
+    decrement!(rowidx)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colptr))
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
     desc = _handledescriptor(desc)
 
     @wraperror LibGraphBLAS.GxB_Matrix_pack_CSC(
-        A,
+        gbpointer(A),
         colptr,
         rowidx,
         values,
@@ -55,15 +55,15 @@ function _packcsrmatrix!(
     colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index),
     valsize = length(values) * sizeof(T)
     ) where {T, Ti}
-    rowptr .-= 1
-    colidx .-= 1
+    decrement!(rowptr)
+    decrement!(colidx)
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowptr))
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
     desc = _handledescriptor(desc)
 
     @wraperror LibGraphBLAS.GxB_Matrix_pack_CSC(
-        A,
+        gbpointer(A),
         rowptr,
         colidx,
         values,
@@ -77,6 +77,6 @@ function _packcsrmatrix!(
     return A
 end
 
-function _makeshallow!(A::GBVecOrMat)
-    ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), A)
+function _makeshallow!(A::AbstractGBArray)
+    ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), gbpointer(A))
 end

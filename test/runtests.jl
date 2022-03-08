@@ -90,7 +90,7 @@ println("Testing SuiteSparseGraphBLAS.jl")
     include_test("chainrules/selectrules.jl")
     include_test("chainrules/constructorrules.jl")
     include_test("chainrules/maprules.jl")
-    include_test("spmgb/sparsemat.jl")
-    include_test("spmgb/higherorderfns.jl")
+    # include_test("spmgb/sparsemat.jl")
+    # include_test("spmgb/higherorderfns.jl")
     
 end

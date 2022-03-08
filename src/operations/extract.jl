@@ -54,7 +54,7 @@ Extract a submatrix or subvector from `A` into `C`.
 extract!
 
 function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, I, J;
+    C::AbstractGBMatrix, A::GBMatOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -65,28 +65,28 @@ function extract!(
     desc = _handledescriptor(desc; in1 = A)
     I = decrement!(I)
     J = decrement!(J)
-    @wraperror LibGraphBLAS.GrB_Matrix_extract(C, mask, getaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
     I isa Vector && increment!(I)
     J isa Vector && increment!(J)
     return C
 end
 
 function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, ::Colon, J;
+    C::AbstractGBMatrix, A::GBMatOrTranspose, ::Colon, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     return extract!(C, A, ALL, J; mask, accum, desc)
 end
 
 function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, I, ::Colon;
+    C::AbstractGBMatrix, A::GBMatOrTranspose, I, ::Colon;
     mask = nothing, accum = nothing, desc = nothing
 )
     return extract!(C, A, I, ALL; mask, accum, desc)
 end
 
 function extract!(
-    C::GBMatrix, A::GBMatOrTranspose, ::Colon, ::Colon;
+    C::AbstractGBMatrix, A::GBMatOrTranspose, ::Colon, ::Colon;
     mask = nothing, accum = nothing, desc = nothing
 )
     return extract!(C, A, ALL, ALL; mask, accum, desc)
@@ -155,14 +155,14 @@ function Base.getindex(
 end
 
 function extract!(
-    w::GBVector, u::GBVector, I;
+    w::AbstractGBVector, u::AbstractGBVector, I;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
     I = decrement!(I)
     desc = _handledescriptor(desc)
     mask === nothing && (mask = C_NULL)
-    @wraperror LibGraphBLAS.GrB_Matrix_extract(w, mask, getaccum(accum, eltype(w)), u, I, ni, UInt64[1], 1, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(w), mask, getaccum(accum, eltype(w)), gbpointer(u), I, ni, UInt64[1], 1, desc)
     I isa Vector && increment!(I)
     return w
 end

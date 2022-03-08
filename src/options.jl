@@ -57,7 +57,7 @@ function GxB_Global_Option_set(field, value)
     end
 end
 
-function GxB_Matrix_Option_get(A, field)
+function GxB_Matrix_Option_get(A::AbstractGBArray, field)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
         T = Cdouble
     elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
@@ -68,20 +68,20 @@ function GxB_Matrix_Option_get(A, field)
         (:GxB_Matrix_Option_get, libgraphblas),
         Cvoid,
         (LibGraphBLAS.GrB_Matrix, UInt32, Ptr{Cvoid}),
-        A,
+        gbpointer(A),
         field,
         v
     )
     return v[]
 end
 
-function GxB_Matrix_Option_set(A, field, value)
+function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
         ccall(
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
             (LibGraphBLAS.GrB_Matrix, UInt32, Cdouble),
-            A,
+            gbpointer(A),
             field,
             value
         )
@@ -90,58 +90,7 @@ function GxB_Matrix_Option_set(A, field, value)
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
             (LibGraphBLAS.GrB_Matrix, UInt32, UInt32),
-            A,
-            field,
-            value
-        )
-    end
-end
-
-function GxB_Vector_Option_get(A, field)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        T = Cdouble
-    elseif field ∈ [GxB_FORMAT]
-        T = UInt32
-    elseif field ∈ [GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
-        T = Cint
-    end
-    v = Ref{T}()
-    ccall(
-        (:GxB_Vector_Option_get, libgraphblas),
-        Cvoid,
-        (LibGraphBLAS.GrB_Vector, UInt32, Ptr{Cvoid}),
-        A,
-        field,
-        v
-    )
-    return v[]
-end
-
-function GxB_Vector_Option_set(A, field, value)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        ccall(
-            (:GxB_Vector_Option_set, libgraphblas),
-            Cvoid,
-            (LibGraphBLAS.GrB_Vector, UInt32, Cdouble),
-            A,
-            field,
-            value
-        )
-    elseif field ∈ [GxB_FORMAT]
-        ccall(
-            (:GxB_Vector_Option_set, libgraphblas),
-            Cvoid,
-            (LibGraphBLAS.GrB_Vector, UInt32, UInt32),
-            A,
-            field,
-            value
-        )
-    elseif field ∈ [GxB_SPARSITY_CONTROL]
-        ccall(
-            (:GxB_Vector_Option_set, libgraphblas),
-            Cvoid,
-            (LibGraphBLAS.GrB_Vector, UInt32, Cint),
-            A,
+            gbpointer(A),
             field,
             value
         )
@@ -160,28 +109,16 @@ function gbget(option)
     return GxB_Global_Option_get(option)
 end
 
-function gbset(A::GBMatrix, option, value)
+function gbset(A::AbstractGBArray, option, value)
     option = option_toconst(option)
     value = option_toconst(value)
     GxB_Matrix_Option_set(A, option, value)
     return nothing
 end
 
-function gbget(A::GBMatrix, option)
+function gbget(A::AbstractGBArray, option)
     option = option_toconst(option)
     return GxB_Matrix_Option_get(A, option)
-end
-
-function gbset(A::GBVector, option, value)
-    option = option_toconst(option)
-    value = option_toconst(value)
-    GxB_Matrix_Option_set(A.p, option, value)
-    return nothing
-end
-
-function gbget(A::GBVector, option)
-    option = option_toconst(option)
-    return GxB_Matrix_Option_get(A.p, option)
 end
 
 function format(A::GBVecOrMat)

@@ -30,7 +30,7 @@ function _importcscmat(
         jumbled,
         desc
     )
-    return A[]
+    return A
 end
 
 function _importcscmat(
@@ -43,20 +43,19 @@ function _importcscmat(
     desc = nothing,
     iso = false
 ) where {U, T}
-    # This section comes after some chatting with Keno Fisher.
-    # Cannot directly pass Julia arrays to GraphBLAS, it expects malloc'd arrays.
-    # Instead we'll malloc some memory for each of the three vectors, and unsafe_copyto!
-    # into them.
     colsize = LibGraphBLAS.GrB_Index(sizeof(colptr)) #Size of colptr vector
     rowsize = LibGraphBLAS.GrB_Index(sizeof(rowindices)) #Size of rowindex vector
     valsize = LibGraphBLAS.GrB_Index(sizeof(values)) #Size of nzval vector
     col = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), colsize)
-    unsafe_copyto!(col, Ptr{UInt64}(pointer(colptr .- 1)), length(colptr))
+    unsafe_copyto!(col, Ptr{UInt64}(pointer(decrement!(colptr))), length(colptr))
     row = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), rowsize)
-    unsafe_copyto!(row, Ptr{UInt64}(pointer(rowindices .- 1)), length(rowindices))
+    unsafe_copyto!(row, Ptr{UInt64}(pointer(decrement!(rowindices))), length(rowindices))
     val = ccall(:jl_malloc, Ptr{T}, (UInt, ), valsize)
     unsafe_copyto!(val, pointer(values), length(values))
-    return _importcscmat(m, n, col, colsize, row, rowsize, val, valsize; jumbled, desc, iso)
+    x = _importcscmat(m, n, col, colsize, row, rowsize, val, valsize; jumbled, desc, iso)
+    increment!(colptr)
+    increment!(rowindices)
+    return x
 end
 
 """
@@ -67,10 +66,11 @@ Create a GBMatrix from a SparseArrays.SparseMatrixCSC `S`.
 Note, that unlike other methods of construction, the resulting matrix will be held by column.
 Use `gbset(A, :format, :byrow)` to switch to row orientation.
 """
-function GBMatrix(S::SparseMatrixCSC)
-    return GBMatrix{eltype(S)}(_importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval))
+function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
+    return GBMatrix{T, F}(_importcscmat(S.m, S.n, S.colptr, S.rowval, S.nzval), fill)
 end
 
+# TODO: should be able to do better here.
 function GBMatrix(v::SparseVector)
     S = SparseMatrixCSC(v)
     return GBMatrix(S)
@@ -81,44 +81,8 @@ end
 
 Create a GBVector from SparseArrays sparse vector `v`.
 """
-function GBVector(v::SparseVector)
-    return GBVector{eltype(v)}(_importcscmat(v.n, 1, [1, length(v.nzind) + 1], v.nzind, v.nzval));
-end
-
-function _importcscvec(
-    n::Integer, vi::Ptr{UInt64}, vi_size, vx::Ptr{T}, vx_size, nnz;
-    jumbled::Bool = false, desc = nothing, iso = false
-) where {T}
-    v = Ref{LibGraphBLAS.GrB_Vector}()
-    n = LibGraphBLAS.GrB_Index(n)
-    desc = _handledescriptor(desc)
-    @wraperror LibGraphBLAS.GxB_Vector_import_CSC(
-        v,
-        gbtype(T),
-        n,
-        Ref{Ptr{LibGraphBLAS.GrB_Index}}(vi),
-        Ref{Ptr{Cvoid}}(vx),
-        vi_size,
-        vx_size,
-        iso,
-        nnz,
-        jumbled,
-        desc
-    )
-    return GBVector{T}(v[])
-end
-
-function _importcscvec(
-    n::Integer, vi::Vector{U}, vx::Vector{T}, nnz;
-    jumbled::Bool = false, desc = nothing, iso = false
-) where {U,T}
-    vi_size = LibGraphBLAS.GrB_Index(sizeof(vi))
-    vx_size = LibGraphBLAS.GrB_Index(sizeof(vx))
-    indices = ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), vi_size)
-    unsafe_copyto!(indices, Ptr{UInt64}(pointer(vi .- 1)), length(vi))
-    values = ccall(:jl_malloc, Ptr{T}, (UInt, ), vx_size)
-    unsafe_copyto!(values, pointer(vx), length(vx))
-    return _importcscvec(n, indices, vi_size, values, vx_size, nnz; jumbled, desc, iso)
+function GBVector(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    return GBVector{T, F}(_importcscmat(v.n, 1, [1, length(v.nzind) + 1], v.nzind, v.nzval), fill)
 end
 
 function _importcsrmat(
@@ -153,7 +117,7 @@ function _importcsrmat(
         jumbled,
         desc
     )
-    return GBMatrix{T}(A[])
+    return A
 end
 
 function _importcsrmat(
@@ -204,7 +168,7 @@ function _importdensematrix(
         iso,
         desc
     )
-    return C[]
+    return C
 end
 
 function _importdensematrix(
@@ -224,56 +188,24 @@ end
 
 Create a GBMatrix from a Julia dense matrix.
 """
-function GBMatrix(M::Union{AbstractVector, AbstractMatrix})
-    #if M isa AbstractVector && !(M isa Vector)
-    #    M = Vector(M)
-    #end
-    #if M isa AbstractMatrix && !(M isa Matrix)
-    #    M = Matrix(M)
-    #end
-    return GBMatrix{eltype(M)}(_importdensematrix(size(M, 1), size(M, 2), M))
+function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
+    if M isa AbstractVector && !(M isa Vector)
+        M = collect(M)
+    end
+    if M isa AbstractMatrix && !(M isa Matrix)
+        M = Matrix(M)
+    end
+    return GBMatrix{T, F}(_importdensematrix(size(M, 1), size(M, 2), M), fill)
 end
 
 """
-    GBVector(v::SparseVector)
+    GBVector(v::AbstractVector)
 
 Create a GBVector from a Julia dense vector.
 """
-function GBVector(v::AbstractVector)
+function GBVector(v::AbstractVector{T}; fill::F = nothing) where {T, F}
     if !(v isa Vector)
-        v = Vector(v)
+        v = collect(v)
     end
-    return GBVector{eltype(v)}(_importdensematrix(size(v, 1), 1, v))
-end
-
-function _importdensevec(
-    n::Integer, v::Ptr{T}, vsize;
-    desc = nothing, iso = false
-) where {T}
-    w = Ref{LibGraphBLAS.GrB_Vector}()
-    n = LibGraphBLAS.GrB_Index(n)
-    desc = _handledescriptor(desc)
-    @wraperror LibGraphBLAS.GxB_Vector_import_Full(
-        w,
-        gbtype(T),
-        n,
-        Ref{Ptr{Cvoid}}(v),
-        vsize,
-        iso,
-        desc
-    )
-    wout = GBVector{T}(w[])
-    return wout
-end
-
-function _importdensevec(
-    n::Integer, v::Vector{T};
-    desc = nothing, iso = false
-) where {T}
-    n = LibGraphBLAS.GrB_Index(n)
-    vsize = LibGraphBLAS.GrB_Index(sizeof(v))
-    # We have to do this instead of Libc.malloc because GraphBLAS will use :jl_free, not Libc.free
-    vx = ccall(:jl_malloc, Ptr{T}, (UInt, ), vsize)
-    unsafe_copyto!(vx, pointer(v), length(v))
-    return _importdensevec(n, vx, vsize; desc, iso)
+    return GBVector{T, F}(_importdensematrix(size(v, 1), 1, v), fill)
 end

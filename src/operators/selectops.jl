@@ -11,6 +11,8 @@ mutable struct SelectOp <: AbstractSelectOp
     end
 end
 
+SelectOp(op::SelectOp) = op
+
 const SelectUnion = Union{AbstractSelectOp, LibGraphBLAS.GxB_SelectOp}
 
 Base.unsafe_convert(::Type{LibGraphBLAS.GxB_SelectOp}, selectop::SelectOp) = selectop.p
