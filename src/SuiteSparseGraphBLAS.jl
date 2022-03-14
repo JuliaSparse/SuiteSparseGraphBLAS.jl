@@ -90,6 +90,7 @@ include("misc.jl")
 include("asjulia.jl")
 # include("spmgb/sparsemat.jl")
 include("mmread.jl")
+include("iterator.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS
