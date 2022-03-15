@@ -5,6 +5,7 @@ version = "0.5.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+HyperSparseMatrices = "c7efdb1c-7caa-4c7d-9b5e-9093f9323c7c"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
@@ -13,6 +14,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SSGraphBLAS_jll = "7ed9a814-9cab-54e9-8e9e-d9e95b4d61b1"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+StorageOrders = "e9177fbf-8fde-426c-9425-4eed0f22262a"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [compat]
@@ -22,3 +24,5 @@ Preferences = "1"
 SSGraphBLAS_jll = "6.2.1"
 SpecialFunctions = "2"
 julia = "1.6"
+HyperSparseMatrices = "0.2"
+StorageOrders = "0.2"
