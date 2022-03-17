@@ -10,13 +10,20 @@ function Serialization.serialize(s::AbstractSerializer, A::GBVecOrMat)
     return nothing
 end
 
-function Serialization.deserialize(s::AbstractSerializer, ::Type{GBMatrix{T, Tf}}) where {T, Tf}
+function _gbdeserialize(s::AbstractSerializer, ::Type{T}) where {T} # Only for internal use, we assume we've already got a GB<Something> here.
     fill = deserialize(s)
-    refA = Ref{LibGraphBLAS.GrB_Matrix}() # GrB will take care of size and such.
+    refA = Ref{LibGraphBLAS.GrB_Matrix}() # Everything is a GrB_Matrix in the end.
     v = deserialize(s)
     @wraperror LibGraphBLAS.GrB_Matrix_deserialize(refA, gbtype(T), v, LibGraphBLAS.GrB_Index(length(v)))
-    A = GBMatrix{T, Tf}(refA[], fill)
-    return A
+    return refA[], fill
+end
+
+
+function Serialization.deserialize(s::AbstractSerializer, ::Type{GBMatrix{T, Tf}}) where {T, Tf}
+    return GBMatrix{T, Tf}(_gbdeserialize(s, T)...)
+end
+function Serialization.deserialize(s::AbstractSerializer, ::Type{GBVector{T, Tf}}) where {T, Tf}
+    return GBVector{T, Tf}(_gbdeserialize(s, T)...)
 end
 
 function serialize_sizehint(A::GBVecOrMat)
