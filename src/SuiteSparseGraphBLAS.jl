@@ -21,6 +21,7 @@ using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
+using Serialization
 include("abstracts.jl")
 include("libutils.jl")
 
@@ -91,6 +92,7 @@ include("asjulia.jl")
 # include("spmgb/sparsemat.jl")
 include("mmread.jl")
 include("iterator.jl")
+include("serialization.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS
