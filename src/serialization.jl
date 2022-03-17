@@ -18,7 +18,6 @@ function _gbdeserialize(s::AbstractSerializer, ::Type{T}) where {T} # Only for i
     return refA[], fill
 end
 
-
 function Serialization.deserialize(s::AbstractSerializer, ::Type{GBMatrix{T, Tf}}) where {T, Tf}
     return GBMatrix{T, Tf}(_gbdeserialize(s, T)...)
 end
@@ -31,4 +30,3 @@ function serialize_sizehint(A::GBVecOrMat)
     @wraperror LibGraphBLAS.GrB_Matrix_serializeSize(sz, gbpointer(A))
     return sz[]
 end
-

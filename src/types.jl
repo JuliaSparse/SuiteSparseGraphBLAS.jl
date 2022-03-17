@@ -285,3 +285,8 @@ end
 # However, if one (for some reason) wraps another AbstractGBArray
 # this should be overloaded.
 gbpointer(A::AbstractGBArray) = A.p[]
+
+# We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
+# This should ideally work out fine. a GBMatrix or GBVector won't have 
+StorageOrders.storageorder(A::AbstractGBMatrix) = gbget(A, :format) == BYCOL ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
+StorageOrders.storageorder(A::AbstractGBVector) = ColMajor()

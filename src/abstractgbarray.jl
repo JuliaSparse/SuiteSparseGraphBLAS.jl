@@ -525,3 +525,27 @@ function Base.setindex!(
     subassign!(u, x, I; mask, accum, desc)
     return nothing
 end
+
+function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback printing
+    gxbprint(io, A)
+end
+
+function Base.getindex(
+    A::AbstractGBMatrix, i, ::Colon;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return extract(A, i, ALL; mask, accum, desc)
+end
+function Base.getindex(
+    A::AbstractGBMatrix, ::Colon, ::Colon;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return extract(A, ALL, ALL; mask, accum, desc)
+end
+
+function Base.getindex(
+    A::AbstractGBMatrix, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return extract(A, i, j; mask, accum, desc)
+end
