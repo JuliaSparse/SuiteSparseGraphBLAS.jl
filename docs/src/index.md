@@ -1,7 +1,8 @@
 # SuiteSparseGraphBLAS.jl
 
-SuiteSparseGraphBLAS.jl is a package for sparse linear algebra on arbitrary semirings, with a particular focus on graph computations.
-It aims to provide a Julian wrapper over Tim Davis' SuiteSparse:GraphBLAS reference implementation of the GraphBLAS C specification.
+Fast sparse linear algebra is an essential part of the scientific computing toolkit. Outside of the usual applications, like differential equations, sparse linear algebra provides an elegant way to express graph algorithms on adjacency and incidence matrices. The GraphBLAS standard specifies a set of operations for computing sparse matrix graph algorithm in a vein similar to the BLAS or LAPACK standards.
+
+SuiteSparseGraphBLAS.jl is a blazing fast package for shared memory sparse matrix operations which wraps Tim Davis' SuiteSparse:GraphBLAS implementation of the GraphBLAS C specification.
 
 # Installation
 
@@ -18,9 +19,9 @@ using Pkg
 Pkg.add("SuiteSparseGraphBLAS")
 ```
 
-The SuiteSparse:GraphBLAS binary is installed automatically as `SSGraphBLAS_jll`.
+The SuiteSparse:GraphBLAS binary, SSGraphBLAS_jll.jl, is installed automatically.
 
-Then in the REPL or script `using SuiteSparseGraphBLAS` will import the package.
+Then in the REPL or script `using SuiteSparseGraphBLAS` will make the package available for use.
 
 # Introduction
 
@@ -28,16 +29,17 @@ GraphBLAS harnesses the well-understood duality between graphs and matrices.
 Specifically a graph can be represented by the [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix) and/or [incidence matrix](https://en.wikipedia.org/wiki/Incidence_matrix), or one of the many variations on those formats. 
 With this matrix representation in hand we have a method to operate on the graph with linear algebra.
 
-Below is an example of the adjacency matrix of a directed graph, and finding the neighbors of a single vertex using basic matrix-vector multiplication on the arithemtic semiring.
+One important algorithm that maps well to linear algebra is Breadth First Search (BFS). 
+A simple BFS is just a matrix-vector multiplication, where `A` is the adjacency matrix and `v` is the set of source nodes, as illustrated below.
 
 ![BFS and Adjacency Matrix](./assets/AdjacencyBFS.png)
 
 ## GBArrays
 
-The core SuiteSparseGraphBLAS.jl array types are `GBVector` and `GBMatrix` which are subtypes `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively.
+The core SuiteSparseGraphBLAS.jl array types are `GBVector` and `GBMatrix` which are subtypes `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively. There are also several auxiliary array types that restrict one or more behaviors, like row or column orientation. More info on those types can be found ### HERE ###
 
 !!! note "GBArray"
-    These docs will often refer to the `GBArray` type, which is the union of `GBVector`, `GBMatrix` and their lazy Transpose objects.
+    These docs will often refer to the `GBArray` type, which is the union of `AbstractGBVector`, `AbstractGBMatrix` and their lazy Transpose objects.
 
 ```@setup intro
 using SuiteSparseGraphBLAS
@@ -59,7 +61,8 @@ Here we can already see several differences compared to `SparseArrays.SparseMatr
 The first is that `A` is stored in `hypersparse` format, and by row.
 
 `GBArrays` are (technically) opaque to the user in order to allow the library author to choose the best storage format.\
-GraphBLAS takes advantage of this by storing matrices in one of four formats: `dense`, `bitmap`, `sparse-compressed`, or `hypersparse-compressed`; and in either `row` or `column` major orientation.
+GraphBLAS takes advantage of this by storing matrices in one of four formats: `dense`, `bitmap`, `sparse-compressed`, or `hypersparse-compressed`; and in either `row` or `column` major orientation.\
+Different matrices may be better suited to storage in one of those formats, and certain operations may perform differently on `row` or `column` major matrices.
 
 !!! warning "Default Orientation"
     The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
@@ -72,31 +75,38 @@ Information about storage formats, orientation, conversion, construction and mor
 The second difference is that a `GBArray` doesn't assume the fill-in value of a sparse array.\
 Since `A[1,5]` isn't stored in the matrix (it's been "compressed" out), we return `nothing`.\
 
-This matches the GraphBLAS spec, where `NO_VALUE` is returned, rather than `zero(eltype(A))`. 
+This better matches the GraphBLAS spec, where `NO_VALUE` is returned, rather than `zero(eltype(A))`. This is better suited to graph algorithms where returning `zero(eltype(A))` might imply the presence of an edge with weight `zero`.\
+However this behavior can be changed with the [`setfill!`](@ref) and [`setfill`](@ref) functions.
+
+```@repl intro
+A[1, 1] === nothing
+
+B = setfill(A, 0) # no-copy alias
+B[1, 1]
+```
 
 An empty matrix and vector won't do us much good, so let's see how to construct the matrix and vector from the graphic above. Both `A` and `v` below are constructed from coordinate format or COO.
 
 ```@repl intro
-#GBMatrix(I::Vector{<:Integer}, J::Vector{<:Integer}, V::Vector{T})
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
 
-#GBVector(I::Vector{<:Integer}, V::Vector{T})
 v = GBVector([4], [10])
 ```
+
 ## GraphBLAS Operations
 
 The complete documentation of supported operations can be found in [Operations](@ref).
-GraphBLAS operations are, where possible, methods of existing Julia functions  listed in the third column.
+GraphBLAS operations are, where possible, methods of existing Julia functions listed in the third column.
 
 | GraphBLAS           | Operation                                                        | Julia                                      |
 |:--------------------|:----------------------------------------:                        |----------:                                 |
 |`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul[!]` or `*`                             |
 |`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``               |`emul[!]` or `.` broadcasting               |
 |`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``               |`eadd[!]`                                   |
-|`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex` or `A[i...]`       |
-|`subassign`          |``\bf C (I,J) \langle M \rangle = C(I,J) \odot A``                |`subassign[!]`, `setindex!` or `A[i...]=3.5`|
+|`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex`       |
+|`subassign`          |``\bf C (I,J) \langle M \rangle = C(I,J) \odot A``                |`subassign[!]` or `setindex!`|
 |`assign`             |``\bf C \langle M \rangle (I,J) = C(I,J) \odot A``                |`assign[!]`                                 |
-|`apply`              |``{\bf C \langle M \rangle = C \odot} f{\bf (A)}``                |`map[!]` or `.` broadcasting                |
+|`apply`              |``{\bf C \langle M \rangle = C \odot} f{\bf (A)}``                |`apply[!]`, `map[!]` or `.` broadcasting                |
 |                     |``{\bf C \langle M \rangle = C \odot} f({\bf A},y)``              |                                            |
 |                     |``{\bf C \langle M \rangle = C \odot} f(x,{\bf A})``              |                                            |
 |`select`             |``{\bf C \langle M \rangle = C \odot} f({\bf A},k)``              |`select[!]`                                 |
@@ -105,41 +115,53 @@ GraphBLAS operations are, where possible, methods of existing Julia functions  l
 |`transpose`          |``\bf C \langle M \rangle = C \odot A^{\sf T}``                   |`gbtranspose[!]`, lazy: `transpose`, `'`    |
 |`kronecker`          |``\bf C \langle M \rangle = C \odot \text{kron}(A, B)``           |`kron[!]`                                   |
 
-where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumulating into ``\bf C``, and ``\otimes`` and ``\oplus`` are a binary operation and commutative monoid respectively. 
+where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumulating into ``\bf C``, and ``\otimes`` and ``\oplus`` are a binary operation and commutative monoid respectively. ``f`` is either a unary or binary operator. 
 
 ## GraphBLAS Operators
+
+Many GraphBLAS operations take additional arguments called *operators*. In the table above operators are denoted by ``\odot``, ``\otimes``, and ``\oplus`` and ``f``, and they behave similar to the function argument of `map`. A closer look at operators can be found in [Operators](@ref)
 
 A GraphBLAS operator is a unary or binary function, the commutative monoid form of a binary function,
 or a semiring, made up of a binary op and a commutative monoid.
 SuiteSparse:GraphBLAS ships with many of the common unary and binary operators as built-ins,
 along with monoids and semirings built commonly used in graph algorithms. 
-In most cases these operators can be used with familiar Julia syntax and functions, which then map to
-objects found in the submodules below:
+These built-in operators are *fast*, and should be used where possible. However, users are also free to provide their own functions as operators when necessary.
 
-- `UnaryOps` such as `SIN`, `SQRT`, `ABS`
-- `BinaryOps` such as `GE`, `MAX`, `POW`, `FIRSTJ`
-- `Monoids` such as `PLUS_MONOID`, `LXOR_MONOID`
-- `Semirings` such as `PLUS_TIMES` (the arithmetic semiring), `MAX_PLUS` (a tropical semiring), `PLUS_PLUS`, ...
+SuiteSparseGraphBLAS.jl will *mostly* take care of operators behind the scenes, and in most cases users should pass in normal functions like `+` and `sin`. For example:
 
-The above objects should, in almost all cases, be used by instead passing the equivalent functions, `sin` for `SIN`, `+` for `PLUS_MONOID` etc.
+```@repl intro
+emul(A, A, ^) # elementwise exponent
 
-A user may choose to call a function in multiple different forms: `A .+ B`, `eadd(A, B, +)`,
-or `eadd(A, B, BinaryOps.PLUS)`. 
+map(sin, A)
+```
 
-Functions which only accept monoids like `reduce` will automatically find the correct monoid,
-so a call to `reduce(+, A)`, will lower to `reduce(Monoids.PLUS_MONOID, A)`.
+Broadcasting functionality is also supported, `A .^ A` will lower to `emul(A, A, ^)`, and `sin.(A)` will lower to `map(sin, A)`.
 
-Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)`,
-`mul(A, B, (max, +))`, or `mul(A, B, Semirings.MAX_PLUS)`. 
+Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)` or
+`mul(A, B, (max, +))`.
+
+We can also use functions that are not already built into SuiteSparseGraphBLAS.jl:
+
+```@repl intro
+M = GBMatrix([[1,2] [3,4]])
+increment(x) = x + 1
+map(increment, M)
+```
+
+Unfortunately this has a couple problems. The first is that it's slow.\
+Compared to `A .+ 1` which lowers to `apply(+, A, 1)` the `map` call above is ~2.5x slower due to function pointer overhead.
+
+The second is that everytime we call `map(increment, M)` we will be re-creating the function pointer for `increment` matched to the type of `M`.\
+To avoid this there's a convenience macro [`@unop`](@ref) which will provide a permanent constant which is used every time `increment` is called with a GraphBLAS operation. See [Operators](@ref) for more information.
 
 !!! warning "Performance of User Defined Functions"
     Operators which are not already built-in are automatically constructed using function pointers when called. 
     Note, however, that their performance is significantly degraded compared to built-in operators,
-    and where possible user code should avoid this capability.
+    and where possible user code should avoid this capability. See [Operators](@ref).
 
 ## Example
 
-Here is an example of two different methods of triangle counting with GraphBLAS.
+Here is a quick example of two different methods of triangle counting with GraphBLAS.
 The methods are drawn from the LAGraph [repo](https://github.com/GraphBLAS/LAGraph).
 
 Input `A` must be a square, symmetric matrix with any element type.

@@ -549,3 +549,13 @@ function Base.getindex(
 )
     return extract(A, i, j; mask, accum, desc)
 end
+
+function setfill!(A::AbstractGBArray, x)
+    A.fill = x
+end
+
+function setfill(A::AbstractGBArray, x) # aliasing form.
+    B = similar(A; fill=x)
+    B.p = A.p
+    return B
+end

@@ -2,7 +2,7 @@ module Semirings
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes,
-    Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, Monoids.Monoid, BinaryOps.second, BinaryOps.rminus,
+    Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, Monoids.Monoid, BinaryOps.second, BinaryOps.rminus, BinaryOps.pair,
     BinaryOps.iseq, BinaryOps.isne, BinaryOps.isgt, BinaryOps.islt, BinaryOps.isge, BinaryOps.isle, BinaryOps.∨,
     BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.fmod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
     BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
@@ -112,7 +112,7 @@ end
 # (I..., F...)
 @rig (min, first) GxB_MIN_FIRST IF=>IF
 @rig (min, second) GxB_MIN_SECOND IF=>IF
-@rig (min, one) GxB_MIN_PAIR IF=>IF
+@rig (min, pair) GxB_MIN_PAIR IF=>IF
 @rig (min, min) GxB_MIN_MIN IF=>IF
 @rig (min, max) GxB_MIN_MAX IF=>IF
 @rig (min, +) GxB_MIN_PLUS IF=>IF
@@ -133,7 +133,7 @@ end
 
 @rig (max, first) GxB_MAX_FIRST IF=>IF
 @rig (max, second) GxB_MAX_SECOND IF=>IF
-@rig (max, one) GxB_MAX_PAIR IF=>IF
+@rig (max, pair) GxB_MAX_PAIR IF=>IF
 @rig (max, min) GxB_MAX_MIN IF=>IF
 @rig (max, max) GxB_MAX_MAX IF=>IF
 @rig (max, +) GxB_MAX_PLUS IF=>IF
@@ -154,7 +154,7 @@ end
 
 @rig (+, first) GxB_PLUS_FIRST IF=>IF
 @rig (+, second) GxB_PLUS_SECOND IF=>IF
-@rig (+, one) GxB_PLUS_PAIR IF=>IF
+@rig (+, pair) GxB_PLUS_PAIR IF=>IF
 @rig (+, min) GxB_PLUS_MIN IF=>IF
 @rig (+, max) GxB_PLUS_MAX IF=>IF
 @rig (+, +) GxB_PLUS_PLUS IF=>IF
@@ -175,7 +175,7 @@ end
 
 @rig (*, first) GxB_TIMES_FIRST IF=>IF
 @rig (*, second) GxB_TIMES_SECOND IF=>IF
-@rig (*, one) GxB_TIMES_PAIR IF=>IF
+@rig (*, pair) GxB_TIMES_PAIR IF=>IF
 @rig (*, min) GxB_TIMES_MIN IF=>IF
 @rig (*, max) GxB_TIMES_MAX IF=>IF
 @rig (*, +) GxB_TIMES_PLUS IF=>IF
@@ -196,7 +196,7 @@ end
 
 @rig (any, first) GxB_ANY_FIRST IF=>IF
 @rig (any, second) GxB_ANY_SECOND IF=>IF
-@rig (any, one) GxB_ANY_PAIR IF=>IF
+@rig (any, pair) GxB_ANY_PAIR IF=>IF
 @rig (any, min) GxB_ANY_MIN IF=>IF
 @rig (any, max) GxB_ANY_MAX IF=>IF
 @rig (any, +) GxB_ANY_PLUS IF=>IF
@@ -255,7 +255,7 @@ end
 
 @rig (∧, first) GxB_LAND_FIRST Bool=>Bool
 @rig (∧, second) GxB_LAND_SECOND Bool=>Bool
-@rig (∧, one) GxB_LAND_PAIR Bool=>Bool
+@rig (∧, pair) GxB_LAND_PAIR Bool=>Bool
 @rig (∧, ∨) GxB_LAND_LOR Bool=>Bool
 @rig (∧, ∧) GxB_LAND_LAND Bool=>Bool
 @rig (∧, lxor) GxB_LAND_LXOR Bool=>Bool
@@ -267,7 +267,7 @@ end
 
 @rig (∨, first) GxB_LOR_FIRST Bool=>Bool
 @rig (∨, second) GxB_LOR_SECOND Bool=>Bool
-@rig (∨, one) GxB_LOR_PAIR Bool=>Bool
+@rig (∨, pair) GxB_LOR_PAIR Bool=>Bool
 @rig (∨, ∨) GxB_LOR_LOR Bool=>Bool
 @rig (∨, ∧) GxB_LOR_LAND Bool=>Bool
 @rig (∨, lxor) GxB_LOR_LXOR Bool=>Bool
@@ -279,7 +279,7 @@ end
 
 @rig (lxor, first) GxB_LXOR_FIRST Bool=>Bool
 @rig (lxor, second) GxB_LXOR_SECOND Bool=>Bool
-@rig (lxor, one) GxB_LXOR_PAIR Bool=>Bool
+@rig (lxor, pair) GxB_LXOR_PAIR Bool=>Bool
 @rig (lxor, ∨) GxB_LXOR_LOR Bool=>Bool
 @rig (lxor, ∧) GxB_LXOR_LAND Bool=>Bool
 @rig (lxor, lxor) GxB_LXOR_LXOR Bool=>Bool
@@ -291,7 +291,7 @@ end
 
 @rig (==, first) GxB_EQ_FIRST Bool=>Bool
 @rig (==, second) GxB_EQ_SECOND Bool=>Bool
-@rig (==, one) GxB_EQ_PAIR Bool=>Bool
+@rig (==, pair) GxB_EQ_PAIR Bool=>Bool
 @rig (==, ∨) GxB_EQ_LOR Bool=>Bool
 @rig (==, ∧) GxB_EQ_LAND Bool=>Bool
 @rig (==, lxor) GxB_EQ_LXOR Bool=>Bool
@@ -303,7 +303,7 @@ end
 
 @rig (any, first) GxB_ANY_FIRST Bool=>Bool
 @rig (any, second) GxB_ANY_SECOND Bool=>Bool
-@rig (any, one) GxB_ANY_PAIR Bool=>Bool
+@rig (any, pair) GxB_ANY_PAIR Bool=>Bool
 @rig (any, ∨) GxB_ANY_LOR Bool=>Bool
 @rig (any, ∧) GxB_ANY_LAND Bool=>Bool
 @rig (any, lxor) GxB_ANY_LXOR Bool=>Bool
@@ -316,7 +316,7 @@ end
 # (PLUS, TIMES, ANY) × (FIRST, SECOND, PAIR(ONEB), PLUS, MINUS, RMINUS, TIMES, DIV, RDIV) × Z
 @rig (+, first) GxB_PLUS_FIRST Z=>Z
 @rig (+, second) GxB_PLUS_SECOND Z=>Z
-@rig (+, one) GxB_PLUS_PAIR Z=>Z
+@rig (+, pair) GxB_PLUS_PAIR Z=>Z
 @rig (+, +) GxB_PLUS_PLUS Z=>Z
 @rig (+, -) GxB_PLUS_MINUS Z=>Z
 @rig (+, rminus) GxB_PLUS_RMINUS Z=>Z
@@ -326,7 +326,7 @@ end
 
 @rig (*, first) GxB_TIMES_FIRST Z=>Z
 @rig (*, second) GxB_TIMES_SECOND Z=>Z
-@rig (*, one) GxB_TIMES_PAIR Z=>Z
+@rig (*, pair) GxB_TIMES_PAIR Z=>Z
 @rig (*, +) GxB_TIMES_PLUS Z=>Z
 @rig (*, -) GxB_TIMES_MINUS Z=>Z
 @rig (*, rminus) GxB_TIMES_RMINUS Z=>Z
@@ -336,7 +336,7 @@ end
 
 @rig (any, first) GxB_ANY_FIRST Z=>Z
 @rig (any, second) GxB_ANY_SECOND Z=>Z
-@rig (any, one) GxB_ANY_PAIR Z=>Z
+@rig (any, pair) GxB_ANY_PAIR Z=>Z
 @rig (any, +) GxB_ANY_PLUS Z=>Z
 @rig (any, -) GxB_ANY_MINUS Z=>Z
 @rig (any, rminus) GxB_ANY_RMINUS Z=>Z
