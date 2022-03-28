@@ -63,7 +63,7 @@ end
 
 Create a GBMatrix from a SparseArrays.SparseMatrixCSC `S`.
 
-Note, that unlike other methods of construction, the resulting matrix will be held by column.
+Note, that unlike most other methods of construction, the resulting matrix will be held by column.
 Use `gbset(A, :format, :byrow)` to switch to row orientation.
 """
 function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
@@ -187,6 +187,8 @@ end
     GBMatrix(M::Matrix)
 
 Create a GBMatrix from a Julia dense matrix.
+Note, that unlike other methods of construction, the resulting matrix will be held by column.
+Use `gbset(A, :format, :byrow)` to switch to row orientation.
 """
 function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
     if M isa AbstractVector && !(M isa Vector)

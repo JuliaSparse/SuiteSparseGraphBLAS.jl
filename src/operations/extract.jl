@@ -4,6 +4,8 @@
 Determine the size of the output for an operation like extract or range-based indexing.
 """
 function _outlength(A, I, J)
+    I isa Colon && (I = ALL)
+    J isa Colon && (J = ALL)
     if I == ALL
         Ilen = size(A, 1)
     else
@@ -18,6 +20,7 @@ function _outlength(A, I, J)
 end
 
 function _outlength(u, I)
+    I isa Colon && (I = ALL)
     if I == ALL
         wlen = size(u)
     else
@@ -70,28 +73,6 @@ function extract!(
     J isa Vector && increment!(J)
     return C
 end
-
-function extract!(
-    C::AbstractGBMatrix, A::GBMatOrTranspose, ::Colon, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(C, A, ALL, J; mask, accum, desc)
-end
-
-function extract!(
-    C::AbstractGBMatrix, A::GBMatOrTranspose, I, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(C, A, I, ALL; mask, accum, desc)
-end
-
-function extract!(
-    C::AbstractGBMatrix, A::GBMatOrTranspose, ::Colon, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(C, A, ALL, ALL; mask, accum, desc)
-end
-
 """
     extract(A::GBMatOrTranspose, I, J; kwargs...)::GBMatrix
     extract(A::GBVector, I; kwargs...)::GBVector
@@ -126,34 +107,6 @@ function extract(
     return extract!(C, A, I, J; mask, accum, desc)
 end
 
-function extract(
-    A::GBMatOrTranspose, ::Colon, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, J; mask, accum, desc)
-end
-
-function extract(
-    A::GBMatOrTranspose, I, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, I, ALL; mask, accum, desc)
-end
-
-function extract(
-    A::GBMatOrTranspose, ::Colon, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, ALL; mask, accum, desc)
-end
-
-function Base.getindex(
-    A::GBMatOrTranspose, ::Colon, j;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, j; mask, accum, desc)
-end
-
 function extract!(
     w::AbstractGBVector, u::AbstractGBVector, I;
     mask = nothing, accum = nothing, desc = nothing
@@ -167,13 +120,6 @@ function extract!(
     return w
 end
 
-function extract!(
-    w::GBVector, u::GBVector, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract!(w, u, ALL; mask, accum, desc)
-end
-
 function extract(
     u::GBVector, I;
     mask = nothing, accum = nothing, desc = nothing
@@ -181,8 +127,4 @@ function extract(
     wlen = _outlength(u, I)
     w = similar(u, wlen)
     return extract!(w, u, I; mask, accum, desc)
-end
-
-function extract(u::GBVector, ::Colon; mask = nothing, accum = nothing, desc = nothing)
-    extract(u, ALL; mask, accum, desc)
 end

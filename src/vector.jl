@@ -19,7 +19,7 @@ GBVector{T}(nrows::Base.OneTo; fill = nothing) where {T} =
 GBVector{T}(nrows::Tuple{Base.OneTo,}; fill = nothing) where {T} = GBVector{T}(first(nrows); fill)
 
 """
-    GBVector(I::AbstractVector, X::AbstractVector{T})
+    GBVector(I::AbstractVector, X::AbstractVector{T}; fill = nothing)
 
 Create a GBVector from a vector of indices `I` and a vector of values `X`.
 """
@@ -33,7 +33,7 @@ end
 
 #iso valued constructors.
 """
-    GBVector(I, x; nrows = maximum(I))
+    GBVector(I, x; nrows = maximum(I) fill = nothing)
 
 Create an `n` length GBVector `v` such that `M[I[k]] = x`.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
@@ -47,7 +47,7 @@ function GBVector(I::AbstractVector{U}, x::T;
 end
 
 """
-    GBVector(n, x)
+    GBVector(n, x; fill = nothing)
 
 Create an `n` length dense GBVector `v` such that M[I[k]] = x.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for

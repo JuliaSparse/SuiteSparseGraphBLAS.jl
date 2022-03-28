@@ -19,7 +19,7 @@ GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}; fill = nothing) where {T} =
     GBMatrix{T}(size[1].stop, size[2].stop; fill)
 
 """
-    GBMatrix(I, J, X; combine = +, nrows = maximum(I), ncols = maximum(J))
+    GBMatrix(I, J, X; combine = +, nrows = maximum(I), ncols = maximum(J); fill = nothing)
 
 Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = X[k]. The combine function defaults
 to `|` for booleans and `+` for nonbooleans.
@@ -38,7 +38,7 @@ end
 
 #iso constructors
 """
-    GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J))
+    GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J); fill = nothing)
 
 Create an nrows x ncols GBMatrix M such that M[I[k], J[k]] = x.
 The resulting matrix is "iso-valued" such that it only stores `x` once rather than once for

@@ -241,6 +241,7 @@ function subassign!(C::AbstractGBArray, x, I, J;
     _subassign(C, x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
+    return C
 end
 
 function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
@@ -294,39 +295,22 @@ end
 function assign!(C::AbstractGBArray, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
+    I, ni = idx(I)
+    J, nj = idx(J)
     I = decrement!(I)
     J = decrement!(J)
     desc = _handledescriptor(desc)
     _assign(gbpointer(C), x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-end
-
-# setindex! uses subassign rather than assign.
-function Base.setindex!(
-    C::AbstractGBMatrix, A, ::Colon, J;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    subassign!(C, A, ALL, J; mask, accum, desc)
-end
-function Base.setindex!(
-    C::AbstractGBMatrix, A, I, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    subassign!(C, A, I, ALL; mask, accum, desc)
-end
-function Base.setindex!(
-    C::AbstractGBMatrix, A, ::Colon, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    subassign!(C, A, ALL, ALL; mask, accum, desc)
+    return C
 end
 
 function Base.setindex!(
     C::AbstractGBMatrix,
     A,
-    I::Union{Vector, UnitRange, StepRange, Number},
-    J::Union{Vector, UnitRange, StepRange, Number};
+    I::Union{Vector, UnitRange, StepRange, Number, Colon},
+    J::Union{Vector, UnitRange, StepRange, Number, Colon};
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -504,13 +488,6 @@ function assign!(w::AbstractGBVector{T, F}, u, I; mask = nothing, accum = nothin
     return assign!(GBMatrix{T, F}(w.p, w.fill), u, I, UInt64[1]; mask, accum, desc)
 end
 
-function Base.setindex!(
-    u::AbstractGBVector, x, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    subassign!(u, x, ALL; mask, accum, desc)
-    return nothing
-end
 # silly overload to help a bit with broadcasting.
 function Base.setindex!(
     u::AbstractGBVector, x, I::Union{Vector, UnitRange, StepRange, Colon}, ::Colon;
@@ -519,7 +496,7 @@ function Base.setindex!(
     Base.setindex!(u, x, I; mask, accum, desc)
 end
 function Base.setindex!(
-    u::AbstractGBVector, x, I::Union{Vector, UnitRange, StepRange};
+    u::AbstractGBVector, x, I::Union{Vector, UnitRange, StepRange, Colon};
     mask = nothing, accum = nothing, desc = nothing
 )
     subassign!(u, x, I; mask, accum, desc)
@@ -531,20 +508,7 @@ function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback pri
 end
 
 function Base.getindex(
-    A::AbstractGBMatrix, i, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, i, ALL; mask, accum, desc)
-end
-function Base.getindex(
-    A::AbstractGBMatrix, ::Colon, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(A, ALL, ALL; mask, accum, desc)
-end
-
-function Base.getindex(
-    A::AbstractGBMatrix, i::Union{Vector, UnitRange, StepRange, Number}, j::Union{Vector, UnitRange, StepRange, Number};
+    A::AbstractGBMatrix, i::Union{Vector, UnitRange, StepRange, Number, Colon}, j::Union{Vector, UnitRange, StepRange, Number, Colon};
     mask = nothing, accum = nothing, desc = nothing
 )
     return extract(A, i, j; mask, accum, desc)

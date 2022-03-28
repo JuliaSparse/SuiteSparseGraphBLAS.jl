@@ -7,6 +7,9 @@ scalar index like [`extractElement`].
 """
 function idx(I)
     # TODO. Do better here, and minimize manual idx management in rest of library.
+    if I isa Colon
+        I = ALL
+    end
     if I == ALL
         return I, 0 #ni doesn't matter if I=ALL
     elseif I isa UnitRange

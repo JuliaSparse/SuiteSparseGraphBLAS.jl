@@ -249,10 +249,11 @@ mutable struct GBScalar{T}
 end
 
 """
-    GBVector{T} <: AbstractSparseArray{T, UInt64, 1}
+    GBVector{T, F} <: AbstractSparseArray{T, UInt64, 1}
 
-One-dimensional GraphBLAS array with elements of type T. Internal representation is
-specified as opaque, but may be either a dense array, bitmap array, or
+One-dimensional GraphBLAS array with elements of type T. `F` is the type of the fill-value, 
+which is typically `Nothing` or `T`. 
+Internal representation is specified as opaque, but may be either a dense vector, bitmap vector, or 
 compressed sparse vector.
 
 See also: [`GBMatrix`](@ref).
@@ -263,11 +264,12 @@ mutable struct GBVector{T, F} <: AbstractGBVector{T, F}
 end
 
 """
-    GBMatrix{T} <: AbstractSparseArray{T, UInt64, 2}
+    GBMatrix{T, F} <: AbstractSparseArray{T, UInt64, 2}
 
-Two-dimensional GraphBLAS array with elements of type T. Internal representation is
-specified as opaque, but in this implementation is stored as one of the following in either
-row or column orientation:
+Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value, 
+which is typically `Nothing` or `T`. 
+Internal representation is specified as opaque, but in this implementation is stored as one of 
+the following in either row or column orientation:
 
     1. Dense
     2. Bitmap

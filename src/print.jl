@@ -38,7 +38,7 @@ function gxbstring(x, name = "", level::LibGraphBLAS.GxB_Print_Level = LibGraphB
         seekstart(f)
         x = read(f, String)
         close(cf)
-        x
+        lstrip(x)
     end
     return str
 end

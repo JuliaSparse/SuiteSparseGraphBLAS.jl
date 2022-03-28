@@ -1,11 +1,23 @@
 # Array Types
 
-There are two primary datastructures in in `SuiteSparseGraphBLAS.jl`: the `GBVector` and `GBMatrix`.
+There are two primary array types in SuiteSparseGraphBLAS.jl: [`GBVector`](@ref) and [`GBMatrix`](@ref), as well as a few specialized versions of those array types. The full type hierarchy is:
 
-Both types currently implement most of the `AbstractArray` interface and part of the `SparseArrays`
-interface. 
+```
+AbstractGBArray{T, N, F} <: AbstractSparseArray{T, N}
+ ├ N = 2 ─ AbstractGBMatrix{T, F} 
+ │   ├─ GBMatrix{T, F}
+ │   └─ OrientedGBMatrix{T, F, O}
+ └ N = 1 ─ AbstractGBVector{T, F}
+     └─ GBVector{T, F}
+```
 
-## Matrix Construction
+The `T` parameter is the element type of the array, `N` is the dimensionality, `F` is the type of the fill value (often `Nothing` or `T`). The [`OrientedGBMatrix`](@ref) restricts the orientation to the parameter `O` which is either `ByRow()` or `ByCol()`. 
+
+All of these types attempt to implement most of the `AbstractArray` interface, and the relevant parts of the `SparseArrays` interface.
+
+## GBMatrix
+
+There are several methods to construct GBArrays. Shown here are empty construction, conversion from a dense matrix and a sparse matrix, and coordinate form with uniform or *iso* coefficients. 
 ```@setup mat
 using SuiteSparseGraphBLAS
 using SparseArrays
@@ -13,27 +25,28 @@ using SparseArrays
 ```@repl mat
 x = GBMatrix{Bool}(20_000_000, 50_000)
 x = GBMatrix([[1,2] [3,4]])
-x = GBMatrix(sprand(100, 100, 0.5))
-x = GBMatrix(rand(1:50_000, 5000), rand(1:500_000, 5000), 1; ncols = 500_000, nrows = 500_000)
+x = GBMatrix(sprand(100, 100, 0.5); fill = 0.0)
+x = GBMatrix(
+    rand(1:50_000, 5000), rand(1:500_000, 5000), 1; 
+    ncols = 500_000, nrows = 500_000
+)
 ```
 
 ```@docs
 GBMatrix
 SuiteSparseGraphBLAS.GBMatrix(::Matrix)
-SuiteSparseGraphBLAS.GBMatrix(::SparseMatrixCSC)
 ```
-Conversion back to matrices, sparse or dense, is also supported.
-## Vector Construction
+
+## GBVector
 ```@repl mat
 v = GBVector{ComplexF32}(100)
-v = GBMatrix(rand(ComplexF64, 3))
+v = GBMatrix(rand(ComplexF64, 3); fill = nothing)
 v = GBVector(sprand(Bool, 100_000_000, 0.001))
 ```
 
 ```@docs
 GBVector
 SuiteSparseGraphBLAS.GBVector(::Vector)
-SuiteSparseGraphBLAS.GBVector(::AbstractVector{<:Integer}, ::AbstractVector)
 ```
 
 # Indexing
