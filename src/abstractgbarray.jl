@@ -507,6 +507,12 @@ function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback pri
     gxbprint(io, A)
 end
 
+function Base.show(io::IO, mime, A::AbstractGBArray) #fallback printing
+    gxbprint(io, A)
+end
+
+
+
 function Base.getindex(
     A::AbstractGBMatrix, i::Union{Vector, UnitRange, StepRange, Number, Colon}, j::Union{Vector, UnitRange, StepRange, Number, Colon};
     mask = nothing, accum = nothing, desc = nothing
