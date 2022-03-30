@@ -433,7 +433,7 @@ uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [[SuiteSparseGraphBLAS]]
 deps = ["ChainRulesCore", "HyperSparseMatrices", "Libdl", "LinearAlgebra", "MacroTools", "Preferences", "Random", "SSGraphBLAS_jll", "Serialization", "SparseArrays", "SpecialFunctions", "StorageOrders", "SuiteSparse"]
-git-tree-sha1 = "9a74eb0c0fa5796dd33e72e05e34055735b2827d"
+git-tree-sha1 = "c826a940f860b8cdf6c4c25b09f6bb08260d8783"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl.git"
 uuid = "c2e53296-7b14-11e9-1210-bddfa8111e1d"

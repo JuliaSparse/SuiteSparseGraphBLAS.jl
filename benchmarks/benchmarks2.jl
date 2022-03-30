@@ -10,9 +10,10 @@ using StorageOrders
 
 #OPTIONS SET 1:
 # Maximum number of samples taken for each benchmark
-BenchmarkTools.DEFAULT_PARAMETERS.samples = 10
+BenchmarkTools.DEFAULT_PARAMETERS.samples = 3
+BenchmarkTools.DEFAULT_PARAMETERS.evals = 1
 # Total amount of time allowed for each benchmark, minimum of 1 sample taken.
-BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 1000
 
 # Comment or uncomment this line to disable or enable MKLSparse respectively.
 # This will only work for SpMM and SpMV and only operates on CSC.
@@ -26,9 +27,9 @@ const threadlist = [1, Sys.CPU_THREADS ÷ 2]
 const suite = BenchmarkGroup()
 const ssmc = ssmc_db()
 
-function mxm(A::SparseMatrixCSC, B::Union{SparseMatrixCSC, DenseArray})
-    printstyled("\nC = A::SparseMatrixCSC * B::$(typeof(B))\n")
-    result = @benchmark $A * $B
+function mxm(A::SparseMatrixCSC, B)
+    printstyled("\nC = A::SparseMatrixCSC($(size(A))) * B::$(typeof(B))($(size(B)))\n")
+    result = @benchmark $A * $B samples=3 evals=1 seconds=2
     show(stdout, MIME("text/plain"), result)
     return median(result)
 end
@@ -37,12 +38,18 @@ function mxm(A::SuiteSparseGraphBLAS.GBArray, B::SuiteSparseGraphBLAS.GBArray; a
     Ao = storageorder(A) == ColMajor() ? "C" : "R"
     Bo = storageorder(B) == ColMajor() ? "C" : "R"
     if !accumdenseoutput
-        printstyled("\nC::GBArray = A::GBArray($Ao) * B::GBArray($Bo)\n")
-        result = @benchmark mul($A, $B)
+        printstyled("\nC::GBArray = A::GBArray($Ao, $(size(A))) * B::GBArray($Bo, $(size(B)))\n")
+        gbset(:burble, true)
+        mul(A, B)
+        gbset(:burble, false)
+        result = @benchmark mul($A, $B) samples=3 evals=1 seconds=2
     else
-        printstyled("\nC::GBArray += A::GBArray($Ao) * B::GBArray($Bo)\n")
+        printstyled("\nC::GBArray += A::GBArray($Ao, $(size(A))) * B::GBArray($Bo, $(size(B)))\n")
         C = GBMatrix(zeros(eltype(A), size(A, 1), size(B, 2)))
-        result = @benchmark mul!($C, $A, $B; accum=+)
+        gbset(:burble, true)
+        mul!(C, A, B; accum=+)
+        gbset(:burble, false)
+        result = @benchmark mul!($C, $A, $B; accum=+) samples=3 evals=1 seconds=2
     end
     show(stdout, MIME("text/plain"), result)
     return median(result)
@@ -64,22 +71,69 @@ function singlebench(pathornum)
     printstyled("Benchmarking $name:\n"; bold=true, color=:green)
     printstyled("#################################################################################\n"; bold=true, color=:green)
     printstyled("Sparse * Vec\n"; bold=true)
-    v = rand(eltype(A), size(A, 2))
-    v = GBVector(v)
-    printstyled("A matrix: ")
+    printstyled("A matrix: \n")
     show(stdout, MIME("text/plain"), A)
-    printstyled("B matrix: ")
-    show(stdout, MIME("text/plain"), v)
-    gbresultsR = runthreaded(A, v; accumdenseoutput=true)
+    B = rand(eltype(A), size(A, 2))
+    B = GBVector(B)
+    
+    printstyled("B matrix: \n")
+    show(stdout, MIME("text/plain"), B)
+
+    gbresultsR = runthreaded(A, B; accumdenseoutput=true)
     gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
     diag(A)
-    show(stdout, MIME("text/plain"), A)
-    gbresultsC = runthreaded(A, v; accumdenseoutput=true)
-    SAresults = mxm(SparseMatrixCSC(A), Vector(v))
-    println((gbresultsR, gbresultsC, SAresults))
+    gbresultsC = runthreaded(A, B; accumdenseoutput=true)
+    SAresults = mxm(SparseMatrixCSC(A), Vector(B))
+    printstyled("RESULTS, Sparse * DenseVec: \n"; bold=true, color=:green)
+    println("A by row: $gbresultsR")
+    println("A by col: $gbresultsC")
+    println("SparseArrays: $SAresults")
 
-    B = GBMatrix(rand(eltype(A), size(A, 2), 160))
+    B = GBMatrix(rand(eltype(A), size(A, 2), 2))
+    printstyled("B matrix: \n")
+    show(stdout, MIME("text/plain"), B)
+    gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
+    diag(A)
+    gbresultsR = runthreaded(A, B; accumdenseoutput=true)
+    gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
+    diag(A)
+    gbresultsC = runthreaded(A, B; accumdenseoutput=true)
+    SAresults = mxm(SparseMatrixCSC(A), Matrix(B))
+    printstyled("RESULTS, Sparse * n x 2 Dense: \n"; bold=true, color=:green)
+    println("A by row: $gbresultsR")
+    println("A by col: $gbresultsC")
+    println("SparseArrays: $SAresults")
 
+    B = GBMatrix(rand(eltype(A), size(A, 2), 32))
+    printstyled("B matrix: \n")
+    show(stdout, MIME("text/plain"), B)
+    gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
+    diag(A)
+    gbresultsR = runthreaded(A, B; accumdenseoutput=true)
+    gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
+    diag(A)
+    gbresultsC = runthreaded(A, B; accumdenseoutput=true)
+    SAresults = mxm(SparseMatrixCSC(A), Matrix(B))
+    printstyled("RESULTS, Sparse * n x 32 Dense: \n"; bold=true, color=:green)
+    println("A by row: $gbresultsR")
+    println("A by col: $gbresultsC")
+    println("SparseArrays: $SAresults")
+
+
+    gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
+    diag(A)
+    gbresultsR = runthreaded(A, transpose(A))
+    gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
+    diag(A)
+    gbresultsC = runthreaded(A, transpose(A))
+    A2 = SparseMatrixCSC(A)
+    SAresults = mxm(A2, transpose(A2))
+    println()
+    printstyled("\n\nRESULTS, Sparse * Sparse: \n"; bold=true, color=:green)
+    println("A by row: $gbresultsR")
+    println("A by col: $gbresultsC")
+    println("SparseArrays: $SAresults")
+    println()
     return nothing
 end
 
