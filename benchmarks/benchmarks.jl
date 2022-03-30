@@ -251,7 +251,7 @@ end
 const functorun = [AxB_allbycol, AxB_ColxRow, CaccumAxB_allbycol, CaccumAxB_allbyrow, CaccumAxB_CRC]
 #= The choices are:
 AxB_allbycol - S * F
-AxB_ColxRow - S' * F
+AxB_ColxRow - S * F'
 CaccumAxB_allbycol - F += S * F
 CaccumAxB_allbyrow - F' += S' * F'
 CaccumAxB_CRC - F += S' * F
@@ -272,7 +272,7 @@ function singlebench(pathornum)
         throw(ErrorException("Argument is not a path or SuiteSparseMatrixCollection ID number"))
     end
     name = basename(path)
-    mmpath = @time MatrixMarket.mmread(path)
+    mmpath = @time SuiteSparseGraphBLAS.mmread(path)
     S = convert(SparseMatrixCSC{Float64}, mmpath)
     G = GBMatrix(S)
     gbset(G, :format, :byrow)

@@ -1,6 +1,9 @@
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 MKLSparse = "0c723cd3-b8cd-5d40-b370-ba682dde9aae"
-MatrixMarket = "4d4711f2-db25-561a-b6b3-d35e7d4047d3"
+SparseMatricesCSR = "a0a7dd2c-ebf4-11e9-1f05-cf50bc540ca1"
+StorageOrders = "e9177fbf-8fde-426c-9425-4eed0f22262a"
 SuiteSparseGraphBLAS = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 SuiteSparseMatrixCollection = "ac199af8-68bc-55b8-82c4-7abd6f96ed98"
+ThreadedSparseArrays = "59d54670-b8ac-4d81-ab7a-bb56233e17ab"
+ThreadedSparseCSR = "39591389-4884-462a-89e7-9edfce40b6eb"
