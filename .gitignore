@@ -6,3 +6,4 @@ docs/site/
 .vscode
 Manifest.toml
 LocalPreferences.toml
+benchmarks/results.txt
