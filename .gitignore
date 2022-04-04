@@ -4,6 +4,6 @@ deps/deps.jl
 docs/build/
 docs/site/
 .vscode
-Manifest.toml
 LocalPreferences.toml
 benchmarks/results.txt
+/Manifest.toml

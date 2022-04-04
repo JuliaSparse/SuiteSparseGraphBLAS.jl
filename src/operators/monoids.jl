@@ -105,7 +105,9 @@ end
 # because users will mostly be exposed to the higher level interface.
 
 @monoid (+) GrB_PLUS nB id=>zero
+(::Monoid{typeof(+)})(::Type{Bool}) = LOR_MONOID_BOOL
 @monoid (*) GrB_TIMES I id=>one term=>zero
+(::Monoid{typeof(*)})(::Type{Bool}) = LAND_MONOID_BOOL
 @monoid (*) GrB_TIMES FZ id=>one 
 
 @monoid any GxB_ANY T id=>one term=>one # This is technically incorrect. The identity and terminal are *ANY* value in the domain.

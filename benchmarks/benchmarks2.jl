@@ -81,6 +81,10 @@ function singlebench(pathornum)
     end
     name = basename(path)
     A = SuiteSparseGraphBLAS.mmread(path)
+    if eltype(A) == Bool
+        A = Int64.(A)
+    end
+    GC.gc()
     printstyled(stdout, "\n#################################################################################\n"; bold=true, color=:green)
     printstyled(stdout, "Benchmarking $name:\n"; bold=true, color=:green)
     printstyled(stdout, "#################################################################################\n"; bold=true, color=:green)
