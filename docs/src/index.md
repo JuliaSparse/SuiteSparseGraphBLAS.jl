@@ -212,15 +212,13 @@ Please cite the serial SuiteSparse:GraphBLAS [paper](https://doi.org/10.1145/332
 and the parallel SuiteSparse:GraphBLAS [paper](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/toms_parallel_grb2.pdf):
 
 ```bibtex
-    @article{DavisTOMS2022,
+    @article{GraphBLAS7,
     author = {Davis, Timothy A.},
-    title = {Algorithm 10xx: SuiteSparse:GraphBLAS: Parallel Graph Algorithms in the Language of Sparse Linear Algebra},
+    title = {Algorithm 10xx: SuiteSparse:GraphBLAS: Graph Algorithms in the Language of Sparse Linear Algebra},
     year = {2022},
-    publisher = {Association for Computing Machinery},
-    address = {New York, NY, USA},
-    url = {https://doi.org/10.1145/3322125},
     journal = {ACM Trans. Math. Softw.},
-    numpages = {29},
+    month = {(under revision)},
+    note={See GraphBLAS/Doc/toms_parallel_grb2.pdf},
     keywords = {GraphBLAS, Graph algorithms, sparse matrices}
-    }
+}
 ```
