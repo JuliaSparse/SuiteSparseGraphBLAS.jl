@@ -47,6 +47,7 @@ function mxm(A::SparseMatrixCSC, B)
     printstyled(stdout, "\nC = A::SparseMatrixCSC($(size(A))) * B::$(typeof(B))($(size(B)))\n")
     result = @bench A * B
     println(stdout, result, "s")
+    GC.gc()
     flush(stdout)
     return result
 end
@@ -65,8 +66,32 @@ function mxm(A::SuiteSparseGraphBLAS.GBArray, B::SuiteSparseGraphBLAS.GBArray; a
         result = @gbbench mul!(C, A, B; accum=+)
     end
     println(stdout, result, "s")
+    GC.gc()
     flush(stdout)
     return result
+end
+
+function tpose(A::SuiteSparseGraphBLAS.GBArray)
+    Ao = storageorder(A) == ColMajor() ? "C" : "R"
+    Bo = storageorder(B) == ColMajor() ? "C" : "R"
+    printstyled(stdout, "\nC::GBArray = transpose(A::GBArray($Ao, $(size(A))))\n")
+    result = @gbbench copy(transpose(A))
+    println(stdout, result, "s")
+    GC.gc()
+    flush(stdout)
+    return result
+end
+
+function tpose(A::SparseMatrixCSC)
+    printstyled(stdout, "\nC = transpose(A::SparseMatrixCSC($(size(A))))\n")
+    result = @bench copy(transpose(A))
+    println(stdout, result, "s")
+    GC.gc()
+    flush(stdout)
+    return result
+end
+
+function spdbench(A)
 end
 
 function singlebench(pathornum)
@@ -160,6 +185,26 @@ function singlebench(pathornum)
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     println(stdout, "SparseArrays: $SAresults")
     flush(stdout)
+
+    printstyled(stdout, "\nSparse * Sparse'"; bold=true)
+    println(stdout, "################################")
+    flush(stdout)
+    gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
+    diag(A)
+    gbresultsR = runthreaded(A, transpose(A))
+    gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
+    diag(A)
+    gbresultsC = runthreaded(A, transpose(A))
+    A2 = SparseMatrixCSC(A) 
+    SAresults = mxm(A2, transpose(A2))
+    println(stdout, )
+    printstyled(stdout, "\nRESULTS, Sparse * Sparse: \n"; bold=true, color=:green)
+    println(stdout, "################################")
+    println(stdout, "A by row (1, 2, 16 thread): $gbresultsR")
+    println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
+    println(stdout, "SparseArrays: $SAresults")
+    flush(stdout)
+
     return nothing
 end
 
