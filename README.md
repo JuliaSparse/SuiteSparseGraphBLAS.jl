@@ -82,10 +82,10 @@ and the parallel SuiteSparse:GraphBLAS [paper](https://github.com/DrTimothyAlden
 ## Acknowledgements
 This work was funded as part of Google Summer of Code over 3 summers, 2 of which were for Abhinav Mehndiratta and the last of which was for William Kimmerer.
 
-Current maintainer: William Kimmerer
-
 Original author: Abhinav Mehndiratta
 
 SuiteSparse author: Tim Davis
 
-Mentors: Viral B Shah, Miha Zgubic
+Mentors: Viral B Shah, Miha Zgubic, Tim Davis
+
+Current maintainer: William Kimmerer
