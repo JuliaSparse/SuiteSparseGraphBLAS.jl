@@ -186,8 +186,9 @@ sandia(M)
 
 # Citing
 
-Please cite the serial SuiteSparse:GraphBLAS [paper](https://doi.org/10.1145/3322125):
+Please cite the following papers:
 
+[pdf](https://doi.org/10.1145/3322125):
 ```bibtex
     @article{10.1145/3322125,
     author = {Davis, Timothy A.},
@@ -209,8 +210,7 @@ Please cite the serial SuiteSparse:GraphBLAS [paper](https://doi.org/10.1145/332
     }
 ```
 
-and the parallel SuiteSparse:GraphBLAS [paper](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/toms_parallel_grb2.pdf):
-
+[pdf](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/toms_parallel_grb2.pdf):
 ```bibtex
     @article{GraphBLAS7,
     author = {Davis, Timothy A.},
@@ -222,3 +222,16 @@ and the parallel SuiteSparse:GraphBLAS [paper](https://github.com/DrTimothyAlden
     keywords = {GraphBLAS, Graph algorithms, sparse matrices}
 }
 ```
+
+[pdf](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9622789&casa_token=VPmmUD8cdFcAAAAA:NYSm3tdjrBwF53rJxo9PqVRWzXY41hE6l1MoKpBqqZC0WESFPGx6PtN1SjVf8M4x01vfPrqU&tag=1):
+```bibtex
+@INPROCEEDINGS{9622789,
+author={Pelletier, Michel and Kimmerer, Will and Davis, Timothy A. and Mattson, Timothy G.},
+booktitle={2021 IEEE High Performance Extreme Computing Conference (HPEC)},
+title={The GraphBLAS in Julia and Python: the PageRank and Triangle Centralities},
+year={2021},
+pages={1-7},
+doi={10.1109/HPEC49654.2021.9622789},
+ISSN={2643-1971},
+month={Sep.}
+}
