@@ -21,15 +21,14 @@ The `GBMatrix` is an opaque sparse matrix structure, which adapts to the sparsit
 
 1. **Dense** - Equivalent to a Julia `Matrix`
 2. **Bitmap** - 2 dense arrays, one storing booleans in the pattern of the matrix, the other storing the values.
-3. **Compressed** - [Compressed Sparse Column (CSC)](http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000) or [Compressed Sparse Row(CSR)](http://netlib.org/linalg/html_templates/node91.html)
-4. **Doubly Compressed** - Doubly Compressed Sparse Column (DCSC or Hypersparse CSC) and Doubly Compressed Sparse Row (DCSR or Hypersparse CSR). See this paper for more information: [pdf](https://people.eecs.berkeley.edu/~aydin/hypersparse-ipdps08.pdf).
+3. **Sparse Compressed** - [Compressed Sparse Column (CSC)](http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000) or [Compressed Sparse Row(CSR)](http://netlib.org/linalg/html_templates/node91.html)
+4. **Doubly Compressed** or **Hypersparse** - Doubly Compressed Sparse Column (DCSC or Hypersparse CSC) and Doubly Compressed Sparse Row (DCSR or Hypersparse CSR). See this paper for more information: [pdf](https://people.eecs.berkeley.edu/~aydin/hypersparse-ipdps08.pdf).
 
-Users should never need to directly interact with the underlying storage type, SuiteSparse:GraphBLAS will automatically convert between them as necessary.
+Additionally a when the stored values in a `GBMatrix` are uniform the value array may be stored in the **iso** version of one of the formats above. Rather than storing the full value array, an iso `GBMatrix` will only store the single scalar to improve performance. This is useful for matrices like the unweighted adjacency matrix, where all stored values may be `true`. 
 
-
+Users should never need to directly interact with the underlying storage format, SuiteSparse:GraphBLAS will automatically convert between them as necessary.
 
 ### Construction
-
 
 There are several methods to construct GBArrays. Shown here are empty construction, conversion from a dense matrix and a sparse matrix, and coordinate form with uniform or *iso* coefficients. 
 ```@setup mat
@@ -52,6 +51,11 @@ SuiteSparseGraphBLAS.GBMatrix(::Matrix)
 ```
 
 ## GBVector
+
+A `GBVector` is the one-dimensional equivalent of the `GBMatrix`, and internally a `GBVector` is represented in exactly the same fashion. However, they are always column-oriented. 
+
+### Construction 
+
 ```@repl mat
 v = GBVector{ComplexF32}(100)
 v = GBMatrix(rand(ComplexF64, 3); fill = nothing)
@@ -72,22 +76,21 @@ The usual AbstractArray and SparseArray indexing capabilities are available. Inc
 
     When indexing a GBArray structural zeros default to `nothing`.
     While this is a significant departure from the `SparseMatrixCSC` it more closely matches the GraphBLAS spec,
-    and enables the consuming method to determine the value of implicit zeros. 
+    and enables the consuming method to determine the value of implicit zeros in the presence of explicit zeros. 
     
-    For instance with an element type of `Float64` you may want the zero to be `0.0`, `-∞` or `+∞` depending on your algorithm. In addition, for graph algorithms there may be a distinction between an implicit zero, indicating the lack of an edge between two vertices in an adjacency matrix, and an explicit zero where the edge exists but has a `0` weight.
+    For instance with an element type of `Float64` you may want the implicit zero to be `0.0`, `-∞` or `+∞` depending on your algorithm. In addition, for graph algorithms there may be a distinction between an implicit zero, indicating the lack of an edge between two vertices in an adjacency matrix, and an explicit zero where the edge exists but has a `0` weight.
 
-    However, many functions outside of GraphBLAS will not work when they index into an `AbstractArray` and get `nothing`. 
+    However, many functions outside of GraphBLAS will throw an error if they receive `nothing` from an indexing operation. To accomodate these functions the user may set the fill value for an `AbstractGBArray` on construction and with [`setfill`](@ref) and [`setfill!`](@ref).
 
 ```@repl mat
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
 SparseMatrixCSC(A)
 A[4]
-A[1,2] 
+A[1,2]
 A[[1,3,5,7], :]
 A[1:2:7, :]
 A[:,:]
 A[:, 5]
-SparseMatrixCSC(A'[:,:]) #Transpose the first argument
 ```
 
 The functionality illustrated above extends to `GBVector` as well.
@@ -98,11 +101,5 @@ overloaded to be equivalent.
 
 !!! danger "Adjoint vs Transpose"
     The adjoint operator `'` currently transposes matrices rather than performing the
-    conjugate transposition. In the future this will change to the complex conjugate
+    conjugate transposition. In the future this will change to the eager adjoint
     for complex types, but currently you must do `map(conj, A')` to achieve this.
-
-# Utilities
-
-```@docs
-clear!
-```

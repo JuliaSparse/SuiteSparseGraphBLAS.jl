@@ -22,7 +22,8 @@ end
     apply(op::Union{Function, AbstractBinaryOp}, A::GBArray, x; kwargs...)::GBArray
     apply(op::Union{Function, AbstractBinaryOp}, x, A::GBArray, kwargs...)::GBArray
 
-Transform a GBArray by applying `op` to each element.
+Transform a GBArray by applying `op` to each element. Equivalent to `Base.map` except for the additional
+`x` argument for mapping with a scalar.
 
 UnaryOps and single argument functions apply elementwise in the usual fashion.
 BinaryOps and two argument functions require the additional argument `x` which is 

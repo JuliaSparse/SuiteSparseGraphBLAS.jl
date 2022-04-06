@@ -23,6 +23,9 @@ using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
 using Serialization
 using StorageOrders
+
+export ColMajor, RowMajor, storageorder #reexports from StorageOrders
+
 using HyperSparseMatrices
 include("abstracts.jl")
 include("libutils.jl")

@@ -7,7 +7,7 @@ makedocs(
     sitename="SuiteSparseGraphBLAS.jl",
     pages = [
         "Introduction" => "index.md",
-        "Arrays" => "arrays.md",
+        "Array Types" => "arrays.md",
         "Operations" => "operations.md",
         "Operators" => [
             "operators.md",
@@ -17,7 +17,8 @@ makedocs(
             "semirings.md",
             "selectops.md",
             "udfs.md"
-        ]
+        ],
+        "Utilities" => "utilities.md"
     ]
 )
 

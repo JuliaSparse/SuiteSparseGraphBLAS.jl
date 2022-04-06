@@ -53,13 +53,13 @@ function Base.reduce(
 end
 
 """
-    reduce(op::Monoid, A::GBMatrix, dims=:; kwargs...)
-    reduce(op::Monoid, v::GBVector; kwargs...)
+    reduce(op::Union{Function, AbstractMonoid}, A::GBMatrix, dims=:; kwargs...)
+    reduce(op::Union{Function, AbstractMonoid}, v::GBVector; kwargs...)
 
 Reduce `A` along dimensions of A with monoid `op`.
 
 # Arguments
-- `op::MonoidUnion`: the monoid reducer. This may not be a BinaryOp.
+- `op`: the reducer. This must map to an AbstractMonoid, not an AbstractBinaryOp.
 - `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
 - `dims = :`: Optional dimensions for GBMatrix, may be `1`, `2`, or `:`.
 
