@@ -21,21 +21,21 @@ julia> @btime s * v
 julia> s = GBMatrix(s); v = GBMatrix(v);
 # Single-threaded
 julia> @btime s * v
-  241.806 s (26 allocations: 1.49 GiB)
+  54.649 s (26 allocations: 1.49 GiB)
 # 2 threads
 julia> @btime s * v
-  126.153 s (26 allocations: 1.50 GiB)
+  30.258 s (26 allocations: 1.50 GiB)
 # 4 threads
 julia> @btime s * v
-  64.622 s (26 allocations: 1.54 GiB)
+  21.738 s (26 allocations: 1.54 GiB)
 
 # Indexing
 julia> s = sprand(Float64, 100000, 100000, 0.05);
 julia> @btime s[1:10:end, end:-10:1]
-  947.438 ms (11 allocations: 76.34 MiB)
+  344.355 ms (11 allocations: 76.32 MiB)
 julia> s = GBMatrix(s);
 julia> @btime s[1:10:end, end:-10:1]
-  626.943 ms (33 allocations: 1.14 KiB)
+  81.750 ms (39 allocations: 152.49 MiB)
 ```
 ## Citing SuiteSparse:GraphBLAS
 
