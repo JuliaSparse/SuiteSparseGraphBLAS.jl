@@ -17,6 +17,20 @@ All of these types attempt to implement most of the `AbstractArray` interface, a
 
 ## GBMatrix
 
+The `GBMatrix` is an opaque sparse matrix structure, which adapts to the sparsity of a matrix by changing the implementation internally. There are 4 different internal representations, all stored in either row or column orientation:
+
+1. **Dense** - Equivalent to a Julia `Matrix`
+2. **Bitmap** - 2 dense arrays, one storing booleans in the pattern of the matrix, the other storing the values.
+3. **Compressed** - [Compressed Sparse Column (CSC)](http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000) or [Compressed Sparse Row(CSR)](http://netlib.org/linalg/html_templates/node91.html)
+4. **Doubly Compressed** - Doubly Compressed Sparse Column (DCSC or Hypersparse CSC) and Doubly Compressed Sparse Row (DCSR or Hypersparse CSR). See this paper for more information: [pdf](https://people.eecs.berkeley.edu/~aydin/hypersparse-ipdps08.pdf).
+
+Users should never need to directly interact with the underlying storage type, SuiteSparse:GraphBLAS will automatically convert between them as necessary.
+
+
+
+### Construction
+
+
 There are several methods to construct GBArrays. Shown here are empty construction, conversion from a dense matrix and a sparse matrix, and coordinate form with uniform or *iso* coefficients. 
 ```@setup mat
 using SuiteSparseGraphBLAS
