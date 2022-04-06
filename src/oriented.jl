@@ -21,7 +21,7 @@ function OrientedGBMatrix{T, F, O}(nrows::Integer, ncols::Integer; fill::F = not
         @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
     end, fill)
     gbset(A, :format, O === StorageOrders.ColMajor() ? :bycol : :byrow)
-    return A
+    return OrientedGBMatrix{T, F, O}(A)
 end
 OrientedGBMatrix{T, O}(nrows::Integer, ncols::Integer; fill::F = nothing) where {T, F, O} = OrientedGBMatrix{T, F, O}(nrows, ncols; fill)
 GBMatrixC{T}(nrows::Integer, ncols::Integer; fill::F = nothing) where {T, F} = GBMatrixC{T, F}(nrows, ncols; fill)
@@ -53,11 +53,22 @@ function OrientedGBMatrix{T, F, O}(
     return A
 end
 function OrientedGBMatrix{O}(
-    I::AbstractVecOrMat, J::AbstractVector, X::AbstractVector{T}; 
+    I::AbstractVector, J::AbstractVector, X::AbstractVector{T}; 
     combine = +, nrows = maximum(I), ncols = maximum(J), fill::F = nothing
 ) where {T, F, O}
     return OrientedGBMatrix{T, F, O}(I, J, X,; combine, nrows, ncols, fill)
 end
+
+
+GBMatrixC(
+    I::AbstractVector, J::AbstractVector, X::AbstractVector; 
+    combine = +, nrows = maximum(I), ncols = maximum(J), fill = nothing
+) = OrientedGBMatrix{ColMajor()}(I, J, X; combine, nrows, ncols, fill)
+GBMatrixR(
+    I::AbstractVector, J::AbstractVector, X::AbstractVector;
+    combine = +, nrows = maximum(I), ncols = maximum(J), fill = nothing
+) = OrientedGBMatrix{RowMajor()}(I, J, X; combine, nrows, ncols, fill)
+
 
 #iso constructors
 """
@@ -88,6 +99,7 @@ OrientedGBMatrix{T, F, O}(nrows, ncols, x::T; fill::F = nothing) where {T, F, O}
 OrientedGBMatrix{O}(nrows, ncols, x::T; fill::F = nothing) where {T, F, O} = OrientedGBMatrix{T, F, O}(nrows, ncols, x; fill)
 
 function OrientedGBMatrix{T, F, O}(v::GBVector) where {T, F, O}
+    O === ByRow() && throw(ArgumentError("Cannot wrap a GBVector in a ByRow matrix."))
     # this copies, I think that's ideal, and I can implement @view or something at a later date.
     return copy(OrientedGBMatrix{T, F, O}(v.p, v.fill)) 
 end
@@ -96,6 +108,27 @@ function OrientedGBMatrix{O}(v::GBVector) where {O}
     return OrientedGBMatrix{eltype(v), typeof(v.fill), O}(v) 
 end
 
+function OrientedGBMatrix{T, F, O}(A::AbstractGBMatrix) where {T, F, O}
+    storageorder(A) != O && throw(ArgumentError("Cannot wrap a GBMatrix in an OrientedGBMatrix with a different orientation."))
+    # this copies, I think that's ideal, and I can implement @view or something at a later date.
+    return copy(OrientedGBMatrix{T, F, O}(A.p, A.fill)) 
+end
+function OrientedGBMatrix{O}(A::AbstractGBMatrix) where {O}
+    # this copies, I think that's ideal, and I can implement @view or something at a later date.
+    return OrientedGBMatrix{eltype(A), typeof(A.fill), O}(A) 
+end
+
+GBMatrixR(A::AbstractGBMatrix) = OrientedGBMatrix{RowMajor()}(A)
+GBMatrixC(A::AbstractGBMatrix) = OrientedGBMatrix{ColMajor()}(A)
+
+GBMatrixC(
+    I::AbstractVector, J::AbstractVector, X::T;
+    nrows = maximum(I), ncols = maximum(J), fill = nothing
+) where {T} = OrientedGBMatrix{ColMajor()}(I, J, X; nrows, ncols, fill)
+GBMatrixR(
+    I::AbstractVector, J::AbstractVector, X::T;
+     nrows = maximum(I), ncols = maximum(J), fill = nothing
+) where {T} = OrientedGBMatrix{RowMajor()}(I, J, X; nrows, ncols, fill)
 
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::OrientedGBMatrix) = A.p[]
 
@@ -147,4 +180,14 @@ function Base.similar(
     dim1::Integer, dim2::Integer; fill = parent(A).fill
 ) where {T}
     return similar(A, (dim1, dim2); fill)
+end
+
+function gbset(A::OrientedGBMatrix, option, value)
+    if option === :format
+        throw(ArgumentError("Cannot change orientation of an OrientedGBMatrix"))
+    end
+    option = option_toconst(option)
+    value = option_toconst(value)
+    GxB_Matrix_Option_set(A, option, value)
+    return nothing
 end
