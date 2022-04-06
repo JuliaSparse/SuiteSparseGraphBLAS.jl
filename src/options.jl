@@ -141,6 +141,11 @@ const BYCOL = LibGraphBLAS.GxB_BY_COL
 
 #only translate if it's a symbol
 option_toconst(option) = option
+function option_toconst(option::StorageOrders.StorageOrder)
+    option === StorageOrders.ColMajor() && (return BYCOL)
+    option === StorageOrders.RowMajor() && (return BYROW)
+    throw(ArgumentError("Invalid Orientation setting $option"))
+end
 function option_toconst(sym::Symbol)
     sym === :format && return FORMAT
     sym === :nthreads && return NTHREADS
