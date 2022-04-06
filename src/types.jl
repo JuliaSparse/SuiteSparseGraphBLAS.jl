@@ -13,11 +13,7 @@ mutable struct TypedUnaryOperator{F, X, Z} <: AbstractTypedOp{Z}
 end
 
 function (op::TypedUnaryOperator{F, X, Z})(::Type{T}) where {F, X, Z, T}
-    if X == T
-        return op
-    else
-        throw(ArgumentError("This TypedUnaryOperator does not operate over $(T)."))
-    end
+    return op
 end
 
 function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
@@ -70,11 +66,7 @@ function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X
 end
 
 function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
-    if X == T1 && Y == T2
-        return op
-    else
-        throw(ArgumentError("This TypedBinaryOperator does not operate over $(T1) and $(T2)."))
-    end
+    return op
 end
 (op::TypedBinaryOperator)(T) = op(T, T)
 
@@ -119,11 +111,7 @@ mutable struct TypedMonoid{F, Z, T} <: AbstractTypedOp{Z}
 end
 
 function (op::TypedMonoid{F, Z, T})(::Type{X}) where {F, X, Z, T}
-    if X == Z
-        return op
-    else
-        throw(ArgumentError("This TypedMonoid does not operate over $(X)."))
-    end
+    return op
 end
 
 for Z ∈ valid_vec
@@ -208,11 +196,7 @@ end
 
 
 function (op::TypedSemiring{FA, FM, X, Y, Z, T})(::Type{T1}, ::Type{T2}) where {FA, FM, X, Y, Z, T, T1, T2}
-    if X == T1 && Y == T2
-        return op
-    else
-        throw(ArgumentError("This TypedBinaryOperator does not operate over $(T1) and $(T2)."))
-    end
+    return op
 end
 
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Semiring}, op::TypedSemiring)

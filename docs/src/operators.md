@@ -1,11 +1,12 @@
 # Basics
 
+Operators are one of the basic objects of GraphBLAS. In Julia, however, users must only interact directly with operators on rare occasions, and should instead pass functions to GraphBLAS operations.
+
 There are five operator types in SuiteSparseGraphBLAS. Four are defined for all GraphBLAS implementations: `UnaryOp`, `BinaryOp`, `Monoid`, and `Semiring`. 
 One is an extension to the `v1.3` specification: `SelectOp`.
 
 !!! danger "Note"
-    Operators are **not** callable objects like functions. They **do** behave like functions as arguments to higher-order functions (operations in the language of GraphBLAS). However `BinaryOp` and `UnaryOp` operators
-    typically have a synonymous julia function, which can be found using `juliaop(op)`.
+    Operators are **not** callable objects like functions. They **do** behave like functions when used as arguments to higher-order functions (operations in the language of GraphBLAS).
 
 Typically operators are positional arguments in one of two places.
 For operations with a clear default operator they appear as the last positional argument:
@@ -17,17 +18,20 @@ For operations with a clear default operator they appear as the last positional 
 
 For other operations without a clear default operator they appear as the first argument:
 
-- [`map(op::Union{UnaryOp, Function}, A)`](@ref map)
+- [`apply(op::Union{UnaryOp, Function}, A)`](@ref apply)
 - [`reduce(op::Union{BinaryOp, Function}, A)`](@ref reduce)
 - [`select(op::Union{SelectOp, Function}, A)`](@ref select)
+
+!!! note "Built-in vs User-defined operators"
+
+    GraphBLAS supports both built-in and user-defined operators. Built-in operators are precompiled C functions, while user-defined operators are function pointers to Julia functions. 
+
+    Built-in operators are typically much faster than user-defined ones. See the page for the particular operator type (unary, binary, select, etc.) for more information.
+
 
 ## UnaryOps, BinaryOps, Monoids, and Semirings
 
 Each operator is defined on a specific domain. For some this is the usual primitive datatypes like booleans, floats, and signed and unsigned integers of the typical sizes.
-
-Each operator is represented as its own concrete type for dispatch purposes. 
-For instance `BinaryOps.PLUS <: AbstractBinaryOp <: AbstractOp`.
-Operators are effectively dictionaries containing the type-specific operators indexed by the `DataType` of their arguments. 
 
 ### Supported Types
 
@@ -39,39 +43,41 @@ SuiteSparseGraphBLAS.jl natively supports the following types:
 - Float32 and Float64
 - ComplexF32 and ComplexF64
 
-The supported types can be found as in the example below:
+### Lowering
+
+Operators are lowered from a Julia function to a container like `BinaryOp` or `Semiring`. After this they are lowered once again using the type to a `TypedBinaryOp`, `TypedSemiring`, etc. The `TypedBinaryOp` contains the reference to the C-side GraphBLAS operator. Typed operators, like `TypedSemiring` are constants, found in a submodule (`SuiteSparseGraphBLAS.Semirings` in the case of `TypedSemiring`s).
+
 ```@setup operators
 using SuiteSparseGraphBLAS
 ```
 ```@repl operators
-Semiring(max, +)
-Semirings.MAX_PLUS
-Semirings.MAX_PLUS[Float64]
+b = BinaryOp(+)
+b(Int32)
+
+s = Semiring(max, +)
+s(Float64)
 ```
 
-All operations will accept the function/tuple form, the `DataType` form, or the `TypedSemiring` form.
-Unless you need to specifically cast the arguments to a specific type there is no need to specify the operator type.
+All operations should accept the function/tuple form, the `Semiring{typeof(max), typeof(+)}` form, or the `TypedSemiring` form.
+Unless you need to specifically cast the arguments to a specific type there is generally no need to use the latter two forms.
 
-You can determine the available types for an operator and the input and output types of a type-specific operator with the functions below:
+You can determine the the input and output types of a type-specific operator with the functions below:
 
 ```@docs
 xtype
 ytype
 ztype
 ```
-```@docs
-validtypes
-```
 
 Some examples of these functions are below. 
 Note the difference between `ISGT` which returns a result with the same type as the input, and `GT` which returns a `Boolean`.
 
 ```@repl operators
-xtype(Semirings.LOR_GT[Float64])
-ztype(Semirings.LOR_GT[Float64])
-xtype(BinaryOps.ISGT[Int8])
-ztype(BinaryOps.ISGT[Int8])
-ztype(BinaryOps.GT[Int8])
+xtype(Semirings.LOR_GT_UINT16)
+ztype(Semirings.LOR_GT_FP64)
+xtype(BinaryOps.ISGT_INT8)
+ztype(BinaryOps.ISGT_INT8)
+ztype(BinaryOps.GT_INT8)
 ```
 
 ## SelectOps

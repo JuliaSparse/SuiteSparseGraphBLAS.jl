@@ -9,26 +9,20 @@ Monoids are used primarily in the `reduce`(@ref) operation. Their other use is a
 
 ## Built-Ins
 
-All built-in monoids can be found in the `Monoids` submodule.
-
-The documentation below uses `T` to refer to any of the valid primitive types listed in [Supported Types](@ref), `ℤ` to refer to integers (signed and unsigned), `F` to refer to floating point types, `ℝ` to refer to real numbers (non-complex numbers).
-
-!!! note "Note"
-    In the case of floating point numbers +∞ and -∞ have their typical meanings. However, for integer types they indicate `typemax` and `typemin` respectively.
-
-```@docs
-SuiteSparseGraphBLAS.Monoids.MAX_MONOID
-SuiteSparseGraphBLAS.Monoids.MIN_MONOID
-SuiteSparseGraphBLAS.Monoids.PLUS_MONOID
-SuiteSparseGraphBLAS.Monoids.TIMES_MONOID
-SuiteSparseGraphBLAS.Monoids.ANY_MONOID
-SuiteSparseGraphBLAS.Monoids.BAND_MONOID
-SuiteSparseGraphBLAS.Monoids.BOR_MONOID
-SuiteSparseGraphBLAS.Monoids.BXNOR_MONOID
-SuiteSparseGraphBLAS.Monoids.BXOR_MONOID
-SuiteSparseGraphBLAS.Monoids.EQ_MONOID
-SuiteSparseGraphBLAS.Monoids.LAND_MONOID
-SuiteSparseGraphBLAS.Monoids.LOR_MONOID
-SuiteSparseGraphBLAS.Monoids.LXNOR_MONOID
-SuiteSparseGraphBLAS.Monoids.LXOR_MONOID
-```
+| Julia Function | GraphBLAS Name | Notes                                                                 |
+|----------------|----------------|-----------------------------------------------------------------------|
+| `max`          | `MAX_MONOID`   | identity: `typemax`, terminal: `typemin`                              |
+| `min`          | `MIN_MONOID`   | identity: `typemin`, terminal: `typemax`                              |
+| `+`            | `PLUS_MONOID`  | identity: `zero`                                                      |
+| `*`            | `TIMES_MONOID` | identity: `one`, terminal: `zero` (terminal only for non-Float types) |
+| `any`          | `ANY_MONOID`   | identity, terminal: any value in domain                               |
+| `&`            | `BAND_MONOID`  | identity: `typemax`, terminal: `zero`                                 |
+| `\|`           | `BOR_MONOID`   | identity: `zero`, terminal: `typemax`                                 |
+| `⊻`            | `BXOR_MONOID`  | identity: `zero`                                                      |
+| `lxor`         | `LXOR_MONOID`  | identity: `false`                                                     |
+| `==`           | `LXNOR_MONOID` | identity: `true`                                                      |
+| `∨`            | `LOR_MONOID`   | identity: `false`, term: `true`                                       |
+| `∧`            | `LAND_MONOID`  | identity: `true`, term: `false`                                       |
+|                |                |                                                                       |
+|                |                |                                                                       |
+|                |                |                                                                       |

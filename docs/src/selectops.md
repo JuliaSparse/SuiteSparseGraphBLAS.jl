@@ -7,7 +7,7 @@ Applying `select` with a `SelectOp` will always return a result with the same ty
 
 ## Built-Ins
 
-Built-in `SelectOp`s can be found in the `SelectOps` submodule.
+Built-in `SelectOp`s can be found in the `SelectOps` submodule. However users should pass the equivalent Julia function when possible.
 
 ```@docs
 SuiteSparseGraphBLAS.TRIL

@@ -2,34 +2,80 @@
 
 `UnaryOp`s are fairly straightforward $z = f(x)$ and their meaning should be clear from the name in most cases. 
 
-`UnaryOp`s are used only in the [`map`](@ref) function, for example:
+`UnaryOp`s are used only in the `map` and [`apply`](@ref) functions.
 
 ```@repl
 using SuiteSparseGraphBLAS
 
 x = GBVector([1.5, 0, pi])
 
-y = map(UnaryOps.SIN, x)
+y = map(sin, x)
 
-map(UnaryOps.ASIN, y)
+map(asin, y)
+```
 
+Internally functions are lowered like this:
+
+```@repl
+using SuiteSparseGraphBLAS
+
+op = UnaryOp(sin)
+
+typedop = op(Float64)
+
+map(typedop, GBVector([1.5, 0, pi]))
 ```
 
 ## Built-Ins
 
-```@eval
-using Pkg
-Pkg.activate("..")
-cd("..")
-using SuiteSparseGraphBLAS
-using Latexify
-head = ["UnaryOp", "Function Form", "Types"]
-v1 = filter((x) -> getproperty(UnaryOps, x) isa SuiteSparseGraphBLAS.AbstractUnaryOp, names(UnaryOps))
-ops = getproperty.(Ref(UnaryOps), v1)
-v2 = convert(Vector{Any}, SuiteSparseGraphBLAS.juliaop.(ops))
-v4 = SuiteSparseGraphBLAS.validtypes.(ops)
+The following functions are built into SuiteSparse:GraphBLAS. They are, much faster than arbitrary Julia functions and should be used when possible.
 
-v1 = "`" .* string.(v1) .* "`"
-v2 = "`" .* string.(v2) .* "`"
-Latexify.mdtable(hcat(v1,v2,v4); head, latex=false)
-```
+| Julia Function             | GraphBLAS Name | Notes |
+|:---------------------------|----------------|-------|
+| `identity`                 | `IDENTITY`     |       |
+| `-`                        | `AINV`         |       |
+| `inv`                      | `MINV`         |       |
+| `one`                      | `ONE`          |       |
+| `!`                        | `LNOT`         |       |
+| `abs`                      | `ABS`          |       |
+| `~`                        | `BNOT`         |       |
+| `positioni`                | `POSITIONI`    |       |
+| `positionj`                | `POSITIONJ`    |       |
+| `sqrt`                     | `SQRT`         |       |
+| `log`                      | `LOG`          |       |
+| `exp`                      | `EXP`          |       |
+| `log10`                    | `LOG10`        |       |
+| `log2`                     | `LOG2`         |       |
+| `exp2`                     | `EXP2`         |       |
+| `expm1`                    | `EXPM1`        |       |
+| `log1p`                    | `LOG1P`        |       |
+| `sin`                      | `SIN`          |       |
+| `cos`                      | `COS`          |       |
+| `tan`                      | `TAN`          |       |
+| `asin`                     | `ASIN`         |       |
+| `acos`                     | `ACOS`         |       |
+| `atan`                     | `ATAN`         |       |
+| `sinh`                     | `SINH`         |       |
+| `cosh`                     | `COSH`         |       |
+| `tanh`                     | `TANH`         |       |
+| `asinh`                    | `ASINH`        |       |
+| `acosh`                    | `ACOSH`        |       |
+| `atanh`                    | `ATANH`        |       |
+| `sign`                     | `SIGNUM`       |       |
+| `ceil`                     | `CEIL`         |       |
+| `floor`                    | `FLOOR`        |       |
+| `round`                    | `ROUND`        |       |
+| `trunc`                    | `TRUNC`        |       |
+| `SpecialFunctions.lgamma`  | `LGAMMA`       |       |
+| `SpecialFunctions.gamma`   | `TGAMMA`       |       |
+| `erf`                      | `ERF`          |       |
+| `erfc`                     | `ERFC`         |       |
+| `frexpx`                   | `FREXPX`       |       |
+| `frexpe`                   | `FREXPE`       |       |
+| `isinf`                    | `ISINF`        |       |
+| `isnan`                    | `ISNAN`        |       |
+| `isfinite`                 | `ISFINITE`     |       |
+| `conj`                     | `CONJ`         |       |
+| `real`                     | `CREAL`        |       |
+| `imag`                     | `CIMAG`        |       |
+| `angle`                    | `CARG`         |       |
