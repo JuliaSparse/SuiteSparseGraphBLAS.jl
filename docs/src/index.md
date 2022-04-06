@@ -2,7 +2,7 @@
 
 Fast sparse linear algebra is an essential part of the scientific computing toolkit. Outside of the usual applications, like differential equations, sparse linear algebra provides an elegant way to express graph algorithms on adjacency and incidence matrices. The GraphBLAS standard specifies a set of operations for computing sparse matrix graph algorithm in a vein similar to the BLAS or LAPACK standards.
 
-SuiteSparseGraphBLAS.jl is a blazing fast package for shared memory sparse matrix operations which wraps Tim Davis' SuiteSparse:GraphBLAS implementation of the GraphBLAS C specification.
+SuiteSparseGraphBLAS.jl is a blazing fast package for shared memory sparse matrix operations which wraps Tim Davis' SuiteSparse:GraphBLAS. If you use this package in your research please see [Citing](@ref).
 
 # Installation
 
@@ -182,4 +182,43 @@ end
 M = eadd(A, A', +) #Make undirected/symmetric
 cohen(M)
 sandia(M)
+```
+
+# Citing
+
+Please cite the serial SuiteSparse:GraphBLAS [paper](https://doi.org/10.1145/3322125):
+
+```bibtex
+    @article{10.1145/3322125,
+    author = {Davis, Timothy A.},
+    title = {Algorithm 1000: SuiteSparse:GraphBLAS: Graph Algorithms in the Language of Sparse Linear Algebra},
+    year = {2019},
+    issue_date = {December 2019},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {45},
+    number = {4},
+    issn = {0098-3500},
+    url = {https://doi.org/10.1145/3322125},
+    doi = {10.1145/3322125},
+    journal = {ACM Trans. Math. Softw.},
+    month = {dec},
+    articleno = {44},
+    numpages = {25},
+    keywords = {GraphBLAS, Graph algorithms, sparse matrices}
+    }
+```
+
+and the parallel SuiteSparse:GraphBLAS [paper](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/toms_parallel_grb2.pdf):
+
+```bibtex
+    @article{GraphBLAS7,
+    author = {Davis, Timothy A.},
+    title = {Algorithm 10xx: SuiteSparse:GraphBLAS: Graph Algorithms in the Language of Sparse Linear Algebra},
+    year = {2022},
+    journal = {ACM Trans. Math. Softw.},
+    month = {(under revision)},
+    note={See GraphBLAS/Doc/toms_parallel_grb2.pdf},
+    keywords = {GraphBLAS, Graph algorithms, sparse matrices}
+}
 ```

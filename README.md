@@ -37,14 +37,53 @@ julia> s = GBMatrix(s);
 julia> @btime s[1:10:end, end:-10:1]
   626.943 ms (33 allocations: 1.14 KiB)
 ```
+## Citing SuiteSparse:GraphBLAS
+
+If you use SuiteSparseGraphBLAS.jl in your research please cite the serial SuiteSparse:GraphBLAS [paper](https://doi.org/10.1145/3322125):
+
+```bibtex
+    @article{10.1145/3322125,
+    author = {Davis, Timothy A.},
+    title = {Algorithm 1000: SuiteSparse:GraphBLAS: Graph Algorithms in the Language of Sparse Linear Algebra},
+    year = {2019},
+    issue_date = {December 2019},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    volume = {45},
+    number = {4},
+    issn = {0098-3500},
+    url = {https://doi.org/10.1145/3322125},
+    doi = {10.1145/3322125},
+    journal = {ACM Trans. Math. Softw.},
+    month = {dec},
+    articleno = {44},
+    numpages = {25},
+    keywords = {GraphBLAS, Graph algorithms, sparse matrices}
+    }
+```
+
+and the parallel SuiteSparse:GraphBLAS [paper](https://github.com/DrTimothyAldenDavis/GraphBLAS/blob/stable/Doc/toms_parallel_grb2.pdf):
+
+```bibtex
+    @article{GraphBLAS7,
+  author = {Davis, Timothy A.},
+  title = {Algorithm 10xx: SuiteSparse:GraphBLAS: Graph Algorithms in the Language of Sparse Linear Algebra},
+  year = {2022},
+  journal = {ACM Trans. Math. Softw.},
+  month = {(under revision)},
+  note={See GraphBLAS/Doc/toms_parallel_grb2.pdf},
+  keywords = {GraphBLAS, Graph algorithms, sparse matrices}
+}
+```
+
 
 ## Acknowledgements
 This work was funded as part of Google Summer of Code over 3 summers, 2 of which were for Abhinav Mehndiratta and the last of which was for William Kimmerer.
-
-Current maintainer: William Kimmerer
 
 Original author: Abhinav Mehndiratta
 
 SuiteSparse author: Tim Davis
 
-Mentors: Viral B Shah, Miha Zgubic
+Mentors: Viral B Shah, Miha Zgubic, Tim Davis
+
+Current maintainer: William Kimmerer
