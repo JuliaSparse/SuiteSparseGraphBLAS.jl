@@ -123,7 +123,6 @@ Base.:-(u::GBArray) = apply(-, u)
     mask!(C::GBArray, A::GBArray, mask::GBArray)
 
 Apply a mask to matrix `A`, storing the results in C.
-
 """
 function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
     desc = Descriptor()

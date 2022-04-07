@@ -3,7 +3,7 @@
     gbset(option, value)
 
 Set an option either for a specific GBArray, or globally. The commonly used options are:
-    - `:format = [:byrow | :bycol]`: The global default or array specific
+    - `:format = [RowMajor() | ColMajor()]`: The global default or array specific
     column major or row major ordering.
     - `:nthreads = [Integer]`: The global number of OpenMP threads to use.
     - `:burble = [Bool]`: Print diagnostic output.

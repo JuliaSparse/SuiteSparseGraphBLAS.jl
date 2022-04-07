@@ -152,7 +152,7 @@ Unfortunately this has a couple problems. The first is that it's slow.\
 Compared to `A .+ 1` which lowers to `apply(+, A, 1)` the `map` call above is ~2.5x slower due to function pointer overhead.
 
 The second is that everytime we call `map(increment, M)` we will be re-creating the function pointer for `increment` matched to the type of `M`.\
-To avoid this there's a convenience macro [`@unop`](@ref) which will provide a permanent constant which is used every time `increment` is called with a GraphBLAS operation. See [Operators](@ref) for more information.
+To avoid this the convenience macro `@unop` will provide a permanent constant which is used internally every time `increment` is called with a GraphBLAS operation. See [Operators](@ref) for more information.
 
 !!! warning "Performance of User Defined Functions"
     Operators which are not already built-in are automatically constructed using function pointers when called. 

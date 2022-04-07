@@ -11,7 +11,7 @@ AbstractGBArray{T, N, F} <: AbstractSparseArray{T, N}
      └─ GBVector{T, F}
 ```
 
-The `T` parameter is the element type of the array, `N` is the dimensionality, `F` is the type of the fill value (often `Nothing` or `T`). The [`OrientedGBMatrix`](@ref) restricts the orientation to the parameter `O` which is either `ByRow()` or `ByCol()`. 
+The `T` parameter is the element type of the array, `N` is the dimensionality, `F` is the type of the fill value (often `Nothing` or `T`). The `OrientedGBMatrix` restricts the orientation to the parameter `O` which is either `ByRow()` or `ByCol()`. 
 
 All of these types attempt to implement most of the `AbstractArray` interface, and the relevant parts of the `SparseArrays` interface.
 
