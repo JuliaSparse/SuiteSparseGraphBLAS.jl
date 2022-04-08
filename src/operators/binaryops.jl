@@ -7,7 +7,8 @@ using ..LibGraphBLAS
 export BinaryOp, @binop
 
 export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor, fmod, 
-bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, secondj
+bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, 
+secondj, pair
 
 struct BinaryOp{F} <: AbstractBinaryOp
     juliaop::F
