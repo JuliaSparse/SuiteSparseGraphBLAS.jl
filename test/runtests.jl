@@ -6,6 +6,7 @@ using ChainRulesTestUtils
 using ChainRulesCore
 using FiniteDifferences
 using SuiteSparseGraphBLAS
+using SuiteSparseGraphBLAS: pair, second
 Random.seed!(1)
 
 function include_test(path)

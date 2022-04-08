@@ -6,5 +6,5 @@ mask!
 gbset
 Descriptor
 SuiteSparseGraphBLAS.set_lib!
-clear!
+empty!
 ```

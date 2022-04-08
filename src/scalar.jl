@@ -22,7 +22,7 @@ function Base.copy(s::GBScalar{T}) where {T}
     return GBScalar{T}(s2[])
 end
 
-function clear!(s::GBScalar)
+function Base.empty!(s::GBScalar)
     @wraperror LibGraphBLAS.GxB_Scalar_clear(s)
 end
 

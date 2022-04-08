@@ -58,7 +58,7 @@ function mxm(A::SuiteSparseGraphBLAS.GBArray, B::SuiteSparseGraphBLAS.GBArray; a
     if !accumdenseoutput
         printstyled(stdout, "\nC::GBArray = A::GBArray($Ao, $(size(A))) * B::GBArray($Bo, $(size(B)))\n")
         flush(stdout)
-        result = @gbbench mul(A, B)
+        result = @gbbench *(A, B)
     else
         printstyled(stdout, "\nC::GBArray += A::GBArray($Ao, $(size(A))) * B::GBArray($Bo, $(size(B)))\n")
         C = GBMatrix(zeros(eltype(A), size(A, 1), size(B, 2)))

@@ -51,7 +51,7 @@ function Base.similar(
 end
 
 #Find the modifying version of a function.
-modifying(::typeof(mul)) = mul!
+modifying(::typeof(*)) = mul!
 modifying(::typeof(eadd)) = eadd!
 modifying(::typeof(emul)) = emul!
 

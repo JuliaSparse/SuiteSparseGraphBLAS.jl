@@ -43,10 +43,10 @@
         end
     end
 
-    @testset "setindex and clear!" begin
+    @testset "setindex and empty!" begin
         x = sprand(UInt16, 10, 10, 0.1)
         m = GBMatrix(x)
-        clear!(m)
+        empty!(m)
         @test nnz(m) == 0
         #steprange and scalar
         m[1:2:10, 1] = [1, 2, 3, 4, 5]
@@ -66,7 +66,7 @@
         #vectors
         x = sprand(Float32, 100, 0.35)
         v = GBVector(x)
-        clear!(v)
+        empty!(v)
         @test nnz(v) == 0
 
         #steprange

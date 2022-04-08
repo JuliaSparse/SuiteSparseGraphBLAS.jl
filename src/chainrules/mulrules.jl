@@ -2,45 +2,45 @@
 ###############
 function frule(
     (_, ΔA, ΔB)::Tuple,
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray
 )
-    frule((nothing, ΔA, ΔB, nothing), mul, A, B, (+, *))
+    frule((nothing, ΔA, ΔB, nothing), *, A, B, (+, *))
 end
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, *))
 )
-    Ω = mul(A, B, (+, *))
-    ∂Ω = mul(unthunk(ΔA), B, (+, *)) + mul(A, unthunk(ΔB), (+, *))
+    Ω = *(A, B, (+, *))
+    ∂Ω = *(unthunk(ΔA), B, (+, *)) + *(A, unthunk(ΔB), (+, *))
     return Ω, ∂Ω
 end
 
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, *))
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(unthunk(ΔΩ), B', (+, *); mask=A)
-        ∂B = mul(A', unthunk(ΔΩ), (+, *); mask=B)
+        ∂A = *(unthunk(ΔΩ), B', (+, *); mask=A)
+        ∂B = *(A', unthunk(ΔΩ), (+, *); mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return mul(A, B), mulpullback
+    return *(A, B), mulpullback
 end
 
 
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray
 )
-    Ω, mulpullback = rrule(mul, A, B, (+, *))
+    Ω, mulpullback = rrule(*, A, B, (+, *))
     pullback(ΔΩ) = mulpullback(ΔΩ)[1:3]
 return Ω, pullback
 end
@@ -49,125 +49,125 @@ end
 # PLUS_DIV:
 # Missing frule here.
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, /))
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(unthunk(ΔΩ), one(eltype(A)) ./ B', (+, *); mask=A)
-        ∂B = (zero(eltype(A)) .- mul(A', unthunk(ΔΩ); mask=B)) ./ (B .^ 2.)
+        ∂A = *(unthunk(ΔΩ), one(eltype(A)) ./ B', (+, *); mask=A)
+        ∂B = (zero(eltype(A)) .- *(A', unthunk(ΔΩ); mask=B)) ./ (B .^ 2.)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return mul(A, B, (+, /)), mulpullback
+    return *(A, B, (+, /)), mulpullback
 end
 
 # PLUS_PLUS:
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, +))
 )
-    Ω = mul(A, B, (+, +))
-    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), (+, +))
+    Ω = *(A, B, (+, +))
+    ∂Ω = *(unthunk(ΔA), unthunk(ΔB), (+, +))
     return Ω, ∂Ω
 end
 
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, +))
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(unthunk(ΔΩ), B', (+, first); mask=A)
-        ∂B = mul(A', unthunk(ΔΩ), (+, second); mask=B)
+        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=A)
+        ∂B = *(A', unthunk(ΔΩ), (+, second); mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return mul(A, B, (+, +)), mulpullback
+    return *(A, B, (+, +)), mulpullback
 end
 
 # PLUS_MINUS:
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, -))
 )
-    Ω = mul(A, B, (+, -))
-    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), (+, -))
+    Ω = *(A, B, (+, -))
+    ∂Ω = *(unthunk(ΔA), unthunk(ΔB), (+, -))
     return Ω, ∂Ω
 end
 
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, -))
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(unthunk(ΔΩ), B', (+, first); mask=A)
-        ∂B = mul(A', zero(eltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), (+, second); mask=B)
+        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=A)
+        ∂B = *(A', zero(eltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), (+, second); mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return mul(A, B, (+, -)), mulpullback
+    return *(A, B, (+, -)), mulpullback
 end
 
 # PLUS_FIRST:
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, first))
 )
-    Ω = mul(A, B, (+, first))
-    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), (+, first))
+    Ω = *(A, B, (+, first))
+    ∂Ω = *(unthunk(ΔA), unthunk(ΔB), (+, first))
     return Ω, ∂Ω
 end
 
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, first))
 )
     function mulpullback(ΔΩ)
-        ∂A = mul(unthunk(ΔΩ), B', (+, first); mask=A)
+        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=A)
         ∂B = NoTangent() # perhaps this should be ZeroTangent(), not sure.
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return mul(A, B, (+, first)), mulpullback
+    return *(A, B, (+, first)), mulpullback
 end
 
 # PLUS_SECOND:
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, second))
 )
-    Ω = mul(A, B, (+, second))
-    ∂Ω = mul(unthunk(ΔA), unthunk(ΔB), (+, second))
+    Ω = *(A, B, (+, second))
+    ∂Ω = *(unthunk(ΔA), unthunk(ΔB), (+, second))
     return Ω, ∂Ω
 end
 
 function rrule(
-    ::typeof(mul),
+    ::typeof(*),
     A::GBArray,
     B::GBArray,
     ::typeof((+, second))
 )
     function mulpullback(ΔΩ)
         ∂A = NoTangent()
-        ∂B = mul(A', unthunk(ΔΩ), (+, second); mask=B)
+        ∂B = *(A', unthunk(ΔΩ), (+, second); mask=B)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
-    return mul(A, B, (+, second)), mulpullback
+    return *(A, B, (+, second)), mulpullback
 end
 
 # TROPICAL REDUCERS:

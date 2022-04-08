@@ -98,9 +98,9 @@ function AxB_allbyrow(S, G, nthreads, sizerhs)
         gbset(:nthreads, n)
         #print burble for checking
         gbset(:burble, true)
-        mul(G, m2)
+        *(G, m2)
         gbset(:burble, false)
-        B = @benchmark mul($G, $m2)
+        B = @benchmark *($G, $m2)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
         color = tratio.time >= 1.0 ? :green : :red
@@ -129,9 +129,9 @@ function AxB_ColxRow(S, G, nthreads, sizerhs)
         gbset(:nthreads, n)
         #print burble for checking
         gbset(:burble, true)
-        mul(G, m2)
+        *(G, m2)
         gbset(:burble, false)
-        B = @benchmark mul($G, $m2)
+        B = @benchmark *($G, $m2)
         show(stdout, MIME("text/plain"), B)
         tratio = ratio(median(A), median(B))
         color = tratio.time >= 1.0 ? :green : :red

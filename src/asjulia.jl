@@ -13,9 +13,9 @@ function as(f::Function, type::Type{<:Union{GBMatrix, GBVector}}, A::AbstractArr
 end
 
 
-function as(f::Function, type::Type{<:Union{Matrix, Vector}}, A::AbstractGBArray{T}; dropzeros=false, freeunpacked=false, nomodstructure = false) where {T}
-    (type == Matrix && !(A isa AbstractMatrix)) && throw(ArgumentError("Cannot wrap $(typeof(A)) in a Matrix."))
-    (type == Vector && !(A isa AbstractVector)) && throw(ArgumentError("Cannot wrap $(typeof(A)) in a Vector."))
+function as(f::Function, type::Type{<:Union{Matrix, Vector}}, A::AbstractGBArray{T}; dropzeros=false, freeunpacked=false, dontmodifysparsity = false) where {T}
+    (type == Matrix && !(A isa AbstractGBMatrix)) && throw(ArgumentError("Cannot wrap $(typeof(A)) in a Matrix."))
+    (type == Vector && !(A isa AbstractGBVector)) && throw(ArgumentError("Cannot wrap $(typeof(A)) in a Vector."))
     if gbget(A, SPARSITY_STATUS) != Int64(GBDENSE)
         X = similar(A)
         if X isa GBVector
@@ -23,7 +23,7 @@ function as(f::Function, type::Type{<:Union{Matrix, Vector}}, A::AbstractGBArray
         else
             X[:,:] = zero(T)
         end
-        if nomodstructure
+        if dontmodifysparsity
             A = eadd!(X, A, X)
         else
             A = eadd!(A, X, A)
@@ -32,7 +32,11 @@ function as(f::Function, type::Type{<:Union{Matrix, Vector}}, A::AbstractGBArray
     
     array = _unpackdensematrix!(A)
     result = try
-        f(array)
+        result = f(array)
+        if result === array
+            result = copy(result)
+        end
+        result
     finally
         if freeunpacked
             ccall(:jl_free, Cvoid, (Ptr{T},), pointer(array))
@@ -50,7 +54,11 @@ function as(f::Function, ::Type{SparseMatrixCSC}, A::AbstractGBMatrix{T}; freeun
     colptr, colptrsize, rowidx, rowidxsize, values, valsize =  _unpackcscmatrix!(A)
     array = SparseMatrixCSC{T, LibGraphBLAS.GrB_Index}(size(A, 1), size(A, 2), colptr, rowidx, values)
     result = try
-        f(array)
+        result = f(array)
+        if result === array
+            result = copy(result)
+        end
+        result
     finally
         if freeunpacked
             ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(colptr))
@@ -67,7 +75,11 @@ function as(f::Function, ::Type{SparseVector}, A::AbstractGBVector{T}; freeunpac
     colptr, colptrsize, rowidx, rowidxsize, values, valsize =  _unpackcscmatrix!(A)
     vector = SparseVector{T, LibGraphBLAS.GrB_Index}(size(A, 1), rowidx, values)
     result = try
-        f(vector)
+        result = f(vector)
+        if result === vector
+            result = copy(result)
+        end
+        result
     finally
         if freeunpacked
             ccall(:jl_free, Cvoid, (Ptr{LibGraphBLAS.GrB_Index},), pointer(colptr))
@@ -82,28 +94,26 @@ end
 
 
 function Base.Matrix(A::AbstractGBMatrix)
-    # we use nomodstructure here to avoid the pitfall of densifying A. 
-    return as(Matrix, A; nomodstructure=true) do arr
+    # we use dontmodifysparsity here to avoid the pitfall of densifying A. 
+    return as(Matrix, A; dontmodifysparsity=true) do arr
         return copy(arr)
     end
 end
 
-function Matrix!(A::AbstractGBMatrix)
-    # we use nomodstructure here to avoid the pitfall of densifying A. 
+function Matrix!(A::AbstractGBMatrix) 
     return as(Matrix, A; freeunpacked=true) do arr
         return copy(arr)
     end
 end
 
 function Base.Vector(v::AbstractGBVector)
-    # we use nomodstructure here to avoid the pitfall of densifying A. 
-    return as(Vector, v; nomodstructure=true) do vec
+    # we use dontmodifysparsity here to avoid the pitfall of densifying A. 
+    return as(Vector, v; dontmodifysparsity=true) do vec
         return copy(vec)
     end
 end
 
-function Vector!(v::AbstractGBVector)
-    # we use nomodstructure here to avoid the pitfall of densifying A. 
+function Vector!(v::AbstractGBVector) 
     return as(Vector, v; freeunpacked=true) do vec
         return copy(vec)
     end

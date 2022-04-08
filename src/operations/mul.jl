@@ -54,7 +54,7 @@ function LinearAlgebra.mul!(
 end
 
 """
-    mul(A::GBArray, B::GBArray, op=(+,*); kwargs...)::GBArray
+    *(A::GBArray, B::GBArray, op=(+,*); kwargs...)::GBArray
 
 Multiply two `GBArray`s `A` and `B` using a semiring, which defaults to the arithmetic semiring `+.*`.
 
@@ -77,7 +77,7 @@ The operator syntax `A * B` can be used when the default semiring is desired, an
 - `GBArray`: The output matrix whose `eltype` is determined by `A` and `B` or the semiring
     if a type specific semiring is provided.
 """
-function mul(
+function Base.:*(
     A::GBArray,
     B::GBArray,
     op = (+, *);
@@ -100,7 +100,7 @@ function mul(
     return C
 end
 
-function mul(
+function Base.:*(
     A::VecOrMat,
     B::GBArray,
     op = (+, *);
@@ -111,10 +111,10 @@ function mul(
     AGB = GBMatrix{eltype(A)}(size(A, 1), size(A, 2))
     _packdensematrix!(AGB, A)
     _makeshallow!(AGB)
-    return mul(AGB, B, op; mask, accum, desc)
+    return *(AGB, B, op; mask, accum, desc)
 end
 
-function mul(
+function Base.:*(
     A::GBArray,
     B::VecOrMat,
     op = (+, *);
@@ -125,17 +125,7 @@ function mul(
     BGB = GBMatrix{eltype(B)}(size(B, 1), size(B, 2))
     _packdensematrix!(BGB, B)
     _makeshallow!(BGB)
-    return mul(A, BGB, op; mask, accum, desc)
-end
-
-function Base.:*(
-    A::GBArray,
-    B::GBArray;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return mul(A, B, (+, *); mask, accum, desc)
+    return *(A, BGB, op; mask, accum, desc)
 end
 
 # clear up some ambiguities:
@@ -146,7 +136,7 @@ function Base.:*(
     accum = nothing,
     desc = nothing
 ) where {T <: Real}
-    return mul(A, B, (+, *); mask, accum, desc)
+    return *(A, B, (+, *); mask, accum, desc)
 end
 
 function Base.:*(
@@ -156,38 +146,17 @@ function Base.:*(
     accum = nothing,
     desc = nothing
 ) where {T <: Real}
-    return mul(A, B, (+, *); mask, accum, desc)
-end
-
-
-function Base.:*(
-    A::VecOrMat,
-    B::GBArray;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return mul(A, B, (+, *); mask, accum, desc)
-end
-
-function Base.:*(
-    A::GBArray,
-    B::VecOrMat;
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-)
-    return mul(A, B, (+, *); mask, accum, desc)
+    return *(A, B, (+, *); mask, accum, desc)
 end
 
 function Base.:*((⊕)::Function, (⊗)::Function)
     return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
-        mul(A, B, (⊕, ⊗); mask, accum, desc)
+        *(A, B, (⊕, ⊗); mask, accum, desc)
     end
 end
 
 function Base.:*(rig::AbstractSemiring)
     return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
-        mul(A, B, rig; mask, accum, desc)
+        *(A, B, rig; mask, accum, desc)
     end
 end

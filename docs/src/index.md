@@ -100,7 +100,7 @@ GraphBLAS operations are, where possible, methods of existing Julia functions li
 
 | GraphBLAS           | Operation                                                        | Julia                                      |
 |:--------------------|:----------------------------------------:                        |----------:                                 |
-|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul[!]` or `*`                             |
+|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul!` or `*`                             |
 |`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``               |`emul[!]` or `.` broadcasting               |
 |`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``               |`eadd[!]`                                   |
 |`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex`       |
@@ -138,7 +138,7 @@ map(sin, A)
 Broadcasting functionality is also supported, `A .^ A` will lower to `emul(A, A, ^)`, and `sin.(A)` will lower to `map(sin, A)`.
 
 Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)` or
-`mul(A, B, (max, +))`.
+`*(A, B, (max, +))`.
 
 We can also use functions that are not already built into SuiteSparseGraphBLAS.jl:
 
@@ -168,15 +168,16 @@ Input `A` must be a square, symmetric matrix with any element type.
 We'll test it using the matrix from the GBArray section above, which has two triangles in its undirected form.
 
 ```@repl intro
+using SuiteSparseGraphBLAS: pair
 function cohen(A)
   U = select(triu, A)
   L = select(tril, A)
-  return reduce(+, mul(L, U, (+, pair); mask=A)) ÷ 2
+  return reduce(+, *(L, U, (+, pair); mask=A)) ÷ 2
 end
 
 function sandia(A)
   L = select(tril, A)
-  return reduce(+, mul(L, L, (+, pair); mask=L))
+  return reduce(+, *(L, L, (+, pair); mask=L))
 end
 
 M = eadd(A, A', +) #Make undirected/symmetric

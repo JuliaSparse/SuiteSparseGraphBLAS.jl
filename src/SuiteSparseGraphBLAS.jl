@@ -114,15 +114,17 @@ export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
 #UnaryOps not found in Julia/stdlibs.
 export frexpe, frexpx, positioni, positionj
 #BinaryOps not found in Julia/stdlibs.
-export second, rminus, pair, ∨, ∧, lxor, fmod, firsti,
-    firstj, secondi, secondj
+export firsti, firstj, secondi, secondj
+# unexported but important BinaryOps:
+# export second, rminus, pair, ∨, ∧, lxor, fmod
+
 #SelectOps not found in Julia/stdlibs
 export offdiag
 
-export clear!, extract, extract!, subassign!, assign!, hvcat! #array functions
+export extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
-export mul, select, select!, eadd, eadd!, emul, emul!, map, map!, gbtranspose, gbtranspose!,
+export select, select!, eadd, eadd!, emul, emul!, gbtranspose, gbtranspose!,
 gbrand, eunion, eunion!, mask, mask!, apply, apply!, setfill, setfill!
 # Reexports from LinAlg
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu

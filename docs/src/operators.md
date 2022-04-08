@@ -14,7 +14,7 @@ For operations with a clear default operator they appear as the last positional 
 - [`emul(A, B, op::Union{BinaryOp, Function})`](@ref emul)
 - [`eadd(A, B, op::Union{BinaryOp, Function})`](@ref eadd)
 - [`kron(A, B, op::Union{BinaryOp, Function})`](@ref kron)
-- [`mul(A, B, op::Union{Semiring, Tuple{Function, Function}})`](@ref mul)
+- [`*(A, B, op::Union{Semiring, Tuple{Function, Function}})`](@ref *)
 
 For other operations without a clear default operator they appear as the first argument:
 

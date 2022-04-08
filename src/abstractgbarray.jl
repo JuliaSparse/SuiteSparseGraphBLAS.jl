@@ -8,13 +8,13 @@ end
 Base.eltype(::Type{AbstractGBArray{T}}) where{T} = T
 
 """
-    clear!(v::GBVector)
-    clear!(A::GBMatrix)
+    empty!(v::GBVector)
+    empty!(A::GBMatrix)
 
 Clear all the entries from the GBArray.
 Does not modify the type or dimensions.
 """
-clear!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A))); return nothing
+Base.empty!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A))); return nothing
 
 # AbstractGBMatrix functions:
 #############################

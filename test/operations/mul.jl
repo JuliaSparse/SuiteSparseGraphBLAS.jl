@@ -1,11 +1,11 @@
 @testset "mul" begin
     m = rand(10, 10)
     n = rand(10, 100)
-    @test isapprox(Matrix(mul(GBMatrix(m), GBMatrix(n))), m * n, atol=8e-15)
+    @test isapprox(Matrix(*(GBMatrix(m), GBMatrix(n))), m * n, atol=8e-15)
     m = GBMatrix([1,3,5,7], [7,5,3,1], [1,2,3,4])
     n = GBMatrix{Int8}(7, 1)
     n[1:2:7, 1] = [1, 10, 20, 30]
-    o = mul(m, n)
+    o = *(m, n)
     @test size(o, 1) == 7
     @test eltype(o) == Int64
     @test o[7, 1] == 4 && o[5, 1] == 30

@@ -5,7 +5,7 @@ GraphBLAS operations cover most of the typical linear algebra operations on arra
 ## Correspondence of GraphBLAS C functions and Julia functions
 | GraphBLAS           | Operation                                                        | Julia                                      |
 |:--------------------|:---------------------------------------------------------------: |----------------------------------------:   |
-|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul[!]` or `*`                             |
+|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul!` or `*`                             |
 |`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``               |`emul[!]` or `.` broadcasting               |
 |`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``               |`eadd[!]`                                   |
 |`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex`                    |
@@ -73,7 +73,7 @@ The mask may also be complemented. These options are controlled by the `desc` ar
 All non-mutating operations below support a mutating form by adding an output array as the first argument as well as the `!` function suffix. 
 
 ```@docs
-mul
+*
 emul
 emul!
 eadd
