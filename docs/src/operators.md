@@ -1,4 +1,4 @@
-# Basics
+# Operators
 
 Operators are one of the basic objects of GraphBLAS. In Julia, however, users must only interact directly with operators on rare occasions, and should instead pass functions to GraphBLAS operations.
 

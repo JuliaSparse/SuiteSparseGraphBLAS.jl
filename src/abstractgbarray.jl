@@ -516,10 +516,22 @@ function Base.getindex(
     return extract(A, i, j; mask, accum, desc)
 end
 
+"""
+    setfill!(A::AbstractGBArray{T, N, F}, x::F)
+
+Modify the fill value of `A`. 
+The fill type of `A` and the type of `x` must be the same.
+"""
 function setfill!(A::AbstractGBArray, x)
     A.fill = x
 end
 
+"""
+    setfill(A::AbstractGBArray{T, N, F}, x::F2)
+
+Create a new AbstractGBArray with the same underlying data but a new fill `x`.
+The fill type of `A` and the type of `x` may be different.
+"""
 function setfill(A::AbstractGBArray, x) # aliasing form.
     B = similar(A; fill=x)
     B.p = A.p

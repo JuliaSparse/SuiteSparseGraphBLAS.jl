@@ -96,9 +96,8 @@ include("serialization.jl")
 #EXPERIMENTAL
 include("misc.jl")
 include("asjulia.jl")
-# include("spmgb/sparsemat.jl")
 include("mmread.jl")
-include("iterator.jl")
+# include("iterator.jl")
 include("oriented.jl")
 
 export SparseArrayCompat
