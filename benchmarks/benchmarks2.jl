@@ -73,8 +73,11 @@ end
 
 function tpose(A::SuiteSparseGraphBLAS.GBArray)
     Ao = storageorder(A) == ColMajor() ? "C" : "R"
-    printstyled(stdout, "\nC::GBArray = transpose(A::GBArray($Ao, $(size(A))))\n")
-    result = @gbbench copy(transpose(A))
+    C = similar(A)
+    gbset(C, :format, storageorder(A) === ColMajor() ? SuiteSparseGraphBLAS.BYCOL : SuiteSparseGraphBLAS.BYROW)
+    Co = storageorder(A) == ColMajor() ? "C" : "R"
+    printstyled(stdout, "\nC::GBArray($(Co)) = transpose(A::GBArray($Ao, $(size(A))))\n")
+    result = @gbbench SuiteSparseGraphBLAS.gbtranspose!(C, A)
     println(stdout, result, "s")
     GC.gc()
     flush(stdout)
