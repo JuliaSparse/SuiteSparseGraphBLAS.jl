@@ -64,13 +64,14 @@ end
 end
 
 @inline function decrement!(I)
-    I isa Vector && (return I .-= 1)
     I isa Number && (return I - 1)
+    parent(I) isa Vector && (return I .-= 1)
     return I # don't need to modify here, likely an AllType.
 end
+
 @inline function increment!(I)
-    I isa Vector && (return I .+= 1)
     I isa Number && (return I + 1)
+    parent(I) isa Vector && (return I .+= 1)
     return I # don't need to modify here, likely an AllType.
 end
 

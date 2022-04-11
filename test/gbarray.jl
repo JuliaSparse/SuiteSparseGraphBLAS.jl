@@ -23,6 +23,9 @@
             @test m[1:2:5, 1:2] == GBMatrix(x[1:2:5, 1:2])
             @test m[1:2:5, :] == GBMatrix(x[1:2:5, :])
 
+            A = GBMatrix([[1,2] [3,4]])
+            @test A[[1,2], [1,1]] == [[1,2] [1,2]]
+
         end
         @testset "sparse" begin
             #Construction and indexing correct for sparse matrices
