@@ -102,11 +102,11 @@ include("oriented.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS
-export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
+# export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export UnaryOp, BinaryOp, Monoid, Semiring #UDFs
 export Descriptor #Types
 export gbset, gbget # global and object specific options.
-export xtype, ytype, ztype #Determine input/output types of operators
+# export xtype, ytype, ztype #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix #arrays
 export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
 
