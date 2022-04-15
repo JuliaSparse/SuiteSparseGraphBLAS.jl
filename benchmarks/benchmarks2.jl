@@ -93,12 +93,43 @@ function tpose(A::SparseMatrixCSC)
     return result
 end
 
-function runthreadedt(A, B; accumdenseoutput=false)
+function runthreadedt(A; accumdenseoutput=false)
     v = []
     for t ∈ threadlist
         printstyled(stdout, "\nRunning GraphBLAS with $t threads\n"; bold=true)
         gbset(:nthreads, t)
         push!(v, tpose(A))
+    end
+    return v
+end
+
+function idx(C, A, I, J)
+    if C isa SuiteSparseGraphBLAS.AbstractGBArray
+        Ao = storageorder(A) == ColMajor() ? "C" : "R"
+        Co = storageorder(A) == ColMajor() ? "C" : "R"
+        printstyled(stdout, "\nC::GBArray($(Co))[I, J] = A::GBArray($Ao, $(size(A)))\n")
+        result = @gbbench begin
+            C[I, J] = A
+            wait(C)
+        end
+        println(stdout, result, "s")
+        GC.gc()
+    else
+        printstyled(stdout, "\nC[I, J] = A::SparseMatrixCSC($(size(A)))\n")
+        result = @bench C[I, J] = A
+        println(stdou, result, "s")
+        GC.gc()
+    end
+    flush(stdout)
+    return result
+end
+
+function runthreadedidx(C, A, I, J)
+    v = []
+    for t ∈ threadlist
+        printstyled(stdout, "\nRunning GraphBLAS with $t threads\n"; bold=true)
+        gbset(:nthreads, t)
+        push!(v, idx(C, A, I, J))
     end
     return v
 end
@@ -114,14 +145,14 @@ function singlebench(pathornum)
         throw(ErrorException("Argument is not a path or SuiteSparseMatrixCollection ID number"))
     end
     name = basename(path)
-    A = SuiteSparseGraphBLAS.mmread(path)
-    if eltype(A) == Bool
-        A = Int64.(A)
-    end
-    GC.gc()
-    printstyled(stdout, "\n#################################################################################\n"; bold=true, color=:green)
-    printstyled(stdout, "Benchmarking $name:\n"; bold=true, color=:green)
-    printstyled(stdout, "#################################################################################\n"; bold=true, color=:green)
+    # A = SuiteSparseGraphBLAS.mmread(path)
+    # if eltype(A) == Bool
+    #     A = Int64.(A)
+    # end
+    # GC.gc()
+    # printstyled(stdout, "\n#################################################################################\n"; bold=true, color=:green)
+    # printstyled(stdout, "Benchmarking $name:\n"; bold=true, color=:green)
+    # printstyled(stdout, "#################################################################################\n"; bold=true, color=:green)
     
     # printstyled(stdout, "\nSparse * Vec\n"; bold=true)
     # println(stdout, "################################")
@@ -214,14 +245,41 @@ function singlebench(pathornum)
     # println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     # println(stdout, "SparseArrays: $SAresults")
     # flush(stdout)
-    printstyled(stdout, "\nC = copy(transpose(A))"; bold=true)
+    # printstyled(stdout, "\nC = copy(transpose(A))"; bold=true)
+    # println(stdout, "################################")
+    # flush(stdout)
+    # gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
+    # diag(A)
+    # gbresultsR = runthreadedt(A)
+    # gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
+    # diag(A)
+    # gbresultsC = runthreadedt(A)
+    # A2 = SparseMatrixCSC(A)
+    # SAresults = tpose(A2)
+    # println(stdout, )
+    # printstyled(stdout, "\nRESULTS, C = copy(transpose(A)): \n"; bold=true, color=:green)
+    # println(stdout, "################################")
+    # println(stdout, "A by row (1, 2, 16 thread): $gbresultsR")
+    # println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
+    # println(stdout, "SparseArrays: $SAresults")
+    # flush(stdout)
+
+    
+    printstyled(stdout, "\nC[I, J] = A)"; bold=true)
     println(stdout, "################################")
+    C = SuiteSparseGraphBLAS.wait(SuiteSparseGraphBLAS.gbrand(Float64, 25_000_000, 25_000_000, 5.76e-8))
+    A = SuiteSparseGraphBLAS.wait(SuiteSparseGraphBLAS.gbrand(Float64, 5_000, 5_000, 0.002))
+    I = rand(1:size(C, 1), size(A, 1))
+    J = rand(1:size(C, 2), size(A, 2))
+
     flush(stdout)
     gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
-    diag(A)
+    gbset(C, :format, SuiteSparseGraphBLAS.BYROW)
+    SuiteSparseGraphBLAS.wait(A)
     gbresultsR = runthreadedt(A, transpose(A))
     gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
-    diag(A)
+    gbset(C, :format, SuiteSparseGraphBLAS.BYCOL)
+    SuiteSparseGraphBLAS.wait(A)
     gbresultsC = runthreadedt(A, transpose(A))
     A2 = SparseMatrixCSC(A) 
     SAresults = tpose(A2)

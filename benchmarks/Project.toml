@@ -2,6 +2,7 @@
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 MKLSparse = "0c723cd3-b8cd-5d40-b370-ba682dde9aae"
 SparseMatricesCSR = "a0a7dd2c-ebf4-11e9-1f05-cf50bc540ca1"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StorageOrders = "e9177fbf-8fde-426c-9425-4eed0f22262a"
 SuiteSparseGraphBLAS = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 SuiteSparseMatrixCollection = "ac199af8-68bc-55b8-82c4-7abd6f96ed98"
