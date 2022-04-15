@@ -26,6 +26,7 @@ end
 
 macro bench(ex)
     return quote
+        $(esc(ex))
         local taccum = 0
         for i ∈ 1:3
             local t0 = time_ns()
@@ -57,7 +58,7 @@ function idx(C, A, I, J)
     else
         printstyled(stdout, "\nC[I, J] = A::SparseMatrixCSC($(size(A)))\n")
         result = @bench C[I, J] = A
-        println(stdou, result, "s")
+        println(stdout, result, "s")
         GC.gc()
     end
     flush(stdout)
@@ -75,10 +76,12 @@ function runthreadedidx(C, A, I, J)
 end
 
 function singlebench(szC, szA)
-    printstyled(stdout, "\nC($szC)[I, J] = A($szA))"; bold=true)
+    printstyled(stdout, "\nC($szC)[I, J] = A($szA))\n"; bold=true)
     println(stdout, "################################")
-    C = SuiteSparseGraphBLAS.wait(SuiteSparseGraphBLAS.gbrand(Float64, szC[1:2]..., szC[3]))
-    A = SuiteSparseGraphBLAS.wait(SuiteSparseGraphBLAS.gbrand(Float64, szA[1:2]..., szA[3]))
+    C = SuiteSparseGraphBLAS.gbrand(Float64, szC[1:2]..., szC[3])
+    A = SuiteSparseGraphBLAS.gbrand(Float64, szA[1:2]..., szA[3])
+    wait(C)
+    wait(A)
     I = sample(1:size(C, 1), size(A, 1), replace = false)
     J = sample(1:size(C, 2), size(A, 2), replace = false)
 
@@ -91,10 +94,11 @@ function singlebench(szC, szA)
     gbset(C, :format, SuiteSparseGraphBLAS.BYCOL)
     SuiteSparseGraphBLAS.wait(A)
     gbresultsC = runthreadedidx(C, A, I, J)
-    A2 = SparseMatrixCSC(A) 
-    SAresults = tpose(A2)
+    A = SparseMatrixCSC(A) 
+    C = SparseMatrixCSC(C)
+    SAresults = idx(C, A, I, J)
     println(stdout, )
-    printstyled(stdout, "\nRESULTS, C = copy(transpose(A)): \n"; bold=true, color=:green)
+    printstyled(stdout, "\nRESULTS, C[I, J] = A: \n"; bold=true, color=:green)
     println(stdout, "################################")
     println(stdout, "A by row (1, 2, 16 thread): $gbresultsR")
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
