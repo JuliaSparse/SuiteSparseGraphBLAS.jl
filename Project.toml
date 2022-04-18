@@ -1,7 +1,7 @@
 name = "SuiteSparseGraphBLAS"
 uuid = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 authors = ["Will Kimmerer <wrkimmerer@outlook.com", "Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
-version = "0.6.1"
+version = "0.7.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
