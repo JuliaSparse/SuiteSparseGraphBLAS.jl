@@ -73,9 +73,11 @@ end
 
 function tpose(A::SuiteSparseGraphBLAS.GBArray)
     Ao = storageorder(A) == ColMajor() ? "C" : "R"
-    Bo = storageorder(B) == ColMajor() ? "C" : "R"
-    printstyled(stdout, "\nC::GBArray = transpose(A::GBArray($Ao, $(size(A))))\n")
-    result = @gbbench copy(transpose(A))
+    C = similar(A)
+    gbset(C, :format, storageorder(A) === ColMajor() ? SuiteSparseGraphBLAS.BYCOL : SuiteSparseGraphBLAS.BYROW)
+    Co = storageorder(A) == ColMajor() ? "C" : "R"
+    printstyled(stdout, "\nC::GBArray($(Co)) = transpose(A::GBArray($Ao, $(size(A))))\n")
+    result = @gbbench SuiteSparseGraphBLAS.gbtranspose!(C, A)
     println(stdout, result, "s")
     GC.gc()
     flush(stdout)
@@ -91,7 +93,45 @@ function tpose(A::SparseMatrixCSC)
     return result
 end
 
-function spdbench(A)
+function runthreadedt(A; accumdenseoutput=false)
+    v = []
+    for t ∈ threadlist
+        printstyled(stdout, "\nRunning GraphBLAS with $t threads\n"; bold=true)
+        gbset(:nthreads, t)
+        push!(v, tpose(A))
+    end
+    return v
+end
+
+function idx(C, A, I, J)
+    if C isa SuiteSparseGraphBLAS.AbstractGBArray
+        Ao = storageorder(A) == ColMajor() ? "C" : "R"
+        Co = storageorder(A) == ColMajor() ? "C" : "R"
+        printstyled(stdout, "\nC::GBArray($(Co))[I, J] = A::GBArray($Ao, $(size(A)))\n")
+        result = @gbbench begin
+            C[I, J] = A
+            wait(C)
+        end
+        println(stdout, result, "s")
+        GC.gc()
+    else
+        printstyled(stdout, "\nC[I, J] = A::SparseMatrixCSC($(size(A)))\n")
+        result = @bench C[I, J] = A
+        println(stdou, result, "s")
+        GC.gc()
+    end
+    flush(stdout)
+    return result
+end
+
+function runthreadedidx(C, A, I, J)
+    v = []
+    for t ∈ threadlist
+        printstyled(stdout, "\nRunning GraphBLAS with $t threads\n"; bold=true)
+        gbset(:nthreads, t)
+        push!(v, idx(C, A, I, J))
+    end
+    return v
 end
 
 function singlebench(pathornum)
@@ -113,12 +153,13 @@ function singlebench(pathornum)
     printstyled(stdout, "\n#################################################################################\n"; bold=true, color=:green)
     printstyled(stdout, "Benchmarking $name:\n"; bold=true, color=:green)
     printstyled(stdout, "#################################################################################\n"; bold=true, color=:green)
+    
     printstyled(stdout, "\nSparse * Vec\n"; bold=true)
     println(stdout, "################################")
     flush(stdout)
     B = rand(eltype(A), size(A, 2))
     B = GBVector(B)
-
+# 
     gbresultsR = runthreaded(A, B; accumdenseoutput=true)
     gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
     diag(A)
@@ -130,7 +171,7 @@ function singlebench(pathornum)
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     println(stdout, "SparseArrays: $SAresults")
     flush(stdout)
-
+# 
     printstyled(stdout, "\nSparse * (n x 2)\n"; bold=true)
     println(stdout, "################################")
     flush(stdout)
@@ -148,7 +189,7 @@ function singlebench(pathornum)
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     println(stdout, "SparseArrays: $SAresults")
     flush(stdout)
-
+# 
     printstyled(stdout, "\nSparse * (n x 32)\n"; bold=true)
     println(stdout, "################################")
     flush(stdout)
@@ -166,7 +207,7 @@ function singlebench(pathornum)
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     println(stdout, "SparseArrays: $SAresults")
     flush(stdout)
-
+# 
     printstyled(stdout, "\nSparse * Sparse'"; bold=true)
     println(stdout, "################################")
     flush(stdout)
@@ -179,32 +220,31 @@ function singlebench(pathornum)
     A2 = SparseMatrixCSC(A) 
     SAresults = mxm(A2, transpose(A2))
     println(stdout, )
-    printstyled(stdout, "\nRESULTS, Sparse * Sparse: \n"; bold=true, color=:green)
+    printstyled(stdout, "\nRESULTS, Sparse * n x 32 Dense: \n"; bold=true, color=:green)
     println(stdout, "################################")
     println(stdout, "A by row (1, 2, 16 thread): $gbresultsR")
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     println(stdout, "SparseArrays: $SAresults")
     flush(stdout)
 
-    printstyled(stdout, "\nSparse * Sparse'"; bold=true)
+    printstyled(stdout, "\nC = copy(transpose(A))"; bold=true)
     println(stdout, "################################")
     flush(stdout)
     gbset(A, :format, SuiteSparseGraphBLAS.BYROW)
     diag(A)
-    gbresultsR = runthreaded(A, transpose(A))
+    gbresultsR = runthreadedt(A)
     gbset(A, :format, SuiteSparseGraphBLAS.BYCOL)
     diag(A)
-    gbresultsC = runthreaded(A, transpose(A))
-    A2 = SparseMatrixCSC(A) 
-    SAresults = mxm(A2, transpose(A2))
+    gbresultsC = runthreadedt(A)
+    A2 = SparseMatrixCSC(A)
+    SAresults = tpose(A2)
     println(stdout, )
-    printstyled(stdout, "\nRESULTS, Sparse * Sparse: \n"; bold=true, color=:green)
+    printstyled(stdout, "\nRESULTS, C = copy(transpose(A)): \n"; bold=true, color=:green)
     println(stdout, "################################")
     println(stdout, "A by row (1, 2, 16 thread): $gbresultsR")
     println(stdout, "A by col (1, 2, 16 thread): $gbresultsC")
     println(stdout, "SparseArrays: $SAresults")
     flush(stdout)
-
     return nothing
 end
 
