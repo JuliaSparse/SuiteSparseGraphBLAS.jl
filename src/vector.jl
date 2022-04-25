@@ -59,6 +59,9 @@ function GBVector(n::Integer, x::T; fill = nothing) where {T}
     return v
 end
 
+GBVector{T, F}(::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+
+
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, v::GBVector) = v.p[]
