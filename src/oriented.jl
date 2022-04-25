@@ -12,7 +12,7 @@ StorageOrders.storageorder(::OrientedGBMatrix{T, F, O}) where {T, F, O} = O
 """
     GBMatrix{T}(nrows, ncols; fill = nothing)
 
-Create a GBMatrix of the specified size, defaulting to the maximum on each dimension, 2^60.
+Create a GBMatrix of the specified size.
 """
 function OrientedGBMatrix{T, F, O}(nrows::Integer, ncols::Integer; fill::F = nothing) where {T, F, O}
     m = Ref{LibGraphBLAS.GrB_Matrix}()

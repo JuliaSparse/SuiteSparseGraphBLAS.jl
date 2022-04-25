@@ -3,7 +3,7 @@
 """
     GBMatrix{T}(nrows, ncols; fill = nothing)
 
-Create a GBMatrix of the specified size, defaulting to the maximum on each dimension, 2^60.
+Create a GBMatrix of the specified size.
 """
 function GBMatrix{T}(nrows::Integer, ncols::Integer; fill::F = nothing) where {T, F}
     m = Ref{LibGraphBLAS.GrB_Matrix}()
