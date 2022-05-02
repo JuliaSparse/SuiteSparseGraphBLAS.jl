@@ -1,5 +1,5 @@
 mutable struct OrientedGBMatrix{T, F, O} <: AbstractGBMatrix{T, F}
-    p::Ref{LibGraphBLAS.GrB_Matrix}
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
 end
 

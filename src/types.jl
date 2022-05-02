@@ -243,7 +243,7 @@ compressed sparse vector.
 See also: [`GBMatrix`](@ref).
 """
 mutable struct GBVector{T, F} <: AbstractGBVector{T, F}
-    p::Ref{LibGraphBLAS.GrB_Matrix} # a GBVector is a GBMatrix internally.
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix} # a GBVector is a GBMatrix internally.
     fill::F
 end
 
@@ -263,7 +263,7 @@ the following in either row or column orientation:
 The storage type is automatically determined by the library.
 """
 mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F}
-    p::Ref{LibGraphBLAS.GrB_Matrix}
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
 end
 

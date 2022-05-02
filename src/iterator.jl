@@ -1,5 +1,5 @@
 struct GBIterator{O}
-    p::Ref{LibGraphBLAS.GxB_Iterator}
+    p::Base.RefValue{LibGraphBLAS.GxB_Iterator}
     A::AbstractGBArray
     function GBIterator(A::AbstractGBArray)
         #garbaage collection
