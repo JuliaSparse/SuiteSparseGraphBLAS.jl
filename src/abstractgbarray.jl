@@ -100,7 +100,7 @@ for T ∈ valid_vec
     # Getindex functions
     func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
     @eval begin
-        function Base.getindex(A::AbstractGBMatrix{$T}, i::Int, j::Int)
+        function Base.getindex(A::AbstractGBMatrix{$T}, i::Integer, j::Integer)
             x = Ref{$T}()
             result = LibGraphBLAS.$func(x, gbpointer(A), decrement!(i), decrement!(j))
             if result == LibGraphBLAS.GrB_SUCCESS
@@ -149,10 +149,88 @@ for T ∈ valid_vec
     end
 end
 
+    # Build functions
+function build(
+        A::AbstractGBMatrix{T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{T};
+        combine = +
+    ) where {T}
+    combine = BinaryOp(combine)(T)
+    I isa Vector || (I = collect(I))
+    J isa Vector || (J = collect(J))
+    X isa Vector || (X = collect(X))
+    nnz(A) == 0 || throw(OutputNotEmptyError("Cannot build matrix with existing elements"))
+    length(X) == length(I) == length(J) ||
+        DimensionMismatch("I, J and X must have the same length")
+    decrement!(I)
+    decrement!(J)
+    @wraperror LibGraphBLAS.GrB_Matrix_build_UDT(
+        gbpointer(A),
+        I,
+        J,
+        X,
+        length(X),
+        combine
+    )
+    increment!(I)
+    increment!(J)
+end
+
+function Base.setindex!(A::AbstractGBMatrix{T}, x, i::Integer, j::Integer) where {T}
+    x = convert(T, x)
+    in = Ref{T}(x)
+    @wraperror LibGraphBLAS.GrB_Matrix_setElement_UDT(gbpointer(A), in, LibGraphBLAS.GrB_Index(decrement!(i)), LibGraphBLAS.GrB_Index(decrement!(j)))
+    return x
+end
+
+function Base.getindex(A::AbstractGBMatrix{T}, i::Integer, j::Integer) where {T}
+    x = Ref{T}()
+    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(x, gbpointer(A), decrement!(i), decrement!(j))
+    if result == LibGraphBLAS.GrB_SUCCESS
+        return x[]
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        return A.fill
+    else
+        @wraperror result
+    end
+end
+# Fix ambiguity
+function Base.getindex(A::Transpose{T, <:AbstractGBMatrix{T}}, i::Integer, j::Integer) where {T}
+    return getindex(parent(A), j, i)
+end
+
+# findnz functions for UDTs
+function SparseArrays.findnz(A::AbstractGBMatrix{T}) where {T}
+    nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+    I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+    J = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+    X = Vector{T}(undef, nvals[])
+    wait(A)
+    @wraperror LibGraphBLAS.GrB_Matrix_extractTuples_UDT(I, J, X, nvals, gbpointer(A))
+    nvals[] == length(I) == length(J) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
+    return increment!(I), increment!(J), X
+end
+function SparseArrays.nonzeros(A::AbstractGBMatrix{T}) where {T}
+    nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+    X = Vector{T}(undef, nvals[])
+    wait(A)
+    @wraperror LibGraphBLAS.GrB_Matrix_extractTuples_UDT(C_NULL, C_NULL, X, nvals, gbpointer(A))
+    nvals[] == length(X) || throw(DimensionMismatch(""))
+    return X
+end
+function SparseArrays.nonzeroinds(A::AbstractGBMatrix{T}) where {T}
+    nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+    I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+    J = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+    wait(A)
+    @wraperror LibGraphBLAS.GrB_Matrix_extractTuples_UDT(I, J, C_NULL, nvals, gbpointer(A))
+    nvals[] == length(I) == length(J) || throw(DimensionMismatch(""))
+    return increment!(I), increment!(J)
+end
+
 for T ∈ valid_vec
     func = Symbol(:GxB_Matrix_subassign_, suffix(T))
     @eval begin
-        function _subassign(C::AbstractGBMatrix{$T}, x, I, ni, J, nj, mask, accum, desc)
+        function _subassign(C::AbstractGBMatrix{$T}, x::$T, I, ni, J, nj, mask, accum, desc)
             @wraperror LibGraphBLAS.$func(gbpointer(C), mask, accum, x, I, ni, J, nj, desc)
             return x
         end
@@ -186,6 +264,32 @@ for T ∈ valid_vec
         end
     end
 end
+
+# type dependent functions for UDTs
+function _subassign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) where {T}
+    in = Ref{T}(x)
+    @wraperror LibGraphBLAS.GxB_Matrix_subassign_UDT(gbpointer(C), mask, accum, in, I, ni, J, nj, desc)
+    return x
+end
+function _assign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) where {T}
+    in = Ref{T}(x)
+    @wraperror LibGraphBLAS.GrB_Matrix_assign_UDT(C, mask, accum, in, I, ni, J, nj, desc)
+    return x
+end
+# TODO: Update when upstream.
+# this is less than ideal. But required for isstored.
+# a new version of graphBLAS will replace this with Matrix_extractElement_Structural
+function Base.isstored(A::AbstractGBMatrix{T}, i::Int, j::Int) where {T}
+    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(Ref{T}(), gbpointer(A), decrement!(i), decrement!(j))
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
+    end
+end
+
 
 # subassign fallback for Matrix <- Matrix, and Matrix <- Vector
 """
@@ -229,9 +333,10 @@ function subassign!(
     return A
 end
 
-function subassign!(C::AbstractGBArray, x, I, J;
+function subassign!(C::AbstractGBArray{T}, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
-)
+) where {T}
+    x = typeof(x) === T ? x : convert(T, x)
     I, ni = idx(I)
     J, nj = idx(J)
     I = decrement!(I)
@@ -295,6 +400,7 @@ end
 function assign!(C::AbstractGBArray, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
+    x = typeof(x) === T ? x : convert(T, x)
     I, ni = idx(I)
     J, nj = idx(J)
     I = decrement!(I)
@@ -406,7 +512,7 @@ for T ∈ valid_vec
     @eval begin
         function Base.setindex!(v::AbstractGBVector{$T}, x, i::Integer)
             x = convert($T, x)
-            return LibGraphBLAS.$func(gbpoitner(v), x, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
+            return LibGraphBLAS.$func(gbpointer(v), x, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
         end
     end
     # Getindex functions
@@ -453,6 +559,71 @@ for T ∈ valid_vec
             return increment!(I)
         end
     end
+end
+
+# UDT versions of Vector functions, which just require one def of each.
+
+function build(v::AbstractGBVector{T}, I::Vector{<:Integer}, X::Vector{T}; combine = +) where {T}
+    nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
+    I isa Vector || (I = collect(I))
+    X isa Vector || (X = collect(X))
+    length(X) == length(I) || DimensionMismatch("I and X must have the same length")
+    combine = BinaryOp(combine)(T)
+    decrement!(I)
+    @wraperror LibGraphBLAS.GrB_Matrix_build_UDT(
+        Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(v)), 
+        I, 
+        # TODO, fix this ugliness by switching to the GBVector build internally.
+        zeros(LibGraphBLAS.GrB_Index, length(I)), 
+        X, 
+        length(X), 
+        combine
+    )
+    increment!(I)
+end
+
+function Base.setindex!(v::AbstractGBVector{T}, x, i::Integer) where {T}
+    x = convert(T, x)
+    return LibGraphBLAS.GrB_Matrix_setElement_UDT(gbpointer(v), x, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
+end
+
+function Base.getindex(v::GBVector{T}, i::Integer) where {T}
+    x = Ref{T}()
+    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(x, v, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
+    if result == LibGraphBLAS.GrB_SUCCESS
+        return x[]
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        return v.fill
+    else
+        @wraperror result
+    end
+end
+
+# findnz functions
+function SparseArrays.findnz(v::AbstractGBVector{T}) where {T}
+    nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
+    I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+    X = Vector{T}(undef, nvals[])
+    wait(v)
+    @wraperror LibGraphBLAS.GrB_Matrix_extractTuples_UDT(I, C_NULL, X, nvals, gbpointer(v))
+    nvals[] == length(I) == length(X) || throw(DimensionMismatch("length(I) != length(X)"))
+    return increment!(I), X
+end
+function SparseArrays.nonzeros(v::GBVector{T}) where {T}
+    nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
+    X = Vector{T}(undef, nvals[])
+    wait(v)
+    @wraperror LibGraphBLAS.GrB_Matrix_extractTuples_UDT(C_NULL, C_NULL, X, nvals, gbpointer(v))
+    nvals[] == length(X) || throw(DimensionMismatch(""))
+    return X
+end
+function SparseArrays.nonzeroinds(v::GBVector{T}) where {T}
+    nvals = Ref{LibGraphBLAS.GrB_Index}(nnz(v))
+    I = Vector{LibGraphBLAS.GrB_Index}(undef, nvals[])
+    wait(v)
+    @wraperror LibGraphBLAS.GrB_Matrix_extractTuples_UDT(I, C_NULL, C_NULL, nvals, gbpointer(v))
+    nvals[] == length(I) || throw(DimensionMismatch(""))
+    return increment!(I)
 end
 
 function build(v::GBVector{T}, I::Vector, x::T) where {T}

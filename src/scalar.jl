@@ -45,6 +45,17 @@ for T ∈ valid_vec
     end
 end
 
+
+function Base.setindex!(value::GBScalar{T}, s::T) where {T}
+    @wraperror LibGraphBLAS.GxB_Scalar_setElement_UDT(value, s)
+    return s
+end
+function Base.getindex(value::GBScalar{T}) where {T}
+    x = Ref{T}()
+    @wraperror LibGraphBLAS.GxB_Scalar_extractElement_UDT(x, value)
+    return x[]
+end
+
 Base.eltype(::Type{GBScalar{T}}) where{T} = T
 
 function Base.show(io::IO, ::MIME"text/plain", s::GBScalar)
