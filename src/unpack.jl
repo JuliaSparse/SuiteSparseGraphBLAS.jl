@@ -13,7 +13,7 @@ function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     return unsafe_wrap(Array{T}, Ptr{T}(values[]), size(A))
 end
 
-function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
+function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, rebaseindices = true) where {T}
     desc = _handledescriptor(desc)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -49,8 +49,10 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
         vals = unsafe_wrap(Array{T}, Ptr{T}(values[]), nnonzeros)
         valsize = valsize[]
     end
-    increment!(colptr)
-    increment!(rowidx)
+    if rebaseindices
+        increment!(colptr)
+        increment!(rowidx)
+    end
     return colptr,
     colptrsize[],
     rowidx,
@@ -59,7 +61,7 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     valsize
 end
 
-function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
+function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing, rebaseindices = true) where {T}
     desc = _handledescriptor(desc)
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -82,9 +84,6 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         isjumbled,
         desc
     )
-    #TODO IMPROVE
-    # rowptrsize isn't always exact. Or rather it can be bigger if GrB has allocated a bigger block.
-    # For now I'll unsafe_wrap based on size(A, 1) + 1
     rowptr = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, rowptr[],size(A, 1) + 1)
     colidx = unsafe_wrap(Array{LibGraphBLAS.GrB_Index}, colidx[], nnonzeros)
 
@@ -98,8 +97,10 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing) where {T}
         vals = unsafe_wrap(Array{T}, Ptr{T}(values[]), nnonzeros)
         valsize = valsize[]
     end
-    increment!(rowptr)
-    increment!(colidx)
+    if rebaseindices
+        increment!(rowptr)
+        increment!(colidx)
+    end
 
     return rowptr,
     rowptrsize[],

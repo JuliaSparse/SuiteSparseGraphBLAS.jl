@@ -21,10 +21,13 @@ function _packcscmatrix!(
     desc = nothing,
     colptrsize = length(colptr) * sizeof(LibGraphBLAS.GrB_Index),
     rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index),
-    valsize = length(values) * sizeof(T)
+    valsize = length(values) * sizeof(T),
+    rebaseindices = true
     ) where {T, Ti}
-    decrement!(colptr)
-    decrement!(rowidx)
+    if rebaseindices
+        decrement!(colptr)
+        decrement!(rowidx)
+    end
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colptr))
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
@@ -53,10 +56,13 @@ function _packcsrmatrix!(
     desc = nothing,
     rowptrsize = length(rowptr) * sizeof(LibGraphBLAS.GrB_Index),
     colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index),
-    valsize = length(values) * sizeof(T)
+    valsize = length(values) * sizeof(T),
+    rebaseindices = true
     ) where {T, Ti}
-    decrement!(rowptr)
-    decrement!(colidx)
+    if rebaseindices
+        decrement!(rowptr)
+        decrement!(colidx)
+    end
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(rowptr))
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(colidx))
     values = Ref{Ptr{Cvoid}}(pointer(values))
