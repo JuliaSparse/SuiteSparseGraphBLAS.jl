@@ -47,7 +47,7 @@ end
 
 
 function Base.setindex!(value::GBScalar{T}, s::T) where {T}
-    @wraperror LibGraphBLAS.GxB_Scalar_setElement_UDT(value, s)
+    @wraperror LibGraphBLAS.GxB_Scalar_setElement_UDT(value, Ref{T}(s))
     return s
 end
 function Base.getindex(value::GBScalar{T}) where {T}

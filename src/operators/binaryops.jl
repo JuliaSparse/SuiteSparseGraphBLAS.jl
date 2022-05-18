@@ -18,10 +18,14 @@ SuiteSparseGraphBLAS.juliaop(op::BinaryOp) = op.juliaop
 
 BinaryOp(op::TypedBinaryOperator) = op
 
-function (op::BinaryOp)(::Type{T}, ::Type{U}) where {T, U} #fallback
+function (op::BinaryOp)(::Type{T}, ::Type{U}; cont = true) where {T, U} #fallback
+    if !cont
+        resulttype = resulttype = Base._return_type(op.juliaop, Tuple{T, U})
+        TypedBinaryOperator(op.juliaop, T, U, resulttype)
+    end
     promoted = optype(T, U)
     return try
-        invoke(op, Tuple{Type{promoted}, Type{promoted}}, promoted, promoted)
+        op(promoted, promoted; cont=false)
     catch
         resulttype = Base._return_type(op.juliaop, Tuple{T, U})
         if resulttype <: Tuple
