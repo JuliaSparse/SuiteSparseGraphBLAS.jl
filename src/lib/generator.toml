@@ -5,8 +5,19 @@ module_name = "LibGraphBLAS"
 output_file_path = "./LibGraphBLAS_gen.jl"
 #epilogue_file_path = "./epilogue.jl"
 use_julia_native_enum_type = true
+
+output_ignorelist = [
+    # Clang.jl cannot handle these macro correctly, skip for now.
+    "GxB_STDC_VERSION",
+    "GB_restrict",
+    "GxB_IMPLEMENTATION",
+    "GxB_VERSION",
+    "GxB_SPEC_VERSION"
+]
+
 [codegen]
 opaque_as_mutable_struct = true
+wrap_variadic_function = true
 
 [codegen.macro]
 macro_mode = "basic"

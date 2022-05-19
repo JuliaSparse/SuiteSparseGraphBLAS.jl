@@ -1,5 +1,11 @@
 module LibGraphBLAS
 import ..libgraphblas
+
+to_c_type(t::Type) = t
+to_c_type_pairs(va_list) = map(enumerate(to_c_type.(va_list))) do (ind, type)
+    :(va_list[$ind]::$type)
+end
+
 const GxB_FC64_t = ComplexF64
 
 const GxB_FC32_t = ComplexF32
@@ -106,6 +112,11 @@ function GrB_Matrix_extractElement_Scalar(x, A, i, j)
     ccall((:GrB_Matrix_extractElement_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
 end
 
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Global_Option_set(field, va_list...)
+        :(@ccall(libgraphblas.GxB_Global_Option_set(field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
 @enum GxB_Option_Field::UInt32 begin
     GxB_HYPER_SWITCH = 0
     GxB_BITMAP_SWITCH = 34
@@ -139,9 +150,44 @@ end
     GxB_GLOBAL_GPU_CHUNK = 22
 end
 
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Vector_Option_set(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Vector_Option_set(A::GrB_Vector, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Matrix_Option_set(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Matrix_Option_set(A::GrB_Matrix, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
 mutable struct GB_Descriptor_opaque end
 
 const GrB_Descriptor = Ptr{GB_Descriptor_opaque}
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Desc_set(desc, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Desc_set(desc::GrB_Descriptor, field::GrB_Desc_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Global_Option_get(field, va_list...)
+        :(@ccall(libgraphblas.GxB_Global_Option_get(field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Vector_Option_get(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Vector_Option_get(A::GrB_Vector, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Matrix_Option_get(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Matrix_Option_get(A::GrB_Matrix, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Desc_get(desc, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Desc_get(desc::GrB_Descriptor, field::GrB_Desc_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
 
 function GrB_Type_free(type)
     ccall((:GrB_Type_free, libgraphblas), GrB_Info, (Ptr{GrB_Type},), type)
@@ -562,13 +608,15 @@ function GB_Iterator_rc_seek(iterator, j, jth_vector)
     ccall((:GB_Iterator_rc_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index, Bool), iterator, j, jth_vector)
 end
 
-function GB_Vector_Iterator_bitmap_seek(iterator, p)
-    ccall((:GB_Vector_Iterator_bitmap_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index), iterator, p)
+function GB_Vector_Iterator_bitmap_seek(iterator, unused)
+    ccall((:GB_Vector_Iterator_bitmap_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index), iterator, unused)
 end
 
 @enum GrB_Mode::UInt32 begin
     GrB_NONBLOCKING = 0
     GrB_BLOCKING = 1
+    GxB_NONBLOCKING_GPU = 2
+    GxB_BLOCKING_GPU = 3
 end
 
 function GrB_init(mode)
@@ -1315,6 +1363,10 @@ function GrB_Vector_extractElement_UDT(x, v, i)
     ccall((:GrB_Vector_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Vector, GrB_Index), x, v, i)
 end
 
+function GxB_Vector_isStoredElement(v, i)
+    ccall((:GxB_Vector_isStoredElement, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), v, i)
+end
+
 function GrB_Vector_removeElement(v, i)
     ccall((:GrB_Vector_removeElement, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), v, i)
 end
@@ -1587,6 +1639,10 @@ function GrB_Matrix_extractElement_UDT(x, A, i, j)
     ccall((:GrB_Matrix_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
 end
 
+function GxB_Matrix_isStoredElement(A, i, j)
+    ccall((:GxB_Matrix_isStoredElement, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), A, i, j)
+end
+
 function GrB_Matrix_removeElement(C, i, j)
     ccall((:GrB_Matrix_removeElement, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), C, i, j)
 end
@@ -1655,12 +1711,12 @@ function GxB_Matrix_split(Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
     ccall((:GxB_Matrix_split, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Matrix, GrB_Descriptor), Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
 end
 
-function GxB_Matrix_diag(C, v, k, desc)
-    ccall((:GxB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64, GrB_Descriptor), C, v, k, desc)
+function GrB_Matrix_diag(C, v, k)
+    ccall((:GrB_Matrix_diag, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Vector, Int64), C, v, k)
 end
 
-function GrB_Matrix_diag(C, v, k)
-    ccall((:GrB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64), C, v, k)
+function GxB_Matrix_diag(C, v, k, desc)
+    ccall((:GxB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64, GrB_Descriptor), C, v, k, desc)
 end
 
 function GxB_Vector_diag(v, A, k, desc)
@@ -2909,21 +2965,56 @@ function GxB_Vector_Iterator_attach(iterator, v, desc)
     ccall((:GxB_Vector_Iterator_attach, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Vector, GrB_Descriptor), iterator, v, desc)
 end
 
+@enum RMM_MODE::UInt32 begin
+    rmm_wrap_host = 0
+    rmm_wrap_host_pinned = 1
+    rmm_wrap_device = 2
+    rmm_wrap_managed = 3
+end
+
+function rmm_wrap_finalize()
+    ccall((:rmm_wrap_finalize, libgraphblas), Cvoid, ())
+end
+
+function rmm_wrap_initialize(mode, init_pool_size, max_pool_size)
+    ccall((:rmm_wrap_initialize, libgraphblas), Cint, (RMM_MODE, Csize_t, Csize_t), mode, init_pool_size, max_pool_size)
+end
+
+function rmm_wrap_allocate(size)
+    ccall((:rmm_wrap_allocate, libgraphblas), Ptr{Cvoid}, (Ptr{Csize_t},), size)
+end
+
+function rmm_wrap_deallocate(p, size)
+    ccall((:rmm_wrap_deallocate, libgraphblas), Cvoid, (Ptr{Cvoid}, Csize_t), p, size)
+end
+
+function rmm_wrap_malloc(size)
+    ccall((:rmm_wrap_malloc, libgraphblas), Ptr{Cvoid}, (Csize_t,), size)
+end
+
+function rmm_wrap_calloc(n, size)
+    ccall((:rmm_wrap_calloc, libgraphblas), Ptr{Cvoid}, (Csize_t, Csize_t), n, size)
+end
+
+function rmm_wrap_realloc(p, newsize)
+    ccall((:rmm_wrap_realloc, libgraphblas), Ptr{Cvoid}, (Ptr{Cvoid}, Csize_t), p, newsize)
+end
+
+function rmm_wrap_free(p)
+    ccall((:rmm_wrap_free, libgraphblas), Cvoid, (Ptr{Cvoid},), p)
+end
+
 # Skipping MacroDefinition: GB_PUBLIC extern
-
-# const GxB_STDC_VERSION = __STDC_VERSION__
-
-# const GB_restrict = restrict
 
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
-const GxB_IMPLEMENTATION_DATE = "Feb 16, 2022"
+const GxB_IMPLEMENTATION_DATE = "May 18, 2022"
 
-const GxB_IMPLEMENTATION_MAJOR = 6
+const GxB_IMPLEMENTATION_MAJOR = 7
 
-const GxB_IMPLEMENTATION_MINOR = 2
+const GxB_IMPLEMENTATION_MINOR = 1
 
-const GxB_IMPLEMENTATION_SUB = 1
+const GxB_IMPLEMENTATION_SUB = 0
 
 const GxB_SPEC_DATE = "Nov 15, 2021"
 
@@ -2936,8 +3027,6 @@ const GxB_SPEC_SUB = 0
 const GRB_VERSION = GxB_SPEC_MAJOR
 
 const GRB_SUBVERSION = GxB_SPEC_MINOR
-
-# const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTATION_MINOR, GxB_IMPLEMENTATION_SUB)
 
 # Skipping MacroDefinition: GxB_IMPLEMENTATION_ABOUT \
 #"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved." \
@@ -2955,15 +3044,13 @@ const GRB_SUBVERSION = GxB_SPEC_MINOR
 #"See the License for the specific language governing permissions and\n" \
 #"limitations under the License.\n"
 
-# const GxB_SPEC_VERSION = GxB_VERSION(GxB_SPEC_MAJOR, GxB_SPEC_MINOR, GxB_SPEC_SUB)
-
 # Skipping MacroDefinition: GxB_SPEC_ABOUT \
 #"GraphBLAS C API, by Aydin Buluc, Timothy Mattson, Scott McMillan,\n" \
 #"Jose' Moreira, Carl Yang, and Benjamin Brock.  Based on 'GraphBLAS\n" \
 #"Mathematics by Jeremy Kepner.  See also 'Graph Algorithms in the Language\n" \
 #"of Linear Algebra,' edited by J. Kepner and J. Gilbert, SIAM, 2011.\n"
 
-const GrB_INDEX_MAX = GrB_Index(Culonglong(1) << 60) * (-1)
+const GrB_INDEX_MAX = (GrB_Index(Culonglong(1) << 60)) * (-1)
 
 const GxB_INDEX_MAX = GrB_Index(Culonglong(1) << 60)
 

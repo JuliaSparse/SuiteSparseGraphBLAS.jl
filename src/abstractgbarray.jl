@@ -149,6 +149,15 @@ for T ∈ valid_vec
     end
 end
 
+function Base.isstored(A::AbstractGBMatrix, i::Int, j::Int)
+    return LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(A), decrement(i), decrement(j)) == LibGraphBLAS.GrB_SUCCESS
+end
+
+function Base.isstored(A::AbstractGBVector, i::Int)
+    return LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(A), decrement(i), 0) == LibGraphBLAS.GrB_SUCCESS
+end
+
+
     # Build functions
 function build(
         A::AbstractGBMatrix{T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{T};
@@ -247,22 +256,6 @@ for T ∈ valid_vec
             return x
         end
     end
-    # TODO: Update when upstream.
-    # this is less than ideal. But required for isstored.
-    # a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-    func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
-    @eval begin
-        function Base.isstored(A::AbstractGBMatrix{$T}, i::Int, j::Int)
-            result = LibGraphBLAS.$func(Ref{$T}(), gbpointer(A), decrement!(i), decrement!(j))
-            if result == LibGraphBLAS.GrB_SUCCESS
-                true
-            elseif result == LibGraphBLAS.GrB_NO_VALUE
-                false
-            else
-                @wraperror result
-            end
-        end
-    end
 end
 
 # type dependent functions for UDTs
@@ -275,19 +268,6 @@ function _assign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) 
     in = Ref{T}(x)
     @wraperror LibGraphBLAS.GrB_Matrix_assign_UDT(C, mask, accum, in, I, ni, J, nj, desc)
     return x
-end
-# TODO: Update when upstream.
-# this is less than ideal. But required for isstored.
-# a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-function Base.isstored(A::AbstractGBMatrix{T}, i::Int, j::Int) where {T}
-    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(Ref{T}(), gbpointer(A), decrement!(i), decrement!(j))
-    if result == LibGraphBLAS.GrB_SUCCESS
-        true
-    elseif result == LibGraphBLAS.GrB_NO_VALUE
-        false
-    else
-        @wraperror result
-    end
 end
 
 

@@ -6,7 +6,7 @@ cd(@__DIR__)
 const HEADER_BASE = joinpath(SSGraphBLAS_jll.artifact_dir, "include")
 const GRAPHBLAS = joinpath(HEADER_BASE, "GraphBLAS.h")
 
-headers = [GRAPHBLAS]
+headers = ["/home/will/GraphBLAS/Include/GraphBLAS.h"]
 
 options = load_options(joinpath(@__DIR__, "generator.toml"))
 args = get_default_args()
