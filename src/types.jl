@@ -164,7 +164,7 @@ function _builtinMonoid(typestr, binaryop::TypedBinaryOperator{F, Z, Z, Z}, iden
 end
 
 function TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Z, terminal::T) where {F, Z, T}
-    return TypedMonoid(false, false, string(fn), LibGraphBLAS.GrB_Monoid(), binop, identity, terminal)
+    return TypedMonoid(false, false, string(binop.fn), LibGraphBLAS.GrB_Monoid(), binop, identity, terminal)
 end
 
 #Enable use of functions for determining identity and terminal values. Could likely be pared down to 2 functions somehow.
@@ -176,6 +176,7 @@ TypedMonoid(builtin, loaded, typestr, p, binaryop::TypedBinaryOperator{F, Z, Z, 
 
 TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Function) where {F, Z} = TypedMonoid(binop, identity(Z))
 TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Function, terminal::Function) where {F, Z} = TypedMonoid(binop, identity(Z), terminal(Z))
+TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Function, terminal::Nothing) where {F, Z} = TypedMonoid(binop, identity(Z), terminal)
 
 TypedMonoid(binop::TypedBinaryOperator, identity) = TypedMonoid(binop, identity, nothing)
 

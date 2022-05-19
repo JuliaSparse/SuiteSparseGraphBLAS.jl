@@ -18,21 +18,26 @@ SuiteSparseGraphBLAS.juliaop(op::BinaryOp) = op.juliaop
 
 BinaryOp(op::TypedBinaryOperator) = op
 
+# TODO, clean up this function, it allocates typedop and is otherwise perhaps a little slow.
 function (op::BinaryOp)(::Type{T}, ::Type{U}; cont = true) where {T, U} #fallback
-    if !cont
-        resulttype = resulttype = Base._return_type(op.juliaop, Tuple{T, U})
-        return TypedBinaryOperator(op.juliaop, T, U, resulttype)
-    end
-    promoted = optype(T, U)
-    return try
-        op(promoted, promoted; cont=false)
-    catch
-        resulttype = Base._return_type(op.juliaop, Tuple{T, U})
-        if resulttype <: Tuple
-            throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
+    typedop = nothing
+    if T ∈ valid_vec && U ∈ valid_vec && cont # if both argtypes are in builtins *and* we're at 0th recursion:
+        promoted = optype(T, U)
+        if promoted ∈ valid_vec # check if we can promote within the builtins
+            typedop = try
+                op(promoted, promoted; cont=false) # try to find a builtin BinaryOp that matches. If we recurse back into this function we know there's no builtin, so cont=false
+            catch
+                nothing
+            end
         end
-        TypedBinaryOperator(op.juliaop, T, U, resulttype)
     end
+    typedop !== nothing && return typedop
+    resulttype = Base._return_type(op.juliaop, Tuple{T, U})
+    if resulttype <: Tuple
+        throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
+    end
+    typedop = TypedBinaryOperator(op.juliaop, T, U, resulttype)
+    return typedop
 end
 
 function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
@@ -61,9 +66,9 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
         constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))))
     end
     dispatchquote = if xtype === :Any && ytype === :Any
-        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type, ::Type) = $(esc(namesym)))
+        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type, ::Type; cont=false) = $(esc(namesym)))
     else
-        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
+        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$xsym}, ::Type{$ysym}; cont=false) = $(esc(namesym)))
     end
     return quote
         $(constquote)
