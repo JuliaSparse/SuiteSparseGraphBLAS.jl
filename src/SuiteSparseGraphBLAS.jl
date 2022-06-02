@@ -24,6 +24,8 @@ using Base.Broadcast
 using Serialization
 using StorageOrders
 
+using KLU
+
 export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 
 using HyperSparseMatrices
@@ -99,7 +101,7 @@ include("asjulia.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")
-
+include("solvers/klu.jl")
 export SparseArrayCompat
 export LibGraphBLAS
 # export UnaryOps, BinaryOps, Monoids, Semirings #Submodules

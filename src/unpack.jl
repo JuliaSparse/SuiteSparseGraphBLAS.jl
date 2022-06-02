@@ -61,7 +61,7 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, rebaseindices 
     valsize
 end
 
-function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing, rebaseindices = true) where {T}
+function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, rebaseindices = true) where {T}
     desc = _handledescriptor(desc)
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -109,3 +109,15 @@ function _unpackcsrmatrix!(A::GBVecOrMat{T}; desc = nothing, rebaseindices = tru
     vals,
     valsize
 end
+
+struct Dense end
+struct Bitmap end
+struct Sparse end
+struct Hypersparse end
+
+shapetoconst(::Dense) = LibGraphBLAS.GBDENSE
+shapetoconst(::Bitmap) = LibGraphBLAS.GBBITMAP
+shapetoconst(::Sparse) = LibGraphBLAS.GBSPARSE
+shapetoconst(::Hypersparse) = LibGraphBLAS.GBHYPER
+
+function unpack!(A::AbstractGBArray, )

@@ -10,6 +10,13 @@ struct OutputNotEmptyError <: Exception end
 struct InsufficientSpaceError <: Exception end
 struct PANIC <: Exception end
 
+function _jlmalloc(size::UInt)
+    return ccall(:jl_malloc, Ptr{LibGraphBLAS.GrB_Index}, (UInt, ), size)
+end
+function _jlfree(p::Union{DenseVecOrMat{T}, Ptr{T}, Ref{T}}) where {T}
+    ccall(:jl_free, Cvoid, (Ptr{T}, ), p isa DenseVecOrMat ? pointer(p) : p)
+end
+
 macro wraperror(code)
     MacroTools.@q begin
         info = $(esc(code))
