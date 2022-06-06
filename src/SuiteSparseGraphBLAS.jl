@@ -99,7 +99,7 @@ include("asjulia.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")
-
+include("mem.jl")
 export SparseArrayCompat
 export LibGraphBLAS
 # export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
@@ -142,7 +142,17 @@ function __init__()
     # We initialize GraphBLAS by giving it Julia's GC wrapped memory management functions.
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
-    @wraperror LibGraphBLAS.GxB_init(LibGraphBLAS.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
+    @wraperror LibGraphBLAS.GxB_init(
+        LibGraphBLAS.GrB_NONBLOCKING, 
+        @cfunction(gbmalloc, Ptr{Cvoid}, (Csize_t,)),
+        @cfunction(gbcalloc, Ptr{Cvoid}, (Csize_t,)),
+        @cfunction(gbrealloc, Ptr{Cvoid}, (Ptr{Cvoid}, Csize_t)),
+        @cfunction(gbfree, Cvoid, (Ptr{Cvoid},))
+        # cglobal(:jl_malloc), 
+        # cglobal(:jl_calloc), 
+        # cglobal(:jl_realloc), 
+        # cglobal(:jl_free)
+    )
     gbset(:nthreads, BLAS.get_num_threads())
     # Eagerly load selectops constants.
     _loadselectops()
