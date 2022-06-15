@@ -1,5 +1,7 @@
 # Constructors:
 ###############
+
+# Empty constructors:
 """
     GBVector{T}(n; fill = nothing)
 """
@@ -18,10 +20,11 @@ GBVector{T}(nrows::Base.OneTo; fill = nothing) where {T} =
     GBVector{T}(nrows.stop; fill)
 GBVector{T}(nrows::Tuple{Base.OneTo,}; fill = nothing) where {T} = GBVector{T}(first(nrows); fill)
 
+# Coordinate constructors: 
 """
     GBVector(I::AbstractVector, X::AbstractVector{T}; fill = nothing)
 
-Create a GBVector from a vector of indices `I` and a vector of values `X`.
+Create a GBVector from a vector of indices `I` and a vector of values `X`, also known as the coordinate form of the vector.
 """
 function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; combine = +, nrows = maximum(I), fill = nothing) where {U<:Integer, T}
     I isa Vector || (I = collect(I))
@@ -31,7 +34,7 @@ function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; combine = +, nrows
     return v
 end
 
-#iso valued constructors.
+# iso valued constructors:
 """
     GBVector(I, x; nrows = maximum(I) fill = nothing)
 
@@ -49,7 +52,7 @@ end
 """
     GBVector(n, x; fill = nothing)
 
-Create an `n` length dense GBVector `v` such that M[I[k]] = x.
+Create an `n` length dense GBVector `v` such that M[:] = x.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
@@ -61,6 +64,20 @@ end
 
 GBVector{T, F}(::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
 
+function GBVector(v::AbstractVector{T}; fill::F = nothing) where {T, F}
+    needcopy = true
+    if v isa AbstractVector && !(v isa Vector)
+        v = collect(v)
+        needcopy = false
+    end
+    A = GBVector{T}(size(v, 1); fill)
+    return pack!(A, needcopy ? copy(v) : v)
+end
+
+function GBVector(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    A = GBVector{T}(size(v, 1); fill)
+    return pack!(A, copy(v))
+end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################

@@ -15,7 +15,7 @@ else
 end
 
 using SparseArrays
-using SparseArrays: nonzeroinds
+using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
@@ -37,8 +37,6 @@ include("operators/libgbops.jl")
 
 include("gbtypes.jl")
 include("types.jl")
-
-
 
 include("constants.jl")
 include("wait.jl")
@@ -77,7 +75,6 @@ include("operations/resize.jl")
 include("operations/sort.jl")
 # 
 include("print.jl")
-include("import.jl")
 include("pack.jl")
 include("unpack.jl")
 include("options.jl")
@@ -95,7 +92,6 @@ include("serialization.jl")
 
 #EXPERIMENTAL
 include("misc.jl")
-include("asjulia.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")

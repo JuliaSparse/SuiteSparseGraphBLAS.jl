@@ -1,5 +1,7 @@
 # Constructors:
 ###############
+
+# Empty constructors: 
 """
     GBMatrix{T}(nrows, ncols; fill = nothing)
 
@@ -17,6 +19,8 @@ GBMatrix{T}(dims::Dims{2}; fill = nothing) where {T} = GBMatrix{T}(dims...; fill
 GBMatrix{T}(dims::Tuple{<:Integer}; fill = nothing) where {T} = GBMatrix{T}(dims...; fill)
 GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}; fill = nothing) where {T} =
     GBMatrix{T}(size[1].stop, size[2].stop; fill)
+
+# Coordinate form constructors:
 
 """
     GBMatrix(I, J, X; combine = +, nrows = maximum(I), ncols = maximum(J); fill = nothing)
@@ -58,6 +62,7 @@ function GBMatrix(dims::Dims{2}, x::T; fill = nothing) where {T}
     return A
 end
 
+# iso dense
 GBMatrix(nrows, ncols, x::T; fill::F = nothing) where {T, F} = GBMatrix((nrows, ncols), x; fill)
 
 function GBMatrix(v::GBVector)
@@ -65,7 +70,31 @@ function GBMatrix(v::GBVector)
     return copy(GBMatrix{eltype(v), typeof(v.fill)}(v.p, v.fill)) 
 end
 
-GBMatrix{T, F}(::Number, ::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+GBMatrix{T, F}(::Number, ::Number; fill = nothing) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+
+function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
+    A = GBMatrix{T}(size(S)...; fill)
+    return pack!(A, copy(S))
+end
+
+function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
+    needcopy = true
+    if M isa AbstractVector && !(M isa Vector)
+        M = collect(M)
+        needcopy = false
+    end
+    if M isa AbstractMatrix && !(M isa Matrix)
+        M = Matrix(M)
+        needcopy = false
+    end
+    A = GBMatrix{T}(size(M, 1), size(M, 2); fill)
+    return pack!(A, needcopy ? copy(M) : M)
+end
+
+function GBMatrix(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    A = GBMatrix{T}(size(v, 1), 1; fill)
+    return pack!(A, copy(v))
+end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
@@ -135,4 +164,3 @@ end
 function Base.getindex(A::GBMatOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end
-

@@ -16,6 +16,20 @@ Does not modify the type or dimensions.
 """
 Base.empty!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A))); return nothing
 
+function Base.Matrix(A::AbstractGBArray)
+    # we use dontmodifysparsity here to avoid the pitfall of densifying A.
+    unpack!(copy(A), Dense())
+end
+
+function Base.Vector(v::AbstractGBVector)
+    # we use dontmodifysparsity here to avoid the pitfall of densifying A. 
+    unpack!(copy(v), Dense())
+end
+
+function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
+    unpack!(copy(A), Sparse())
+end
+
 # AbstractGBMatrix functions:
 #############################
 
@@ -276,6 +290,7 @@ function _assign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) 
     @wraperror LibGraphBLAS.GrB_Matrix_assign_UDT(C, mask, accum, in, I, ni, J, nj, desc)
     return x
 end
+
 # TODO: Update when upstream.
 # this is less than ideal. But required for isstored.
 # a new version of graphBLAS will replace this with Matrix_extractElement_Structural
@@ -289,7 +304,6 @@ function Base.isstored(A::AbstractGBMatrix{T}, i::Int, j::Int) where {T}
         @wraperror result
     end
 end
-
 
 # subassign fallback for Matrix <- Matrix, and Matrix <- Vector
 """
@@ -317,7 +331,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
 function subassign!(
-    C::AbstractGBMatrix, A::GBArray, I, J;
+    C::AbstractGBArray, A::AbstractGBArray, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -351,9 +365,9 @@ end
 
 function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
     mask = nothing, accum = nothing, desc = nothing)
-    as(GBMatrix, x) do array
-        subassign!(C, array, I, J; mask, accum, desc)
-    end
+    array = pack!(GBMatrix, x)
+    subassign!(C, array, I, J; mask, accum, desc)
+    unpack!(array)
 end
 
 """
@@ -381,7 +395,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(C) != size(mask)`.
 """
 function assign!(
-    C::AbstractGBMatrix, A::AbstractGBVector, I, J;
+    C::AbstractGBArray, A::AbstractGBArray, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)

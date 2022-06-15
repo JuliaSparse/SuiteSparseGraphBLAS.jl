@@ -4,7 +4,7 @@ function _packdensematrix!(A::AbstractGBArray{T}, M::VecOrMat{T}; desc = nothing
     ptr = pointer(M)
     lock(memlock)
     try
-        PTRTOJL[ptr] = M
+        PTRTOJL[Ptr{Cvoid}(ptr)] = M
     finally
         unlock(memlock)
     end
@@ -24,7 +24,7 @@ function _packdensematrixR!(A::AbstractGBArray{T}, M::VecOrMat{T}; desc = nothin
     ptr = pointer(M)
     lock(memlock)
     try
-        PTRTOJL[ptr] = M
+        PTRTOJL[Ptr{Cvoid}(ptr)] = M
     finally
         unlock(memlock)
     end
@@ -57,9 +57,9 @@ function _packcscmatrix!(
     valpointer = pointer(values)
     lock(memlock)
     try
-        PTRTOJL[colpointer] = colptr
-        PTRTOJL[rowpointer] = rowidx
-        PTRTOJL[valpointer] = values
+        PTRTOJL[Ptr{Cvoid}(colpointer)] = colptr
+        PTRTOJL[Ptr{Cvoid}(rowpointer)] = rowidx
+        PTRTOJL[Ptr{Cvoid}(valpointer)] = values
     finally
         unlock(memlock)
     end
@@ -102,9 +102,9 @@ function _packcsrmatrix!(
     valpointer = pointer(values)
     lock(memlock)
     try
-        PTRTOJL[rowpointer] = rowptr
-        PTRTOJL[colpointer] = colidx
-        PTRTOJL[valpointer] = values
+        PTRTOJL[Ptr{Cvoid}(rowpointer)] = rowptr
+        PTRTOJL[Ptr{Cvoid}(colpointer)] = colidx
+        PTRTOJL[Ptr{Cvoid}(valpointer)] = values
     finally
         unlock(memlock)
     end
@@ -157,5 +157,17 @@ function pack!(A::AbstractGBArray, S::SparseMatrixCSC)
     _packcscmatrix!(A, getcolptr(S), getrowval(S), getnzval(S))
 end
 
+function pack!(A::AbstractGBArray, s::SparseVector)
+    _packcscmatrix!(A, [1, length(s.nzind) + 1], s.nzind, s.nzval)
+end
+
+function pack!(::Type{GT}, A::AbstractArray{T}; fill = nothing) where {GT<:AbstractGBArray, T}
+    if GT <: AbstractGBVector
+        G = GT{T}(size(A, 1); fill)
+    else
+        G = GT{T}(size(A, 1), size(A, 2); fill)
+    end
+    return pack!(G, A)
+end
 
 # TODO: BITMAP && HYPER

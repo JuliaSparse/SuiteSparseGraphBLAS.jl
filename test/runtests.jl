@@ -69,9 +69,6 @@ SuiteSparseGraphBLAS.@unop foo F=>F
 
 println("Testing SuiteSparseGraphBLAS.jl")
 @testset "SuiteSparseGraphBLAS" begin
-
-    
-    include_test("asjulia.jl")
     include_test("libutils.jl")
     include_test("operatorutils.jl")
     include_test("ops.jl")
@@ -91,7 +88,7 @@ println("Testing SuiteSparseGraphBLAS.jl")
     include_test("chainrules/selectrules.jl")
     include_test("chainrules/constructorrules.jl")
     include_test("chainrules/maprules.jl")
-    # include_test("spmgb/sparsemat.jl")
-    # include_test("spmgb/higherorderfns.jl")
+    include_test("spmgb/sparsemat.jl")
+    include_test("spmgb/higherorderfns.jl")
     
 end
