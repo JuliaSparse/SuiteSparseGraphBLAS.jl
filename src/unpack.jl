@@ -12,11 +12,13 @@ function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
         desc
     )
     lock(memlock)
-    return reshape(try
+    M = try
         pop!(PTRTOJL, values[])
     finally
         unlock(memlock)
-    end, szA)
+    end
+    eltype(M) == T || M = 
+    return size(A, 2) == 1 ? reshape(M, :) : reshape(M, szA)
 end
 
 function _unpackdensematrixR!(A::AbstractGBArray{T}; desc = nothing) where {T}
@@ -33,11 +35,12 @@ function _unpackdensematrixR!(A::AbstractGBArray{T}; desc = nothing) where {T}
         desc
     )
     lock(memlock)
-    return reshape(try
+    M = try
         pop!(PTRTOJL, values[])
     finally
         unlock(memlock)
-    end, szA)
+    end
+    return size(A, 2) == 1 ? reshape(M, :) : reshape(M, szA)
 end
 
 function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindices = true) where {T}
@@ -134,16 +137,6 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     vals
 end
 
-struct Dense end
-struct Bitmap end
-struct Sparse end
-struct Hypersparse end
-
-shapetoconst(::Dense) = LibGraphBLAS.GBDENSE
-shapetoconst(::Bitmap) = LibGraphBLAS.GBBITMAP
-shapetoconst(::Sparse) = LibGraphBLAS.GBSPARSE
-shapetoconst(::Hypersparse) = LibGraphBLAS.GBHYPER
-
 function unpack!(A::AbstractGBArray, ::Dense; order = ColMajor())
     wait(A)
     if order === ColMajor()
@@ -166,7 +159,16 @@ function unpack!(A::AbstractGBArray, ::Sparse; order = ColMajor(), incrementindi
         return _unpackcsrmatrix!(A; incrementindices)
     end
 end
-unpack!(A::AbstractGBArray, ::SparseMatrixCSC) = SparseMatrixCSC(unpack!(A, Sparse())...)
+unpack!(A::AbstractGBArray, ::Type{SparseMatrixCSC}) = SparseMatrixCSC(size(A)..., unpack!(A, Sparse())...)
+
+# remove colptr for this, colptr doesn't really exist anyway, it should just be [0] (or [1] in 1-based).
+unpack!(A::AbstractGBVector, ::Type{SparseVector}) = SparseVector(size(A)..., unpack!(A, Sparse())[2:end]...)
+
+function unpack!(A::AbstractGBArray)
+    sparsity, order = format(A)
+    return unpack!(A, sparsity; order)
+end
+
 
 # TODO: BITMAP && HYPER
 # TODO: A repack! api?
