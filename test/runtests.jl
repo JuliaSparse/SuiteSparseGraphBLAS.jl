@@ -68,6 +68,7 @@ foo(x) = x + 3.5
 SuiteSparseGraphBLAS.@unop foo F=>F
 
 println("Testing SuiteSparseGraphBLAS.jl")
+println("$(SuiteSparseGraphBLAS.get_lib())")
 @testset "SuiteSparseGraphBLAS" begin
 
     
