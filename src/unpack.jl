@@ -79,8 +79,8 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     # finally
     #     unlock(memlock)
     # end
-    colptr = unsafe_wrap(Array{Int64}, colptr[], size(A, 2) + 1)
-    rowidx = unsafe_wrap(Array{Int64}, rowidx[], nnonzeros)
+    colptr = unsafe_wrap(Array{Int64}, Ptr{Int64}(colptr[]), size(A, 2) + 1)
+    rowidx = unsafe_wrap(Array{Int64}, Ptr{Int64}(rowidx[]), nnonzeros)
 
     # if isiso[]
     #     vals = fill(vals[1], nnonzeros)
@@ -113,7 +113,7 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     isiso = Ref{Bool}(false)
     isjumbled = C_NULL
     nnonzeros = nnz(A)
-    @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
         gbpointer(A),
         rowptr,
         colidx,
@@ -141,8 +141,8 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     #     vals = fill(vals[1], nnonzeros)
     # end
 
-    rowptr = unsafe_wrap(Array{Int64}, rowptr[], size(A, 1) + 1)
-    colidx = unsafe_wrap(Array{Int64}, colidx[], nnonzeros)
+    rowptr = unsafe_wrap(Array{Int64}, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
+    colidx = unsafe_wrap(Array{Int64}, Ptr{Int64}(colidx[]), nnonzeros)
 
     if isiso[]
         val = unsafe_wrap(Array{T}, Ptr{T}(values[]), 1)[1]

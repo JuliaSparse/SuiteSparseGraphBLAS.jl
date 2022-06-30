@@ -149,13 +149,13 @@ function pack!(
     A::AbstractGBArray, ptr, idx, values; 
     order = ColMajor(), decrementindices = true, copytoraw = true
 )
-    ptr2 = copytoraw ? _copytoraw(ptr) : ptr
-    idx2 = copytoraw ? _copytoraw(idx) : idx
-    values2 = copytoraw ? _copytoraw(values) : values
+    ptr = copytoraw ? _copytoraw(ptr) : ptr
+    idx = copytoraw ? _copytoraw(idx) : idx
+    values = copytoraw ? _copytoraw(values) : values
     if order === ColMajor()
-        _packcscmatrix!(A, ptr2, idx2, values2; decrementindices)
+        _packcscmatrix!(A, ptr, idx, values; decrementindices)
     else
-        _packcsrmatrix!(A, ptr2, idx2, values2; decrementindices)
+        _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
     return A
 end
