@@ -16,6 +16,35 @@ Does not modify the type or dimensions.
 """
 Base.empty!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A))); return nothing
 
+# TODO: with cheatmalloc we can move from 2x copies -> 1x copy.
+# Currently this function copies A to avoid modifying the sparsity of A and 
+function Base.Matrix(A::AbstractGBMatrix)
+    sparsity = sparsitystatus(A)
+    T = sparsity === Dense() ? A : copy(A) # If A is not dense we need to copy to avoid densifying
+    x = unpack!(T, Dense())
+    C = copy(x)
+    pack!(T, x)
+    return C
+end
+
+function Base.Vector(v::AbstractGBVector)
+    sparsity = sparsitystatus(v)
+    T = sparsity === Dense() ? v : copy(v) # If A is not dense we need to copy to avoid densifying
+    x = unpack!(T, Dense())
+    C = copy(x)
+    pack!(T, x)
+    return C
+end
+
+function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
+    sparsity = sparsitystatus(A)
+    T = sparsity === Sparse() ? A : copy(A)
+    x = unpack!(T, SparseMatrixCSC)
+    C = copy(x)
+    pack!(T, x)
+    return C
+end
+
 # AbstractGBMatrix functions:
 #############################
 
@@ -317,7 +346,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
 function subassign!(
-    C::AbstractGBMatrix, A::GBArray, I, J;
+    C::AbstractGBMatrix, A::AbstractGBArray, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -346,14 +375,15 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     _subassign(C, x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-    return C
+    return x
 end
 
 function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
     mask = nothing, accum = nothing, desc = nothing)
-    as(GBMatrix, x) do array
-        subassign!(C, array, I, J; mask, accum, desc)
-    end
+    array = pack!(GBMatrix, x; copytoraw=false)
+    subassign!(C, array, I, J; mask, accum, desc)
+    unpack!(array)
+    return C
 end
 
 """
@@ -381,7 +411,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(C) != size(mask)`.
 """
 function assign!(
-    C::AbstractGBMatrix, A::AbstractGBVector, I, J;
+    C::AbstractGBMatrix, A::AbstractGBArray, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -409,7 +439,7 @@ function assign!(C::AbstractGBArray, x, I, J;
     _assign(gbpointer(C), x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-    return C
+    return x
 end
 
 function Base.setindex!(

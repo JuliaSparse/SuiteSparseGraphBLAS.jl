@@ -65,8 +65,31 @@ function GBMatrix(v::GBVector)
     return copy(GBMatrix{eltype(v), typeof(v.fill)}(v.p, v.fill)) 
 end
 
-GBMatrix{T, F}(::Number, ::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+GBMatrix{T, F}(::Number, ::Number; fill = nothing) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
 
+function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
+    A = GBMatrix{T}(size(S)...; fill)
+    return pack!(A, S) # will copy automatically.
+end
+
+function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
+    needcopy = true
+    if M isa AbstractVector && !(M isa Vector)
+        M = collect(M)
+        needcopy = false
+    end
+    if M isa AbstractMatrix && !(M isa Matrix)
+        M = Matrix(M)
+        needcopy = false
+    end
+    A = GBMatrix{T}(size(M, 1), size(M, 2); fill)
+    return pack!(A, M) # needcopy ? copy(M) : M. Currently copies within pack
+end
+
+function GBMatrix(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    A = GBMatrix{T}(size(v, 1), 1; fill)
+    return pack!(A, v) # currently copies within pack!
+end
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 

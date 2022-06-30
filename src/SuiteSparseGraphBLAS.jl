@@ -15,7 +15,7 @@ else
 end
 
 using SparseArrays
-using SparseArrays: nonzeroinds
+using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval, rowvals
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
@@ -33,6 +33,7 @@ include("libutils.jl")
 include("lib/LibGraphBLAS_gen.jl")
 using .LibGraphBLAS
 
+include("mem.jl")
 include("operators/libgbops.jl")
 
 include("gbtypes.jl")
@@ -77,7 +78,6 @@ include("operations/resize.jl")
 include("operations/sort.jl")
 # 
 include("print.jl")
-include("import.jl")
 include("pack.jl")
 include("unpack.jl")
 include("options.jl")
@@ -95,7 +95,6 @@ include("serialization.jl")
 
 #EXPERIMENTAL
 include("misc.jl")
-include("asjulia.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")

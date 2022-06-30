@@ -71,8 +71,6 @@ println("Testing SuiteSparseGraphBLAS.jl")
 println("$(SuiteSparseGraphBLAS.get_lib())")
 @testset "SuiteSparseGraphBLAS" begin
 
-    
-    include_test("asjulia.jl")
     include_test("libutils.jl")
     include_test("operatorutils.jl")
     include_test("ops.jl")

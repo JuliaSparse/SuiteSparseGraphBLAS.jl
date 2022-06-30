@@ -277,3 +277,21 @@ gbpointer(A::AbstractGBArray) = A.p[]
 # This should ideally work out fine. a GBMatrix or GBVector won't have 
 StorageOrders.storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
 StorageOrders.storageorder(A::AbstractGBVector) = ColMajor()
+
+abstract type AbstractSparsity end
+struct Dense <: AbstractSparsity end
+struct Bitmap <: AbstractSparsity end
+struct Sparse <: AbstractSparsity end
+struct Hypersparse <: AbstractSparsity end
+
+shapetoconst(::Dense) = GBDENSE
+shapetoconst(::Bitmap) = GBBITMAP
+shapetoconst(::Sparse) = GBSPARSE
+shapetoconst(::Hypersparse) = GBHYPER
+
+function consttoshape(c)
+    c == GBDENSE && (return Dense())
+    c == GBBITMAP && (return Bitmap())
+    c == GBSPARSE && (return Sparse())
+    c == GBHYPER && (return Hypersparse())
+end
