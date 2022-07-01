@@ -1,5 +1,5 @@
-function _jlmalloc(size)
-    return ccall(:jl_malloc, Ptr{Cvoid}, (UInt, ), size)
+function _jlmalloc(size, ::Type{T}) where {T}
+    return ccall(:jl_malloc, Ptr{T}, (UInt, ), size)
 end
 function _jlfree(p::Union{DenseVecOrMat{T}, Ptr{T}, Ref{T}}) where {T}
     ccall(:jl_free, Cvoid, (Ptr{T}, ), p isa DenseVecOrMat ? pointer(p) : p)
@@ -7,8 +7,8 @@ end
 
 function _copytorawptr(A::DenseVecOrMat{T}) where {T}
     sz = sizeof(A)
-    ptr = _jlmalloc(sz)
-    ptr = Ptr{T}(ptr)
+    ptr = _jlmalloc(sz, T)
+    ptr = ptr
     unsafe_copyto!(ptr, pointer(A), length(A))
     return ptr
 end

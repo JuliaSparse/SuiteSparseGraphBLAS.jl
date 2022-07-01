@@ -23,7 +23,7 @@ function Base.Matrix(A::AbstractGBMatrix)
     T = sparsity === Dense() ? A : copy(A) # If A is not dense we need to copy to avoid densifying
     x = unpack!(T, Dense())
     C = copy(x)
-    pack!(T, x)
+    pack!(T, x; copytoraw = false)
     return C
 end
 
@@ -32,7 +32,7 @@ function Base.Vector(v::AbstractGBVector)
     T = sparsity === Dense() ? v : copy(v) # If A is not dense we need to copy to avoid densifying
     x = unpack!(T, Dense())
     C = copy(x)
-    pack!(T, x)
+    pack!(T, x; copytoraw = false)
     return C
 end
 
@@ -41,7 +41,7 @@ function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
     T = sparsity === Sparse() ? A : copy(A)
     x = unpack!(T, SparseMatrixCSC)
     C = copy(x)
-    pack!(T, x)
+    pack!(T, x; copytoraw = false)
     return C
 end
 
@@ -276,21 +276,16 @@ for T ∈ valid_vec
             return x
         end
     end
-    # TODO: Update when upstream.
-    # this is less than ideal. But required for isstored.
-    # a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-    func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
-    @eval begin
-        function Base.isstored(A::AbstractGBMatrix{$T}, i::Int, j::Int)
-            result = LibGraphBLAS.$func(Ref{$T}(), gbpointer(A), decrement!(i), decrement!(j))
-            if result == LibGraphBLAS.GrB_SUCCESS
-                true
-            elseif result == LibGraphBLAS.GrB_NO_VALUE
-                false
-            else
-                @wraperror result
-            end
-        end
+end
+
+function Base.isstored(A::AbstractGBMatrix, i::Int, j::Int)
+    result = LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(A), decrement!(i), decrement!(j))
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
     end
 end
 
@@ -304,19 +299,6 @@ function _assign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) 
     in = Ref{T}(x)
     @wraperror LibGraphBLAS.GrB_Matrix_assign_UDT(C, mask, accum, in, I, ni, J, nj, desc)
     return x
-end
-# TODO: Update when upstream.
-# this is less than ideal. But required for isstored.
-# a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-function Base.isstored(A::AbstractGBMatrix{T}, i::Int, j::Int) where {T}
-    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(Ref{T}(), gbpointer(A), decrement!(i), decrement!(j))
-    if result == LibGraphBLAS.GrB_SUCCESS
-        true
-    elseif result == LibGraphBLAS.GrB_NO_VALUE
-        false
-    else
-        @wraperror result
-    end
 end
 
 
@@ -588,6 +570,17 @@ for T ∈ valid_vec
             nvals[] == length(I) || throw(DimensionMismatch(""))
             return increment!(I)
         end
+    end
+end
+
+function Base.isstored(v::AbstractGBVector, i::Int)
+    result = LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(v), decrement!(i), 0)
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
     end
 end
 
