@@ -1,6 +1,11 @@
 module LibGraphBLAS
-import ..libgraphblas
-const GxB_FC64_t = ComplexF64
+
+to_c_type(t::Type) = t
+to_c_type_pairs(va_list) = map(enumerate(to_c_type.(va_list))) do (ind, type)
+    :(va_list[$ind]::$type)
+end
+
+const GxB_FC64_t = ComplexF32
 
 const GxB_FC32_t = ComplexF32
 
@@ -106,6 +111,11 @@ function GrB_Matrix_extractElement_Scalar(x, A, i, j)
     ccall((:GrB_Matrix_extractElement_Scalar, libgraphblas), GrB_Info, (GrB_Scalar, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
 end
 
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Global_Option_set(field, va_list...)
+        :(@ccall(libgraphblas.GxB_Global_Option_set(field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
 @enum GxB_Option_Field::UInt32 begin
     GxB_HYPER_SWITCH = 0
     GxB_BITMAP_SWITCH = 34
@@ -139,9 +149,44 @@ end
     GxB_GLOBAL_GPU_CHUNK = 22
 end
 
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Vector_Option_set(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Vector_Option_set(A::GrB_Vector, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Matrix_Option_set(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Matrix_Option_set(A::GrB_Matrix, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
 mutable struct GB_Descriptor_opaque end
 
 const GrB_Descriptor = Ptr{GB_Descriptor_opaque}
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Desc_set(desc, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Desc_set(desc::GrB_Descriptor, field::GrB_Desc_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Global_Option_get(field, va_list...)
+        :(@ccall(libgraphblas.GxB_Global_Option_get(field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Vector_Option_get(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Vector_Option_get(A::GrB_Vector, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Matrix_Option_get(A, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Matrix_Option_get(A::GrB_Matrix, field::GxB_Option_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
+
+# automatic type deduction for variadic arguments may not be what you want, please use with caution
+@generated function GxB_Desc_get(desc, field, va_list...)
+        :(@ccall(libgraphblas.GxB_Desc_get(desc::GrB_Descriptor, field::GrB_Desc_Field; $(to_c_type_pairs(va_list)...))::GrB_Info))
+    end
 
 function GrB_Type_free(type)
     ccall((:GrB_Type_free, libgraphblas), GrB_Info, (Ptr{GrB_Type},), type)
@@ -562,13 +607,15 @@ function GB_Iterator_rc_seek(iterator, j, jth_vector)
     ccall((:GB_Iterator_rc_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index, Bool), iterator, j, jth_vector)
 end
 
-function GB_Vector_Iterator_bitmap_seek(iterator, p)
-    ccall((:GB_Vector_Iterator_bitmap_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index), iterator, p)
+function GB_Vector_Iterator_bitmap_seek(iterator, unused)
+    ccall((:GB_Vector_Iterator_bitmap_seek, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Index), iterator, unused)
 end
 
 @enum GrB_Mode::UInt32 begin
     GrB_NONBLOCKING = 0
     GrB_BLOCKING = 1
+    GxB_NONBLOCKING_GPU = 2
+    GxB_BLOCKING_GPU = 3
 end
 
 function GrB_init(mode)
@@ -1315,6 +1362,10 @@ function GrB_Vector_extractElement_UDT(x, v, i)
     ccall((:GrB_Vector_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Vector, GrB_Index), x, v, i)
 end
 
+function GxB_Vector_isStoredElement(v, i)
+    ccall((:GxB_Vector_isStoredElement, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), v, i)
+end
+
 function GrB_Vector_removeElement(v, i)
     ccall((:GrB_Vector_removeElement, libgraphblas), GrB_Info, (GrB_Vector, GrB_Index), v, i)
 end
@@ -1587,6 +1638,10 @@ function GrB_Matrix_extractElement_UDT(x, A, i, j)
     ccall((:GrB_Matrix_extractElement_UDT, libgraphblas), GrB_Info, (Ptr{Cvoid}, GrB_Matrix, GrB_Index, GrB_Index), x, A, i, j)
 end
 
+function GxB_Matrix_isStoredElement(A, i, j)
+    ccall((:GxB_Matrix_isStoredElement, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), A, i, j)
+end
+
 function GrB_Matrix_removeElement(C, i, j)
     ccall((:GrB_Matrix_removeElement, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Index, GrB_Index), C, i, j)
 end
@@ -1655,12 +1710,12 @@ function GxB_Matrix_split(Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
     ccall((:GxB_Matrix_split, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Index, GrB_Index, Ptr{GrB_Index}, Ptr{GrB_Index}, GrB_Matrix, GrB_Descriptor), Tiles, m, n, Tile_nrows, Tile_ncols, A, desc)
 end
 
-function GxB_Matrix_diag(C, v, k, desc)
-    ccall((:GxB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64, GrB_Descriptor), C, v, k, desc)
+function GrB_Matrix_diag(C, v, k)
+    ccall((:GrB_Matrix_diag, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Vector, Int64), C, v, k)
 end
 
-function GrB_Matrix_diag(C, v, k)
-    ccall((:GrB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64), C, v, k)
+function GxB_Matrix_diag(C, v, k, desc)
+    ccall((:GxB_Matrix_diag, libgraphblas), GrB_Info, (GrB_Matrix, GrB_Vector, Int64, GrB_Descriptor), C, v, k, desc)
 end
 
 function GxB_Vector_diag(v, A, k, desc)
@@ -2909,21 +2964,60 @@ function GxB_Vector_Iterator_attach(iterator, v, desc)
     ccall((:GxB_Vector_Iterator_attach, libgraphblas), GrB_Info, (GxB_Iterator, GrB_Vector, GrB_Descriptor), iterator, v, desc)
 end
 
+@enum RMM_MODE::UInt32 begin
+    rmm_wrap_host = 0
+    rmm_wrap_host_pinned = 1
+    rmm_wrap_device = 2
+    rmm_wrap_managed = 3
+end
+
+function rmm_wrap_finalize()
+    ccall((:rmm_wrap_finalize, libgraphblas), Cvoid, ())
+end
+
+function rmm_wrap_initialize(mode, init_pool_size, max_pool_size)
+    ccall((:rmm_wrap_initialize, libgraphblas), Cint, (RMM_MODE, Csize_t, Csize_t), mode, init_pool_size, max_pool_size)
+end
+
+function rmm_wrap_allocate(size)
+    ccall((:rmm_wrap_allocate, libgraphblas), Ptr{Cvoid}, (Ptr{Csize_t},), size)
+end
+
+function rmm_wrap_deallocate(p, size)
+    ccall((:rmm_wrap_deallocate, libgraphblas), Cvoid, (Ptr{Cvoid}, Csize_t), p, size)
+end
+
+function rmm_wrap_malloc(size)
+    ccall((:rmm_wrap_malloc, libgraphblas), Ptr{Cvoid}, (Csize_t,), size)
+end
+
+function rmm_wrap_calloc(n, size)
+    ccall((:rmm_wrap_calloc, libgraphblas), Ptr{Cvoid}, (Csize_t, Csize_t), n, size)
+end
+
+function rmm_wrap_realloc(p, newsize)
+    ccall((:rmm_wrap_realloc, libgraphblas), Ptr{Cvoid}, (Ptr{Cvoid}, Csize_t), p, newsize)
+end
+
+function rmm_wrap_free(p)
+    ccall((:rmm_wrap_free, libgraphblas), Cvoid, (Ptr{Cvoid},), p)
+end
+
 # Skipping MacroDefinition: GB_PUBLIC extern
 
-# const GxB_STDC_VERSION = __STDC_VERSION__
+const GxB_STDC_VERSION = __STDC_VERSION__
 
-# const GB_restrict = restrict
+const GB_restrict = restrict
 
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
-const GxB_IMPLEMENTATION_DATE = "Feb 16, 2022"
+const GxB_IMPLEMENTATION_DATE = "May 20, 2022"
 
-const GxB_IMPLEMENTATION_MAJOR = 6
+const GxB_IMPLEMENTATION_MAJOR = 7
 
-const GxB_IMPLEMENTATION_MINOR = 2
+const GxB_IMPLEMENTATION_MINOR = 1
 
-const GxB_IMPLEMENTATION_SUB = 1
+const GxB_IMPLEMENTATION_SUB = 0
 
 const GxB_SPEC_DATE = "Nov 15, 2021"
 
@@ -2963,9 +3057,9 @@ const GRB_SUBVERSION = GxB_SPEC_MINOR
 #"Mathematics by Jeremy Kepner.  See also 'Graph Algorithms in the Language\n" \
 #"of Linear Algebra,' edited by J. Kepner and J. Gilbert, SIAM, 2011.\n"
 
-const GrB_INDEX_MAX = GrB_Index(Culonglong(1) << 60) * (-1)
+# const GrB_INDEX_MAX = (GrB_Index(Culonglong(1) << 60))(-1)
 
-const GxB_INDEX_MAX = GrB_Index(Culonglong(1) << 60)
+# const GxB_INDEX_MAX = GrB_Index(Culonglong(1) << 60)
 
 const GxB_NTHREADS = 5
 
@@ -3020,5 +3114,113 @@ const GxB_COMPRESSION_LZ4 = 1000
 const GxB_COMPRESSION_LZ4HC = 2000
 
 const GxB_COMPRESSION_INTEL = 1000000
+
+# Skipping MacroDefinition: GB_Iterator_rc_knext ( iterator ) \
+#( /* move to the next vector, and check if iterator is exhausted */ ( ++ ( iterator -> k ) >= iterator -> anvec ) ? ( /* iterator is at the end of the matrix */ iterator -> pstart = 0 , iterator -> pend = 0 , iterator -> p = 0 , iterator -> k = iterator -> anvec , GxB_EXHAUSTED ) : ( /* find first entry in vector, and pstart/pend for this vector */ ( iterator -> A_sparsity <= GxB_SPARSE ) ? ( /* matrix is sparse or hypersparse */ iterator -> pstart = iterator -> Ap [ iterator -> k ] , iterator -> pend = iterator -> Ap [ iterator -> k + 1 ] , iterator -> p = iterator -> pstart , ( ( iterator -> p >= iterator -> pend ) ? GrB_NO_VALUE : GrB_SUCCESS ) ) : ( /* matrix is bitmap or full */ iterator -> pstart += iterator -> avlen , iterator -> pend += iterator -> avlen , iterator -> p = iterator -> pstart , ( iterator -> A_sparsity <= GxB_BITMAP ) ? ( /* matrix is bitmap */ GB_Iterator_rc_bitmap_next ( iterator ) ) : ( /* matrix is full */ ( ( iterator -> p >= iterator -> pend ) ? GrB_NO_VALUE : GrB_SUCCESS ) ) ) ) \
+#)
+
+# Skipping MacroDefinition: GB_Iterator_rc_inext ( iterator ) \
+#( /* move to the next entry in the vector */ ( ++ ( iterator -> p ) >= iterator -> pend ) ? ( /* no more entries in the current vector */ GrB_NO_VALUE ) : ( ( iterator -> A_sparsity == GxB_BITMAP ) ? ( /* the matrix is in bitmap form */ GB_Iterator_rc_bitmap_next ( iterator ) ) : ( GrB_SUCCESS ) ) \
+#)
+
+# Skipping MacroDefinition: GB_Iterator_rc_getj ( iterator ) \
+#( ( iterator -> k >= iterator -> anvec ) ? ( /* iterator is past the end of the matrix */ iterator -> avdim ) : ( ( iterator -> A_sparsity == GxB_HYPERSPARSE ) ? ( /* return the name of kth vector: j = Ah [k] if it appears */ iterator -> Ah [ iterator -> k ] ) : ( /* return the kth vector: j = k */ iterator -> k ) ) \
+#)
+
+# Skipping MacroDefinition: GB_Iterator_rc_geti ( iterator ) \
+#( ( iterator -> Ai != NULL ) ? ( iterator -> Ai [ iterator -> p ] ) : ( ( iterator -> p - iterator -> pstart ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_attach ( iterator , A , desc ) \
+#( GB_Iterator_attach ( iterator , A , GxB_BY_ROW , desc ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_kount ( iterator ) \
+#( ( iterator ) -> anvec \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_seekRow ( iterator , row ) \
+#( GB_Iterator_rc_seek ( iterator , row , false ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_kseek ( iterator , k ) \
+#( GB_Iterator_rc_seek ( iterator , k , true ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_nextRow ( iterator ) \
+#( GB_Iterator_rc_knext ( iterator ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_nextCol ( iterator ) \
+#( GB_Iterator_rc_inext ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_getRowIndex ( iterator ) \
+#( GB_Iterator_rc_getj ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_rowIterator_getColIndex ( iterator ) \
+#( GB_Iterator_rc_geti ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_attach ( iterator , A , desc ) \
+#( GB_Iterator_attach ( iterator , A , GxB_BY_COL , desc ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_kount ( iterator ) \
+#( ( iterator ) -> anvec \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_seekCol ( iterator , col ) \
+#( GB_Iterator_rc_seek ( iterator , col , false ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_kseek ( iterator , k ) \
+#( GB_Iterator_rc_seek ( iterator , k , true ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_nextCol ( iterator ) \
+#( GB_Iterator_rc_knext ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_nextRow ( iterator ) \
+#( GB_Iterator_rc_inext ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_getColIndex ( iterator ) \
+#( GB_Iterator_rc_getj ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_colIterator_getRowIndex ( iterator ) \
+#( GB_Iterator_rc_geti ( ( iterator ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_Vector_Iterator_getpmax ( iterator ) \
+#( ( iterator -> pmax ) \
+#)
+
+# Skipping MacroDefinition: GB_Vector_Iterator_seek ( iterator , q ) \
+#( ( q >= iterator -> pmax ) ? ( /* the iterator is exhausted */ iterator -> p = iterator -> pmax , GxB_EXHAUSTED ) : ( /* seek to an arbitrary position in the vector */ iterator -> p = q , ( iterator -> A_sparsity == GxB_BITMAP ) ? ( GB_Vector_Iterator_bitmap_seek ( iterator , 0 ) ) : ( GrB_SUCCESS ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_Vector_Iterator_seek ( iterator , p ) \
+#( GB_Vector_Iterator_seek ( iterator , p ) \
+#)
+
+# Skipping MacroDefinition: GB_Vector_Iterator_next ( iterator ) \
+#( /* move to the next entry */ ( ++ ( iterator -> p ) >= iterator -> pmax ) ? ( /* the iterator is exhausted */ iterator -> p = iterator -> pmax , GxB_EXHAUSTED ) : ( ( iterator -> A_sparsity == GxB_BITMAP ) ? ( /* bitmap: seek to the next entry present in the bitmap */ GB_Vector_Iterator_bitmap_seek ( iterator , 0 ) ) : ( /* other formats: already at the next entry */ GrB_SUCCESS ) ) \
+#)
+
+# Skipping MacroDefinition: GxB_Vector_Iterator_next ( iterator ) \
+#( GB_Vector_Iterator_next ( iterator ) \
+#)
+
+# Skipping MacroDefinition: GxB_Vector_Iterator_getp ( iterator ) \
+#( ( iterator -> p ) \
+#)
+
+# Skipping MacroDefinition: GxB_Vector_Iterator_getIndex ( iterator ) \
+#( ( ( iterator -> Ai != NULL ) ? iterator -> Ai [ iterator -> p ] : iterator -> p ) \
+#)
 
 end # module

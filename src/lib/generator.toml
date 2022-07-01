@@ -1,12 +1,40 @@
 [general]
 library_name = "libgraphblas"
 module_name = "LibGraphBLAS"
-#prologue_file_path = "./prologue.jl"
 output_file_path = "./LibGraphBLAS_gen.jl"
-#epilogue_file_path = "./epilogue.jl"
 use_julia_native_enum_type = true
 [codegen]
 opaque_as_mutable_struct = true
+wrap_variadic_function = true
 
 [codegen.macro]
 macro_mode = "basic"
+functionlike_macro_includelist = [
+    "GB_Iterator_rc_knext",
+    "GB_Iterator_rc_inext",
+    "GB_Iterator_rc_getj",
+    "GB_Iterator_rc_geti",
+    "GxB_rowIterator_attach",
+    "GxB_rowIterator_kount",
+    "GxB_rowIterator_seekRow",
+    "GxB_rowIterator_kseek",
+    "GxB_rowIterator_nextRow",
+    "GxB_rowIterator_nextCol",
+    "GxB_rowIterator_getRowIndex",
+    "GxB_rowIterator_getColIndex",
+    "GxB_colIterator_attach",
+    "GxB_colIterator_kount",
+    "GxB_colIterator_seekCol",
+    "GxB_colIterator_kseek",
+    "GxB_colIterator_nextCol",
+    "GxB_colIterator_nextRow",
+    "GxB_colIterator_getColIndex",
+    "GxB_colIterator_getRowIndex",
+    "GxB_Vector_Iterator_getpmax",
+    "GB_Vector_Iterator_seek",
+    "GxB_Vector_Iterator_seek",
+    "GB_Vector_Iterator_next",
+    "GxB_Vector_Iterator_next",
+    "GxB_Vector_Iterator_getp",
+    "GxB_Vector_Iterator_getIndex",
+]
