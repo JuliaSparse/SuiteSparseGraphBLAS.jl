@@ -3005,9 +3005,9 @@ end
 
 # Skipping MacroDefinition: GB_PUBLIC extern
 
-const GxB_STDC_VERSION = __STDC_VERSION__
+# const GxB_STDC_VERSION = __STDC_VERSION__
 
-const GB_restrict = restrict
+# const GB_restrict = restrict
 
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
