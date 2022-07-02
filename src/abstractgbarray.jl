@@ -45,6 +45,14 @@ function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
     return C
 end
 
+function SparseArrays.SparseVector(v::AbstractGBVector)
+    sparsity = sparsitystatus(v)
+    T = sparsity === Sparse() ? A : copy(A)
+    x = unpack!(T, SparseVector)
+    C = copy(x)
+    pack!(T, x; copytoraw = false)
+    return C
+end
 # AbstractGBMatrix functions:
 #############################
 

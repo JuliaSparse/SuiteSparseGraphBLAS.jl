@@ -169,7 +169,7 @@ function pack!(A::AbstractGBArray, s::SparseVector; copytoraw = true)
 end
 
 function pack!(
-    ::Type{GT}, A::AbstractArray{T}; 
+    ::Type{GT}, A::AbstractArray{T};
     fill = nothing, order = ColMajor(), copytoraw = true
 ) where {GT<:AbstractGBArray, T}
     if GT <: AbstractGBVector
