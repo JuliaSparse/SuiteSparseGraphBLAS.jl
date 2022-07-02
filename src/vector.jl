@@ -60,7 +60,20 @@ function GBVector(n::Integer, x::T; fill = nothing) where {T}
 end
 
 GBVector{T, F}(::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+function GBVector(v::AbstractVector{T}; fill::F = nothing) where {T, F}
+    needcopy = true
+    if v isa AbstractVector && !(v isa Vector)
+        v = collect(v)
+        needcopy = false
+    end
+    A = GBVector{T}(size(v, 1); fill)
+    return pack!(A, v) # needcopy ? copy(v) : v. Currently copies within pack!
+end
 
+function GBVector(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    A = GBVector{T}(size(v, 1); fill)
+    return pack!(A, v) # currently copies within pack!
+end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
@@ -69,7 +82,7 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, v::GBVector) = v.p[]
 function Base.copy(A::GBVector{T, F}) where {T, F}
     C = Ref{LibGraphBLAS.GrB_Matrix}()
     LibGraphBLAS.GrB_Matrix_dup(C, gbpointer(A))
-    return GBVector{T, F}(C[], A.fill)
+    return GBVector{T, F}(C, A.fill)
 end
 
 

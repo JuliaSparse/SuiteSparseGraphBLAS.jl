@@ -121,10 +121,12 @@ function gbget(A::AbstractGBArray, option)
     return GxB_Matrix_Option_get(A, option)
 end
 
-function format(A::GBVecOrMat)
-    t = gbget(A, SPARSITY_STATUS)
-    f = gbget(A, FORMAT)
-    return (GBSparsity(t), GBFormat(f))
+function sparsitystatus(A::AbstractGBArray)
+    t = GBSparsity(gbget(A, SPARSITY_STATUS))
+    return consttoshape(t)
+end
+function format(A::AbstractGBArray)
+    return (sparsitystatus(A), storageorder(A))
 end
 
 const HYPER_SWITCH = LibGraphBLAS.GxB_HYPER_SWITCH
@@ -160,6 +162,9 @@ function option_toconst(sym::Symbol)
     sym === :hypersparse && return GBHYPER
 end
 
+function option_toconst(sparsity::AbstractSparsity)
+    return shapetoconst(sparsity)
+end
 
 """
 Sparsity options for GraphBLAS. values can be summed to produce additional options.
