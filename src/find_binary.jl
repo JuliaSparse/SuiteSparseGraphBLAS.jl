@@ -1,5 +1,5 @@
 function get_lib()
-    default_lib = "default"
+    default_lib = "/home/will/GraphBLAS/build/libgraphblas.so"
 
     lib = @load_preference("shared_lib", default_lib)
     if lib != "default" && lib !== nothing

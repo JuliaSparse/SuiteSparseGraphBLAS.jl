@@ -140,9 +140,9 @@ function __init__()
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     @wraperror LibGraphBLAS.GxB_init(
         LibGraphBLAS.GrB_NONBLOCKING, 
-        @cfunction(gbmalloc, Ptr{Cvoid}, (Csize_t,)),
-        @cfunction(gbcalloc, Ptr{Cvoid}, (Csize_t,)),
-        @cfunction(gbrealloc, Ptr{Cvoid}, (Ptr{Cvoid}, Csize_t)),
+        @cfunction(gbmalloc, Ptr{Cvoid}, (Csize_t, LibGraphBLAS.GrB_Type)),
+        C_NULL,
+        C_NULL,
         @cfunction(gbfree, Cvoid, (Ptr{Cvoid},))
         # cglobal(:jl_malloc), 
         # cglobal(:jl_calloc), 
@@ -150,6 +150,9 @@ function __init__()
         # cglobal(:jl_free)
     )
     gbset(:nthreads, BLAS.get_num_threads())
+    for type ∈ valid_vec
+        Base.unsafe_convert(LibGraphBLAS.GrB_Type, gbtype(type))
+    end
     # Eagerly load selectops constants.
     _loadselectops()
     ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)

@@ -17,7 +17,7 @@ function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     finally
         unlock(memlock)
     end
-    eltype(M) == T || M = 
+    eltype(M) == T || error("$M != $T")
     return size(A, 2) == 1 ? reshape(M, :) : reshape(M, szA)
 end
 

@@ -32,7 +32,6 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
     if !op.loaded
         if op.builtin
             op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
-            
         else
             fn = op.fn
             function unaryopfn(z, x)

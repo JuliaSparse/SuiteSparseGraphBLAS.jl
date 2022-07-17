@@ -111,7 +111,7 @@ See also: [`gbtype`](@ref)
 juliatype(::GBType{T}) where {T} = T
 
 @gbtype Bool GrB_BOOL
-@gbtype Int8 GrB_INT8
+@gbtype Int8  GrB_INT8
 @gbtype UInt8 GrB_UINT8
 @gbtype Int16 GrB_INT16
 @gbtype UInt16 GrB_UINT16
@@ -123,4 +123,3 @@ juliatype(::GBType{T}) where {T} = T
 @gbtype Float64 GrB_FP64
 @gbtype ComplexF32 GxB_FC32
 @gbtype ComplexF64 GxB_FC64
-

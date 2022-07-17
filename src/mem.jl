@@ -1,8 +1,9 @@
 const PTRTOJL = Dict{Ptr{Cvoid}, VecOrMat}()
 const memlock = Threads.SpinLock()
 
-function gbmalloc(size)
-    v = Vector{UInt8}(undef, size)
+function gbmalloc(size, type)
+    type = juliatype(ptrtogbtype[type])
+    v = Vector{type}(undef, size)
     p = Ptr{Cvoid}(pointer(v))
     lock(memlock)
     try
