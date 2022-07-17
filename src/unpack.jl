@@ -17,8 +17,11 @@ function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     finally
         unlock(memlock)
     end
-    eltype(M) == T || error("$M != $T")
-    return size(A, 2) == 1 ? reshape(M, :) : reshape(M, szA)
+    eltype(M) == T || copy(reinterpret(T, M))
+    if length(M) != length(A)
+        resize!(M, length(A))
+    end
+    return reshape(M, szA...)
 end
 
 function _unpackdensematrixR!(A::AbstractGBArray{T}; desc = nothing) where {T}
@@ -40,7 +43,7 @@ function _unpackdensematrixR!(A::AbstractGBArray{T}; desc = nothing) where {T}
     finally
         unlock(memlock)
     end
-    return size(A, 2) == 1 ? reshape(M, :) : reshape(M, szA)
+    return reshape(M, szA...)
 end
 
 function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindices = true) where {T}

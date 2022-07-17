@@ -1,3 +1,6 @@
 [deps]
 Clang = "40e3b903-d033-50b4-a0cc-940c62c95e31"
 SSGraphBLAS_jll = "7ed9a814-9cab-54e9-8e9e-d9e95b4d61b1"
+
+[compat]
+SSGraphBLAS_jll = "7.1.0" 

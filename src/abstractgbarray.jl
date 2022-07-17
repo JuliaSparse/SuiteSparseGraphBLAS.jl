@@ -16,18 +16,40 @@ Does not modify the type or dimensions.
 """
 Base.empty!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A))); return nothing
 
-function Base.Matrix(A::AbstractGBArray)
-    # we use dontmodifysparsity here to avoid the pitfall of densifying A.
-    unpack!(copy(A), Dense())
+function Base.Matrix(A::AbstractGBMatrix)
+    sparsity = sparsitystatus(A)
+    T = sparsity === Dense() ? A : copy(A) # If A is not dense we need to copy to avoid densifying
+    x = unpack!(T, Dense())
+    C = copy(x)
+    pack!(T, x; copytoraw = false)
+    return C
 end
 
 function Base.Vector(v::AbstractGBVector)
-    # we use dontmodifysparsity here to avoid the pitfall of densifying A. 
-    unpack!(copy(v), Dense())
+    sparsity = sparsitystatus(v)
+    T = sparsity === Dense() ? v : copy(v) # If v is not dense we need to copy to avoid densifying
+    x = unpack!(T, Dense())
+    C = copy(x)
+    pack!(T, x; copytoraw = false)
+    return C
 end
 
 function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
-    unpack!(copy(A), Sparse())
+    sparsity = sparsitystatus(A)
+    T = sparsity === Sparse() ? A : copy(A)
+    x = unpack!(T, SparseMatrixCSC)
+    C = copy(x)
+    pack!(T, x; copytoraw = false)
+    return C
+end
+
+function SparseArrays.SparseVector(v::AbstractGBVector)
+    sparsity = sparsitystatus(v)
+    T = sparsity === Sparse() ? A : copy(A)
+    x = unpack!(T, SparseVector)
+    C = copy(x)
+    pack!(T, x; copytoraw = false)
+    return C
 end
 
 # AbstractGBMatrix functions:
@@ -261,21 +283,16 @@ for T ∈ valid_vec
             return x
         end
     end
-    # TODO: Update when upstream.
-    # this is less than ideal. But required for isstored.
-    # a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-    func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
-    @eval begin
-        function Base.isstored(A::AbstractGBMatrix{$T}, i::Int, j::Int)
-            result = LibGraphBLAS.$func(Ref{$T}(), gbpointer(A), decrement!(i), decrement!(j))
-            if result == LibGraphBLAS.GrB_SUCCESS
-                true
-            elseif result == LibGraphBLAS.GrB_NO_VALUE
-                false
-            else
-                @wraperror result
-            end
-        end
+end
+
+function Base.isstored(A::AbstractGBMatrix, i::Int, j::Int)
+    result = LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(A), decrement!(i), decrement!(j))
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
     end
 end
 
@@ -289,20 +306,6 @@ function _assign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) 
     in = Ref{T}(x)
     @wraperror LibGraphBLAS.GrB_Matrix_assign_UDT(C, mask, accum, in, I, ni, J, nj, desc)
     return x
-end
-
-# TODO: Update when upstream.
-# this is less than ideal. But required for isstored.
-# a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-function Base.isstored(A::AbstractGBMatrix{T}, i::Int, j::Int) where {T}
-    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(Ref{T}(), gbpointer(A), decrement!(i), decrement!(j))
-    if result == LibGraphBLAS.GrB_SUCCESS
-        true
-    elseif result == LibGraphBLAS.GrB_NO_VALUE
-        false
-    else
-        @wraperror result
-    end
 end
 
 # subassign fallback for Matrix <- Matrix, and Matrix <- Vector
@@ -360,14 +363,15 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     _subassign(C, x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-    return C
+    return x
 end
 
 function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
     mask = nothing, accum = nothing, desc = nothing)
-    array = pack!(GBMatrix, x)
+    array = pack!(GBMatrix, x; copytoraw=false)
     subassign!(C, array, I, J; mask, accum, desc)
     unpack!(array)
+    return C
 end
 
 """
@@ -423,7 +427,7 @@ function assign!(C::AbstractGBArray, x, I, J;
     _assign(gbpointer(C), x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-    return C
+    return x
 end
 
 function Base.setindex!(
@@ -572,6 +576,17 @@ for T ∈ valid_vec
             nvals[] == length(I) || throw(DimensionMismatch(""))
             return increment!(I)
         end
+    end
+end
+
+function Base.isstored(v::AbstractGBVector, i::Int)
+    result = LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(v), decrement!(i), 0)
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
     end
 end
 

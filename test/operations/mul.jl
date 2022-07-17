@@ -18,6 +18,9 @@
     m = GBMatrix([[1,2,3] [4,5,6]])
     n = GBVector([10,20,30])
     @test_throws DimensionMismatch m * n
+    x = m' * n
+    y = Matrix(m)'; show(y)
+    z = Vector(n); show(z)
     @test m' * n == Matrix(m)' * Vector(n)
     @test n' * m == Vector(n)' * Matrix(m)
     @test n' * n == GBVector([Vector(n)' * Vector(n)])

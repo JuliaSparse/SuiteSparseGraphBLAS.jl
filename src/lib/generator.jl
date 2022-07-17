@@ -10,6 +10,7 @@ headers = [GRAPHBLAS]
 
 options = load_options(joinpath(@__DIR__, "generator.toml"))
 args = get_default_args()
+push!(args, "-fparse-all-comments")
 push!(args, "-I$HEADER_BASE")
 
 ctx = create_context(headers, args, options)

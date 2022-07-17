@@ -1,10 +1,29 @@
 const PTRTOJL = Dict{Ptr{Cvoid}, VecOrMat}()
 const memlock = Threads.SpinLock()
 
+
+function _jlmalloc(size, ::Type{T}) where {T}
+    return ccall(:jl_malloc, Ptr{T}, (UInt, ), size)
+end
+function _jlfree(p::Union{DenseVecOrMat{T}, Ptr{T}, Ref{T}}) where {T}
+    ccall(:jl_free, Cvoid, (Ptr{T}, ), p isa DenseVecOrMat ? pointer(p) : p)
+end
+
+function _copytorawptr(A::DenseVecOrMat{T}) where {T}
+    sz = sizeof(A)
+    ptr = _jlmalloc(sz, T)
+    ptr = ptr
+    unsafe_copyto!(ptr, pointer(A), length(A))
+    return ptr
+end
+
+_copytoraw(A::DenseVecOrMat) = unsafe_wrap(Array, _copytorawptr(A), size(A)) 
+
 function gbmalloc(size, type)
     type = juliatype(ptrtogbtype[type])
     v = Vector{type}(undef, size)
     p = Ptr{Cvoid}(pointer(v))
+    println("creating: $p with size $size")
     lock(memlock)
     try
         PTRTOJL[p] = v
@@ -52,9 +71,12 @@ end
 # I'm not going to aggressively free here,
 # since it could still be valid elsewhere in Julia.
 function gbfree(addr)
+    println("freeing: $addr")
     lock(memlock)
     try
         delete!(PTRTOJL, addr)
+    catch
+        println("failed to free $addr")
     finally
         unlock(memlock)
     end

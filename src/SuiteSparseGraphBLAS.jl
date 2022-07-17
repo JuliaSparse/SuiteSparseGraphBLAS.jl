@@ -15,7 +15,7 @@ else
 end
 
 using SparseArrays
-using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval
+using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval, rowvals
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG

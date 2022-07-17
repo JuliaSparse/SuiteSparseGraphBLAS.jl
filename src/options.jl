@@ -162,7 +162,9 @@ function option_toconst(option::StorageOrders.StorageOrder)
     throw(ArgumentError("Invalid Orientation setting $option"))
 end
 
-optiontoconst(option::Sparsity) = shapetoconst(option)
+function option_toconst(sparsity::AbstractSparsity)
+    return shapetoconst(sparsity)
+end
 
 function option_toconst(sym::Symbol)
     sym === :format && return FORMAT
