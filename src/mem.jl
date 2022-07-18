@@ -23,7 +23,6 @@ function gbmalloc(size, type)
     type = juliatype(ptrtogbtype[type])
     v = Vector{type}(undef, size)
     p = Ptr{Cvoid}(pointer(v))
-    println("creating: $p with size $size")
     lock(memlock)
     try
         PTRTOJL[p] = v
@@ -71,7 +70,6 @@ end
 # I'm not going to aggressively free here,
 # since it could still be valid elsewhere in Julia.
 function gbfree(addr)
-    println("freeing: $addr")
     lock(memlock)
     try
         delete!(PTRTOJL, addr)

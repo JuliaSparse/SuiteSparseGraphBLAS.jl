@@ -21,7 +21,7 @@ function Base.Matrix(A::AbstractGBMatrix)
     T = sparsity === Dense() ? A : copy(A) # If A is not dense we need to copy to avoid densifying
     x = unpack!(T, Dense())
     C = copy(x)
-    pack!(T, x; copytoraw = false)
+    pack!(T, x)
     return C
 end
 
@@ -30,7 +30,7 @@ function Base.Vector(v::AbstractGBVector)
     T = sparsity === Dense() ? v : copy(v) # If v is not dense we need to copy to avoid densifying
     x = unpack!(T, Dense())
     C = copy(x)
-    pack!(T, x; copytoraw = false)
+    pack!(T, x)
     return C
 end
 
@@ -39,7 +39,7 @@ function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
     T = sparsity === Sparse() ? A : copy(A)
     x = unpack!(T, SparseMatrixCSC)
     C = copy(x)
-    pack!(T, x; copytoraw = false)
+    pack!(T, x)
     return C
 end
 
@@ -48,7 +48,7 @@ function SparseArrays.SparseVector(v::AbstractGBVector)
     T = sparsity === Sparse() ? A : copy(A)
     x = unpack!(T, SparseVector)
     C = copy(x)
-    pack!(T, x; copytoraw = false)
+    pack!(T, x)
     return C
 end
 
@@ -368,7 +368,7 @@ end
 
 function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
     mask = nothing, accum = nothing, desc = nothing)
-    array = pack!(GBMatrix, x; copytoraw=false)
+    array = pack!(GBMatrix, x)
     subassign!(C, array, I, J; mask, accum, desc)
     unpack!(array)
     return C
