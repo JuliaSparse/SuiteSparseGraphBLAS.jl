@@ -1,4 +1,4 @@
-function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
+function _unpackdensematrix!(A::AbstractGBVector{T}; desc = nothing) where {T}
     szA = size(A)
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
@@ -17,11 +17,37 @@ function _unpackdensematrix!(A::AbstractGBArray{T}; desc = nothing) where {T}
     finally
         unlock(memlock)
     end
-    eltype(M) == T || copy(reinterpret(T, M))
+    # eltype(M) == T || (M = copy(reinterpret(T, M)))
     if length(M) != length(A)
         resize!(M, length(A))
     end
-    return reshape(M, szA...)
+    return M::Vector{T}
+end
+
+function _unpackdensematrix!(A::AbstractGBMatrix{T}; desc = nothing) where {T}
+    szA = size(A)
+    desc = _handledescriptor(desc)
+    Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
+    values = Ref{Ptr{Cvoid}}(Ptr{T}())
+    isiso = Ref{Bool}(false)
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
+        gbpointer(A),
+        values,
+        Csize,
+        isiso,
+        desc
+    )
+    lock(memlock)
+    M = try
+        pop!(PTRTOJL, values[])
+    finally
+        unlock(memlock)
+    end
+    # eltype(M) == T || (M = copy(reinterpret(T, M)))
+    if length(M) != length(A)
+        resize!(M, length(A))
+    end
+    return reshape(M, szA[1], szA[2])::Matrix{T}
 end
 
 function _unpackdensematrixR!(A::AbstractGBArray{T}; desc = nothing) where {T}
@@ -140,8 +166,10 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     vals
 end
 
-function unpack!(A::AbstractGBArray, ::Dense; order = ColMajor())
+function unpack!(A::AbstractGBArray{T}, ::Dense; order = ColMajor()) where {T}
     wait(A)
+    sparsity = sparsitystatus(A)
+    sparsity === Dense() || (A .+= (similar(A) .= zero(T)))
     if order === ColMajor()
         return _unpackdensematrix!(A)
     else

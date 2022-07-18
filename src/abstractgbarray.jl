@@ -700,7 +700,7 @@ function Base.setindex!(
     mask = nothing, accum = nothing, desc = nothing
 )
     subassign!(u, x, I; mask, accum, desc)
-    return nothing
+    return x
 end
 
 function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback printing

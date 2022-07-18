@@ -58,12 +58,16 @@ end
 
 function GBMatrix(dims::Dims{2}, x::T; fill = nothing) where {T}
     A = GBMatrix{T}(dims; fill)
-    A[:, :] = x
+    A .= x
     return A
 end
 
 # iso dense
-GBMatrix(nrows, ncols, x::T; fill::F = nothing) where {T, F} = GBMatrix((nrows, ncols), x; fill)
+GBMatrix(nrows, ncols, x; fill = nothing) = GBMatrix((nrows, ncols), x; fill)
+GBMatrix(dims::Tuple{<:Integer}, x; fill = nothing) = GBMatrix(dims..., x; fill)
+GBMatrix(size::Tuple{Base.OneTo, Base.OneTo}, x; fill = nothing) = 
+GBMatrix(size[1].stop, size[2].stop, x; fill)
+
 
 function GBMatrix(v::GBVector)
     # this copies, I think that's ideal, and I can implement @view or something at a later date.
