@@ -626,6 +626,10 @@ function GxB_init(mode, user_malloc_function, user_calloc_function, user_realloc
     ccall((:GxB_init, libgraphblas), GrB_Info, (GrB_Mode, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), mode, user_malloc_function, user_calloc_function, user_realloc_function, user_free_function)
 end
 
+function JL_memory_init(jl_malloc_function, jl_realloc_function, jl_free_function)
+    ccall((:JL_memory_init, libgraphblas), GrB_Info, (Ptr{Cvoid}, Ptr{Cvoid}, Ptr{Cvoid}), jl_malloc_function, jl_realloc_function, jl_free_function)
+end
+
 function GrB_finalize()
     ccall((:GrB_finalize, libgraphblas), GrB_Info, ())
 end
@@ -3005,19 +3009,15 @@ end
 
 # Skipping MacroDefinition: GB_PUBLIC extern
 
-# const GxB_STDC_VERSION = __STDC_VERSION__
-
-# const GB_restrict = restrict
-
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
-const GxB_IMPLEMENTATION_DATE = "May 20, 2022"
+const GxB_IMPLEMENTATION_DATE = "July 8, 2022"
 
 const GxB_IMPLEMENTATION_MAJOR = 7
 
 const GxB_IMPLEMENTATION_MINOR = 1
 
-const GxB_IMPLEMENTATION_SUB = 0
+const GxB_IMPLEMENTATION_SUB = 2
 
 const GxB_SPEC_DATE = "Nov 15, 2021"
 
@@ -3030,8 +3030,6 @@ const GxB_SPEC_SUB = 0
 const GRB_VERSION = GxB_SPEC_MAJOR
 
 const GRB_SUBVERSION = GxB_SPEC_MINOR
-
-# const GxB_IMPLEMENTATION = GxB_VERSION(GxB_IMPLEMENTATION_MAJOR, GxB_IMPLEMENTATION_MINOR, GxB_IMPLEMENTATION_SUB)
 
 # Skipping MacroDefinition: GxB_IMPLEMENTATION_ABOUT \
 #"SuiteSparse:GraphBLAS, Timothy A. Davis, (c) 2017-2022, All Rights Reserved." \
@@ -3048,8 +3046,6 @@ const GRB_SUBVERSION = GxB_SPEC_MINOR
 #"WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" \
 #"See the License for the specific language governing permissions and\n" \
 #"limitations under the License.\n"
-
-# const GxB_SPEC_VERSION = GxB_VERSION(GxB_SPEC_MAJOR, GxB_SPEC_MINOR, GxB_SPEC_SUB)
 
 # Skipping MacroDefinition: GxB_SPEC_ABOUT \
 #"GraphBLAS C API, by Aydin Buluc, Timothy Mattson, Scott McMillan,\n" \

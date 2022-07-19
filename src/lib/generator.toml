@@ -40,6 +40,3 @@ functionlike_macro_includelist = [
     "GxB_Vector_Iterator_getp",
     "GxB_Vector_Iterator_getIndex",
 ] 
-
-[codegen.macro]
-macro_mode = "basic"

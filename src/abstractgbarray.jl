@@ -18,38 +18,26 @@ Base.empty!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear
 
 function Base.Matrix(A::AbstractGBMatrix)
     sparsity = sparsitystatus(A)
-    T = sparsity === Dense() ? A : copy(A) # If A is not dense we need to copy to avoid densifying
-    x = unpack!(T, Dense())
-    C = copy(x)
-    pack!(T, x)
-    return C
+    T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
+    return unpack!(T, Dense())
 end
 
 function Base.Vector(v::AbstractGBVector)
     sparsity = sparsitystatus(v)
-    T = sparsity === Dense() ? v : copy(v) # If v is not dense we need to copy to avoid densifying
-    x = unpack!(T, Dense())
-    C = copy(x)
-    pack!(T, x)
-    return C
+    T = copy(v) # avoid densifying v and destroying v.
+    return unpack!(T, Dense())
 end
 
 function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
     sparsity = sparsitystatus(A)
-    T = sparsity === Sparse() ? A : copy(A)
-    x = unpack!(T, SparseMatrixCSC)
-    C = copy(x)
-    pack!(T, x)
-    return C
+    T = copy(A) # avoid changing sparsity of A and destroying it.
+    return unpack!(T, SparseMatrixCSC)
 end
 
 function SparseArrays.SparseVector(v::AbstractGBVector)
     sparsity = sparsitystatus(v)
-    T = sparsity === Sparse() ? A : copy(A)
-    x = unpack!(T, SparseVector)
-    C = copy(x)
-    pack!(T, x)
-    return C
+    T = copy(A) # avoid changing sparsity of v and destroying it.
+    return unpack!(T, SparseVector)
 end
 
 # AbstractGBMatrix functions:

@@ -32,18 +32,6 @@ function gbmalloc(size, type)
     return p
 end
 
-function gbcalloc(size)
-    v = zeros(UInt8, size)
-    p = Ptr{Cvoid}(pointer(v))
-    lock(memlock)
-    try
-        PTRTOJL[p] = v
-    finally
-        unlock(memlock)
-    end
-    return p
-end
-
 function gbrealloc(addr, size)
     if addr == C_NULL
         size == 0 && (return C_NULL)
@@ -54,7 +42,7 @@ function gbrealloc(addr, size)
     if addr ∈ keys(PTRTOJL)
         lock(memlock)
         return try
-            v = pop!(PTRTOJL, ptr)
+            v = pop!(PTRTOJL, addr)
             resize!(v, size)
             addr = Ptr{Cvoid}(pointer(v))
             PTRTOJL[addr] = v
@@ -74,7 +62,8 @@ function gbfree(addr)
     try
         delete!(PTRTOJL, addr)
     catch
-        println("failed to free $addr")
+        _jlfree(addr) # We do this as a back up, 
+        # this might be wrong, and maybe should be caught again.
     finally
         unlock(memlock)
     end
