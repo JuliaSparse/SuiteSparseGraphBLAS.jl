@@ -44,6 +44,7 @@ mutable struct GBType{T} <: AbstractGBType
         end
     end
 end
+gbpointer(T::GBType) = T.p
 
 """
     gbtype(x)

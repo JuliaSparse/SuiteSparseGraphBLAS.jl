@@ -154,6 +154,7 @@ function __init__()
     for type ∈ valid_vec
         Base.unsafe_convert(LibGraphBLAS.GrB_Type, gbtype(type))
     end
+    LibGraphBLAS.GxB_Global_Option_set(LibGraphBLAS.GxB_MEMORY_POOL, pointer(MEMPOOL))
     # Eagerly load selectops constants.
     _loadselectops()
     ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)

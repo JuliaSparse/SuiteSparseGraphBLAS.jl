@@ -1,6 +1,8 @@
 const PTRTOJL = Dict{Ptr{Cvoid}, VecOrMat}()
+sizehint!(PTRTOJL, 75)
 const memlock = Threads.SpinLock()
 
+const MEMPOOL = zeros(Int64, 10000)
 
 function _jlmalloc(size, ::Type{T}) where {T}
     return ccall(:jl_malloc, Ptr{T}, (UInt, ), size)
