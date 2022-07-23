@@ -37,7 +37,7 @@ end
 function gbrealloc(addr, size)
     if addr == C_NULL
         size == 0 && (return C_NULL)
-        size > 0 && (return gbmalloc(size))
+        size > 0 && (return gbmalloc(size, GrB_UINT8))
     end
     # We now have that ptr != C_NULL and size > 0
     # so we must resize
