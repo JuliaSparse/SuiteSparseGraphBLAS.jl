@@ -15,7 +15,7 @@ else
 end
 
 using SparseArrays
-using SparseArrays: nonzeroinds
+using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval
 using MacroTools
 using LinearAlgebra
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
@@ -37,7 +37,7 @@ include("operators/libgbops.jl")
 
 include("gbtypes.jl")
 include("types.jl")
-
+include("mem.jl")
 
 
 include("constants.jl")
@@ -77,7 +77,6 @@ include("operations/resize.jl")
 include("operations/sort.jl")
 # 
 include("print.jl")
-include("import.jl")
 include("pack.jl")
 include("unpack.jl")
 include("options.jl")
@@ -95,7 +94,6 @@ include("serialization.jl")
 
 #EXPERIMENTAL
 include("misc.jl")
-include("asjulia.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")
@@ -144,6 +142,12 @@ function __init__()
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     @wraperror LibGraphBLAS.GxB_init(LibGraphBLAS.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
     gbset(:nthreads, BLAS.get_num_threads())
+
+    # Eagerly load the GrB_Types for builtin numeric types.
+    # Avoids some missing definition issues.
+    for type ∈ valid_vec
+        Base.unsafe_convert(LibGraphBLAS.GrB_Type, gbtype(type))
+    end
     # Eagerly load selectops constants.
     _loadselectops()
     ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)

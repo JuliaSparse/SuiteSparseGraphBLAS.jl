@@ -14,7 +14,34 @@ Base.eltype(::Type{AbstractGBArray{T}}) where{T} = T
 Clear all the entries from the GBArray.
 Does not modify the type or dimensions.
 """
-Base.empty!(A::AbsGBArrayOrTranspose) = @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A))); return nothing
+function Base.empty!(A::AbsGBArrayOrTranspose)
+    @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A)))
+    return A
+end
+
+function Base.Matrix(A::AbstractGBMatrix)
+    sparsity = sparsitystatus(A)
+    T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
+    return unpack!(T, Dense())
+end
+
+function Base.Vector(v::AbstractGBVector)
+    sparsity = sparsitystatus(v)
+    T = copy(v) # avoid densifying v and destroying v.
+    return unpack!(T, Dense())
+end
+
+function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
+    sparsity = sparsitystatus(A)
+    T = copy(A) # avoid changing sparsity of A and destroying it.
+    return unpack!(T, SparseMatrixCSC)
+end
+
+function SparseArrays.SparseVector(v::AbstractGBVector)
+    sparsity = sparsitystatus(v)
+    T = copy(A) # avoid changing sparsity of v and destroying it.
+    return unpack!(T, SparseVector)
+end
 
 # AbstractGBMatrix functions:
 #############################
@@ -247,21 +274,16 @@ for T ∈ valid_vec
             return x
         end
     end
-    # TODO: Update when upstream.
-    # this is less than ideal. But required for isstored.
-    # a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-    func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
-    @eval begin
-        function Base.isstored(A::AbstractGBMatrix{$T}, i::Int, j::Int)
-            result = LibGraphBLAS.$func(Ref{$T}(), gbpointer(A), decrement!(i), decrement!(j))
-            if result == LibGraphBLAS.GrB_SUCCESS
-                true
-            elseif result == LibGraphBLAS.GrB_NO_VALUE
-                false
-            else
-                @wraperror result
-            end
-        end
+end
+
+function Base.isstored(A::AbstractGBMatrix, i::Int, j::Int)
+    result = LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(A), decrement!(i), decrement!(j))
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
     end
 end
 
@@ -276,20 +298,6 @@ function _assign(C::AbstractGBMatrix{T}, x::T, I, ni, J, nj, mask, accum, desc) 
     @wraperror LibGraphBLAS.GrB_Matrix_assign_UDT(C, mask, accum, in, I, ni, J, nj, desc)
     return x
 end
-# TODO: Update when upstream.
-# this is less than ideal. But required for isstored.
-# a new version of graphBLAS will replace this with Matrix_extractElement_Structural
-function Base.isstored(A::AbstractGBMatrix{T}, i::Int, j::Int) where {T}
-    result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(Ref{T}(), gbpointer(A), decrement!(i), decrement!(j))
-    if result == LibGraphBLAS.GrB_SUCCESS
-        true
-    elseif result == LibGraphBLAS.GrB_NO_VALUE
-        false
-    else
-        @wraperror result
-    end
-end
-
 
 # subassign fallback for Matrix <- Matrix, and Matrix <- Vector
 """
@@ -317,7 +325,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
 function subassign!(
-    C::AbstractGBMatrix, A::GBArray, I, J;
+    C::AbstractGBArray, A::AbstractGBArray, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -346,14 +354,33 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     _subassign(C, x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-    return C
+    return x
 end
 
-function subassign!(C::AbstractGBArray, x::AbstractArray, I, J;
+function subassign!(C::AbstractGBArray, x::AbstractMatrix, I, J;
     mask = nothing, accum = nothing, desc = nothing)
-    as(GBMatrix, x) do array
-        subassign!(C, array, I, J; mask, accum, desc)
-    end
+    array = x isa VecOrMat ? x : collect(x)
+    array = pack!(GBMatrix, array)
+    subassign!(C, array, I, J; mask, accum, desc)
+    unpack!(array, Dense())
+    return x
+end
+
+function subassign!(C::AbstractGBArray, x::AbstractVector, I, J;
+    mask = nothing, accum = nothing, desc = nothing)
+    array = x isa VecOrMat ? x : collect(x)
+    array = pack!(GBVector, array)
+    subassign!(C, array, I, J; mask, accum, desc)
+    unpack!(array, Dense())
+    return x
+end
+
+function subassign!(C::AbstractGBArray, x::Union{SparseMatrixCSC, SparseVector}, I, J;
+    mask = nothing, accum = nothing, desc = nothing)
+    array = pack!(GBMatrix, array)
+    subassign!(C, array, I, J; mask, accum, desc)
+    unpack!(array, Sparse())
+    return x
 end
 
 """
@@ -409,7 +436,7 @@ function assign!(C::AbstractGBArray, x, I, J;
     _assign(gbpointer(C), x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
-    return C
+    return x
 end
 
 function Base.setindex!(
@@ -561,6 +588,17 @@ for T ∈ valid_vec
     end
 end
 
+function Base.isstored(v::AbstractGBVector, i::Int)
+    result = LibGraphBLAS.GxB_Matrix_isStoredElement(gbpointer(v), decrement!(i), 0)
+    if result == LibGraphBLAS.GrB_SUCCESS
+        true
+    elseif result == LibGraphBLAS.GrB_NO_VALUE
+        false
+    else
+        @wraperror result
+    end
+end
+
 # UDT versions of Vector functions, which just require one def of each.
 
 function build(v::AbstractGBVector{T}, I::Vector{<:Integer}, X::Vector{T}; combine = +) where {T}
@@ -671,7 +709,7 @@ function Base.setindex!(
     mask = nothing, accum = nothing, desc = nothing
 )
     subassign!(u, x, I; mask, accum, desc)
-    return nothing
+    return x
 end
 
 function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback printing

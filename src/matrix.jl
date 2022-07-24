@@ -1,5 +1,7 @@
 # Constructors:
 ###############
+
+# Empty constructors:
 """
     GBMatrix{T}(nrows, ncols; fill = nothing)
 
@@ -18,6 +20,7 @@ GBMatrix{T}(dims::Tuple{<:Integer}; fill = nothing) where {T} = GBMatrix{T}(dims
 GBMatrix{T}(size::Tuple{Base.OneTo, Base.OneTo}; fill = nothing) where {T} =
     GBMatrix{T}(size[1].stop, size[2].stop; fill)
 
+# Coordinate form constructors:
 """
     GBMatrix(I, J, X; combine = +, nrows = maximum(I), ncols = maximum(J); fill = nothing)
 
@@ -54,18 +57,42 @@ end
 
 function GBMatrix(dims::Dims{2}, x::T; fill = nothing) where {T}
     A = GBMatrix{T}(dims; fill)
-    A[:, :] = x
+    A .= x
     return A
 end
 
-GBMatrix(nrows, ncols, x::T; fill::F = nothing) where {T, F} = GBMatrix((nrows, ncols), x; fill)
+GBMatrix(nrows, ncols, x; fill = nothing) = GBMatrix((nrows, ncols), x; fill)
+GBMatrix(dims::Tuple{<:Integer}, x; fill = nothing) = GBMatrix(dims..., x; fill)
+GBMatrix(size::Tuple{Base.OneTo, Base.OneTo}, x; fill = nothing) = 
+GBMatrix(size[1].stop, size[2].stop, x; fill)
 
 function GBMatrix(v::GBVector)
     # this copies, I think that's ideal, and I can implement @view or something at a later date.
     return copy(GBMatrix{eltype(v), typeof(v.fill)}(v.p, v.fill)) 
 end
 
-GBMatrix{T, F}(::Number, ::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+GBMatrix{T, F}(::Number, ::Number; fill = nothing) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
+
+function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
+    A = GBMatrix{T}(size(S)...; fill)
+    return pack!(A, _copytoraw(S)...; shallow = false)
+end
+
+function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
+    if M isa AbstractVector && !(M isa Vector)
+        M = collect(M)
+    end
+    if M isa AbstractMatrix && !(M isa Matrix)
+        M = Matrix(M)
+    end
+    A = GBMatrix{T}(size(M, 1), size(M, 2); fill)
+    return pack!(A, _copytoraw(M))
+end
+
+function GBMatrix(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    A = GBMatrix{T}(size(v, 1), 1; fill)
+    return pack!(A, _copytoraw(v)...)
+end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
@@ -135,4 +162,3 @@ end
 function Base.getindex(A::GBMatOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end
-

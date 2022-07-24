@@ -1,3 +1,9 @@
+abstract type AbstractSparsity end
+struct Dense <: AbstractSparsity end
+struct Bitmap <: AbstractSparsity end
+struct Sparse <: AbstractSparsity end
+struct Hypersparse <: AbstractSparsity end
+
 mutable struct TypedUnaryOperator{F, X, Z} <: AbstractTypedOp{Z}
     builtin::Bool
     loaded::Bool

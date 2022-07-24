@@ -35,7 +35,7 @@ end
 """
     GBVector(I, x; nrows = maximum(I) fill = nothing)
 
-Create an `n` length GBVector `v` such that `M[I[k]] = x`.
+Create an GBVector `v` from coordinates `I` such that `M[I] = x` .
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
@@ -49,18 +49,30 @@ end
 """
     GBVector(n, x; fill = nothing)
 
-Create an `n` length dense GBVector `v` such that M[I[k]] = x.
+Create an `n` length dense GBVector `v` such that M[:] = x.
 The resulting vector is "iso-valued" such that it only stores `x` once rather than once for
 each index.
 """
 function GBVector(n::Integer, x::T; fill = nothing) where {T}
     v = GBVector{T}(n; fill)
-    v[:] = x
+    v .= x
     return v
 end
 
 GBVector{T, F}(::Number) where {T, F} = throw(ArgumentError("The F parameter is implicit and determined by the `fill` keyword argument to constructors. Users must not specify this manually."))
 
+function GBVector(v::AbstractVector{T}; fill::F = nothing) where {T, F}
+    if v isa AbstractVector && !(v isa Vector)
+        v = collect(v)
+    end
+    A = GBVector{T}(size(v, 1); fill)
+    return pack!(A, _copytoraw(v))
+end
+
+function GBVector(v::SparseVector{T}; fill::F = nothing) where {T, F}
+    A = GBVector{T}(size(v, 1); fill)
+    return pack!(A, copy(v))
+end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
@@ -69,7 +81,7 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, v::GBVector) = v.p[]
 function Base.copy(A::GBVector{T, F}) where {T, F}
     C = Ref{LibGraphBLAS.GrB_Matrix}()
     LibGraphBLAS.GrB_Matrix_dup(C, gbpointer(A))
-    return GBVector{T, F}(C[], A.fill)
+    return GBVector{T, F}(C, A.fill)
 end
 
 
