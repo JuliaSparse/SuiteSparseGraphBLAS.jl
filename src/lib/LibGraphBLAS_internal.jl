@@ -8463,3 +8463,4 @@ end
 function rmm_wrap_free(p)
     ccall((:rmm_wrap_free, libgraphblas), Cvoid, (Ptr{Cvoid},), p)
 end
+end
