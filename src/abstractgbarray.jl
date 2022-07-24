@@ -622,7 +622,7 @@ end
 
 function Base.setindex!(v::AbstractGBVector{T}, x, i::Integer) where {T}
     x = convert(T, x)
-    return LibGraphBLAS.GrB_Matrix_setElement_UDT(gbpointer(v), x, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
+    return LibGraphBLAS.GrB_Matrix_setElement_UDT(gbpointer(v), Ref(x), LibGraphBLAS.GrB_Index(decrement!(i)), 0)
 end
 
 function Base.getindex(v::GBVector{T}, i::Integer) where {T}

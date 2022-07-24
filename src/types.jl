@@ -134,21 +134,32 @@ for Z ∈ valid_vec
             opref = Ref{LibGraphBLAS.GrB_Monoid}()
             if op.terminal === nothing
                 if Z ∈ valid_union
-                    @wraperror LibGraphBLAS.$func(opref, op.binop, op.identity)
+                    @wraperror LibGraphBLAS.$func(opref, op.binaryop, op.identity)
                 else
-                    @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binop, Ref(op.identity))
+                    @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binaryop, Ref(op.identity))
                 end
             else
                 if Z ∈ valid_union
-                    @wraperror LibGraphBLAS.$functerm(opref, op.binop, op.identity, op.terminal)
+                    @wraperror LibGraphBLAS.$functerm(opref, op.binaryop, op.identity, op.terminal)
                 else
-                    @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binop, Ref(op.identity), Ref(op.terminal))
+                    @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
                 end
             end
             op.p = opref[]
         end
     end
 end
+
+function _monoidnew!(op::TypedMonoid{F, Z, T}) where {F, Z, T}
+    opref = Ref{LibGraphBLAS.GrB_Monoid}()
+    if op.terminal === nothing
+        @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binaryop, Ref(op.identity))
+    else
+        @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
+    end
+    op.p = opref[]
+end
+
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Monoid}, op::TypedMonoid{F, Z, T}) where {F, Z, T}
     if !op.loaded
         if op.builtin
