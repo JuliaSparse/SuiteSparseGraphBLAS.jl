@@ -133,17 +133,9 @@ for Z ∈ valid_vec
         function _monoidnew!(op::TypedMonoid{F, $Z, T}) where {F, T}
             opref = Ref{LibGraphBLAS.GrB_Monoid}()
             if op.terminal === nothing
-                if Z ∈ valid_union
-                    @wraperror LibGraphBLAS.$func(opref, op.binaryop, op.identity)
-                else
-                    @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binaryop, Ref(op.identity))
-                end
+                @wraperror LibGraphBLAS.$func(opref, op.binaryop, op.identity)
             else
-                if Z ∈ valid_union
-                    @wraperror LibGraphBLAS.$functerm(opref, op.binaryop, op.identity, op.terminal)
-                else
-                    @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
-                end
+                @wraperror LibGraphBLAS.$functerm(opref, op.binaryop, op.identity, op.terminal)
             end
             op.p = opref[]
         end
