@@ -7,9 +7,8 @@ getaccum(op::Function, tleft, tright) = BinaryOp(op)(tleft, tright)
 getaccum(op::BinaryOp, tleft, tright) = op(tleft, tright)
 getaccum(op::TypedBinaryOperator, tleft, tright=tleft) = op
 
-inferunarytype(::Type{T}, op::AbstractUnaryOp) where {T} = ztype(op(T))
-inferunarytype(::Type{T}, op) where {T} = inferunarytype(T, UnaryOp(op))
-inferunarytype(::Type{X}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z} = ztype(op)
+inferunarytype(::Type{T}, f::F) where {T, F<:Base.Callable} = Base._return_type(f, Tuple{T})
+inferunarytype(::Type{X}, op::TypedUnaryOperator) where X = ztype(op)
 
 inferbinarytype(::Type{T}, ::Type{U}, op::AbstractBinaryOp) where {T, U} = ztype(op(T, U))
 inferbinarytype(::Type{T}, ::Type{U}, op) where {T, U} = inferbinarytype(T, U, BinaryOp(op))

@@ -4,7 +4,7 @@ function apply!(
 ) where {T}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
-    op = UnaryOp(op)(eltype(A))
+    op = unaryop(op, eltype(A))
     accum = getaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GrB_Matrix_apply(gbpointer(C), mask, accum, op, gbpointer(parent(A)), desc)
     return C
@@ -18,7 +18,7 @@ function apply!(
 end
 
 """
-    apply(op::Union{Function, AbstractUnaryOp}, A::GBArray; kwargs...)::GBArray
+    apply(op::Union{Function, TypedUnaryOp}, A::GBArray; kwargs...)::GBArray
     apply(op::Union{Function, AbstractBinaryOp}, A::GBArray, x; kwargs...)::GBArray
     apply(op::Union{Function, AbstractBinaryOp}, x, A::GBArray, kwargs...)::GBArray
 
@@ -30,7 +30,7 @@ BinaryOps and two argument functions require the additional argument `x` which i
     substituted as the first or second operand of `op` depending on its position.
 
 # Arguments
-- `op::Union{Function, AbstractUnaryOp, AbstractBinaryOp}`
+- `op::Union{Function, TypedUnaryOp, AbstractBinaryOp}`
 - `A::GBArray`
 - `x`: Position dependent argument to binary operators.
 

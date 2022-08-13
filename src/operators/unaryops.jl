@@ -1,32 +1,29 @@
 module UnaryOps
 
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp, GBType,
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
 using ..LibGraphBLAS
-export UnaryOp, @unop
+export unaryop, @unop
 
 export positioni, positionj, frexpx, frexpe
 
 using SpecialFunctions
 
-struct UnaryOp{F} <: AbstractUnaryOp
-    juliaop::F
-end
+const UNARYOPS = IdDict{Tuple{<:Base.Callable, DataType}, TypedUnaryOperator}()
 
-UnaryOp(op::TypedUnaryOperator) = op
-
-SuiteSparseGraphBLAS.juliaop(op::UnaryOp) = op.juliaop
-
-# fallback
-# This is a fallback since creating these every time is incredibly costly.
-function (op::UnaryOp)(::Type{T}) where {T}
-    resulttype = Base._return_type(op.juliaop, Tuple{T})
-    if resulttype <: Tuple
-        throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
+function unaryop(
+    f::F, ::Type{T}
+) where {F<:Base.Callable, T}
+    return get!(UNARYOPS, (f, T)) do
+        return TypedUnaryOperator(f, T)
     end
-    return TypedUnaryOperator(op.juliaop, T, resulttype)
 end
+
+unaryop(op::TypedUnaryOperator, _) = op
+
+SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn
+
 function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     # Complex ops must always be GxB prefixed
     if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
@@ -51,7 +48,7 @@ function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     end
     return quote
         $(constquote)
-        (::$(esc(:UnaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$(esc(insym))}) = $(esc(namesym))
+        $(esc(:(SuiteSparseGraphBLAS.UnaryOps.unaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type{$(esc(insym))}) = $(esc(namesym))
     end
 end
 
@@ -115,8 +112,12 @@ end
 @unop (~) GrB_BNOT I=>I
 
 # positionals
-@unop new positioni GxB_POSITIONI1 Any=>N
-@unop new positionj GxB_POSITIONJ1 Any=>N
+# dummy functions mostly for Base._return_type purposes.
+# 1 is the most natural value regardless.
+positioni(_) = 1::Int64
+positionj(_) = 1::Int64
+@unop positioni GxB_POSITIONI1 Any=>N
+@unop positionj GxB_POSITIONJ1 Any=>N
 
 #floats and complexes
 @unop sqrt GxB_SQRT FZ=>FZ
@@ -165,9 +166,6 @@ end
 @unop imag GxB_CIMAG Z=>F
 @unop angle GxB_CARG Z=>F
 end
-
-const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
-
 
 ztype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = O
 xtype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = I

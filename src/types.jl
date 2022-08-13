@@ -26,6 +26,10 @@ function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
     return TypedUnaryOperator{F, X, Z}(false, false, string(fn), LibGraphBLAS.GrB_UnaryOp(), fn)
 end
 
+function TypedUnaryOperator(fn::F, ::Type{X}) where {F, X}
+    return TypedUnaryOperator(fn, X, Base._return_type(fn, Tuple{X}))
+end
+
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
     # We can lazily load the built-ins since they are already constants. 
     # Could potentially do this with UDFs, but probably not worth the effort.
