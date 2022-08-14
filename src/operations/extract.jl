@@ -43,7 +43,7 @@ Extract a submatrix or subvector from `A` into `C`.
 # Keywords
 - `mask::Union{Nothing, GBArray} = nothing`: mask where
     `size(M) == (max(I), max(J))`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 
@@ -86,7 +86,7 @@ Extract a submatrix or subvector from `A`
 # Keywords
 - `mask::Union{Nothing, GBArray} = nothing`: mask where
     `size(M) == (max(I), max(J))`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = nothing`
 

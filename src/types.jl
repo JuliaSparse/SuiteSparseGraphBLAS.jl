@@ -75,6 +75,10 @@ function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X
     return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), LibGraphBLAS.GrB_BinaryOp(), fn)
 end
 
+function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}) where {F, X, Y}
+    return TypedBinaryOperator(fn, X, Y, Base._return_type(fn, Tuple{X, Y}))
+end
+
 function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
     return op
 end

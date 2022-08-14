@@ -2,9 +2,9 @@ module Semirings
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes,
-    Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, Monoids.Monoid, BinaryOps.second, BinaryOps.rminus, BinaryOps.pair,
+    Rtypes, Ntypes, Ttypes, suffix, BinaryOps.binaryop, Monoids.Monoid, BinaryOps.second, BinaryOps.rminus, BinaryOps.pair,
     BinaryOps.iseq, BinaryOps.isne, BinaryOps.isgt, BinaryOps.islt, BinaryOps.isge, BinaryOps.isle, BinaryOps.∨,
-    BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.fmod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
+    BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, mod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
     BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
     BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj, xtype, ytype, ztype
 using ..LibGraphBLAS
@@ -12,9 +12,9 @@ export Semiring, @rig
 
 struct Semiring{FM, FA} <: AbstractSemiring
     addop::Monoid{FM}
-    mulop::BinaryOp{FA}
+    mulop::FA
 end
-Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),BinaryOp(mulop))
+Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),mulop)
 Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
 Semiring(op::TypedSemiring) = op
 (rig::Semiring)(type) = rig(type, type)
@@ -50,7 +50,7 @@ function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, out
         :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
     end
     return quote
-        const $(esc(namesym)) = TypedSemiring($builtin, false, $namestr, LibGraphBLAS.GrB_Semiring(), Monoid($(esc(addfunc)))($(esc(outsym))), BinaryOp($(esc(mulfunc)))($(esc(xsym)), $(esc(ysym))))
+        const $(esc(namesym)) = TypedSemiring($builtin, false, $namestr, LibGraphBLAS.GrB_Semiring(), Monoid($(esc(addfunc)))($(esc(outsym))), $(esc(mulfunc))($(esc(xsym)), $(esc(ysym))))
         $(dispatchquote)
     end
 end

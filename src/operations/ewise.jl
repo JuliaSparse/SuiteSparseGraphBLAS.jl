@@ -11,12 +11,12 @@ union equivalent see [`eadd!`](@ref).
 # Arguments
 - `C::GBArray`: the output vector or matrix.
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = *`: the binary operation which is
+- `op::Union{Function, Monoid} = *`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before
     accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
@@ -33,7 +33,7 @@ function emul!(
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
-    op = BinaryOp(op)(eltype(A), eltype(B))
+    op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
@@ -54,12 +54,12 @@ union equivalent see [`eadd`](@ref).
 
 # Arguments
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = *`: the binary operation which is
+- `op::Union{Function, Monoid} = *`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in both `A` and `B`.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 
@@ -96,12 +96,12 @@ For a set intersection equivalent see [`emul!`](@ref).
 # Arguments
 - `C::GBArray`: the output vector or matrix.
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
+- `op::Union{Function, Monoid} = +`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
@@ -117,7 +117,7 @@ function eadd!(
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2 = B)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
-    op = BinaryOp(op)(eltype(A), eltype(B))
+    op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
@@ -141,12 +141,12 @@ For a set intersection equivalent see [`emul`](@ref).
 
 # Arguments
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
+- `op::Union{Function, Monoid} = +`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
@@ -178,12 +178,12 @@ Unlike `eadd!` where an argument missing in `A` causes the `B` element to "pass-
 - `C::GBArray`: the output vector or matrix.
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
 - `α, β`: The fill-in value for `A` and `B` respectively.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
+- `op::Union{Function, Monoid} = +`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
@@ -201,7 +201,7 @@ function eunion!(
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2 = B)
     size(C) == size(A) == size(B) || throw(DimensionMismatch())
-    op = BinaryOp(op)(eltype(A), eltype(B))
+    op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(gbpointer(C), mask, accum, op, gbpointer(parent(A)), GBScalar(α), gbpointer(parent(B)), GBScalar(β), desc)
@@ -223,12 +223,12 @@ Unlike `eadd!` where an argument missing in `A` causes the `B` element to "pass-
 # Arguments
 - `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
 - `α, β`: The fill-in value for `A` and `B` respectively.
-- `op::Union{Function, AbstractBinaryOp, Monoid} = +`: the binary operation which is
+- `op::Union{Function, Monoid} = +`: the binary operation which is
     applied such that `C[i,j] = op(A[i,j], B[i,j])` for all `i,j` present in either `A` and `B`.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """

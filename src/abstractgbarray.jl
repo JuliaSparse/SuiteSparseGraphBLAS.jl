@@ -94,7 +94,7 @@ for T ∈ valid_vec
         function build(A::AbstractGBMatrix{$T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{$T};
                 combine = +
             )
-            combine = BinaryOp(combine)($T)
+            combine = binaryop(combine, $T)
             I isa Vector || (I = collect(I))
             J isa Vector || (J = collect(J))
             X isa Vector || (X = collect(X))
@@ -181,7 +181,7 @@ function build(
         A::AbstractGBMatrix{T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{T};
         combine = +
     ) where {T}
-    combine = BinaryOp(combine)(T)
+    combine = binaryop(combine, T)
     I isa Vector || (I = collect(I))
     J isa Vector || (J = collect(J))
     X isa Vector || (X = collect(X))
@@ -314,7 +314,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: mask where
     `size(M) == size(A)`.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 
@@ -397,7 +397,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: mask where
     `size(M) == size(C)`.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 
@@ -520,7 +520,7 @@ for T ∈ valid_vec
             I isa Vector || (I = collect(I))
             X isa Vector || (X = collect(X))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-            combine = BinaryOp(combine)($T)
+            combine = binaryop(combine, $T)
             decrement!(I)
             @wraperror LibGraphBLAS.$func(
                 Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(v)), 
@@ -606,7 +606,7 @@ function build(v::AbstractGBVector{T}, I::Vector{<:Integer}, X::Vector{T}; combi
     I isa Vector || (I = collect(I))
     X isa Vector || (X = collect(X))
     length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-    combine = BinaryOp(combine)(T)
+    combine = binaryop(combine, T)
     decrement!(I)
     @wraperror LibGraphBLAS.GrB_Matrix_build_UDT(
         Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(v)), 

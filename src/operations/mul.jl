@@ -69,7 +69,7 @@ The operator syntax `A * B` can be used when the default semiring is desired, an
 - `op::Union{Tuple{Function, Function}, AbstractSemiring}`: the semiring used for matrix multiplication. May be passed as a tuple of functions, or an `AbstractSemiring` found in the `Semirings` submodule.
 # Keywords
 - `mask::Union{Nothing, GBArray} = nothing`: optional mask which determines the output pattern.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: optional binary accumulator
+- `accum::Union{Nothing, Function} = nothing`: optional binary accumulator
     operation such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor}`
 

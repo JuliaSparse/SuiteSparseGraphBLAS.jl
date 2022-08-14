@@ -12,15 +12,13 @@ using SpecialFunctions
 
 const UNARYOPS = IdDict{Tuple{<:Base.Callable, DataType}, TypedUnaryOperator}()
 
-function unaryop(
-    f::F, ::Type{T}
-) where {F<:Base.Callable, T}
+function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
     return get!(UNARYOPS, (f, T)) do
-        return TypedUnaryOperator(f, T)
+        TypedUnaryOperator(f, T)
     end
 end
 
-unaryop(op::TypedUnaryOperator, _) = op
+unaryop(op::TypedUnaryOperator, x...) = op
 
 SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn
 
@@ -154,8 +152,10 @@ positionj(_) = 1::Int64
 @unop erf GxB_ERF FZ=>FZ
 @unop erfc GxB_ERFC FZ=>FZ
 # julia has frexp which returns (x, exp). This is split in SS:GrB to frexpx = frexp[1]; frexpe = frexp[2];
-@unop new frexpx GxB_FREXPX FZ=>FZ 
-@unop new frexpe GxB_FREXPE FZ=>FZ
+frexpx(x) = frexp[1]
+frexpe(x) = frexp[2]
+@unop frexpx GxB_FREXPX FZ=>FZ 
+@unop frexpe GxB_FREXPE FZ=>FZ
 @unop isinf GxB_ISINF FZ=>Bool
 @unop isnan GxB_ISNAN FZ=>Bool
 @unop isfinite GxB_ISFINITE FZ=>Bool

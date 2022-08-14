@@ -1,18 +1,15 @@
 
 getaccum(::Nothing, t) = C_NULL
 getaccum(::Ptr{Nothing}, t) = C_NULL
-getaccum(op::Function, t) = BinaryOp(op)(t, t)
-getaccum(op::BinaryOp, t) = op(t, t)
-getaccum(op::Function, tleft, tright) = BinaryOp(op)(tleft, tright)
-getaccum(op::BinaryOp, tleft, tright) = op(tleft, tright)
-getaccum(op::TypedBinaryOperator, tleft, tright=tleft) = op
+getaccum(op::Function, t) = binaryop(op, t, t)
+getaccum(op::Function, tleft, tright) = binaryop(op, tleft, tright)
+getaccum(op::TypedBinaryOperator, x...) = op
 
 inferunarytype(::Type{T}, f::F) where {T, F<:Base.Callable} = Base._return_type(f, Tuple{T})
 inferunarytype(::Type{X}, op::TypedUnaryOperator) where X = ztype(op)
 
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractBinaryOp) where {T, U} = ztype(op(T, U))
-inferbinarytype(::Type{T}, ::Type{U}, op) where {T, U} = inferbinarytype(T, U, BinaryOp(op))
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop)
+inferbinarytype(::Type{T}, ::Type{U}, f::F) where {T, U, F<:Base.Callable} = Base._return_type(f, Tuple{T, U})
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop.fn)
 #semirings are technically binary so we'll just overload that
 inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, Semiring(op))
 inferbinarytype(::Type{T}, ::Type{U}, op::AbstractSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)

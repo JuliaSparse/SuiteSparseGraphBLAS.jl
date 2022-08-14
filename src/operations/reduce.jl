@@ -59,7 +59,7 @@ end
 Reduce `A` along dimensions of A with monoid `op`.
 
 # Arguments
-- `op`: the reducer. This must map to an AbstractMonoid, not an AbstractBinaryOp.
+- `op`: the reducer. This must map to an AbstractMonoid, not a binary op.
 - `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
 - `dims = :`: Optional dimensions for GBMatrix, may be `1`, `2`, or `:`.
 
@@ -67,7 +67,7 @@ Reduce `A` along dimensions of A with monoid `op`.
 - `typeout`: Optional output type specification. Defaults to `eltype(A)`.
 - `init`: Optional initial value.
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 """

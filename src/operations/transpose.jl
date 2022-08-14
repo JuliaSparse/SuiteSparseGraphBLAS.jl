@@ -10,7 +10,7 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = DEFAULTDESC`
 """
@@ -31,7 +31,7 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 

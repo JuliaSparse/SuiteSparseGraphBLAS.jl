@@ -18,9 +18,9 @@ function apply!(
 end
 
 """
-    apply(op::Union{Function, TypedUnaryOp}, A::GBArray; kwargs...)::GBArray
-    apply(op::Union{Function, AbstractBinaryOp}, A::GBArray, x; kwargs...)::GBArray
-    apply(op::Union{Function, AbstractBinaryOp}, x, A::GBArray, kwargs...)::GBArray
+    apply(op::Union{Function, TypedUnaryOperator}, A::GBArray; kwargs...)::GBArray
+    apply(op::Union{Function}, A::GBArray, x; kwargs...)::GBArray
+    apply(op::Union{Function}, x, A::GBArray, kwargs...)::GBArray
 
 Transform a GBArray by applying `op` to each element. Equivalent to `Base.map` except for the additional
 `x` argument for mapping with a scalar.
@@ -30,13 +30,13 @@ BinaryOps and two argument functions require the additional argument `x` which i
     substituted as the first or second operand of `op` depending on its position.
 
 # Arguments
-- `op::Union{Function, TypedUnaryOp, AbstractBinaryOp}`
+- `op::Union{Function, TypedUnaryOperator}`
 - `A::GBArray`
 - `x`: Position dependent argument to binary operators.
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
@@ -54,7 +54,7 @@ function apply!(
 ) where {T}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in2=A)
-    op = BinaryOp(op)(eltype(A), typeof(x))
+    op = binaryop(op, eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(gbpointer(C), mask, accum, op, GBScalar(x), gbpointer(parent(A)), desc)
     return C
@@ -81,7 +81,7 @@ function apply!(
 ) where {T}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
-    op = BinaryOp(op)(eltype(A), typeof(x))
+    op = binaryop(op, eltype(A), typeof(x))
     accum = getaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp2nd(gbpointer(C), mask, accum, op, gbpointer(parent(A)), GBScalar(x), desc)
     return C

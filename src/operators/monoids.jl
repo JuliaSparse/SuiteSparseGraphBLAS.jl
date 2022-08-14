@@ -2,16 +2,30 @@ module Monoids
 
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
-    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOps.BinaryOp, _builtinMonoid, BinaryOps.∨, BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor
+    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOps.binaryop, _builtinMonoid, BinaryOps.∨, BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor
 using ..LibGraphBLAS
 export Monoid, @monoid
 
-struct Monoid{F} <: AbstractMonoid
-    binaryop::BinaryOp{F}
+const MONOIDS = IdDict{Tuple{<:Monoid, DataType}, TypedMonoid}()
+
+struct Monoid{F, I, T} <: AbstractMonoid
+    fn::F
+    identity::I
+    terminal::T
 end
-SuiteSparseGraphBLAS.juliaop(op::Monoid) = juliaop(op.binaryop)
-Monoid(f::Function) = Monoid(BinaryOp(f))
-Monoid(op::TypedMonoid) = op
+SuiteSparseGraphBLAS.juliaop(op::Monoid) = op.fn
+
+function Monoid(fn, identity, terminal = nothing)
+    return Monoid(fn, identity, terminal)
+end
+
+function typedmonoid(m::Monoid{F, I, Term}, ::Type{T}) where {F<:Base.Callable, I, Term, T}
+    return get!(MONOIDS, (m, T)) do
+        TypedMonoid(f, T)
+    end
+end
+
+unaryop(op::TypedUnaryOperator, x...) = op
 
 # Can't really do ephemeral monoid fallbacks... Need the identity and possibly terminal.
 
@@ -33,9 +47,9 @@ function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     end
     typesym = Symbol(type)
     if builtin
-        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
+        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, binaryop($(esc(jlfunc)), $(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
     else
-        constquote = :(const $(esc(namesym)) = TypedMonoid(BinaryOp($(esc(jlfunc)))($(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
+        constquote = :(const $(esc(namesym)) = TypedMonoid(binaryop($(esc(jlfunc)), $(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
     end
     return quote
         $(constquote)

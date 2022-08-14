@@ -27,9 +27,7 @@ Internally functions are lowered like this:
 ```@repl
 using SuiteSparseGraphBLAS
 
-op = BinaryOp(+)
-
-typedop = op(Int64, Int64)
+typedop = binaryop(+, Int64, Int64)
 
 eadd(GBVector([1,2]), GBVector([3,4]), typedop)
 ```

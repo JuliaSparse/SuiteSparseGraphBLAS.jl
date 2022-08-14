@@ -14,7 +14,7 @@ function Base.sort!(
     A isa GBVector && (dims = 1)
     C, P = _handlenothings(C, P)
     C == C_NULL && P == C_NULL && throw(ArgumentError("One (or both) of C and P must not be nothing."))
-    op = BinaryOp(lt)(eltype(A))
+    op = binaryop(lt, eltype(A))
     if dims == 1
         transpose = true
     elseif dims == 2

@@ -1,6 +1,6 @@
 module BinaryOps
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, AbstractBinaryOp, GBType,
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
     Ntypes, Ttypes, suffix, valid_union
 using ..LibGraphBLAS
@@ -10,35 +10,22 @@ export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor,
 bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, 
 secondj, pair
 
-struct BinaryOp{F} <: AbstractBinaryOp
-    juliaop::F
-end
-SuiteSparseGraphBLAS.juliaop(op::BinaryOp) = op.juliaop
-(op::BinaryOp)(T) = op(T, T)
+const BINARYOPS = IdDict{Tuple{<:Base.Callable, DataType, DataType}, TypedBinaryOperator}()
 
-BinaryOp(op::TypedBinaryOperator) = op
+function binaryop(
+    f::F, ::Type{X}, ::Type{Y}
+) where {F<:Base.Callable, X, Y}
+    return get!(BINARYOPS, (f, X, Y)) do
+        TypedBinaryOperator(f, X, Y)
+    end
+end
+
+binaryop(f, type) = binaryop(f, type, type)
+binaryop(op::TypedBinaryOperator, x...) = op
+
+SuiteSparseGraphBLAS.juliaop(op::TypedBinaryOperator) = op.fn
 
 # TODO, clean up this function, it allocates typedop and is otherwise perhaps a little slow.
-function (op::BinaryOp)(::Type{T}, ::Type{U}; cont = true) where {T, U} #fallback
-    typedop = nothing
-    if T ∈ valid_vec && U ∈ valid_vec && cont # if both argtypes are in builtins *and* we're at 0th recursion:
-        promoted = optype(T, U)
-        if promoted ∈ valid_vec # check if we can promote within the builtins
-            typedop = try
-                op(promoted, promoted; cont=false) # try to find a builtin BinaryOp that matches. If we recurse back into this function we know there's no builtin, so cont=false
-            catch
-                nothing
-            end
-        end
-    end
-    typedop !== nothing && return typedop
-    resulttype = Base._return_type(op.juliaop, Tuple{T, U})
-    if resulttype <: Tuple
-        throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
-    end
-    typedop = TypedBinaryOperator(op.juliaop, T, U, resulttype)
-    return typedop
-end
 
 function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
     # Complex ops must always be GxB prefixed
@@ -66,9 +53,9 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
         constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))))
     end
     dispatchquote = if xtype === :Any && ytype === :Any
-        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type, ::Type; cont=false) = $(esc(namesym)))
+        :($(esc(:(SuiteSparseGraphBLAS.BinaryOps.binaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type, ::Type) = $(esc(namesym)))
     else
-        :((::$(esc(:BinaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$xsym}, ::Type{$ysym}; cont=false) = $(esc(namesym)))
+        :($(esc(:(SuiteSparseGraphBLAS.BinaryOps.binaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
     end
     return quote
         $(constquote)
@@ -134,30 +121,47 @@ end
 @binop first GrB_FIRST T=>T
 @binop new second GrB_SECOND T=>T
 @binop any GxB_ANY T=>T # this doesn't match the semantics of Julia's any, but that may be ok...
-@binop new pair GrB_ONEB T=>T # I prefer pair, but to keep up with the spec I'll match...
+
+pair(x::T, y::T) where T = one(T)
+@binop pair GrB_ONEB T=>T # I prefer pair, but to keep up with the spec I'll match...
 @binop (+) GrB_PLUS T=>T
 @binop (-) GrB_MINUS T=>T
-@binop new rminus GxB_RMINUS T=>T
+
+rminus(x, y) = y - x
+@binop rminus GxB_RMINUS T=>T
+
 @binop (*) GrB_TIMES T=>T
 @binop (/) GrB_DIV T=>T
 @binop (\) GxB_RDIV T=>T
 @binop (^) GxB_POW T=>T
+
+iseq(x::T, y::T) where T = T(x == y)
 @binop new iseq GxB_ISEQ T=>T
+
+isne(x::T, y::T) where T = T(x != y)
 @binop new isne GxB_ISNE T=>T
 
 # Real types
 @binop min GrB_MIN R=>R
 @binop max GrB_MAX R=>R
-@binop new isgt GxB_ISGT R=>R
-@binop new islt GxB_ISLT R=>R
-@binop new isge GxB_ISGE R=>R
-@binop new isle GxB_ISLE R=>R
-@binop new (∨) GxB_LOR R=>R
-@binop new (∧) GxB_LAND R=>R
-(::BinaryOp{typeof(|)})(::Type{Bool}, ::Type{Bool}) = LOR_BOOL
-(::BinaryOp{typeof(&)})(::Type{Bool}, ::Type{Bool}) = LAND_BOOL
 
-@binop new lxor GxB_LXOR R=>R
+isgt(x::T, y::T) where T = T(x > y)
+@binop isgt GxB_ISGT R=>R
+islt(x::T, y::T) where T = T(x < y)
+@binop islt GxB_ISLT R=>R
+isge(x::T, y::T) where T = T(x >= y)
+@binop isge GxB_ISGE R=>R
+isle(x::T, y::T) where T = T(x <= y)
+@binop isle GxB_ISLE R=>R
+∨(x::T, y::T) where T = (x != zero(T)) || (y != zero(T))
+@binop (∨) GxB_LOR R=>R
+∧(x::T, y::T) where T = (x != zero(T)) && (y != zero(T))
+@binop (∧) GxB_LAND R=>R
+binaryop(::typeof(|), ::Type{Bool}, ::Type{Bool}) = LOR_BOOL
+binaryop(::typeof(&), ::Type{Bool}, ::Type{Bool}) = LAND_BOOL
+
+lxor(x::T, y::T) where T = xor((x != zero(T)), (y != zero(T)))
+@binop lxor GxB_LXOR R=>R
 
 # T/R => Bool
 @binop (==) GrB_EQ T=>Bool
@@ -168,12 +172,13 @@ end
 @binop (<=) GrB_LE R=>Bool
 
 # Bool=>Bool, most of which are covered above.
-@binop new xnor GrB_LXNOR Bool=>Bool
+xnor(x::T, y::T) where T = !(lxor(x, y))
+@binop xnor GrB_LXNOR Bool=>Bool
 
 
 @binop atan GxB_ATAN2 F=>F
 @binop hypot GxB_HYPOT F=>F
-@binop new fmod GxB_FMOD F=>F
+@binop mod GxB_FMOD F=>F
 @binop rem GxB_REMAINDER F=>F
 @binop ldexp GxB_LDEXP F=>F
 @binop copysign GxB_COPYSIGN F=>F
@@ -183,30 +188,38 @@ end
 @binop (|) GrB_BOR I=>I
 @binop (&) GrB_BAND I=>I
 @binop (⊻) GrB_BXOR I=>I
-@binop new bxnor GrB_BXNOR I=>I
-(::BinaryOp{typeof(⊻)})(::Type{Bool}, ::Type{Bool}) = LXOR_BOOL
+bxnor(x::T, y::T) where T = ~⊻(x, y)
+@binop bxnor GrB_BXNOR I=>I
+binaryop(::typeof(⊻), ::Type{Bool}, ::Type{Bool}) = LXOR_BOOL
 
+# leaving these without any equivalent Julia functions
+# probably should only operate on Ints anyway.
 @binop new bget GxB_BGET I=>I
 @binop new bset GxB_BSET I=>I
 @binop new bclr GxB_BCLR I=>I
 @binop (>>) GxB_BSHIFT (I, Int8)=>I
 
-# Positionals
+# Positionals with dummy functions for output type inference purposes
+firsti0(x, y) = 0::Int64
 @binop new firsti0 GxB_FIRSTI Any=>N
+firsti1(x, y) = 1::Int64
 @binop new firsti GxB_FIRSTI1 Any=>N
 
+firstj0(x, y) = 0::Int64
 @binop new firstj0 GxB_FIRSTJ Any=>N
+firstj1(x, y) = 1::Int64
 @binop new firstj GxB_FIRSTJ1 Any=>N
 
+secondi0(x, y) = 0::Int64
 @binop new secondi0 GxB_SECONDI Any=>N
+secondi1(x, y) = 1::Int64
 @binop new secondi GxB_SECONDI1 Any=>N
 
+secondj0(x, y) = 0::Int64
 @binop new secondj0 GxB_SECONDJ Any=>N
+secondj1(x, y) = 1::Int64
 @binop new secondj GxB_SECONDJ1 Any=>N
 end
-
-
-const BinaryUnion = Union{AbstractBinaryOp, TypedBinaryOperator}
 
 ztype(::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = Z
 xtype(::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = X

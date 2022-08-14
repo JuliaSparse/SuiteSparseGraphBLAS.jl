@@ -51,8 +51,7 @@ Operators are lowered from a Julia function to a container like `BinaryOp` or `S
 using SuiteSparseGraphBLAS
 ```
 ```@repl operators
-b = BinaryOp(+)
-b(Int32)
+b = binaryop(+, Int32)
 
 s = Semiring(max, +)
 s(Float64)

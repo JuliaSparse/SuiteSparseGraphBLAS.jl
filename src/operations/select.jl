@@ -43,7 +43,7 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask which determines the output
     pattern.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: optional binary accumulator
+- `accum::Union{Nothing} = nothing`: optional binary accumulator
     operation where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 

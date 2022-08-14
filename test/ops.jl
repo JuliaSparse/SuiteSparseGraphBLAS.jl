@@ -22,9 +22,9 @@
 
     end
     @testset "BinaryOps" begin # kinda vacuous tests here...
-        @test xtype(BinaryOp(+)(Float64)) == Float64
-        @test ytype(BinaryOp(+)(Float64)) == Float64
-        @test ztype(BinaryOp(+)(Float64)) == Float64
+        @test xtype(binaryop(+, Float64)) == Float64
+        @test ytype(binaryop(+, Float64)) == Float64
+        @test ztype(binaryop(+, Float64)) == Float64
     end
     @testset "Monoids" begin
         @test xtype(Monoid(+)(Float64)) == Float64
