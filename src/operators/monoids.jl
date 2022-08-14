@@ -2,30 +2,39 @@ module Monoids
 
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
-    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix, BinaryOps.binaryop, _builtinMonoid, BinaryOps.∨, BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor
+    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, 
+    Ntypes, Ttypes, suffix, BinaryOps.binaryop, _builtinMonoid, BinaryOps.∨, 
+    BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor, valid_union
 using ..LibGraphBLAS
-export Monoid, @monoid
-
-const MONOIDS = IdDict{Tuple{<:Monoid, DataType}, TypedMonoid}()
+export Monoid, typedmonoid, defaultmonoid
 
 struct Monoid{F, I, T} <: AbstractMonoid
     fn::F
     identity::I
     terminal::T
 end
+
+const MONOIDS = IdDict{Tuple{<:Monoid, DataType}, TypedMonoid}()
+
 SuiteSparseGraphBLAS.juliaop(op::Monoid) = op.fn
 
-function Monoid(fn, identity, terminal = nothing)
-    return Monoid(fn, identity, terminal)
+function Monoid(fn, identity)
+    return Monoid(fn, identity, nothing)
 end
 
 function typedmonoid(m::Monoid{F, I, Term}, ::Type{T}) where {F<:Base.Callable, I, Term, T}
-    return get!(MONOIDS, (m, T)) do
-        TypedMonoid(f, T)
-    end
+    return (get!(MONOIDS, (m, T)) do
+        TypedMonoid(binaryop(m.fn, T), m.identity, m.terminal)
+    end)
 end
 
-unaryop(op::TypedUnaryOperator, x...) = op
+typedmonoid(op::TypedMonoid, x...) = op
+
+# We default to no available monoid.
+defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = nothing
+
+# Use defaultmonoid when available. User should verify that this results in the correct monoid.
+typedmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = typedmonoid(defaultmonoid(f, T), T)
 
 # Can't really do ephemeral monoid fallbacks... Need the identity and possibly terminal.
 
@@ -40,20 +49,19 @@ function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     else
         namestr = namestr * "_$(suffix(type))"
     end
-    if builtin
-        namesym = Symbol(namestr[5:end])
-    else
-        namesym = Symbol(namestr)
-    end
     typesym = Symbol(type)
-    if builtin
-        constquote = :(const $(esc(namesym)) = _builtinMonoid($namestr, binaryop($(esc(jlfunc)), $(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
-    else
-        constquote = :(const $(esc(namesym)) = TypedMonoid(binaryop($(esc(jlfunc)), $(esc(typesym)), $(esc(typesym))), $(esc(identity)), $(esc(term))))
-    end
     return quote
-        $(constquote)
-        (::$(esc(:Monoid)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$typesym}) = $(esc(namesym))
+        $(esc(:MONOIDS))[
+            ($(esc(:Monoid))($(esc(jlfunc)), $(esc(identity)), $(esc(term))), $(esc(typesym)))
+        ] = 
+            _builtinMonoid(
+                $namestr, 
+                binaryop($(esc(jlfunc)), 
+                $(esc(typesym)), 
+                $(esc(typesym))), 
+                $(esc(identity)), 
+                $(esc(term))
+            )
     end
 end
 
@@ -118,28 +126,63 @@ end
 # We link to the BinaryOp rather than the Julia functions, 
 # because users will mostly be exposed to the higher level interface.
 
+const PLUSMONOID = Monoid(+, zero)
+defaultmonoid(::typeof(+), ::Type{<:Number}) = PLUSMONOID
 @monoid (+) GrB_PLUS nB id=>zero
-(::Monoid{typeof(+)})(::Type{Bool}) = LOR_MONOID_BOOL
+# (::Monoid{typeof(+)})(::Type{Bool}) = LOR_MONOID_BOOL
+
+const TIMESMONOID = Monoid(*, one, zero)
+defaultmonoid(::typeof(*), ::Type{<:Integer}) = TIMESMONOID
 @monoid (*) GrB_TIMES I id=>one term=>zero
-(::Monoid{typeof(*)})(::Type{Bool}) = LAND_MONOID_BOOL
+# (::Monoid{typeof(*)})(::Type{Bool}) = LAND_MONOID_BOOL
+const FLOATTIMESMONOID = Monoid(*, one) # float * monoid doesn't have a terminal.
+defaultmonoid(::typeof(*), ::Type{<:Union{Complex, AbstractFloat}}) = FLOATTIMESMONOID
 @monoid (*) GrB_TIMES FZ id=>one 
 
-@monoid any GxB_ANY T id=>one term=>one # This is technically incorrect. The identity and terminal are *ANY* value in the domain.
+# This is technically incorrect. The identity and terminal are *ANY* value in the domain.
+# TODO: Users MAY NOT extend the any monoid, and this should be banned somehow.
+const ANYMONOID = Monoid(any, one, one)
+defaultmonoid(::typeof(any), ::Type{<:valid_union}) = ANYMONOID
+@monoid any GxB_ANY T id=>one term=>one
+
+const MINMONOID = Monoid(min, typemax, typemin)
+defaultmonoid(::typeof(min), ::Type{<:Real}) = MINMONOID
 @monoid min GrB_MIN R id=>typemax term=>typemin
+
+const MAXMONOID = Monoid(max, typemin, typemax)
+defaultmonoid(::typeof(max), ::Type{<:Real}) = MAXMONOID
 @monoid max GrB_MAX R id=>typemin term=>typemax
 
+const ORMONOID = Monoid(∨, false, true)
+defaultmonoid(::typeof(∨), ::Type{Bool}) = ORMONOID
 @monoid (∨) GrB_LOR Bool id=>false term=>true
+const ANDMONOID = Monoid(∧, true, false)
+defaultmonoid(::typeof(∧), ::Type{Bool}) = ANDMONOID
 @monoid (∧) GrB_LAND Bool id=>true term=>false
+
+const XORMONOID = Monoid(lxor, false)
+defaultmonoid(::typeof(lxor), ::Type{Bool}) = XORMONOID
 @monoid (lxor) GrB_LXOR Bool id=>false
+
+const EQMONOID = Monoid(==, true)
+defaultmonoid(::typeof(==), ::Type{Bool}) = EQMONOID
 @monoid (==) GrB_LXNOR Bool id=>true
+
+const BORMONOID = Monoid(|, zero, typemax)
+defaultmonoid(::typeof(|), ::Type{<:Unsigned}) = BORMONOID
 @monoid (|) GrB_BOR I id=>zero term=>typemax
+const BANDMONOID = Monoid(&, typemax, zero)
+defaultmonoid(::typeof(&), ::Type{<:Unsigned}) = BANDMONOID
 @monoid (&) GrB_BAND I id=>typemax term=>zero
+const BXORMONOID = Monoid(⊻, zero)
+defaultmonoid(::typeof(⊻), ::Type{<:Unsigned}) = BXORMONOID
 @monoid (⊻) GrB_BXOR I id=>zero
+const BXNORMONOID = Monoid(bxnor, typemax)
+defaultmonoid(::typeof(bxnor), ::Type{<:Unsigned}) = BXORMONOID
 @monoid bxnor GrB_BXNOR I id=>typemax
 
 end
 
-const MonoidUnion = Union{AbstractMonoid, TypedMonoid}
 ztype(::TypedMonoid{F, X, T}) where {F, X, T} = X
 xtype(::TypedMonoid{F, X, T}) where {F, X, T} = X
 ytype(::TypedMonoid{F, X, T}) where {F, X, T} = X

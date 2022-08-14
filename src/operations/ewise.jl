@@ -260,8 +260,8 @@ end
 ⊗(A, B, op; mask = nothing, accum = nothing, desc = nothing) =
     emul(A, B, op; mask, accum, desc)
 
-⊕(f::Union{Function, BinaryUnion}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
+⊕(f::Union{Function, TypedBinaryOperator}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
     eadd(A, B, f; mask, accum, desc)
 
-⊗(f::Union{Function, BinaryUnion}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
+⊗(f::Union{Function, TypedBinaryOperator}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
     emul(A, B, f; mask, accum, desc)

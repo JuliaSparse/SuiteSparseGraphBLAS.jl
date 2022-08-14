@@ -4,7 +4,7 @@ function reduce!(
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
-    op = Monoid(op)(eltype(w))
+    op = typedmonoid(op, eltype(w))
     accum = getaccum(accum, eltype(w))
     @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(
         Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(w)), mask, accum, op, gbpointer(parent(A)), desc
@@ -44,7 +44,7 @@ function Base.reduce(
             GBScalar{typeout}(init)
             typec = typeof(init)
         end
-        op = Monoid(op)(typec)
+        op = typedmonoid(op, typec)
         desc = _handledescriptor(desc; in1=A)
         accum = getaccum(accum, typec)
         @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)

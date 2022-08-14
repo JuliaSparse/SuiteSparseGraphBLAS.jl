@@ -6,22 +6,23 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBT
     BinaryOps.iseq, BinaryOps.isne, BinaryOps.isgt, BinaryOps.islt, BinaryOps.isge, BinaryOps.isle, BinaryOps.∨,
     BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, mod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
     BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
-    BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj, xtype, ytype, ztype
+    BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj, xtype, ytype, ztype,
+    Monoids.typedmonoid, Monoids.defaultmonoid
 using ..LibGraphBLAS
 export Semiring, @rig
 
-struct Semiring{FM, FA} <: AbstractSemiring
-    addop::Monoid{FM}
+struct Semiring{FM, IM, TermM, FA} <: AbstractSemiring
+    addop::Monoid{FM, IM, TermM}
     mulop::FA
 end
-Semiring(addop::Function, mulop::Function) = Semiring(Monoid(addop),mulop)
+Semiring(addop::Function, mulop::Function) = Semiring(defaultmonoid(addop),mulop)
 Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
 Semiring(op::TypedSemiring) = op
 (rig::Semiring)(type) = rig(type, type)
 function (rig::Semiring)(T, U) #fallback
     mulop = rig.mulop(T, U)
     Z = ztype(mulop)
-    TypedSemiring(rig.addop(Z), mulop)
+    TypedSemiring(typedmonoid(rig.addop, Z), mulop)
 end
 function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, outtype)
     # Complex ops must always be GxB prefixed
@@ -50,7 +51,14 @@ function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, out
         :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
     end
     return quote
-        const $(esc(namesym)) = TypedSemiring($builtin, false, $namestr, LibGraphBLAS.GrB_Semiring(), Monoid($(esc(addfunc)))($(esc(outsym))), $(esc(mulfunc))($(esc(xsym)), $(esc(ysym))))
+        const $(esc(namesym)) = TypedSemiring(
+            $builtin, 
+            false, 
+            $namestr, 
+            LibGraphBLAS.GrB_Semiring(), 
+            typedmonoid(defaultmonoid($(esc(addfunc)), $(esc(outsym))), $(esc(outsym))), 
+            binaryop($(esc(mulfunc)), $(esc(xsym)), $(esc(ysym)))
+        )
         $(dispatchquote)
     end
 end
