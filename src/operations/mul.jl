@@ -16,7 +16,7 @@ function LinearAlgebra.mul!(
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
-    op = Semiring(op)(eltype(A), eltype(B))
+    op = semiring(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     @wraperror LibGraphBLAS.GrB_mxm(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
@@ -155,7 +155,7 @@ function Base.:*((⊕)::Function, (⊗)::Function)
     end
 end
 
-function Base.:*(rig::AbstractSemiring)
+function Base.:*(rig::TypedSemiring)
     return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
         *(A, B, rig; mask, accum, desc)
     end

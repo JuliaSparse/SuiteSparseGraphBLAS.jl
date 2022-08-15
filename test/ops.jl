@@ -22,22 +22,18 @@
 
     end
     @testset "BinaryOps" begin # kinda vacuous tests here...
-        @test xtype(binaryop(+, Float64)) == Float64
-        @test ytype(binaryop(+, Float64)) == Float64
-        @test ztype(binaryop(+, Float64)) == Float64
+        @test xtype(SuiteSparseGraphBLAS.binaryop(+, Float64)) == Float64
+        @test ytype(SuiteSparseGraphBLAS.binaryop(+, Float64)) == Float64
+        @test ztype(SuiteSparseGraphBLAS.binaryop(+, Float64)) == Float64
     end
     @testset "Monoids" begin
-        @test xtype(Monoid(+)(Float64)) == Float64
-        @test ytype(Monoid(+)(Float64)) == Float64
-        @test ztype(Monoid(+)(Float64)) == Float64
-
-        op = Monoid(+)
-        @test SuiteSparseGraphBLAS.juliaop(op) === +
-        @test Monoid(op(ComplexF64)) == op(ComplexF64)
+        @test xtype(SuiteSparseGraphBLAS.typedmonoid(+, Float64)) == Float64
+        @test ytype(SuiteSparseGraphBLAS.typedmonoid(+, Float64)) == Float64
+        @test ztype(SuiteSparseGraphBLAS.typedmonoid(+, Float64)) == Float64
     end
     @testset "Semirings" begin
-        @test xtype(Semiring(+, *)(ComplexF64)) == ComplexF64
-        @test ytype(Semiring(+, *)(ComplexF64)) == ComplexF64
-        @test ztype(Semiring(+, *)(ComplexF64)) == ComplexF64
+        @test xtype(semiring((+, *), ComplexF64)) == ComplexF64
+        @test ytype(semiring((+, *), ComplexF64)) == ComplexF64
+        @test ztype(semiring((+, *), ComplexF64)) == ComplexF64
     end
 end

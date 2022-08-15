@@ -1,29 +1,35 @@
 module Semirings
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, AbstractSemiring, GBType,
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedSemiring, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes,
     Rtypes, Ntypes, Ttypes, suffix, BinaryOps.binaryop, Monoids.Monoid, BinaryOps.second, BinaryOps.rminus, BinaryOps.pair,
     BinaryOps.iseq, BinaryOps.isne, BinaryOps.isgt, BinaryOps.islt, BinaryOps.isge, BinaryOps.isle, BinaryOps.∨,
     BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, mod, BinaryOps.bxnor, BinaryOps.bget, BinaryOps.bset,
     BinaryOps.bclr, BinaryOps.firsti0, BinaryOps.firsti, BinaryOps.firstj0, BinaryOps.firstj, BinaryOps.secondi0, 
     BinaryOps.secondi, BinaryOps.secondj0, BinaryOps.secondj, xtype, ytype, ztype,
-    Monoids.typedmonoid, Monoids.defaultmonoid
+    Monoids.typedmonoid, Monoids.defaultmonoid, valid_union
 using ..LibGraphBLAS
-export Semiring, @rig
+export semiring
 
-struct Semiring{FM, IM, TermM, FA} <: AbstractSemiring
-    addop::Monoid{FM, IM, TermM}
-    mulop::FA
+const SEMIRINGS = IdDict{Tuple{<:Monoid, <:Base.Callable, DataType, DataType}, TypedSemiring}()
+
+function semiring(
+    m::Monoid{F, I, Term}, f::F2, ::Type{T}, ::Type{T2}
+) where {F<:Base.Callable, F2<:Base.Callable, I, Term, T, T2}
+    return (get!(SEMIRINGS, (m, f, T, T2)) do
+        TypedSemiring(typedmonoid(m, T), binaryop(f, T, T2))
+    end)
 end
-Semiring(addop::Function, mulop::Function) = Semiring(defaultmonoid(addop),mulop)
-Semiring(tup::Tuple{Function, Function}) = Semiring(tup...)
-Semiring(op::TypedSemiring) = op
-(rig::Semiring)(type) = rig(type, type)
-function (rig::Semiring)(T, U) #fallback
-    mulop = rig.mulop(T, U)
-    Z = ztype(mulop)
-    TypedSemiring(typedmonoid(rig.addop, Z), mulop)
-end
+
+semiring(addop::Function, mulop::Function, ::Type{T}, ::Type{U}) where {T,U} = 
+    semiring(defaultmonoid(addop, Base._return_type(mulop, Tuple{T, U})), mulop, T, U)
+semiring(tup::Tuple{Function, Function}, ::Type{T}, ::Type{U}) where {T,U} = semiring(tup..., T, U)
+semiring(op::TypedSemiring, ::Type{T}, ::Type{U}) where {T,U} = op
+
+semiring(addop::Function, mulop::Function, ::Type{T}) where T = semiring(defaultmonoid(addop),mulop, T, T)
+semiring(tup::Tuple{Function, Function}, ::Type{T}) where T = semiring(tup..., T, T)
+semiring(op::TypedSemiring, ::Type{T}) where T = op
+
 function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, outtype)
     # Complex ops must always be GxB prefixed
     if (xtype ∈ Ztypes || ytype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
@@ -46,9 +52,22 @@ function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, out
     ysym = Symbol(ytype)
     outsym = Symbol(outtype)
     dispatchquote = if xtype === :Any && ytype === :Any
-        :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type, ::Type) = $(esc(namesym)))
+        quote
+            $(esc(:semiring))(
+                ::$(esc(:typeof))($(esc(addfunc))), 
+                ::$(esc(:typeof))($(esc(mulfunc))), 
+                ::Type{T}, 
+                ::Type{T}
+            ) where {T<:valid_union}= $(esc(namesym))
+        end
     else
-        :((::$(esc(:Semiring)){$(esc(:typeof))($(esc(addfunc))), $(esc(:typeof))($(esc(mulfunc)))})(::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
+        quote
+            $(esc(:semiring))(
+                ::$(esc(:typeof))($(esc(addfunc))), 
+                ::$(esc(:typeof))($(esc(mulfunc))), 
+                ::Type{$xsym}, ::Type{$ysym}
+            ) = $(esc(namesym))
+        end
     end
     return quote
         const $(esc(namesym)) = TypedSemiring(

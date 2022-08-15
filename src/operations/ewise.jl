@@ -123,7 +123,7 @@ function eadd!(
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
         return C
     else
-        throw(ArgumentError("$op is not a valid monoid binary op or semiring."))
+        throw(ArgumentError("$op is not a valid binary op."))
     end
 end
 

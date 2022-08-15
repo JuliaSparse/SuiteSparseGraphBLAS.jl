@@ -4,7 +4,7 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
     Ntypes, Ttypes, suffix, valid_union
 using ..LibGraphBLAS
-export BinaryOp, @binop
+export BinaryOp, binaryop
 
 export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor, fmod, 
 bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, 
@@ -119,7 +119,8 @@ macro binop(expr...)
 end
 # All types
 @binop first GrB_FIRST T=>T
-@binop new second GrB_SECOND T=>T
+second(x, y) = y
+@binop second GrB_SECOND T=>T
 @binop any GxB_ANY T=>T # this doesn't match the semantics of Julia's any, but that may be ok...
 
 pair(x::T, y::T) where T = one(T)
@@ -153,9 +154,13 @@ isge(x::T, y::T) where T = T(x >= y)
 @binop isge GxB_ISGE R=>R
 isle(x::T, y::T) where T = T(x <= y)
 @binop isle GxB_ISLE R=>R
-∨(x::T, y::T) where T = (x != zero(T)) || (y != zero(T))
+function ∨(x::T, y::T) where T
+    return (x != zero(T)) || (y != zero(T))
+end
 @binop (∨) GxB_LOR R=>R
-∧(x::T, y::T) where T = (x != zero(T)) && (y != zero(T))
+function ∧(x::T, y::T) where T
+    return (x != zero(T)) && (y != zero(T))
+end
 @binop (∧) GxB_LAND R=>R
 binaryop(::typeof(|), ::Type{Bool}, ::Type{Bool}) = LOR_BOOL
 binaryop(::typeof(&), ::Type{Bool}, ::Type{Bool}) = LAND_BOOL

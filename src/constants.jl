@@ -28,7 +28,6 @@ const MonoidBinaryOrRig = Union{
     TypedMonoid,
     TypedSemiring,
     TypedBinaryOperator,
-    AbstractSemiring,
     AbstractMonoid
 }
 
