@@ -12,11 +12,27 @@ secondj, pair
 
 const BINARYOPS = IdDict{Tuple{<:Base.Callable, DataType, DataType}, TypedBinaryOperator}()
 
+function fallback_binaryop(
+    f::F, ::Type{X}, ::Type{Y}
+) where {F<:Base.Callable, X, Y}
+    println("Fallback for $f over $X and $Y")
+    return get!(BINARYOPS, (f, X, Y)) do
+        TypedBinaryOperator(f, X, Y)
+    end
+end
+
+# If we have the same type we know we must fallback, 
+# more specific methods will be captured by dispatch.
+binaryop(f::F, ::Type{X}, ::Type{X}) where {F<:Base.Callable, X} = fallback_binaryop(f, X, X)
+
 function binaryop(
     f::F, ::Type{X}, ::Type{Y}
 ) where {F<:Base.Callable, X, Y}
-    return get!(BINARYOPS, (f, X, Y)) do
-        TypedBinaryOperator(f, X, Y)
+    P = promote_type(X, Y)
+    if isconcretetype(P)
+        return binaryop(f, P, P)
+    else
+        return fallback_binaryop(f, X, Y)
     end
 end
 

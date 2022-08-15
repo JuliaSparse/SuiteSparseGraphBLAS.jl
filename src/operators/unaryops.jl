@@ -13,6 +13,7 @@ using SpecialFunctions
 const UNARYOPS = IdDict{Tuple{<:Base.Callable, DataType}, TypedUnaryOperator}()
 
 function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
+    println("Searching for $f in fallback")
     return get!(UNARYOPS, (f, T)) do
         TypedUnaryOperator(f, T)
     end
@@ -99,7 +100,7 @@ macro unop(expr...)
 end
 
 # all types
-@unop identity GrB_IDENTITY Bool=>Bool
+@unop identity GrB_IDENTITY T=>T
 @unop (-) GrB_AINV T=>T
 @unop inv GrB_MINV T=>T
 @unop one GxB_ONE T=>T
