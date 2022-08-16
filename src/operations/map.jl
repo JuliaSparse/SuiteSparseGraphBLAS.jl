@@ -1,5 +1,5 @@
 function apply!(
-    op, C::GBVecOrMat, A::GBArray{T};
+    op, C::GBVecOrMat, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     mask, accum = _handlenothings(mask, accum)
@@ -11,16 +11,16 @@ function apply!(
 end
 
 function apply!(
-    op, A::GBArray{T};
+    op, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     return apply!(op, A, A; mask, accum, desc)
 end
 
 """
-    apply(op::Union{Function, TypedUnaryOperator}, A::GBArray; kwargs...)::GBArray
-    apply(op::Union{Function}, A::GBArray, x; kwargs...)::GBArray
-    apply(op::Union{Function}, x, A::GBArray, kwargs...)::GBArray
+    apply(op::Union{Function, TypedUnaryOperator}, A::GBArrayOrTranspose; kwargs...)::GBArrayOrTranspose
+    apply(op::Union{Function}, A::GBArrayOrTranspose, x; kwargs...)::GBArrayOrTranspose
+    apply(op::Union{Function}, x, A::GBArrayOrTranspose, kwargs...)::GBArrayOrTranspose
 
 Transform a GBArray by applying `op` to each element. Equivalent to `Base.map` except for the additional
 `x` argument for mapping with a scalar.
@@ -31,7 +31,7 @@ BinaryOps and two argument functions require the additional argument `x` which i
 
 # Arguments
 - `op::Union{Function, TypedUnaryOperator}`
-- `A::GBArray`
+- `A::GBArrayOrTranspose`
 - `x`: Position dependent argument to binary operators.
 
 # Keywords
@@ -41,7 +41,7 @@ BinaryOps and two argument functions require the additional argument `x` which i
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
 function apply(
-    op, A::GBArray{T};
+    op, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     t = inferunarytype(eltype(A), op)
@@ -49,7 +49,7 @@ function apply(
 end
 
 function apply!(
-    op, C::GBVecOrMat, x, A::GBArray{T};
+    op, C::GBVecOrMat, x, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     mask, accum = _handlenothings(mask, accum)
@@ -61,14 +61,14 @@ function apply!(
 end
 
 function apply!(
-    op, x, A::GBArray{T};
+    op, x, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     return apply!(op, A, x, A; mask, accum, desc)
 end
 
 function apply(
-    op, x, A::GBArray{T};
+    op, x, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     t = inferbinarytype(typeof(x), eltype(A), op)
@@ -76,7 +76,7 @@ function apply(
 end
 
 function apply!(
-    op, C::GBVecOrMat, A::GBArray{T}, x;
+    op, C::GBVecOrMat, A::GBArrayOrTranspose{T}, x;
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     mask, accum = _handlenothings(mask, accum)
@@ -88,43 +88,43 @@ function apply!(
 end
 
 function apply!(
-    op, A::GBArray{T}, x;
+    op, A::GBArrayOrTranspose{T}, x;
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     return apply!(op, A, A, x; mask, accum, desc)
 end
 
 function apply(
-    op, A::GBArray{T}, x;
+    op, A::GBArrayOrTranspose{T}, x;
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     t = inferbinarytype(eltype(A), typeof(x), op)
     return apply!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-function Base.map(f, A::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+function Base.map(f, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
     apply(f, A; mask, accum, desc)
 end
-function Base.map!(f, C::GBArray, A::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+function Base.map!(f, C::GBVecOrMat, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
     apply!(f, C, A; mask, accum, desc)
 end
-function Base.map!(f, A::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+function Base.map!(f, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
     apply!(f, C, A; mask, accum, desc)
 end
 
-Base.:*(x::V, u::GBArray{T}; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T}} =
+Base.:*(x::V, u::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T}} =
     apply(*, x, u; mask, accum, desc)
-Base.:*(u::GBArray{T}, x::V; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T}} =
+Base.:*(u::GBArrayOrTranspose{T}, x::V; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T}} =
     apply(*, u, x; mask, accum, desc)
 
-Base.:-(u::GBArray) = apply(-, u)
+Base.:-(u::GBArrayOrTranspose) = apply(-, u)
 
 """
-    mask!(C::GBArray, A::GBArray, mask::GBArray)
+    mask!(C::GBArrayOrTranspose, A::GBArrayOrTranspose, mask::GBVecOrMat)
 
 Apply a mask to matrix `A`, storing the results in C.
 """
-function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, complement = false)
+function mask!(C::GBVecOrMat, A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
     desc = Descriptor()
     structural && (desc.structural_mask=true)
     complement && (desc.complement_mask=true)
@@ -133,15 +133,15 @@ function mask!(C::GBArray, A::GBArray, mask::GBArray; structural = false, comple
     return C
 end
 
-function mask!(A::GBArray, mask::GBArray; structural = false, complement = false)
+function mask!(A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
     mask!(A, A, mask; structural, complement)
 end
 
 """
-    mask(A::GBArray, mask::GBArray)
+    mask(A::GBArrayOrTranspose, mask::GBVecOrMat)
 
 Apply a mask to matrix `A`.
 """
-function mask(A::GBArray, mask::GBArray; structural = false, complement = false)
+function mask(A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
     return mask!(similar(A), A, mask; structural, complement)
 end

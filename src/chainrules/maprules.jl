@@ -21,7 +21,7 @@ macro scalarapplyrule(func, derivative)
             (_, _, $(esc(:ΔA)))::Tuple,
             ::typeof(apply),
             ::typeof($(func)),
-            $(esc(:A))::GBArray
+            $(esc(:A))::AbstractGBArray
         )
             $(esc(:Ω)) = apply($(esc(func)), $(esc(:A)))
             return $(esc(:Ω)), $(esc(derivative)) .* unthunk($(esc(:ΔA)))
@@ -29,7 +29,7 @@ macro scalarapplyrule(func, derivative)
         function ChainRulesCore.rrule(
             ::typeof(apply),
             ::typeof($(func)),
-            $(esc(:A))::GBArray
+            $(esc(:A))::AbstractGBArray
         )
             $(esc(:Ω)) = apply($(esc(func)), $(esc(:A)))
             function applyback($(esc(:ΔA)))
@@ -75,10 +75,10 @@ function frule(
     (_, _, ΔA)::Tuple,
     ::typeof(apply),
     ::typeof(identity),
-    A::GBArray
+    A::AbstractGBArray
 )
     return (A, ΔA)
 end
-function rrule(::typeof(apply), ::typeof(identity), A::GBArray)
+function rrule(::typeof(apply), ::typeof(identity), A::AbstractGBArray)
     return A, (ΔΩ) -> (NoTangent(), NoTangent(), ΔΩ)
 end

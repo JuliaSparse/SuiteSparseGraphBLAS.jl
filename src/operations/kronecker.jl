@@ -5,8 +5,8 @@ In-place version of [kron](@ref).
 """
 function LinearAlgebra.kron!(
     C::GBVecOrMat,
-    A::GBArray,
-    B::GBArray,
+    A::GBArrayOrTranspose,
+    B::GBArrayOrTranspose,
     op = *;
     mask = nothing,
     accum = nothing,
@@ -39,8 +39,8 @@ Does not support `GBVector`s at this time.
 - `desc = nothing`
 """
 function LinearAlgebra.kron(
-    A::GBArray,
-    B::GBArray,
+    A::GBArrayOrTranspose,
+    B::GBArrayOrTranspose,
     op = *;
     mask = nothing,
     accum = nothing,

@@ -159,6 +159,6 @@ end
 ####################
 
 # Linear indexing
-function Base.getindex(A::GBMatOrTranspose, v::AbstractVector)
+function Base.getindex(A::GBMatrixOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end

@@ -1,11 +1,11 @@
 # AbstractGBArray functions:
-function SparseArrays.nnz(A::AbsGBArrayOrTranspose)
+function SparseArrays.nnz(A::GBArrayOrTranspose)
     nvals = Ref{LibGraphBLAS.GrB_Index}()
     @wraperror LibGraphBLAS.GrB_Matrix_nvals(nvals, gbpointer(parent(A)))
     return Int64(nvals[])
 end
 
-Base.eltype(::Type{AbstractGBArray{T}}) where{T} = T
+Base.eltype(::Type{GBArrayOrTranspose{T}}) where{T} = T
 
 """
     empty!(v::GBVector)
@@ -14,30 +14,30 @@ Base.eltype(::Type{AbstractGBArray{T}}) where{T} = T
 Clear all the entries from the GBArray.
 Does not modify the type or dimensions.
 """
-function Base.empty!(A::AbsGBArrayOrTranspose)
+function Base.empty!(A::GBArrayOrTranspose)
     @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A)))
     return A
 end
 
-function Base.Matrix(A::AbstractGBMatrix)
+function Base.Matrix(A::GBArrayOrTranspose)
     sparsity = sparsitystatus(A)
     T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
     return unpack!(T, Dense())
 end
 
-function Base.Vector(v::AbstractGBVector)
+function Base.Vector(v::GBVectorOrTranspose)
     sparsity = sparsitystatus(v)
     T = copy(v) # avoid densifying v and destroying v.
     return unpack!(T, Dense())
 end
 
-function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
+function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
     sparsity = sparsitystatus(A)
     T = copy(A) # avoid changing sparsity of A and destroying it.
     return unpack!(T, SparseMatrixCSC)
 end
 
-function SparseArrays.SparseVector(v::AbstractGBVector)
+function SparseArrays.SparseVector(v::GBVectorOrTranspose)
     sparsity = sparsitystatus(v)
     T = copy(A) # avoid changing sparsity of v and destroying it.
     return unpack!(T, SparseVector)

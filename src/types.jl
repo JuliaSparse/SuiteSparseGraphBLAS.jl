@@ -176,12 +176,17 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Monoid}, op::TypedMonoid{F,
     end
 end
 
+# TODO: Determine TERMINAL::T, T ∈ Z always, or if T can be outside Z.
 function _builtinMonoid(typestr, binaryop::TypedBinaryOperator{F, Z, Z, Z}, identity, terminal::T) where {F, Z, T}
     return TypedMonoid(true, false, typestr, LibGraphBLAS.GrB_Monoid(), binaryop, identity, terminal)
 end
 
 function TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Z, terminal::T) where {F, Z, T}
     return TypedMonoid(false, false, string(binop.fn), LibGraphBLAS.GrB_Monoid(), binop, identity, terminal)
+end
+
+function TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity, terminal::T) where {F, Z, T}
+    return TypedMonoid(false, false, string(binop.fn), LibGraphBLAS.GrB_Monoid(), binop, convert(Z, identity), terminal)
 end
 
 #Enable use of functions for determining identity and terminal values. Could likely be pared down to 2 functions somehow.

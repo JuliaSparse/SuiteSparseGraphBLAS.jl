@@ -15,7 +15,7 @@ Eagerly evaluated matrix transpose, storing the output in `C`.
 - `desc::Union{Nothing, Descriptor} = DEFAULTDESC`
 """
 function gbtranspose!(
-    C::AbstractGBArray, A::GBArray;
+    C::AbstractGBArray, A::GBArrayOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
@@ -38,13 +38,13 @@ Eagerly evaluated matrix transpose which returns the transposed matrix.
 # Returns
 - `C::GBMatrix`: output matrix.
 """
-function gbtranspose(A::GBArray; mask = nothing, accum = nothing, desc = nothing)
+function gbtranspose(A::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing)
     C = similar(A, size(A,2), size(A, 1))
     gbtranspose!(C, A; mask, accum, desc)
     return C
 end
 
-function LinearAlgebra.transpose(A::GBArray)
+function LinearAlgebra.transpose(A::AbstractGBArray)
     return Transpose(A)
 end
 
@@ -66,4 +66,5 @@ end
 LinearAlgebra.adjoint(A::GBVecOrMat) = transpose(A)
 
 #arrrrgh, type piracy.
+# TODO: avoid this if possible
 LinearAlgebra.transpose(::Nothing) = nothing

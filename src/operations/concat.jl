@@ -1,4 +1,4 @@
-function cat!(C::GBArray, tiles::AbstractArray{T}) where {T<:GBArray}
+function cat!(C::GBVecOrMat, tiles::AbstractArray{T}) where {T<:GBVecOrMat}
     tiles = permutedims(tiles)
     @wraperror LibGraphBLAS.GxB_Matrix_concat(gbpointer(C), gbpointer.(tiles), size(tiles,2), size(tiles,1), C_NULL)
     return C
@@ -32,10 +32,10 @@ function Base.cat(tiles::VecOrMat{<:Union{AbstractGBMatrix{T, F}, AbstractGBVect
     return cat!(C, tiles)
 end
 
-vcat!(C, A::GBArray...) = cat!(C, collect(A))
-Base.vcat(A::GBArray...) = cat(collect(A))
+vcat!(C, A::GBArrayOrTranspose...) = cat!(C, collect(A))
+Base.vcat(A::GBArrayOrTranspose...) = cat(collect(A))
 
-hcat!(C, A::GBArray...) = cat!(C, permutedims(collect(A)))
-Base.hcat(A::GBArray...) = cat(permutedims(collect(A)))
+hcat!(C, A::GBArrayOrTranspose...) = cat!(C, permutedims(collect(A)))
+Base.hcat(A::GBArrayOrTranspose...) = cat(permutedims(collect(A)))
 
 # TODO split. I don't necessarily see a great need for split though. We have indexing/slicing.

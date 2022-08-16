@@ -1,5 +1,5 @@
 function reduce!(
-    op, w::AbstractGBVector, A::GBMatOrTranspose;
+    op, w::AbstractGBVector, A::GBArrayOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
     mask, accum = _handlenothings(mask, accum)
@@ -14,7 +14,7 @@ end
 
 function Base.reduce(
     op,
-    A::GBArray;
+    A::GBArrayOrTranspose;
     dims = :,
     typeout = nothing,
     init = nothing,
@@ -27,16 +27,16 @@ function Base.reduce(
         typeout = eltype(A)
     end
 
-    if dims == 2 && !(A isa GBVecOrTranspose)
+    if dims == 2 && !(A isa GBVectorOrTranspose)
         w = similar(A, typeout, size(A, 1))
         reduce!(op, w, A; desc, accum, mask)
         return w
-    elseif dims == 1 && !(A isa GBVecOrTranspose)
+    elseif dims == 1 && !(A isa GBVectorOrTranspose)
         desc.transpose_input1 = true
         w = similar(A, typeout, size(A, 2))
         reduce!(op, w, A; desc, accum, mask)
         return w
-    elseif dims == (1,2) || dims == Colon() || A isa GBVecOrTranspose
+    elseif dims == (1,2) || dims == Colon() || A isa GBVectorOrTranspose
         if init === nothing
             c = GBScalar{typeout}()
             typec = typeout
@@ -60,7 +60,7 @@ Reduce `A` along dimensions of A with monoid `op`.
 
 # Arguments
 - `op`: the reducer. This must map to an AbstractMonoid, not a binary op.
-- `A::GBArray`: `GBVector` or optionally transposed `GBMatrix`.
+- `A::GBArrayOrTranspose`: `GBVector` or optionally transposed `GBMatrix`.
 - `dims = :`: Optional dimensions for GBMatrix, may be `1`, `2`, or `:`.
 
 # Keywords
@@ -73,10 +73,10 @@ Reduce `A` along dimensions of A with monoid `op`.
 """
 reduce
 
-Base.maximum(A::GBArray) = reduce(max, A)
-Base.maximum(f::Function, A::GBArray) = reduce(max, map(f, A))
+Base.maximum(A::GBArrayOrTranspose) = reduce(max, A)
+Base.maximum(f::Function, A::GBArrayOrTranspose) = reduce(max, map(f, A))
 
-Base.minimum(A::GBArray) = reduce(min, A)
-Base.minimum(f::Function, A::GBArray) = reduce(min, map(f, A))
+Base.minimum(A::GBArrayOrTranspose) = reduce(min, A)
+Base.minimum(f::Function, A::GBArrayOrTranspose) = reduce(min, map(f, A))
 
-Base.sum(A::GBArray; dims=:) = reduce(+, A; dims)
+Base.sum(A::GBArrayOrTranspose; dims=:) = reduce(+, A; dims)

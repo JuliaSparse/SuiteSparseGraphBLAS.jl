@@ -4,8 +4,8 @@
 
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
-    A::GBArray,
-    B::GBArray,
+    A::GBArrayOrTranspose,
+    B::GBArrayOrTranspose,
     op = (+, *);
     mask = nothing,
     accum = nothing,
@@ -26,7 +26,7 @@ end
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
     A::VecOrMat,
-    B::GBArray,
+    B::GBArrayOrTranspose,
     op = (+, *);
     mask = nothing,
     accum = nothing,
@@ -40,7 +40,7 @@ end
 
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
-    A::GBArray,
+    A::GBArrayOrTranspose,
     B::VecOrMat,
     op = (+, *);
     mask = nothing,
@@ -54,7 +54,7 @@ function LinearAlgebra.mul!(
 end
 
 """
-    *(A::GBArray, B::GBArray, op=(+,*); kwargs...)::GBArray
+    *(A::GBArrayOrTranspose, B::GBArrayOrTranspose, op=(+,*); kwargs...)::GBArrayOrTranspose
 
 Multiply two `GBArray`s `A` and `B` using a semiring, which defaults to the arithmetic semiring `+.*`.
 
@@ -65,7 +65,7 @@ The mutating form, `mul!(C, A, B, op; kwargs...)` is identical except it stores 
 The operator syntax `A * B` can be used when the default semiring is desired, and `*(max, +)(A, B)` can be used otherwise.
 
 # Arguments
-- `A, B::GBArray`: A GBVector or GBMatrix, possibly transposed.
+- `A, B::GBArrayOrTranspose`: A GBVector or GBMatrix, possibly transposed.
 - `op::Union{Tuple{Function, Function}, AbstractSemiring}`: the semiring used for matrix multiplication. May be passed as a tuple of functions, or an `AbstractSemiring` found in the `Semirings` submodule.
 # Keywords
 - `mask::Union{Nothing, GBArray} = nothing`: optional mask which determines the output pattern.
@@ -78,8 +78,8 @@ The operator syntax `A * B` can be used when the default semiring is desired, an
     if a type specific semiring is provided.
 """
 function Base.:*(
-    A::GBArray,
-    B::GBArray,
+    A::GBArrayOrTranspose,
+    B::GBArrayOrTranspose,
     op = (+, *);
     mask = nothing,
     accum = nothing,
@@ -87,9 +87,9 @@ function Base.:*(
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
     fill = _promotefill(parent(A).fill, parent(B).fill)
-    if A isa GBMatOrTranspose && B isa AbstractGBVector
+    if A isa GBMatrixOrTranspose && B isa AbstractGBVector
         C = similar(A, t, size(A, 1); fill)
-    elseif A isa GBVector && B isa GBMatOrTranspose
+    elseif A isa GBVector && B isa GBMatrixOrTranspose
         C = similar(A, t, size(B, 2); fill)
     elseif A isa Transpose{<:Any, <:GBVector} && B isa GBVector
         C = similar(A, t, 1; fill)
@@ -102,7 +102,7 @@ end
 
 function Base.:*(
     A::VecOrMat,
-    B::GBArray,
+    B::GBArrayOrTranspose,
     op = (+, *);
     mask = nothing,
     accum = nothing,
@@ -115,7 +115,7 @@ function Base.:*(
 end
 
 function Base.:*(
-    A::GBArray,
+    A::GBArrayOrTranspose,
     B::VecOrMat,
     op = (+, *);
     mask = nothing,
@@ -149,14 +149,20 @@ function Base.:*(
     return *(A, B, (+, *); mask, accum, desc)
 end
 
-function Base.:*((⊕)::Function, (⊗)::Function)
-    return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
+function Base.:*((⊕)::Union{<:Base.Callable, Monoid}, (⊗)::Function)
+    return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
+        *(A, B, (⊕, ⊗); mask, accum, desc)
+    end
+end
+
+function Base.:*((⊕)::Monoid, (⊗)::Function)
+    return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
         *(A, B, (⊕, ⊗); mask, accum, desc)
     end
 end
 
 function Base.:*(rig::TypedSemiring)
-    return function(A::GBArray, B::GBArray; mask=nothing, accum=nothing, desc=nothing)
+    return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
         *(A, B, rig; mask, accum, desc)
     end
 end

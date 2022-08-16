@@ -23,7 +23,7 @@ end
 
 semiring(addop::Function, mulop::Function, ::Type{T}, ::Type{U}) where {T,U} = 
     semiring(defaultmonoid(addop, Base._return_type(mulop, Tuple{T, U})), mulop, T, U)
-semiring(tup::Tuple{Function, Function}, ::Type{T}, ::Type{U}) where {T,U} = semiring(tup..., T, U)
+semiring(tup::Tuple{<:Union{Function, Monoid}, Function}, ::Type{T}, ::Type{U}) where {T,U} = semiring(tup..., T, U)
 semiring(op::TypedSemiring, ::Type{T}, ::Type{U}) where {T,U} = op
 
 semiring(addop::Function, mulop::Function, ::Type{T}) where T = semiring(defaultmonoid(addop),mulop, T, T)

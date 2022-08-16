@@ -30,7 +30,7 @@ function _outlength(u, I)
 end
 
 """
-    extract!(C::GBMatrix, A::GBMatOrTranspose, I, J; kwargs...)::GBMatrix
+    extract!(C::GBMatrix, A::GBMatrixOrTranspose, I, J; kwargs...)::GBMatrix
     extract!(C::GBVector, A::GBVector, I; kwargs...)::GBVector
 
 Extract a submatrix or subvector from `A` into `C`.
@@ -57,7 +57,7 @@ Extract a submatrix or subvector from `A` into `C`.
 extract!
 
 function extract!(
-    C::AbstractGBMatrix, A::GBMatOrTranspose, I, J;
+    C::AbstractGBMatrix, A::GBMatrixOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -74,7 +74,7 @@ function extract!(
     return C
 end
 """
-    extract(A::GBMatOrTranspose, I, J; kwargs...)::GBMatrix
+    extract(A::GBMatrixOrTranspose, I, J; kwargs...)::GBMatrix
     extract(A::GBVector, I; kwargs...)::GBVector
 
 Extract a submatrix or subvector from `A`
@@ -99,7 +99,7 @@ Extract a submatrix or subvector from `A`
 extract
 
 function extract(
-    A::GBMatOrTranspose, I, J;
+    A::GBMatrixOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     Ilen, Jlen = _outlength(A, I, J)

@@ -28,7 +28,7 @@ Select the entries **not** on the `k`th diagonal of A.
 """
 function offdiag end #I don't know of a function which does this already.
 const OFFDIAG = SelectOp("GxB_OFFDIAG", LibGraphBLAS.GxB_SelectOp(), offdiag)
-offdiag(A::GBArray, k=0) = select(offdiag, A, k)
+offdiag(A::GBArrayOrTranspose, k=0) = select(offdiag, A, k)
 
 const NONZERO = SelectOp("GxB_NONZERO", LibGraphBLAS.GxB_SelectOp(), nonzeros)
 const EQ_ZERO = SelectOp("GxB_EQ_ZERO", LibGraphBLAS.GxB_SelectOp(), nothing)
