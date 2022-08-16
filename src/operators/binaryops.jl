@@ -15,7 +15,6 @@ const BINARYOPS = IdDict{Tuple{<:Base.Callable, DataType, DataType}, TypedBinary
 function fallback_binaryop(
     f::F, ::Type{X}, ::Type{Y}
 ) where {F<:Base.Callable, X, Y}
-    println("Fallback for $f over $X and $Y")
     return get!(BINARYOPS, (f, X, Y)) do
         TypedBinaryOperator(f, X, Y)
     end

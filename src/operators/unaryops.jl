@@ -13,7 +13,6 @@ using SpecialFunctions
 const UNARYOPS = IdDict{Tuple{<:Base.Callable, DataType}, TypedUnaryOperator}()
 
 function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
-    println("Searching for $f in fallback")
     return get!(UNARYOPS, (f, T)) do
         TypedUnaryOperator(f, T)
     end
@@ -118,6 +117,7 @@ positionj(_) = 1::Int64
 @unop positioni GxB_POSITIONI1 Any=>N
 @unop positionj GxB_POSITIONJ1 Any=>N
 
+
 #floats and complexes
 @unop sqrt GxB_SQRT FZ=>FZ
 @unop log GxB_LOG FZ=>FZ
@@ -160,6 +160,35 @@ frexpe(x) = frexp[2]
 @unop isinf GxB_ISINF FZ=>Bool
 @unop isnan GxB_ISNAN FZ=>Bool
 @unop isfinite GxB_ISFINITE FZ=>Bool
+
+# manually create promotion overloads.
+# Otherwise we will fallback to Julia functions which can be harmful.
+for f ∈ [
+    sqrt, log, exp, log10, log2, exp2, expm1, log1p, sin, cos, tan, 
+    asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh]
+    @eval begin
+        unaryop(::typeof($f), ::Type{UInt64}) = 
+            unaryop($f, Float64)
+        unaryop(::typeof($f), ::Type{<:Union{UInt32, UInt16, UInt8}}) =
+            unaryop($f, Float32)
+    end
+end
+
+# I think this list is correct.
+# It should be those functions which can be safely promoted to float
+# from Ints (including negatives).
+# This might be overzealous, and should be just combined with the list above.
+# I'd rather error on domain than create a bunch of NaNs.
+for f ∈ [
+    exp, exp2, expm1, sin, cos, tan, 
+    atan, sinh, cosh, tanh, asinh] 
+    @eval begin
+        unaryop(::typeof($f), ::Type{Int64}) = 
+            unaryop($f, Float64)
+        unaryop(::typeof($f), ::Type{<:Union{Int32, Int16, Int8}}) =
+            unaryop($f, Float32)
+    end
+end
 
 # Complex functions
 @unop conj GxB_CONJ Z=>Z
