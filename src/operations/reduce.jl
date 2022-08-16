@@ -22,6 +22,7 @@ function Base.reduce(
     accum = nothing,
     desc = nothing
 )
+    desc = _handledescriptor(desc; in1=A)
     mask, accum = _handlenothings(mask, accum)
     if typeout === nothing
         typeout = eltype(A)
@@ -45,7 +46,6 @@ function Base.reduce(
             typec = typeof(init)
         end
         op = typedmonoid(op, typec)
-        desc = _handledescriptor(desc; in1=A)
         accum = getaccum(accum, typec)
         @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)
         return c[]
