@@ -57,7 +57,7 @@ Extract a submatrix or subvector from `A` into `C`.
 extract!
 
 function extract!(
-    C::AbstractGBMatrix, A::GBMatrixOrTranspose, I, J;
+    C::AbstractGBArray, A::GBMatrixOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -106,6 +106,25 @@ function extract(
     C = similar(A, Ilen, Jlen)
     return extract!(C, A, I, J; mask, accum, desc)
 end
+
+function extract(
+    A::GBMatrixOrTranspose, ::Colon, J::Number;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    Ilen, _ = _outlength(A, :, J)
+    C = similar(A, Ilen)
+    return extract!(C, A, :, J; mask, accum, desc)
+end
+
+# TODO: FINISH THIS WITH GxB_Matrix_reshape!!!
+# function extract(
+#     A::GBMatrixOrTranspose, I::Number, ::Colon;
+#     mask = nothing, accum = nothing, desc = nothing
+# )
+#     _, Jlen = _outlength(A, I, :)
+#     C = similar(A, 1, Jlen)
+#     return extract!(C, A, I, :; mask, accum, desc)
+# end
 
 function extract!(
     w::AbstractGBVector, u::AbstractGBVector, I;
