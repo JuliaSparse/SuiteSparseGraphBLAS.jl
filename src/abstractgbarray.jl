@@ -408,7 +408,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(C) != size(mask)`.
 """
 function assign!(
-    C::AbstractGBMatrix, A::AbstractGBVector, I, J;
+    C::AbstractGBMatrix, A::GBArrayOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -417,16 +417,16 @@ function assign!(
     I = decrement!(I)
     J = decrement!(J)
     # we know A isn't adjoint/transpose on input
-    desc = _handledescriptor(desc)
-    @wraperror LibGraphBLAS.GrB_Matrix_assign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(A), I, ni, J, nj, desc)
+    desc = _handledescriptor(desc; in1=A)
+    @wraperror LibGraphBLAS.GrB_Matrix_assign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
     increment!(I)
     increment!(J)
     return A
 end
 
-function assign!(C::AbstractGBArray, x, I, J;
+function assign!(C::AbstractGBArray{T}, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
-)
+) where T
     x = typeof(x) === T ? x : convert(T, x)
     I, ni = idx(I)
     J, nj = idx(J)

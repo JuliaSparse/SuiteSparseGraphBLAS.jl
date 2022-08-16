@@ -1,7 +1,7 @@
 module Monoids
 
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
+using ..SuiteSparseGraphBLAS: BinaryOps, isGxB, isGrB, TypedMonoid, AbstractMonoid, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, 
     Ntypes, Ttypes, suffix, BinaryOps.binaryop, _builtinMonoid, BinaryOps.∨, 
     BinaryOps.∧, BinaryOps.lxor, BinaryOps.xnor, BinaryOps.bxnor, valid_union
@@ -35,6 +35,8 @@ defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = nothing
 
 # Use defaultmonoid when available. User should verify that this results in the correct monoid.
 typedmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = typedmonoid(defaultmonoid(f, T), T)
+
+BinaryOps.binaryop(op::TypedMonoid) = op.binaryop
 
 # Can't really do ephemeral monoid fallbacks... Need the identity and possibly terminal.
 

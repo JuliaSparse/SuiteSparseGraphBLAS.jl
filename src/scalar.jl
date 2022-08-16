@@ -12,6 +12,18 @@ function GBScalar(v::T) where {T}
     return x
 end
 
+function GBScalar{T}(v::T) where {T}
+    x = GBScalar{T}()
+    x[] = v
+    return x
+end
+
+function GBScalar{T}(v::U) where {T, U}
+    x = GBScalar{T}()
+    x[] = convert(T, v)
+    return x
+end
+
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 Base.unsafe_convert(::Type{LibGraphBLAS.GxB_Scalar}, s::GBScalar) = s.p
@@ -65,5 +77,5 @@ end
 function SparseArrays.nnz(v::GBScalar)
     n = Ref{LibGraphBLAS.GrB_Index}()
     @wraperror LibGraphBLAS.GrB_Scalar_nvals(n, v)
-    return n[]
+    return Int64(n[])
 end

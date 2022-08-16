@@ -40,13 +40,14 @@ function Base.reduce(
     elseif dims == (1,2) || dims == Colon() || A isa GBVectorOrTranspose
         if init === nothing
             c = GBScalar{typeout}()
-            typec = typeout
         else
-            GBScalar{typeout}(init)
-            typec = typeof(init)
+            c = GBScalar{typeout}(init)
         end
-        op = typedmonoid(op, typec)
-        accum = getaccum(accum, typec)
+        op = typedmonoid(op, typeout)
+        if nnz(c) == 1 && accum == C_NULL
+            accum = binaryop(op)
+        end
+        accum = getaccum(accum, typeout)
         @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)
         return c[]
     end
