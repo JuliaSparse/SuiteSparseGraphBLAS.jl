@@ -134,7 +134,7 @@ function extract!(
     I = decrement!(I)
     desc = _handledescriptor(desc)
     mask === nothing && (mask = C_NULL)
-    @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(w), mask, getaccum(accum, eltype(w)), gbpointer(u), I, ni, UInt64[1], 1, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(w), mask, getaccum(accum, eltype(w)), gbpointer(u), I, ni, UInt64[0], 1, desc)
     I isa Vector && increment!(I)
     return w
 end
