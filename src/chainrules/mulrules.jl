@@ -3,16 +3,16 @@
 function frule(
     (_, ΔA, ΔB)::Tuple,
     ::typeof(*),
-    A::GBArray,
-    B::GBArray
+    A::AbstractGBArray,
+    B::AbstractGBArray
 )
     frule((nothing, ΔA, ΔB, nothing), *, A, B, (+, *))
 end
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, *))
 )
     Ω = *(A, B, (+, *))
@@ -22,8 +22,8 @@ end
 
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, *))
 )
     function mulpullback(ΔΩ)
@@ -37,8 +37,8 @@ end
 
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray
+    A::AbstractGBArray,
+    B::AbstractGBArray
 )
     Ω, mulpullback = rrule(*, A, B, (+, *))
     pullback(ΔΩ) = mulpullback(ΔΩ)[1:3]
@@ -50,8 +50,8 @@ end
 # Missing frule here.
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, /))
 )
     function mulpullback(ΔΩ)
@@ -66,8 +66,8 @@ end
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, +))
 )
     Ω = *(A, B, (+, +))
@@ -77,8 +77,8 @@ end
 
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, +))
 )
     function mulpullback(ΔΩ)
@@ -93,8 +93,8 @@ end
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, -))
 )
     Ω = *(A, B, (+, -))
@@ -104,8 +104,8 @@ end
 
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, -))
 )
     function mulpullback(ΔΩ)
@@ -120,8 +120,8 @@ end
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, first))
 )
     Ω = *(A, B, (+, first))
@@ -131,8 +131,8 @@ end
 
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, first))
 )
     function mulpullback(ΔΩ)
@@ -147,8 +147,8 @@ end
 function frule(
     (_, ΔA, ΔB, _)::Tuple,
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, second))
 )
     Ω = *(A, B, (+, second))
@@ -158,8 +158,8 @@ end
 
 function rrule(
     ::typeof(*),
-    A::GBArray,
-    B::GBArray,
+    A::AbstractGBArray,
+    B::AbstractGBArray,
     ::typeof((+, second))
 )
     function mulpullback(ΔΩ)

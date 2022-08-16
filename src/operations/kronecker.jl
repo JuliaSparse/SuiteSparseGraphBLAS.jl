@@ -5,8 +5,8 @@ In-place version of [kron](@ref).
 """
 function LinearAlgebra.kron!(
     C::GBVecOrMat,
-    A::GBArray,
-    B::GBArray,
+    A::GBArrayOrTranspose,
+    B::GBArrayOrTranspose,
     op = *;
     mask = nothing,
     accum = nothing,
@@ -14,7 +14,7 @@ function LinearAlgebra.kron!(
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
-    op = BinaryOp(op)(eltype(A), eltype(B))
+    op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GxB_kron(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
     return C
@@ -34,13 +34,13 @@ Does not support `GBVector`s at this time.
 
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 """
 function LinearAlgebra.kron(
-    A::GBArray,
-    B::GBArray,
+    A::GBArrayOrTranspose,
+    B::GBArrayOrTranspose,
     op = *;
     mask = nothing,
     accum = nothing,

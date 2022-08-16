@@ -30,7 +30,7 @@ function _outlength(u, I)
 end
 
 """
-    extract!(C::GBMatrix, A::GBMatOrTranspose, I, J; kwargs...)::GBMatrix
+    extract!(C::GBMatrix, A::GBMatrixOrTranspose, I, J; kwargs...)::GBMatrix
     extract!(C::GBVector, A::GBVector, I; kwargs...)::GBVector
 
 Extract a submatrix or subvector from `A` into `C`.
@@ -43,7 +43,7 @@ Extract a submatrix or subvector from `A` into `C`.
 # Keywords
 - `mask::Union{Nothing, GBArray} = nothing`: mask where
     `size(M) == (max(I), max(J))`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 
@@ -57,7 +57,7 @@ Extract a submatrix or subvector from `A` into `C`.
 extract!
 
 function extract!(
-    C::AbstractGBMatrix, A::GBMatOrTranspose, I, J;
+    C::AbstractGBArray, A::GBMatrixOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -74,7 +74,7 @@ function extract!(
     return C
 end
 """
-    extract(A::GBMatOrTranspose, I, J; kwargs...)::GBMatrix
+    extract(A::GBMatrixOrTranspose, I, J; kwargs...)::GBMatrix
     extract(A::GBVector, I; kwargs...)::GBVector
 
 Extract a submatrix or subvector from `A`
@@ -86,7 +86,7 @@ Extract a submatrix or subvector from `A`
 # Keywords
 - `mask::Union{Nothing, GBArray} = nothing`: mask where
     `size(M) == (max(I), max(J))`.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Descriptor = nothing`
 
@@ -99,13 +99,32 @@ Extract a submatrix or subvector from `A`
 extract
 
 function extract(
-    A::GBMatOrTranspose, I, J;
+    A::GBMatrixOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
     return extract!(C, A, I, J; mask, accum, desc)
 end
+
+function extract(
+    A::GBMatrixOrTranspose, ::Colon, J::Number;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    Ilen, _ = _outlength(A, :, J)
+    C = similar(A, Ilen)
+    return extract!(C, A, :, J; mask, accum, desc)
+end
+
+# TODO: FINISH THIS WITH GxB_Matrix_reshape!!!
+# function extract(
+#     A::GBMatrixOrTranspose, I::Number, ::Colon;
+#     mask = nothing, accum = nothing, desc = nothing
+# )
+#     _, Jlen = _outlength(A, I, :)
+#     C = similar(A, 1, Jlen)
+#     return extract!(C, A, I, :; mask, accum, desc)
+# end
 
 function extract!(
     w::AbstractGBVector, u::AbstractGBVector, I;
@@ -115,7 +134,7 @@ function extract!(
     I = decrement!(I)
     desc = _handledescriptor(desc)
     mask === nothing && (mask = C_NULL)
-    @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(w), mask, getaccum(accum, eltype(w)), gbpointer(u), I, ni, UInt64[1], 1, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(w), mask, getaccum(accum, eltype(w)), gbpointer(u), I, ni, UInt64[0], 1, desc)
     I isa Vector && increment!(I)
     return w
 end

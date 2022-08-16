@@ -19,9 +19,7 @@ Internally functions are lowered like this:
 ```@repl
 using SuiteSparseGraphBLAS
 
-op = UnaryOp(sin)
-
-typedop = op(Float64)
+op = unaryop(sin, Float64)
 
 map(typedop, GBVector([1.5, 0, pi]))
 ```

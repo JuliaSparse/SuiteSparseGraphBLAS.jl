@@ -47,6 +47,10 @@ end
 
 gbpointer(T::GBType) = T.p
 
+
+
+const GBTYPES = IdDict{DataType, GBType}()
+
 """
     gbtype(x)
 
@@ -54,9 +58,14 @@ Determine the GBType equivalent of a Julia primitive type.
 
 See also: [`juliatype`](@ref)
 """
-function gbtype end
+function gbtype(::Type{T}; builtin = false, loaded = false, typestr = string(T)) where T
+    (get!(GBTYPES, T) do 
+        return GBType{T}(builtin, loaded, LibGraphBLAS.GrB_Type(), typestr)
+    end)::GBType{T}
+end
 
-macro gbtype(expr...)
+# For maybe a tiny bit of additional speed we'll overload `gbtype` for builtins.
+macro _gbtype(expr...)
 
     jtype = expr[1]
     if length(expr) == 2
@@ -112,17 +121,17 @@ See also: [`gbtype`](@ref)
 """
 juliatype(::GBType{T}) where {T} = T
 
-@gbtype Bool GrB_BOOL
-@gbtype Int8 GrB_INT8
-@gbtype UInt8 GrB_UINT8
-@gbtype Int16 GrB_INT16
-@gbtype UInt16 GrB_UINT16
-@gbtype Int32 GrB_INT32
-@gbtype UInt32 GrB_UINT32
-@gbtype Int64 GrB_INT64
-@gbtype UInt64 GrB_UINT64
-@gbtype Float32 GrB_FP32
-@gbtype Float64 GrB_FP64
-@gbtype ComplexF32 GxB_FC32
-@gbtype ComplexF64 GxB_FC64
+@_gbtype Bool GrB_BOOL
+@_gbtype Int8 GrB_INT8
+@_gbtype UInt8 GrB_UINT8
+@_gbtype Int16 GrB_INT16
+@_gbtype UInt16 GrB_UINT16
+@_gbtype Int32 GrB_INT32
+@_gbtype UInt32 GrB_UINT32
+@_gbtype Int64 GrB_INT64
+@_gbtype UInt64 GrB_UINT64
+@_gbtype Float32 GrB_FP32
+@_gbtype Float64 GrB_FP64
+@_gbtype ComplexF32 GxB_FC32
+@_gbtype ComplexF64 GxB_FC64
 

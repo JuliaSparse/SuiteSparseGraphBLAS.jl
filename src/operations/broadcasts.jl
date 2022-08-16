@@ -80,7 +80,7 @@ modifying(::typeof(emul)) = emul!
         if right isa Broadcast.Broadcasted
             right = copy(right)
         end
-        if left isa GBArray && right isa GBArray
+        if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
             return add(left, right, f)
         else
@@ -91,7 +91,7 @@ end
 mutatingop(::typeof(emul)) = emul!
 mutatingop(::typeof(eadd)) = eadd!
 mutatingop(::typeof(apply)) = apply!
-@inline function Base.copyto!(C::AbsGBArrayOrTranspose, bc::Broadcast.Broadcasted{GBMatrixStyle})
+@inline function Base.copyto!(C::GBArrayOrTranspose, bc::Broadcast.Broadcasted{GBMatrixStyle})
     l = length(bc.args)
     if l == 1
         x = first(bc.args)
@@ -139,7 +139,7 @@ mutatingop(::typeof(apply)) = apply!
                     # If they're further nested broadcasts we can't fuse them, so just copy.
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
-                    if subargleft isa GBArray && subargright isa GBArray
+                    if subargleft isa GBArrayOrTranspose && subargright isa GBArrayOrTranspose
                         add = mutatingop(defaultadd(f))
                         return add(C, subargleft, subargright, f; accum)
                     else
@@ -156,7 +156,7 @@ mutatingop(::typeof(apply)) = apply!
             if right isa Broadcast.Broadcasted
                 right = copy(right)
             end
-            if left isa GBArray && right isa GBArray
+            if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(f))
                 return add(C, left, right, f)
             else
@@ -189,7 +189,7 @@ end
         if right isa Broadcast.Broadcasted
             right = copy(right)
         end
-        if left isa GBArray && right isa GBArray
+        if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
             return add(left, right, f)
         else
@@ -246,7 +246,7 @@ end
                     # If they're further nested broadcasts we can't fuse them, so just copy.
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
-                    if subargleft isa GBArray && subargright isa GBArray
+                    if subargleft isa GBArrayOrTranspose && subargright isa GBArrayOrTranspose
                         add = mutatingop(defaultadd(f))
                         return add(C, subargleft, subargright, f; accum)
                     else
@@ -263,7 +263,7 @@ end
             if right isa Broadcast.Broadcasted
                 right = copy(right)
             end
-            if left isa GBArray && right isa GBArray
+            if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(f))
                 return add(C, left, right, f)
             else

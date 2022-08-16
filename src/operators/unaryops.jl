@@ -1,32 +1,27 @@
 module UnaryOps
 
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, AbstractUnaryOp, GBType,
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
 using ..LibGraphBLAS
-export UnaryOp, @unop
+export unaryop, @unop
 
 export positioni, positionj, frexpx, frexpe
 
 using SpecialFunctions
 
-struct UnaryOp{F} <: AbstractUnaryOp
-    juliaop::F
-end
+const UNARYOPS = IdDict{Tuple{<:Base.Callable, DataType}, TypedUnaryOperator}()
 
-UnaryOp(op::TypedUnaryOperator) = op
-
-SuiteSparseGraphBLAS.juliaop(op::UnaryOp) = op.juliaop
-
-# fallback
-# This is a fallback since creating these every time is incredibly costly.
-function (op::UnaryOp)(::Type{T}) where {T}
-    resulttype = Base._return_type(op.juliaop, Tuple{T})
-    if resulttype <: Tuple
-        throw(ArgumentError("Inferred a tuple return type for function $(string(op.juliaop)) on type $T."))
+function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
+    return get!(UNARYOPS, (f, T)) do
+        TypedUnaryOperator(f, T)
     end
-    return TypedUnaryOperator(op.juliaop, T, resulttype)
 end
+
+unaryop(op::TypedUnaryOperator, x...) = op
+
+SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn
+
 function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     # Complex ops must always be GxB prefixed
     if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
@@ -51,7 +46,7 @@ function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
     end
     return quote
         $(constquote)
-        (::$(esc(:UnaryOp)){$(esc(:typeof))($(esc(jlfunc)))})(::Type{$(esc(insym))}) = $(esc(namesym))
+        $(esc(:(SuiteSparseGraphBLAS.UnaryOps.unaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type{$(esc(insym))}) = $(esc(namesym))
     end
 end
 
@@ -104,7 +99,7 @@ macro unop(expr...)
 end
 
 # all types
-@unop identity GrB_IDENTITY Bool=>Bool
+@unop identity GrB_IDENTITY T=>T
 @unop (-) GrB_AINV T=>T
 @unop inv GrB_MINV T=>T
 @unop one GxB_ONE T=>T
@@ -115,8 +110,13 @@ end
 @unop (~) GrB_BNOT I=>I
 
 # positionals
-@unop new positioni GxB_POSITIONI1 Any=>N
-@unop new positionj GxB_POSITIONJ1 Any=>N
+# dummy functions mostly for Base._return_type purposes.
+# 1 is the most natural value regardless.
+positioni(_) = 1::Int64
+positionj(_) = 1::Int64
+@unop positioni GxB_POSITIONI1 Any=>N
+@unop positionj GxB_POSITIONJ1 Any=>N
+
 
 #floats and complexes
 @unop sqrt GxB_SQRT FZ=>FZ
@@ -153,11 +153,42 @@ end
 @unop erf GxB_ERF FZ=>FZ
 @unop erfc GxB_ERFC FZ=>FZ
 # julia has frexp which returns (x, exp). This is split in SS:GrB to frexpx = frexp[1]; frexpe = frexp[2];
-@unop new frexpx GxB_FREXPX FZ=>FZ 
-@unop new frexpe GxB_FREXPE FZ=>FZ
+frexpx(x) = frexp[1]
+frexpe(x) = frexp[2]
+@unop frexpx GxB_FREXPX FZ=>FZ 
+@unop frexpe GxB_FREXPE FZ=>FZ
 @unop isinf GxB_ISINF FZ=>Bool
 @unop isnan GxB_ISNAN FZ=>Bool
 @unop isfinite GxB_ISFINITE FZ=>Bool
+
+# manually create promotion overloads.
+# Otherwise we will fallback to Julia functions which can be harmful.
+for f ∈ [
+    sqrt, log, exp, log10, log2, exp2, expm1, log1p, sin, cos, tan, 
+    asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh]
+    @eval begin
+        unaryop(::typeof($f), ::Type{UInt64}) = 
+            unaryop($f, Float64)
+        unaryop(::typeof($f), ::Type{<:Union{UInt32, UInt16, UInt8}}) =
+            unaryop($f, Float32)
+    end
+end
+
+# I think this list is correct.
+# It should be those functions which can be safely promoted to float
+# from Ints (including negatives).
+# This might be overzealous, and should be just combined with the list above.
+# I'd rather error on domain than create a bunch of NaNs.
+for f ∈ [
+    exp, exp2, expm1, sin, cos, tan, 
+    atan, sinh, cosh, tanh, asinh] 
+    @eval begin
+        unaryop(::typeof($f), ::Type{Int64}) = 
+            unaryop($f, Float64)
+        unaryop(::typeof($f), ::Type{<:Union{Int32, Int16, Int8}}) =
+            unaryop($f, Float32)
+    end
+end
 
 # Complex functions
 @unop conj GxB_CONJ Z=>Z
@@ -165,9 +196,6 @@ end
 @unop imag GxB_CIMAG Z=>F
 @unop angle GxB_CARG Z=>F
 end
-
-const UnaryUnion = Union{AbstractUnaryOp, TypedUnaryOperator}
-
 
 ztype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = O
 xtype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = I

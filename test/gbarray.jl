@@ -17,8 +17,8 @@
             x = sprand(Int64, 100, 100, 0.05)
             m = GBMatrix(x)
             @test m[1, 2] === nothing
-            @test m[:, 2] == GBMatrix(x[:, 2])
-            @test m[2, :] == copy(GBMatrix(x[2, :])')
+            @test m[:, 2] == GBVector(x[:, 2])
+            @test m[2, :] == copy(GBVector(x[2, :])')
             @test m[:, :] == m
             @test m[1:2:5, 1:2] == GBMatrix(x[1:2:5, 1:2])
             @test m[1:2:5, :] == GBMatrix(x[1:2:5, :])

@@ -1,22 +1,20 @@
 
 getaccum(::Nothing, t) = C_NULL
 getaccum(::Ptr{Nothing}, t) = C_NULL
-getaccum(op::Function, t) = BinaryOp(op)(t, t)
-getaccum(op::BinaryOp, t) = op(t, t)
-getaccum(op::Function, tleft, tright) = BinaryOp(op)(tleft, tright)
-getaccum(op::BinaryOp, tleft, tright) = op(tleft, tright)
-getaccum(op::TypedBinaryOperator, tleft, tright=tleft) = op
+getaccum(op::Function, t) = binaryop(op, t, t)
+getaccum(op::Function, tleft, tright) = binaryop(op, tleft, tright)
+getaccum(op::TypedBinaryOperator, x...) = op
 
-inferunarytype(::Type{T}, op::AbstractUnaryOp) where {T} = ztype(op(T))
-inferunarytype(::Type{T}, op) where {T} = inferunarytype(T, UnaryOp(op))
-inferunarytype(::Type{X}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z} = ztype(op)
+inferunarytype(::Type{T}, f::F) where {T, F<:Base.Callable} = Base._return_type(f, Tuple{T})
+inferunarytype(::Type{X}, op::TypedUnaryOperator) where X = ztype(op)
 
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractBinaryOp) where {T, U} = ztype(op(T, U))
-inferbinarytype(::Type{T}, ::Type{U}, op) where {T, U} = inferbinarytype(T, U, BinaryOp(op))
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop)
+inferbinarytype(::Type{T}, ::Type{U}, f::F) where {T, U, F<:Base.Callable} = Base._return_type(f, Tuple{T, U})
+# Overload for `first`, which will give Vector{T} normally:
+inferbinarytype(::Type{T}, ::Type{U}, f::typeof(first)) where {T, U} = T
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop.fn)
 #semirings are technically binary so we'll just overload that
-inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, Semiring(op))
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)
+inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, semiring(op, T, U))
+inferbinarytype(::Type{T}, ::Type{U}, op::TypedSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)
 
 inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = ztype(op)
 inferbinarytype(::Type{X}, ::Type{X}, op::TypedMonoid{F, X, Z}) where {F, X, Z} = ztype(op)

@@ -26,6 +26,10 @@ function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
     return TypedUnaryOperator{F, X, Z}(false, false, string(fn), LibGraphBLAS.GrB_UnaryOp(), fn)
 end
 
+function TypedUnaryOperator(fn::F, ::Type{X}) where {F, X}
+    return TypedUnaryOperator(fn, X, Base._return_type(fn, Tuple{X}))
+end
+
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
     # We can lazily load the built-ins since they are already constants. 
     # Could potentially do this with UDFs, but probably not worth the effort.
@@ -69,6 +73,10 @@ mutable struct TypedBinaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
 end
 function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
     return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), LibGraphBLAS.GrB_BinaryOp(), fn)
+end
+
+function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}) where {F, X, Y}
+    return TypedBinaryOperator(fn, X, Y, Base._return_type(fn, Tuple{X, Y}))
 end
 
 function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
@@ -168,12 +176,17 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Monoid}, op::TypedMonoid{F,
     end
 end
 
+# TODO: Determine TERMINAL::T, T ∈ Z always, or if T can be outside Z.
 function _builtinMonoid(typestr, binaryop::TypedBinaryOperator{F, Z, Z, Z}, identity, terminal::T) where {F, Z, T}
     return TypedMonoid(true, false, typestr, LibGraphBLAS.GrB_Monoid(), binaryop, identity, terminal)
 end
 
 function TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Z, terminal::T) where {F, Z, T}
     return TypedMonoid(false, false, string(binop.fn), LibGraphBLAS.GrB_Monoid(), binop, identity, terminal)
+end
+
+function TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity, terminal::T) where {F, Z, T}
+    return TypedMonoid(false, false, string(binop.fn), LibGraphBLAS.GrB_Monoid(), binop, convert(Z, identity), terminal)
 end
 
 #Enable use of functions for determining identity and terminal values. Could likely be pared down to 2 functions somehow.

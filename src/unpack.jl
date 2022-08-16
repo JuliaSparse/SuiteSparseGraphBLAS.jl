@@ -123,10 +123,10 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
             colvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)) do x
                 _jlfree(x)
             end
-            rowvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(rowidx[]), rowidxsize[])) do x
+            rowvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)) do x
                 _jlfree(x)
             end
-            v = finalizer(unsafe_wrap(Array, Ptr{T}(values[]), nnz)) do x
+            v = finalizer(unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)) do x
                 _jlfree(x)
             end
             x = (colvector, rowvector, v)

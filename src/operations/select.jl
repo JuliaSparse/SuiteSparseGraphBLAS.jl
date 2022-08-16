@@ -4,7 +4,7 @@
 function select!(
     op,
     C::GBVecOrMat,
-    A::GBArray,
+    A::GBArrayOrTranspose,
     thunk = nothing;
     mask = nothing,
     accum = nothing,
@@ -22,13 +22,13 @@ function select!(
     return C
 end
 
-function select!(op, A::GBArray, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
+function select!(op, A::GBArrayOrTranspose, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
     return select!(op, A, A, thunk; mask, accum, desc)
 end
 
 """
-    select(op::Union{Function, SelectUnion}, A::GBArray; kwargs...)::GBArray
-    select(op::Union{Function, SelectUnion}, A::GBArray, thunk; kwargs...)::GBArray
+    select(op::Union{Function, SelectUnion}, A::GBArrayOrTranspose; kwargs...)::GBArrayOrTranspose
+    select(op::Union{Function, SelectUnion}, A::GBArrayOrTranspose, thunk; kwargs...)::GBArrayOrTranspose
 
 Return a `GBArray` whose elements satisfy the predicate defined by `op`.
 Some SelectOps or functions may require an additional argument `thunk`, for use in
@@ -37,13 +37,13 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 
 # Arguments
 - `op::Union{Function, SelectUnion}`: A select operator from the SelectOps submodule.
-- `A::GBArray`
+- `A::GBArrayOrTranspose`
 - `thunk::Union{GBScalar, nothing, valid_union}`: Optional value used to evaluate `op`.
 
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask which determines the output
     pattern.
-- `accum::Union{Nothing, AbstractBinaryOp} = nothing`: optional binary accumulator
+- `accum::Union{Nothing} = nothing`: optional binary accumulator
     operation where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc = nothing`
 
@@ -52,7 +52,7 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 """
 function select(
     op,
-    A::GBArray,
+    A::GBArrayOrTranspose,
     thunk = nothing;
     mask = nothing,
     accum = nothing,
@@ -65,7 +65,7 @@ function select(
     return C
 end
 
-LinearAlgebra.tril(A::GBArray, k::Integer = 0) = select(tril, A, k)
-LinearAlgebra.triu(A::GBArray, k::Integer = 0) = select(triu, A, k)
-SparseArrays.dropzeros(A::GBArray) = select(nonzeros, A)
-SparseArrays.dropzeros!(A::GBArray) = select!(nonzeros, A)
+LinearAlgebra.tril(A::GBArrayOrTranspose, k::Integer = 0) = select(tril, A, k)
+LinearAlgebra.triu(A::GBArrayOrTranspose, k::Integer = 0) = select(triu, A, k)
+SparseArrays.dropzeros(A::GBArrayOrTranspose) = select(nonzeros, A)
+SparseArrays.dropzeros!(A::GBArrayOrTranspose) = select!(nonzeros, A)

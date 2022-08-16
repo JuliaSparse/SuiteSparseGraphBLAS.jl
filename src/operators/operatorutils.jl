@@ -15,7 +15,7 @@ function optype(atype, btype)
         return promote_type(atype, btype)
     end
 end
-optype(::GBArray{T}, ::GBArray{U}) where {T, U} = optype(T, U)
+optype(::GBArrayOrTranspose{T}, ::GBArrayOrTranspose{U}) where {T, U} = optype(T, U)
 
 const Utypes = (:UInt8, :UInt16, :UInt32, :UInt64)
 const Itypes = (:Int8, :Int16, :Int32, :Int64, :UInt8, :UInt16, :UInt32, :UInt64)

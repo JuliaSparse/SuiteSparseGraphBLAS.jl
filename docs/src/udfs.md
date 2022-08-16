@@ -7,8 +7,8 @@ GraphBLAS supports users to supply functions as operators. Constructors exported
 
 - `UnaryOp(name::String, fn::Function, [type | types | ztype, xtype | ztypes, xtypes])`
 - `BinaryOp(name::String, fn::Function, [type | types | ztype, xtype | ztypes, xtypes])`
-- `Monoid(name::String, binop::Union{AbstractBinaryOp, GrB_BinaryOp}, id::T, terminal::T = nothing)`: all types must be the same.
-- `Semiring(name::String, add::[GrB_Monoid | AbstractMonoid], mul::[GrB_BinaryOp | AbstractBinaryOp])`
+- `Monoid(name::String, binop::Union{GrB_BinaryOp}, id::T, terminal::T = nothing)`: all types must be the same.
+- `Semiring(name::String, add::[GrB_Monoid | AbstractMonoid], mul::GrB_BinaryOp)`
 
 `GrB_` prefixed arguments are typed operators, such as the result of `UnaryOps.COS[Float64]`.
 Type arguments may be single types or vectors of types.

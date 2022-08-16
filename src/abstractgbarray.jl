@@ -1,11 +1,11 @@
 # AbstractGBArray functions:
-function SparseArrays.nnz(A::AbsGBArrayOrTranspose)
+function SparseArrays.nnz(A::GBArrayOrTranspose)
     nvals = Ref{LibGraphBLAS.GrB_Index}()
     @wraperror LibGraphBLAS.GrB_Matrix_nvals(nvals, gbpointer(parent(A)))
     return Int64(nvals[])
 end
 
-Base.eltype(::Type{AbstractGBArray{T}}) where{T} = T
+Base.eltype(::Type{GBArrayOrTranspose{T}}) where{T} = T
 
 """
     empty!(v::GBVector)
@@ -14,32 +14,32 @@ Base.eltype(::Type{AbstractGBArray{T}}) where{T} = T
 Clear all the entries from the GBArray.
 Does not modify the type or dimensions.
 """
-function Base.empty!(A::AbsGBArrayOrTranspose)
+function Base.empty!(A::GBArrayOrTranspose)
     @wraperror LibGraphBLAS.GrB_Matrix_clear(gbpointer(parent(A)))
     return A
 end
 
-function Base.Matrix(A::AbstractGBMatrix)
+function Base.Matrix(A::GBArrayOrTranspose)
     sparsity = sparsitystatus(A)
     T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
     return unpack!(T, Dense())
 end
 
-function Base.Vector(v::AbstractGBVector)
+function Base.Vector(v::GBVectorOrTranspose)
     sparsity = sparsitystatus(v)
     T = copy(v) # avoid densifying v and destroying v.
     return unpack!(T, Dense())
 end
 
-function SparseArrays.SparseMatrixCSC(A::AbstractGBArray)
+function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
     sparsity = sparsitystatus(A)
     T = copy(A) # avoid changing sparsity of A and destroying it.
     return unpack!(T, SparseMatrixCSC)
 end
 
-function SparseArrays.SparseVector(v::AbstractGBVector)
+function SparseArrays.SparseVector(v::GBVectorOrTranspose)
     sparsity = sparsitystatus(v)
-    T = copy(A) # avoid changing sparsity of v and destroying it.
+    T = copy(v) # avoid changing sparsity of v and destroying it.
     return unpack!(T, SparseVector)
 end
 
@@ -94,7 +94,7 @@ for T ∈ valid_vec
         function build(A::AbstractGBMatrix{$T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{$T};
                 combine = +
             )
-            combine = BinaryOp(combine)($T)
+            combine = binaryop(combine, $T)
             I isa Vector || (I = collect(I))
             J isa Vector || (J = collect(J))
             X isa Vector || (X = collect(X))
@@ -181,7 +181,7 @@ function build(
         A::AbstractGBMatrix{T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{T};
         combine = +
     ) where {T}
-    combine = BinaryOp(combine)(T)
+    combine = binaryop(combine, T)
     I isa Vector || (I = collect(I))
     J isa Vector || (J = collect(J))
     X isa Vector || (X = collect(X))
@@ -314,7 +314,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: mask where
     `size(M) == size(A)`.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 
@@ -325,7 +325,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
 function subassign!(
-    C::AbstractGBArray, A::AbstractGBArray, I, J;
+    C::AbstractGBArray, A::GBArrayOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -397,7 +397,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: mask where
     `size(M) == size(C)`.
-- `accum::Union{Nothing, Function, AbstractBinaryOp} = nothing`: binary accumulator operation
+- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
     where `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 
@@ -408,7 +408,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`subassign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(C) != size(mask)`.
 """
 function assign!(
-    C::AbstractGBMatrix, A::AbstractGBVector, I, J;
+    C::AbstractGBMatrix, A::GBArrayOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -417,16 +417,16 @@ function assign!(
     I = decrement!(I)
     J = decrement!(J)
     # we know A isn't adjoint/transpose on input
-    desc = _handledescriptor(desc)
-    @wraperror LibGraphBLAS.GrB_Matrix_assign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(A), I, ni, J, nj, desc)
+    desc = _handledescriptor(desc; in1=A)
+    @wraperror LibGraphBLAS.GrB_Matrix_assign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
     increment!(I)
     increment!(J)
     return A
 end
 
-function assign!(C::AbstractGBArray, x, I, J;
+function assign!(C::AbstractGBArray{T}, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
-)
+) where T
     x = typeof(x) === T ? x : convert(T, x)
     I, ni = idx(I)
     J, nj = idx(J)
@@ -467,7 +467,7 @@ end
 Base.eltype(::Type{AbstractGBVector{T}}) where{T} = T
 
 function Base.deleteat!(v::AbstractGBVector, i)
-    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(gbpointer(v), decrement!(i), 1)
+    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(gbpointer(v), decrement!(i), 0)
     return v
 end
 
@@ -520,7 +520,7 @@ for T ∈ valid_vec
             I isa Vector || (I = collect(I))
             X isa Vector || (X = collect(X))
             length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-            combine = BinaryOp(combine)($T)
+            combine = binaryop(combine, $T)
             decrement!(I)
             @wraperror LibGraphBLAS.$func(
                 Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(v)), 
@@ -606,7 +606,7 @@ function build(v::AbstractGBVector{T}, I::Vector{<:Integer}, X::Vector{T}; combi
     I isa Vector || (I = collect(I))
     X isa Vector || (X = collect(X))
     length(X) == length(I) || DimensionMismatch("I and X must have the same length")
-    combine = BinaryOp(combine)(T)
+    combine = binaryop(combine, T)
     decrement!(I)
     @wraperror LibGraphBLAS.GrB_Matrix_build_UDT(
         Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(v)), 
