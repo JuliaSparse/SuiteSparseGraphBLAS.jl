@@ -39,7 +39,7 @@ end
 
 function SparseArrays.SparseVector(v::GBVectorOrTranspose)
     sparsity = sparsitystatus(v)
-    T = copy(A) # avoid changing sparsity of v and destroying it.
+    T = copy(v) # avoid changing sparsity of v and destroying it.
     return unpack!(T, SparseVector)
 end
 
@@ -325,7 +325,7 @@ Assign a submatrix of `A` to `C`. Equivalent to [`assign!`](@ref) except that
 - `GrB_DIMENSION_MISMATCH`: If `size(A) != (max(I), max(J))` or `size(A) != size(mask)`.
 """
 function subassign!(
-    C::AbstractGBArray, A::AbstractGBArray, I, J;
+    C::AbstractGBArray, A::GBArrayOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
     I, ni = idx(I)
@@ -467,7 +467,7 @@ end
 Base.eltype(::Type{AbstractGBVector{T}}) where{T} = T
 
 function Base.deleteat!(v::AbstractGBVector, i)
-    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(gbpointer(v), decrement!(i), 1)
+    @wraperror LibGraphBLAS.GrB_Matrix_removeElement(gbpointer(v), decrement!(i), 0)
     return v
 end
 
