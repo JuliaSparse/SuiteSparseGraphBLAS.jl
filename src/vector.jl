@@ -31,6 +31,12 @@ function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; combine = +, nrows
     return v
 end
 
+function GBVector{T}(
+    I::AbstractVector, X::AbstractVector{Told}; 
+    combine = +, nrows = maximum(I), fill = nothing
+) where {T, U, Told}
+    return GBVector(I, T.(X); combine, nrows, fill)
+end
 #iso valued constructors.
 """
     GBVector(I, x; nrows = maximum(I) fill = nothing)

@@ -39,6 +39,13 @@ function GBMatrix(
     return A
 end
 
+function GBMatrix{T}(
+    I::AbstractVector, J::AbstractVector, X::AbstractVector{Told}; 
+    combine = +, nrows = maximum(I), ncols = maximum(J), fill = nothing
+) where {T, Told}
+    return GBMatrix(I, J, T.(X); combine, ncols, nrows, fill)
+end
+
 #iso constructors
 """
     GBMatrix(I, J, x; nrows = maximum(I), ncols = maximum(J); fill = nothing)
