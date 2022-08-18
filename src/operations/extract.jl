@@ -116,15 +116,18 @@ function extract(
     return extract!(C, A, :, J; mask, accum, desc)
 end
 
-# TODO: FINISH THIS WITH GxB_Matrix_reshape!!!
-# function extract(
-#     A::GBMatrixOrTranspose, I::Number, ::Colon;
-#     mask = nothing, accum = nothing, desc = nothing
-# )
-#     _, Jlen = _outlength(A, I, :)
-#     C = similar(A, 1, Jlen)
-#     return extract!(C, A, I, :; mask, accum, desc)
-# end
+function extract(
+    A::GBMatrixOrTranspose{T}, I::Number, ::Colon;
+    mask = nothing, accum = nothing, desc = nothing
+) where {T}
+    _, Jlen = _outlength(A, I, :)
+    C = similar(A, Jlen)
+    # TODO, better abstractions here.
+    @wraperror LibGraphBLAS.GxB_Matrix_reshape(C, true, 1, Jlen, C_NULL)
+    extract!(C, A, I, :; mask, accum, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_reshape(C, true, Jlen, 1, C_NULL)
+    return C
+end
 
 function extract!(
     w::AbstractGBVector, u::AbstractGBVector, I;

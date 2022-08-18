@@ -43,6 +43,58 @@ function SparseArrays.SparseVector(v::GBVectorOrTranspose)
     return unpack!(T, SparseVector)
 end
 
+function reshape!(
+    A::AbstractGBMatrix, nrows, ncols; 
+    bycol::Bool = true, desc = nothing
+)
+    desc = _handledescriptor(desc)
+    lenA = length(A)
+    nrows isa Colon && ncols isa Colon && throw(
+        ArgumentError("nrows and ncols may not both be Colon"))
+    nrows isa Colon && (nrows = lenA ÷ ncols)
+    ncols isa Colon && (ncols = lenA ÷ nrows)
+    @wraperror LibGraphBLAS.GxB_Matrix_reshape(
+        gbpointer(A), bycol, nrows, ncols, desc
+    )
+    return A
+end
+reshape!(A::AbstractGBMatrix, dims...; bycol = true) = 
+    reshape!(A, dims...; bycol)
+reshape!(A::AbstractGBMatrix, n; bycol = true) =
+    reshape!(A, n, 1; bycol)
+function Base.reshape(
+    A::AbstractGBMatrix, nrows, ncols; 
+    bycol = true, desc = nothing)
+    desc = _handledescriptor(desc)
+    lenA = length(A)
+    nrows isa Colon && ncols isa Colon && throw(
+        ArgumentError("nrows and ncols may not both be Colon"))
+    nrows isa Colon && (nrows = lenA ÷ ncols)
+    ncols isa Colon && (ncols = lenA ÷ nrows)
+    C = Ref{LibGraphBLAS.GrB_Matrix}()
+    @wraperror LibGraphBLAS.GxB_Matrix_reshapeDup(
+        C, gbpointer(A), 
+        bycol, nrows, ncols, desc
+    )
+    # TODO, do better. This is ugly and allocates twice.
+    out = similar(A)
+    out.p = finalizer(C) do ref
+        @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
+    end
+    return out
+end
+Base.reshape(A::AbstractGBMatrix, dims::Tuple{Vararg{Int64, N}}; bycol = true) where N =
+    reshape(A, dims...; bycol)
+Base.reshape(A::AbstractGBMatrix, dims::Tuple{Vararg{Union{Colon, Int64}}}; bycol = true) =
+    reshape(A, dims...; bycol)
+Base.reshape(
+    A::AbstractGBMatrix, 
+    dims::Tuple{Union{Integer, Base.OneTo}, Vararg{Union{Integer, Base.OneTo}}};
+    bycol = true
+) = reshape(A, dims...; bycol)
+
+Base.reshape(A::AbstractGBMatrix, n; bycol = true) = reshape(A, n, 1; bycol)
+
 # AbstractGBMatrix functions:
 #############################
 
