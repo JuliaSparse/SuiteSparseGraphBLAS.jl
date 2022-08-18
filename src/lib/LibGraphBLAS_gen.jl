@@ -2932,6 +2932,14 @@ function GxB_deserialize_type_name(type_name, blob, blob_size)
     ccall((:GxB_deserialize_type_name, libgraphblas), GrB_Info, (Ptr{Cchar}, Ptr{Cvoid}, GrB_Index), type_name, blob, blob_size)
 end
 
+function GxB_Matrix_reshape(C, by_col, nrows_new, ncols_new, desc)
+    ccall((:GxB_Matrix_reshape, libgraphblas), GrB_Info, (GrB_Matrix, Bool, GrB_Index, GrB_Index, GrB_Descriptor), C, by_col, nrows_new, ncols_new, desc)
+end
+
+function GxB_Matrix_reshapeDup(C, A, by_col, nrows_new, ncols_new, desc)
+    ccall((:GxB_Matrix_reshapeDup, libgraphblas), GrB_Info, (Ptr{GrB_Matrix}, GrB_Matrix, Bool, GrB_Index, GrB_Index, GrB_Descriptor), C, A, by_col, nrows_new, ncols_new, desc)
+end
+
 function GxB_Iterator_new(iterator)
     ccall((:GxB_Iterator_new, libgraphblas), GrB_Info, (Ptr{GxB_Iterator},), iterator)
 end
@@ -3007,11 +3015,11 @@ end
 
 const GxB_IMPLEMENTATION_NAME = "SuiteSparse:GraphBLAS"
 
-const GxB_IMPLEMENTATION_DATE = "May 20, 2022"
+const GxB_IMPLEMENTATION_DATE = "Aug 8, 2022"
 
 const GxB_IMPLEMENTATION_MAJOR = 7
 
-const GxB_IMPLEMENTATION_MINOR = 1
+const GxB_IMPLEMENTATION_MINOR = 2
 
 const GxB_IMPLEMENTATION_SUB = 0
 
@@ -3100,6 +3108,8 @@ const GxB_COMPRESSION_DEFAULT = 0
 const GxB_COMPRESSION_LZ4 = 1000
 
 const GxB_COMPRESSION_LZ4HC = 2000
+
+const GxB_COMPRESSION_ZSTD = 3000
 
 const GxB_COMPRESSION_INTEL = 1000000
 
