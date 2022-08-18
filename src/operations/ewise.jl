@@ -32,7 +32,8 @@ function emul!(
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
-    size(C) == size(A) == size(B) || throw(DimensionMismatch())
+    size(C, 1) == size(A, 1) == size(B, 1) &&
+    size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
@@ -76,7 +77,7 @@ function emul(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, size(A); fill=_promotefill(parent(A).fill, parent(B).fill))
+    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A).fill, parent(B).fill))
     return emul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -116,7 +117,8 @@ function eadd!(
 )
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2 = B)
-    size(C) == size(A) == size(B) || throw(DimensionMismatch())
+    size(C, 1) == size(A, 1) == size(B, 1) &&
+    size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
@@ -159,7 +161,7 @@ function eadd(
     desc = nothing
 )
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, size(A); fill=_promotefill(parent(A).fill, parent(B).fill))
+    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A).fill, parent(B).fill))
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
@@ -200,7 +202,8 @@ function eunion!(
 ) where {T, U}
     mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2 = B)
-    size(C) == size(A) == size(B) || throw(DimensionMismatch())
+    size(C, 1) == size(A, 1) == size(B, 1) &&
+    size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, eltype(A), eltype(B))
     accum = getaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
@@ -243,7 +246,7 @@ function eunion(
     desc = nothing
 ) where {T, U}
     t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, size(A); fill=_promotefill(parent(A).fill, parent(B).fill))
+    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A).fill, parent(B).fill))
     return eunion!(C, A, α, B, β, op; mask, accum, desc)
 end
 

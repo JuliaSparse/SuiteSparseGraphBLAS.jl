@@ -33,3 +33,15 @@ function idx(I)
             Union{UnitRange, StepRange, Vector, Integer}, typeof(I)))
     end
 end
+
+# This function assumes that szA and szB are
+# technically equal and that
+# 1 <= length(szA | szB) <= 2
+# size checks should be done elsewhere.
+function _combinesizes(A, B)
+    if A isa AbstractVector || B isa AbstractVector
+        return (size(A, 1), size(A, 2))
+    else
+        return size(A)
+    end
+end
