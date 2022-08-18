@@ -69,8 +69,8 @@ function extract!(
     I = decrement!(I)
     J = decrement!(J)
     @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
-    I isa Vector && increment!(I)
-    J isa Vector && increment!(J)
+    I isa AbstractVector && increment!(I)
+    J isa AbstractVector && increment!(J)
     return C
 end
 """
@@ -138,7 +138,7 @@ function extract!(
     desc = _handledescriptor(desc)
     mask === nothing && (mask = C_NULL)
     @wraperror LibGraphBLAS.GrB_Matrix_extract(gbpointer(w), mask, getaccum(accum, eltype(w)), gbpointer(u), I, ni, UInt64[0], 1, desc)
-    I isa Vector && increment!(I)
+    I isa AbstractVector && increment!(I)
     return w
 end
 

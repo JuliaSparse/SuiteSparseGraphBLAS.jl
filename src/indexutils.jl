@@ -39,7 +39,8 @@ end
 # 1 <= length(szA | szB) <= 2
 # size checks should be done elsewhere.
 function _combinesizes(A, B)
-    if A isa AbstractVector || B isa AbstractVector
+    if (A isa AbstractVector && B isa AbstractMatrix) ||
+        (B isa AbstractVector && A isa AbstractMatrix)
         return (size(A, 1), size(A, 2))
     else
         return size(A)

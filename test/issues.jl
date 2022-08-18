@@ -5,7 +5,7 @@
         A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
         @test A[:, 2] isa GBVector
         @test A[2, :] isa GBVector
-        @test emul(A[:, 2], B) == GBVector([1], [1])
+        @test emul(A[:, 2], B) == GBVector([1], [1], nrows = 7)
 
         # test that GBMatrix <ewise> GBVector is allowed
         # with correct sizes:
@@ -43,3 +43,4 @@
         @test_throws ArgumentError GBMatrix{Int, Int}(10, 10)
         @test_throws ArgumentError GBVector{Int, Int}(10)
     end
+end
