@@ -68,3 +68,10 @@ LinearAlgebra.adjoint(A::GBVecOrMat) = transpose(A)
 #arrrrgh, type piracy.
 # TODO: avoid this if possible
 LinearAlgebra.transpose(::Nothing) = nothing
+
+# fix unsafe_converts to be safer for GrB types.
+# should fix at least unsafe passing of `mask`.
+# Base.unsafe_convert(::Type{Ptr{T}}, A::Adjoint{<:Real, <:AbstractVecOrMat}) where {T} = 
+# Base.unsafe_convert(Ptr{T}, A.parent)
+Base.unsafe_convert(::Type{Ptr{T}}, A::Transpose{<:Any, <:AbstractGBArray}) where {T} = 
+Base.unsafe_convert(Ptr{T}, copy(A))
