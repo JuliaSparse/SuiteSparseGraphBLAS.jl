@@ -39,6 +39,8 @@ function Base.reduce(
         reduce!(op, w, A; desc, accum, mask)
         return w
     elseif dims == (1,2) || dims == Colon() || A isa GBVectorOrTranspose
+        mask !== nothing && throw(
+            ArgumentError("Reduction to a scalar does not support masking."))
         if init === nothing
             c = GBScalar{typeout}()
         else

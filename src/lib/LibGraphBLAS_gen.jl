@@ -1,6 +1,7 @@
 module LibGraphBLAS
 import ..libgraphblas
 to_c_type(t::Type) = t
+to_c_type(::Type{Base.RefValue{T}}) where T = Base.Ptr{T}
 to_c_type_pairs(va_list) = map(enumerate(to_c_type.(va_list))) do (ind, type)
     :(va_list[$ind]::$type)
 end

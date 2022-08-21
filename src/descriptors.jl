@@ -39,69 +39,49 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Descriptor}, d::Descriptor) = d.p
 Base.:+(a::LibGraphBLAS.GrB_Desc_Value, b::LibGraphBLAS.GrB_Desc_Value) = 
     Integer(a) + Integer(b)
 
+function symtodescfield(sym::Symbol)
+    sym === :replace_output && return LibGraphBLAS.GrB_OUTP
+    (sym === :complement_mask || sym === :structural_mask) && 
+        return LibGraphBLAS.GrB_MASK
+    sym === :transpose_input1 && return LibGraphBLAS.GrB_INP0
+    sym === :transpose_input2 && return LibGraphBLAS.GrB_INP1
+    sym === :nthreads && return LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS
+    sym === :chunk && return LibGraphBLAS.GxB_DESCRIPTOR_CHUNK
+    sym === :sort && return LibGraphBLAS.GxB_SORT
+    throw(ArgumentError("$sym is not a valid Descriptor field"))
+end
+function descfieldtype(sym::Symbol)
+    if sym ∈ [:replace_output, :transpose_input1, :transpose_input2]
+        return LibGraphBLAS.GrB_Desc_Value
+    elseif sym ∈ [:chunk]
+        return Float64
+    else
+        return Int32
+    end
+end
+function Desc_get(d::Descriptor, field::Symbol)
+    o = Ref{descfieldtype(field)}()
+    @wraperror LibGraphBLAS.GxB_Desc_get(d, symtodescfield(field), o)
+    return o[]
+end
+
 function Base.getproperty(d::Descriptor, s::Symbol)
     if s === :p
         return getfield(d, s)
-    elseif s === :replace_output
-        x = LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GrB_OUTP)
-        if x == LibGraphBLAS.GrB_REPLACE
-            return true
-        else
-            return false
-        end
+    end
+    x = Desc_get(d, s)
+    if s === :replace_output
+        return x == LibGraphBLAS.GrB_REPLACE
     elseif s === :complement_mask
-        x = LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GrB_MASK)
-        if x == LibGraphBLAS.GrB_COMP || x == (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
-            return true
-        else
-            return false
-        end
+        return x == Integer(LibGraphBLAS.GrB_COMP) || x == 
+            (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
     elseif s === :structural_mask
-        x = LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GrB_MASK)
-        if x == LibGraphBLAS.GrB_STRUCTURE || x == (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
-            return true
-        else
-            return false
-        end
-    elseif s === :transpose_input1
-        x = LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GrB_INP0)
-        if x == LibGraphBLAS.GrB_TRAN
-            return true
-        else
-            return false
-        end
-    elseif s === :transpose_input2
-        x = LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GrB_INP1)
-        if x == LibGraphBLAS.GrB_TRAN
-            return true
-        else
-            return false
-        end
-    elseif s === :nthreads
-        return LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS)
-    elseif s === :chunk
-        return LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GxB_DESCRIPTOR_CHUNK)
-    elseif s === :sort
-        if LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GxB_SORT) == LibGraphBLAS.GxB_DEFAULT
-            return false
-        else
-            return true
-        end
-    elseif s === :axb_method
-        x = LibGraphBLAS.GxB_Desc_get(d, LibGraphBLAS.GxB_AxB_METHOD)
-        if x == LibGraphBLAS.GxB_AxB_GUSTAVSON
-            return :gustavson
-        elseif x == LibGraphBLAS.GxB_AxB_DOT
-            return :dot
-        elseif x == LibGraphBLAS.AxB_HASH
-            return :hash
-        elseif x == LibGraphBLAS.GxB_AxB_SAXPY
-            return :saxpy
-        else
-            return :default
-        end
-    else
-        return getfield(d, s)
+        return x == Integer(LibGraphBLAS.GrB_STRUCTURE) || x == 
+            (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
+    elseif s === :transpose_input1 || s === :transpose_input2
+        return x == LibGraphBLAS.GrB_TRAN
+    elseif s === :nthreads || s === :chunk || s === :sort
+        return x
     end
 end
 
