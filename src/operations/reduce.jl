@@ -29,17 +29,17 @@ function Base.reduce(
         typeout = eltype(A)
     end
 
-    if dims == 2 && !(A isa GBVectorOrTranspose)
+    if dims == 2
         w = similar(A, typeout, size(A, 1))
         reduce!(op, w, A; desc, accum, mask)
         return w
-    elseif dims == 1 && !(A isa GBVectorOrTranspose)
+    elseif dims == 1
         desc.transpose_input1 = true
         w = similar(A, typeout, size(A, 2))
         reduce!(op, w, A; desc, accum, mask)
         return w
     elseif dims == (1,2) || dims == Colon() || A isa GBVectorOrTranspose
-        mask !== nothing && throw(
+        mask != C_NULL && throw(
             ArgumentError("Reduction to a scalar does not support masking."))
         if init === nothing
             c = GBScalar{typeout}()
