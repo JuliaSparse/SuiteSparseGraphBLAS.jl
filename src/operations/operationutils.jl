@@ -1,10 +1,3 @@
-
-getaccum(::Nothing, t) = C_NULL
-getaccum(::Ptr{Nothing}, t) = C_NULL
-getaccum(op::Function, t) = binaryop(op, t, t)
-getaccum(op::Function, tleft, tright) = binaryop(op, tleft, tright)
-getaccum(op::TypedBinaryOperator, x...) = op
-
 inferunarytype(::Type{T}, f::F) where {T, F<:Base.Callable} = Base._return_type(f, Tuple{T})
 inferunarytype(::Type{X}, op::TypedUnaryOperator) where X = ztype(op)
 
@@ -20,9 +13,54 @@ inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X, Y, Z}) where
 inferbinarytype(::Type{X}, ::Type{X}, op::TypedMonoid{F, X, Z}) where {F, X, Z} = ztype(op)
 inferbinarytype(::Type{X}, ::Type{Y}, op::TypedSemiring{F, X, Y, Z}) where {F, X, Y, Z} = ztype(op)
 inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X2, Y2, Z}) where {F, X, X2, Y, Y2, Z} = ztype(op)
-function _handlenothings(kwargs...)
-    return (x === nothing ? C_NULL : x for x in kwargs)
+
+struct Complement{T}
+    parent::T
 end
+
+Complement(A::T) where {T<:GBArrayOrTranspose}= Complement{T}(A)
+Base.:~(A::T) where {T<:GBArrayOrTranspose} = Complement(A)
+Base.parent(C::Complement) = C.parent
+
+struct Structural{T}
+    parent::T
+end
+
+Structural(A::T) where {T<:GBArrayOrTranspose}= Structural{T}(A)
+Base.parent(C::Structural) = C.parent
+
+_handlemask!(desc, mask::Nothing) = C_NULL
+_handlemask!(desc, mask::AbstractGBArray) = mask
+function _handlemask!(desc, mask)
+    while !(mask isa AbstractGBArray)
+        if mask isa Transpose
+            mask = copy(mask)
+        elseif mask isa Complement
+            mask = parent(mask)
+            desc.complement_mask = true
+        elseif mask isa Structural
+            mask = parent(mask)
+            desc.structural_mask = true
+        end
+    end
+    return mask
+end
+
+
+_handleaccum(::Nothing, t) = C_NULL
+_handleaccum(::Ptr{Nothing}, t) = C_NULL
+_handleaccum(op::Function, t) = binaryop(op, t, t)
+_handleaccum(op::Function, tleft, tright) = binaryop(op, tleft, tright)
+_handleaccum(op::TypedBinaryOperator, x...) = op
+
+function _kwargtoc(desc, x)
+    x.second === nothing && return C_NULL
+    if x.first === :mask
+        return _handlemask!(desc, x.second)
+    end
+    return x.second
+end
+    
 
 """
     xtype(op::GrBOp)::DataType

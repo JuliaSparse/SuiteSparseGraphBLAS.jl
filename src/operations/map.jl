@@ -2,10 +2,10 @@ function apply!(
     op, C::GBVecOrMat, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
+    mask = _handlemask!(desc, mask)
     op = unaryop(op, eltype(A))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GrB_Matrix_apply(gbpointer(C), mask, accum, op, gbpointer(parent(A)), desc)
     return C
 end
@@ -52,10 +52,10 @@ function apply!(
     op, C::GBVecOrMat, x, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in2=A)
+    mask = _handlemask!(desc, mask)
     op = binaryop(op, eltype(A), typeof(x))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(gbpointer(C), mask, accum, op, GBScalar(x), gbpointer(parent(A)), desc)
     return C
 end
@@ -79,10 +79,10 @@ function apply!(
     op, C::GBVecOrMat, A::GBArrayOrTranspose{T}, x;
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
+    mask = _handlemask!(desc, mask)
     op = binaryop(op, eltype(A), typeof(x))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp2nd(gbpointer(C), mask, accum, op, gbpointer(parent(A)), GBScalar(x), desc)
     return C
 end

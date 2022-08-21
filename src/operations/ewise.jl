@@ -30,12 +30,12 @@ function emul!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
+    mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, eltype(A), eltype(B))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
         return C
@@ -115,12 +115,13 @@ function eadd!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum = _handlenothings(mask, accum)
+
     desc = _handledescriptor(desc; in1=A, in2 = B)
+    mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, eltype(A), eltype(B))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
         return C
@@ -200,12 +201,13 @@ function eunion!(
     accum = nothing,
     desc = nothing
 ) where {T, U}
-    mask, accum = _handlenothings(mask, accum)
+    
     desc = _handledescriptor(desc; in1=A, in2 = B)
+    mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, eltype(A), eltype(B))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(gbpointer(C), mask, accum, op, gbpointer(parent(A)), GBScalar(α), gbpointer(parent(B)), GBScalar(β), desc)
         return C

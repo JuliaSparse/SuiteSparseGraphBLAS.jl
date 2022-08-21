@@ -43,4 +43,15 @@
         @test_throws ArgumentError GBMatrix{Int, Int}(10, 10)
         @test_throws ArgumentError GBVector{Int, Int}(10)
     end
+
+    @testset "#85" begin
+        A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
+        B = GBVector([3, 4, 5, 6, 7], [3, 4, 5, 6, 7])
+        x = subassign!(A, B', 3, :);
+        @test_broken x == GBVector([3,4,5,6,7], [3,4,5,6,7])'
+        @test A[3, 3] == 3
+        B = GBVector([1, 2, 3, 4, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
+        @test subassign!(A, B', 3, :; mask=B') == B'
+        @test A[3,7] == 7
+    end
 end

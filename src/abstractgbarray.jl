@@ -380,14 +380,29 @@ function subassign!(
     C::AbstractGBArray, A::GBArrayOrTranspose, I, J;
     mask = nothing, accum = nothing, desc = nothing
 )
+    # before we make I and J into GraphBLAS internal types
+    # get their size to check if A should be reshaped from nx1 -> 1xn
+    ni_sizecheck = I isa Colon ? size(C, 1) : length(I)
+    nj_sizecheck = J isa Colon ? size(C, 2) : length(J)
     I, ni = idx(I)
     J, nj = idx(J)
-    mask === nothing && (mask = C_NULL)
+    desc = _handledescriptor(desc; in1=A)
+    mask = _handlemask!(desc, mask)
     I = decrement!(I)
     J = decrement!(J)
-    # we know A isn't adjoint/transpose on input
-    desc = _handledescriptor(desc; in1=A)
-    @wraperror LibGraphBLAS.GxB_Matrix_subassign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
+    rereshape = false
+    sz1 = size(A, 1)
+    # reshape A: nx1 -> 1xn
+    if A isa GBVector && (ni_sizecheck == size(A, 2) && nj_sizecheck == sz1)
+        @wraperror LibGraphBLAS.GxB_Matrix_reshape(gbpointer(parent(A)), true, 1, sz1, C_NULL)
+        rereshape = true
+    end
+    @wraperror LibGraphBLAS.GxB_Matrix_subassign(gbpointer(C), mask, 
+        _handleaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
+    if rereshape # undo the reshape. Need size(A, 2) here
+        @wraperror LibGraphBLAS.GxB_Matrix_reshape(
+        gbpointer(parent(A)), true, sz1, 1, C_NULL)
+    end
     increment!(I)
     increment!(J)
     return A
@@ -402,8 +417,8 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     I = decrement!(I)
     J = decrement!(J)
     desc = _handledescriptor(desc)
-    mask, accum = _handlenothings(mask, accum)
-    _subassign(C, x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
+    mask = _handlemask!(desc, mask)
+    _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
     return x
@@ -465,12 +480,11 @@ function assign!(
 )
     I, ni = idx(I)
     J, nj = idx(J)
-    mask === nothing && (mask = C_NULL)
+    desc = _handledescriptor(desc; in1=A)
+    mask = _handlemask!(desc, mask)
     I = decrement!(I)
     J = decrement!(J)
-    # we know A isn't adjoint/transpose on input
-    desc = _handledescriptor(desc; in1=A)
-    @wraperror LibGraphBLAS.GrB_Matrix_assign(gbpointer(C), mask, getaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_assign(gbpointer(C), mask, _handleaccum(accum, eltype(C)), gbpointer(parent(A)), I, ni, J, nj, desc)
     increment!(I)
     increment!(J)
     return A
@@ -485,7 +499,7 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     I = decrement!(I)
     J = decrement!(J)
     desc = _handledescriptor(desc)
-    _assign(gbpointer(C), x, I, ni, J, nj, mask, getaccum(accum, eltype(C)), desc)
+    _assign(gbpointer(C), x, I, ni, J, nj, mask, _handleaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
     return x

@@ -12,10 +12,10 @@ function LinearAlgebra.kron!(
     accum = nothing,
     desc = nothing
 )
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A, in2=B)
+    mask = _handlemask!(desc, mask)
     op = binaryop(op, eltype(A), eltype(B))
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GxB_kron(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
     return C
 end

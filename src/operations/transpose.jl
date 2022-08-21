@@ -18,9 +18,9 @@ function gbtranspose!(
     C::AbstractGBArray, A::GBArrayOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
-    accum = getaccum(accum, eltype(C))
+    mask = _handlemask!(desc, mask)
+    accum = _handleaccum(accum, eltype(C))
     @wraperror LibGraphBLAS.GrB_transpose(gbpointer(C), mask, accum, gbpointer(parent(A)), desc)
     return C
 end
@@ -69,9 +69,5 @@ LinearAlgebra.adjoint(A::GBVecOrMat) = transpose(A)
 # TODO: avoid this if possible
 LinearAlgebra.transpose(::Nothing) = nothing
 
-# fix unsafe_converts to be safer for GrB types.
-# should fix at least unsafe passing of `mask`.
-# Base.unsafe_convert(::Type{Ptr{T}}, A::Adjoint{<:Real, <:AbstractVecOrMat}) where {T} = 
-# Base.unsafe_convert(Ptr{T}, A.parent)
-Base.unsafe_convert(::Type{Ptr{T}}, A::Transpose{<:Any, <:AbstractGBArray}) where {T} = 
-Base.unsafe_convert(Ptr{T}, copy(A))
+Base.unsafe_convert(::Type{Ptr{T}}, A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) where {T} = 
+throw(ArgumentError("Cannot convert $(typeof(A)) directly to a pointer. Please use copy."))

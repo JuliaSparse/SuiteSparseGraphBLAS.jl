@@ -70,8 +70,6 @@ SuiteSparseGraphBLAS.@unop foo F=>F
 println("Testing SuiteSparseGraphBLAS.jl")
 println("$(SuiteSparseGraphBLAS.get_lib())")
 @testset "SuiteSparseGraphBLAS" begin
-
-    
     include_test("libutils.jl")
     include_test("operatorutils.jl")
     include_test("ops.jl")

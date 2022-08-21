@@ -12,7 +12,8 @@ function Base.sort!(
 )
     A isa GBMatrixOrTranspose && dims === nothing && throw(ArgumentError("dims must be either 1 (sort columns) or 2 (sort rows) for matrix arguments."))
     A isa GBVector && (dims = 1)
-    C, P = _handlenothings(C, P)
+    C === nothing && (C = C_NULL)
+    P === nothing && (P = C_NULL)
     C == C_NULL && P == C_NULL && throw(ArgumentError("One (or both) of C and P must not be nothing."))
     op = binaryop(lt, eltype(A))
     if dims == 1

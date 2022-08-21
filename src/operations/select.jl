@@ -11,10 +11,10 @@ function select!(
     desc = nothing
 )
     op = SelectOp(op)
-    mask, accum = _handlenothings(mask, accum)
     desc = _handledescriptor(desc; in1=A)
+    mask = _handlemask!(desc, mask)
     thunk === nothing && (thunk = C_NULL)
-    accum = getaccum(accum, eltype(C))
+    accum = _handleaccum(accum, eltype(C))
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
@@ -59,7 +59,6 @@ function select(
     desc = nothing
 )
     op = SelectOp(op)
-    mask, accum = _handlenothings(mask, accum)
     C = similar(A)
     select!(op, C, A, thunk; accum, mask, desc)
     return C
