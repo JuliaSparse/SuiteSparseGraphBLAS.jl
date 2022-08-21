@@ -92,6 +92,10 @@ function GxB_Desc_set(d, field, value)
     end
 end
 
+Base.:+(a::LibGraphBLAS.GrB_Desc_Value, b::LibGraphBLAS.GrB_Desc_Value) = 
+    Integer(a) + Integer(b)
+
+
 function Base.getproperty(d::Descriptor, s::Symbol)
     if s === :p
         return getfield(d, s)
@@ -104,7 +108,7 @@ function Base.getproperty(d::Descriptor, s::Symbol)
         end
     elseif s === :complement_mask
         x = GxB_Desc_get(d, LibGraphBLAS.GrB_MASK)
-        if x == LibGraphBLAS.GrB_COMP || x == LibGraphBLAS.GrB_STRUCT_COMP
+        if x == LibGraphBLAS.GrB_COMP || x == LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP
             return true
         else
             return false
@@ -173,7 +177,11 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
                 GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GxB_DEFAULT)
             end
         else
-            GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
+            if d.structural_mask
+                GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
+            else
+                GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
+            end
         end
     elseif s === :structural_mask
         if x == false

@@ -18,8 +18,16 @@ struct Complement{T}
     parent::T
 end
 
-Complement(A::T) where {T<:GBArrayOrTranspose}= Complement{T}(A)
-Base.:~(A::T) where {T<:GBArrayOrTranspose} = Complement(A)
+Complement(A::T) where {
+    T<:Union{GBArrayOrTranspose, 
+    Structural{<:GBArrayOrTranspose}, 
+    Complement{<:GBArrayOrTranspose}}
+} = Complement{T}(A)
+Base.:~(A::T) where {
+    T<:Union{GBArrayOrTranspose, 
+    Structural{<:GBArrayOrTranspose}, 
+    Complement}
+} = Complement(A)
 Base.parent(C::Complement) = C.parent
 
 struct Structural{T}
@@ -37,7 +45,7 @@ function _handlemask!(desc, mask)
             mask = copy(mask)
         elseif mask isa Complement
             mask = parent(mask)
-            desc.complement_mask = true
+            desc.complement_mask = ~desc.complement_mask
         elseif mask isa Structural
             mask = parent(mask)
             desc.structural_mask = true
