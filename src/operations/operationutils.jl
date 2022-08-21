@@ -49,6 +49,8 @@ function _handlemask!(desc, mask)
         elseif mask isa Structural
             mask = parent(mask)
             desc.structural_mask = true
+        elseif mask == C_NULL
+            return C_NULL
         end
     end
     return mask
