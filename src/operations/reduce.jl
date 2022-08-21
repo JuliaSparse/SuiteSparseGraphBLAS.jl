@@ -26,9 +26,13 @@ function Base.reduce(
     desc = _handledescriptor(desc; in1=A)
     mask = _handlemask!(desc, mask)
     if typeout === nothing
-        typeout = eltype(A)
+        typeout = inferbinarytype(eltype(A), eltype(A), op)
     end
-
+    if typeout != eltype(A)
+        throw(ArgumentError(
+            "The SuiteSparse:GraphBLAS reduce function only supports monoids where T x T -> T.
+            Please pass a function whose output type matches both input types."))
+    end
     if dims == 2
         w = similar(A, typeout, size(A, 1))
         reduce!(op, w, A; desc, accum, mask)

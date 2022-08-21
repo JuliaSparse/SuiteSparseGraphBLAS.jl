@@ -4,7 +4,7 @@ inferunarytype(::Type{X}, op::TypedUnaryOperator) where X = ztype(op)
 inferbinarytype(::Type{T}, ::Type{U}, f::F) where {T, U, F<:Base.Callable} = Base._return_type(f, Tuple{T, U})
 # Overload for `first`, which will give Vector{T} normally:
 inferbinarytype(::Type{T}, ::Type{U}, f::typeof(first)) where {T, U} = T
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop.fn)
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.fn)
 #semirings are technically binary so we'll just overload that
 inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, semiring(op, T, U))
 inferbinarytype(::Type{T}, ::Type{U}, op::TypedSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)

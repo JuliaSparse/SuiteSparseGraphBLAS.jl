@@ -31,7 +31,12 @@ end
 typedmonoid(op::TypedMonoid, x...) = op
 
 # We default to no available monoid.
-defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = nothing
+defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = throw(
+    ArgumentError("Function $f does not have a default monoid.
+    You must either extend defaultmonoid(::$F, ::Type{T}) = 
+    Monoid($f, <identity> [, <terminal>]) or pass the struct
+    Monoid($f, <identity>, [, <terminal>]) to the operation.")
+    )
 
 # Use defaultmonoid when available. User should verify that this results in the correct monoid.
 typedmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = typedmonoid(defaultmonoid(f, T), T)

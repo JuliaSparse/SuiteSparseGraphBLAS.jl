@@ -155,7 +155,7 @@ function _monoidnew!(op::TypedMonoid{F, Z, T}) where {F, Z, T}
     if op.terminal === nothing
         @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binaryop, Ref(op.identity))
     else
-        @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
+        @wraperror LibGraphBLAS.GxB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
     end
     op.p = opref[]
 end
