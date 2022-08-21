@@ -18,6 +18,10 @@ struct Complement{T}
     parent::T
 end
 
+struct Structural{T}
+    parent::T
+end
+
 Complement(A::T) where {
     T<:Union{GBArrayOrTranspose, 
     Structural{<:GBArrayOrTranspose}, 
@@ -29,10 +33,6 @@ Base.:~(A::T) where {
     Complement}
 } = Complement(A)
 Base.parent(C::Complement) = C.parent
-
-struct Structural{T}
-    parent::T
-end
 
 Structural(A::T) where {T<:GBArrayOrTranspose}= Structural{T}(A)
 Base.parent(C::Structural) = C.parent
