@@ -812,3 +812,17 @@ function setfill(A::AbstractGBArray, x) # aliasing form.
     B.p = A.p
     return B
 end
+
+getfill(A::AbstractGBArray) = A.fill
+getfill(A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) = parent(A).fill
+
+function Base.:(==)(A::GBArrayOrTranspose, B::GBArrayOrTranspose)
+    A === B && return true
+    size(A) == size(B) || return false
+    getfill(A) == getfill(B) || return false
+    nnz(A) == nnz(B) || return false
+    C = emul(A, B, ==)
+    nnz(C) == nnz(A) || return false
+    nnz(C) == 0 && return true
+    return reduce(∧, C, dims=:, init=true)
+end

@@ -1,10 +1,10 @@
 inferunarytype(::Type{T}, f::F) where {T, F<:Base.Callable} = Base._return_type(f, Tuple{T})
-inferunarytype(::Type{X}, op::TypedUnaryOperator) where X = ztype(op)
+inferunarytype(::Type{X}, op::TypedUnaryOperator{F, X}) where {F, X} = ztype(op)
 
 inferbinarytype(::Type{T}, ::Type{U}, f::F) where {T, U, F<:Base.Callable} = Base._return_type(f, Tuple{T, U})
 # Overload for `first`, which will give Vector{T} normally:
 inferbinarytype(::Type{T}, ::Type{U}, f::typeof(first)) where {T, U} = T
-inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.binaryop.fn)
+inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.fn)
 #semirings are technically binary so we'll just overload that
 inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, semiring(op, T, U))
 inferbinarytype(::Type{T}, ::Type{U}, op::TypedSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)
@@ -37,7 +37,7 @@ Base.parent(C::Complement) = C.parent
 Structural(A::T) where {T<:GBArrayOrTranspose}= Structural{T}(A)
 Base.parent(C::Structural) = C.parent
 
-_handlemask!(desc, mask::Nothing) = C_NULL
+_handlemask!(desc, ::Nothing) = C_NULL
 _handlemask!(desc, mask::AbstractGBArray) = mask
 function _handlemask!(desc, mask)
     while !(mask isa AbstractGBArray)
@@ -51,6 +51,8 @@ function _handlemask!(desc, mask)
             desc.structural_mask = true
         elseif mask isa Ptr
             return C_NULL
+        else
+            throw(ArgumentError("Mask type not recognized."))
         end
     end
     return mask
@@ -62,15 +64,6 @@ _handleaccum(::Ptr{Nothing}, t) = C_NULL
 _handleaccum(op::Function, t) = binaryop(op, t, t)
 _handleaccum(op::Function, tleft, tright) = binaryop(op, tleft, tright)
 _handleaccum(op::TypedBinaryOperator, x...) = op
-
-function _kwargtoc(desc, x)
-    x.second === nothing && return C_NULL
-    if x.first === :mask
-        return _handlemask!(desc, x.second)
-    end
-    return x.second
-end
-    
 
 """
     xtype(op::GrBOp)::DataType

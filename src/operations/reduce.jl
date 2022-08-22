@@ -8,7 +8,8 @@ function reduce!(
     op = typedmonoid(op, eltype(w))
     accum = _handleaccum(accum, eltype(w))
     @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(
-        Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(w)), mask, accum, op, gbpointer(parent(A)), desc
+        Ptr{LibGraphBLAS.GrB_Vector}(
+            gbpointer(w)), gbpointer(mask), accum, op, gbpointer(parent(A)), desc
         )
     return w
 end
@@ -26,9 +27,13 @@ function Base.reduce(
     desc = _handledescriptor(desc; in1=A)
     mask = _handlemask!(desc, mask)
     if typeout === nothing
-        typeout = eltype(A)
+        typeout = inferbinarytype(eltype(A), eltype(A), op)
     end
-
+    if typeout != eltype(A)
+        throw(ArgumentError(
+            "The SuiteSparse:GraphBLAS reduce function only supports monoids where T x T -> T.
+            Please pass a function whose output type matches both input types."))
+    end
     if dims == 2
         w = similar(A, typeout, size(A, 1))
         reduce!(op, w, A; desc, accum, mask)
@@ -52,6 +57,7 @@ function Base.reduce(
         end
         accum = _handleaccum(accum, typeout)
         @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)
+        c[] === nothing  && return getfill(A)
         return c[]
     end
 end

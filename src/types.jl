@@ -155,7 +155,7 @@ function _monoidnew!(op::TypedMonoid{F, Z, T}) where {F, Z, T}
     if op.terminal === nothing
         @wraperror LibGraphBLAS.GrB_Monoid_new_UDT(opref, op.binaryop, Ref(op.identity))
     else
-        @wraperror LibGraphBLAS.GrB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
+        @wraperror LibGraphBLAS.GxB_Monoid_terminal_new_UDT(opref, op.binaryop, Ref(op.identity), Ref(op.terminal))
     end
     op.p = opref[]
 end
@@ -294,6 +294,7 @@ end
 # However, if one (for some reason) wraps another AbstractGBArray
 # this should be overloaded.
 gbpointer(A::AbstractGBArray) = A.p[]
+gbpointer(A::Ptr) = A
 
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 
