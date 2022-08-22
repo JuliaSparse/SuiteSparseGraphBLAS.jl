@@ -28,7 +28,7 @@ export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 include("abstracts.jl")
 include("libutils.jl")
 
-include("lib/LibGraphBLAS_gen.jl")
+include("../lib/LibGraphBLAS_gen.jl")
 using .LibGraphBLAS
 
 include("operators/libgbops.jl")
