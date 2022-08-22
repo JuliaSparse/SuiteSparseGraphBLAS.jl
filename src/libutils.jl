@@ -40,8 +40,12 @@ macro wraperror(code)
                 throw(BoundsError())
             elseif info == LibGraphBLAS.GrB_PANIC
                 throw(PANIC)
+            elseif info == LibGraphBLAS.GrB_INVALID_OBJECT
+                throw(ErrorException("Invalid Object"))
+            elseif info == LibGraphBLAS.GrB_EMPTY_OBJECT
+                throw(ErrorException("Empty Object"))
             else
-                throw(ErrorException("Unreachable Reached."))
+                throw(ErrorException("Unknown GraphBLAS Exception."))
             end
         end
     end

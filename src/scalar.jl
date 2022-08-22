@@ -51,7 +51,9 @@ for T ∈ valid_vec
     @eval begin
         function Base.getindex(value::GBScalar{$T})
             x = Ref{$T}()
-            @wraperror LibGraphBLAS.$func(x, value)
+            info = LibGraphBLAS.$func(x, value)
+            info == LibGraphBLAS.GrB_NO_VALUE && return nothing
+            @wraperror info
             return x[]
         end
     end

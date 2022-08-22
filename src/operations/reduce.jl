@@ -57,6 +57,7 @@ function Base.reduce(
         end
         accum = _handleaccum(accum, typeout)
         @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)
+        c[] === nothing  && return getfill(A)
         return c[]
     end
 end
