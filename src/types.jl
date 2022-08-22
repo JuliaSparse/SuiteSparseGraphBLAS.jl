@@ -294,6 +294,7 @@ end
 # However, if one (for some reason) wraps another AbstractGBArray
 # this should be overloaded.
 gbpointer(A::AbstractGBArray) = A.p[]
+gbpointer(A::Ptr) = A
 
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 

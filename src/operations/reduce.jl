@@ -7,9 +7,9 @@ function reduce!(
     
     op = typedmonoid(op, eltype(w))
     accum = _handleaccum(accum, eltype(w))
-    mask != C_NULL && (mask = gbpointer(mask))
     @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(
-        Ptr{LibGraphBLAS.GrB_Vector}(gbpointer(w)), mask, accum, op, gbpointer(parent(A)), desc
+        Ptr{LibGraphBLAS.GrB_Vector}(
+            gbpointer(w)), gbpointer(mask), accum, op, gbpointer(parent(A)), desc
         )
     return w
 end
