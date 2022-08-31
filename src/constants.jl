@@ -3,6 +3,7 @@ const GBMatrixOrTranspose{T} = Union{<:AbstractGBMatrix{T}, Transpose{T, <:Abstr
 const GBVectorOrTranspose{T} = Union{<:AbstractGBVector{T}, Transpose{T, <:AbstractGBVector{T}}}
 const GBArrayOrTranspose{T} = Union{<:AbstractGBArray{T}, Transpose{T, <:AbstractGBArray{T}}}
 
+const VecMatOrTrans = Union{<:DenseVecOrMat, <:Transpose{<:Any, <:DenseVecOrMat}}
 const ptrtogbtype = IdDict{Ptr, GBType}()
 
 const GrBOp = Union{

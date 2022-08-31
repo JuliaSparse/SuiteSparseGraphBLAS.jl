@@ -270,3 +270,31 @@ end
 
 ⊗(f::Union{Function, TypedBinaryOperator}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
     emul(A, B, f; mask, accum, desc)
+
+# pack friendly overloads. Potentially this could be done more succinctly by using Unions above.
+# but it's ~ 10loc per function so it's nbd.
+emul!(C::GBVecOrMat, A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) = 
+    @_densepack A emul!(C, A, B, op; kwargs...)
+emul!(C::GBVecOrMat, A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack B emul!(C, A, B, op; kwargs...)
+emul!(C::GBVecOrMat, A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack A B emul!(C, A, B, op; kwargs...)
+emul(A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) = 
+    @_densepack A emul(A, B, op; kwargs...)
+emul(A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack B emul(A, B, op; kwargs...)
+emul(A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack A B emul(A, B, op; kwargs...)
+
+eadd!(C::GBVecOrMat, A::VecMatOrTrans, B::GBArrayOrTranspose, op = +; kwargs...) = 
+    @_densepack A eadd!(C, A, B, op; kwargs...)
+eadd!(C::GBVecOrMat, A::GBArrayOrTranspose, B::VecMatOrTrans, op = +; kwargs...) = 
+    @_densepack B eadd!(C, A, B, op; kwargs...)
+eadd!(C::GBVecOrMat, A::VecMatOrTrans, B::VecMatOrTrans, op = +; kwargs...) = 
+    @_densepack A B eadd!(C, A, B, op; kwargs...)
+eadd(A::VecMatOrTrans, B::GBArrayOrTranspose, op = +; kwargs...) = 
+    @_densepack A eadd(A, B, op; kwargs...)
+eadd(A::GBArrayOrTranspose, B::VecMatOrTrans, op = +; kwargs...) = 
+    @_densepack B eadd(A, B, op; kwargs...)
+eadd(A::VecMatOrTrans, B::VecMatOrTrans, op = +; kwargs...) = 
+    @_densepack A B eadd(A, B, op; kwargs...)

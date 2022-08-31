@@ -60,8 +60,10 @@ function _packcscmatrix!(
     decrementindices = true,
     shallow = true
     ) where {T, Ti}
-    decrementindices && decrement!(colptr)
-    decrementindices && decrement!(rowidx)
+    if decrementindices && colptr[begin] == 1
+        decrement!(colptr)
+        decrement!(rowidx)
+    end
 
     colpointer = pointer(colptr)
     rowpointer = pointer(rowidx)
@@ -107,8 +109,10 @@ function _packcsrmatrix!(
     decrementindices = true,
     shallow = true
     ) where {T, Ti}
-    decrementindices && decrement!(rowptr)
-    decrementindices && decrement!(colidx)
+    if decrementindices && rowptr[begin] == 1
+        decrement!(rowptr)
+        decrement(colidx)
+    end
 
     rowpointer = pointer(rowptr)
     colpointer = pointer(colidx)
@@ -170,15 +174,23 @@ function pack!(
     return A
 end
 
-function pack!(A::AbstractGBArray, S::SparseMatrixCSC, shallow = true)
+function pack!(A::AbstractGBArray, S::SparseMatrixCSC; shallow = true)
     pack!(A, getcolptr(S), getrowval(S), getnzval(S); shallow)
 end
+pack!(
+    A::AbstractGBArray, 
+    S::Transpose{<:Any, <:SparseMatrixCSC}; shallow = true
+) = transpose(pack!(A, parent(S); shallow))
 
-function pack!(A::AbstractGBArray, s::SparseVector, shallow = true)
+function pack!(A::AbstractGBArray, s::SparseVector; shallow = true)
     ptrvec = [1, length(s.nzind) + 1]
     ptrvec = shallow ? ptrvec : _copytoraw(ptrvec)
     pack!(A, ptrvec, s.nzind, s.nzval; shallow)
 end
+pack!(
+    A::AbstractGBArray, 
+    s::Transpose{<:Any, <:SparseVector}; shallow = true
+) = transpose(pack!(A, parent(s); shallow))
 
 function pack!(::Type{GT}, A::AbstractArray{T}; fill = nothing, shallow = true) where {GT<:AbstractGBArray, T}
     if GT <: AbstractGBVector
@@ -187,4 +199,65 @@ function pack!(::Type{GT}, A::AbstractArray{T}; fill = nothing, shallow = true) 
         G = GT{T}(size(A, 1), size(A, 2); fill)
     end
     return pack!(G, A; shallow)
+end
+pack!(
+    ::Type{GT}, A::Transpose{<:Any, AbstractArray}; 
+    fill = nothing, shallow = true
+) where {GT<:AbstractGBArray} = 
+    transpose(pack!(GT, parent(A); fill, shallow))
+
+# These functions do not have the `!` since they will not modify A during packing (to decrement indices)
+function pack(::Type{GT}, A::DenseVecOrMat; fill = nothing, shallow = true) where {GT<:AbstractGBArray}
+    return pack!(GT, A; fill, shallow)
+end
+pack(
+    ::Type{GT}, A::Transpose{<:Any, <:DenseVecOrMat}; 
+    fill = nothing, shallow = true
+) where {GT<:AbstractGBArray} = 
+    transpose(pack(GT, parent(A); fill, shallow))
+
+function pack(A::DenseVecOrMat; fill = nothing, shallow = true)
+    if A isa AbstractVector
+        return pack!(GBVector, A; fill, shallow)
+    else
+        return pack!(GBMatrix, A; fill, shallow)
+    end
+end
+pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing, shallow = true) = 
+    transpose(pack(parent(A); fill, shallow))
+
+packquote(x) = :($(esc(x)) = SuiteSparseGraphBLAS.pack($(esc(x))))
+macro _densepack(expr...)
+    keepalives = expr[begin:end-1]
+    expr = expr[end]
+    syms = packquote.(keepalives)
+    display(
+    quote
+        GC.@preserve $((esc.(keepalives)...)) begin
+            println("preserving $(keepalives...)")
+        end
+    end
+    )
+end
+
+macro _densepack(sym, ex)
+    Meta.isexpr(ex, :call) || throw(ArgumentError("expected call, got $ex"))
+    for i in eachindex(ex.args)
+        if i > 1 && ex.args[i] === sym
+            ex.args[i] = Expr(:call, :pack, sym)
+        end
+    end
+    return esc(:(GC.@preserve $sym $ex))
+end
+
+macro _densepack(xs...)
+    syms = xs[1:(end - 1)]
+    ex = xs[end]
+    Meta.isexpr(ex, :call) || throw(ArgumentError("expected call, got $ex"))
+    for i in eachindex(ex.args)
+        if i > 1 && ex.args[i] ∈ syms
+            ex.args[i] = Expr(:call, :pack, ex.args[i])
+        end
+    end
+    return esc(:(GC.@preserve $(syms...) $ex))
 end
