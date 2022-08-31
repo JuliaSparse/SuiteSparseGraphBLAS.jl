@@ -174,6 +174,18 @@ function pack!(
     return A
 end
 
+function pack!(
+    ::Type{GT}, ptr, idx, values::AbstractVector{T};
+    decrementindices = true, shallow = true, fill = nothing
+) where {GT <:AbstractGBArray, T}
+    if GT <: AbstractGBVector
+        G = GT{T}(size(A, 1); fill)
+    else
+        G = GT{T}(size(A, 1), size(A, 2); fill)
+    end
+    pack!(G, ptr, idx, values; decrementindices, shallow)
+end
+
 function pack!(A::AbstractGBArray, S::SparseMatrixCSC; shallow = true)
     pack!(A, getcolptr(S), getrowval(S), getnzval(S); shallow)
 end
@@ -225,30 +237,6 @@ function pack(A::DenseVecOrMat; fill = nothing, shallow = true)
 end
 pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing, shallow = true) = 
     transpose(pack(parent(A); fill, shallow))
-
-packquote(x) = :($(esc(x)) = SuiteSparseGraphBLAS.pack($(esc(x))))
-macro _densepack(expr...)
-    keepalives = expr[begin:end-1]
-    expr = expr[end]
-    syms = packquote.(keepalives)
-    display(
-    quote
-        GC.@preserve $((esc.(keepalives)...)) begin
-            println("preserving $(keepalives...)")
-        end
-    end
-    )
-end
-
-macro _densepack(sym, ex)
-    Meta.isexpr(ex, :call) || throw(ArgumentError("expected call, got $ex"))
-    for i in eachindex(ex.args)
-        if i > 1 && ex.args[i] === sym
-            ex.args[i] = Expr(:call, :pack, sym)
-        end
-    end
-    return esc(:(GC.@preserve $sym $ex))
-end
 
 macro _densepack(xs...)
     syms = xs[1:(end - 1)]

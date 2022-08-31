@@ -23,6 +23,7 @@ using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
 using Serialization
 using StorageOrders
+using KLU
 
 export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 include("abstracts.jl")
@@ -96,6 +97,7 @@ include("misc.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")
+include("solvers/klu.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS
