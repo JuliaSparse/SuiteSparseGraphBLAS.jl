@@ -1,6 +1,9 @@
-using KLU: KLUTypes, KLUITypes, AbstractKLUFactorization, klu_l_common, klu_common
+using KLU: KLUTypes, KLUITypes, AbstractKLUFactorization, klu_l_common, 
+klu_common, _klu_name, KLUFactorization, KLUValueTypes, KLUIndexTypes,
+_common, klu_factor!, klu_analyze!, klu_analyze, klu_l_analyze, kluerror, 
+klu_factor, klu_l_factor, klu_numeric, klu_l_numeric, _extract!
 
-mutable struct GB_KLUFactorization{Tv<:KLUTypes, Ti<:KLUITypes, M<:AbstractGBMatrix} <: AbstractKLUFactorization{Tv}
+mutable struct GB_KLUFactorization{Tv<:KLUTypes, Ti<:KLUITypes, M<:AbstractGBMatrix} <: AbstractKLUFactorization{Tv, Ti}
     common::Union{klu_l_common, klu_common}
     _symbolic::Ptr{Cvoid}
     _numeric::Ptr{Cvoid}
@@ -53,18 +56,18 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
     # Factor parts:
     if s === :(_L)
         lnz = klu.lnz
-        Lp = unsafe_wrap(Array, _jlmalloc(klu.n + 1, Ti), klu.n + 1)
-        Li = unsafe_wrap(Array, _jlmalloc(lnz, Ti), lnz)
-        Lx = unsafe_wrap(Array, _jlmalloc(lnz, Float64), lnz)
-        Lz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _jlmalloc(lnz, Float64), lnz)
+        Lp = unsafe_wrap(Array, _sizedjlmalloc(klu.n + 1, Ti), klu.n + 1)
+        Li = unsafe_wrap(Array, _sizedjlmalloc(lnz, Ti), lnz)
+        Lx = unsafe_wrap(Array, _sizedjlmalloc(lnz, Float64), lnz)
+        Lz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _sizedjlmalloc(lnz, Float64), lnz)
         _extract!(klu; Lp, Li, Lx, Lz)
         return Lp, Li, Lx, Lz
     elseif s === :(_U)
         unz = klu.unz
-        Up = unsafe_wrap(Array, _jlmalloc(klu.n + 1, Ti), klu.n + 1)
-        Ui = unsafe_wrap(Array, _jlmalloc(unz, Ti), unz)
-        Ux = unsafe_wrap(Array, _jlmalloc(unz, Float64), unz)
-        Uz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _jlmalloc(unz, Float64), unz)
+        Up = unsafe_wrap(Array, _sizedjlmalloc(klu.n + 1, Ti), klu.n + 1)
+        Ui = unsafe_wrap(Array, _sizedjlmalloc(unz, Ti), unz)
+        Ux = unsafe_wrap(Array, _sizedjlmalloc(unz, Float64), unz)
+        Uz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _sizedjlmalloc(unz, Float64), unz)
         _extract!(klu; Up, Ui, Ux, Uz)
         return Up, Ui, Ux, Uz
     elseif s === :(_F)
@@ -73,10 +76,10 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
         if fnz == 0
             return nothing
         else
-            Fp = unsafe_wrap(Array, _jlmalloc(klu.n + 1, Ti), klu.n + 1)
-            Fi = unsafe_wrap(Array, _jlmalloc(fnz, Ti), fnz)
-            Fx = unsafe_wrap(Array, _jlmalloc(fnz, Float64), fnz)
-            Fz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _jlmalloc(fnz, Float64), fnz)
+            Fp = unsafe_wrap(Array, _sizedjlmalloc(klu.n + 1, Ti), klu.n + 1)
+            Fi = unsafe_wrap(Array, _sizedjlmalloc(fnz, Ti), fnz)
+            Fx = unsafe_wrap(Array, _sizedjlmalloc(fnz, Float64), fnz)
+            Fz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _sizedjlmalloc(fnz, Float64), fnz)
             _extract!(klu; Fp, Fi, Fx, Fz)
             # F is *not* sorted on output, so we'll have to do it here:
             for i ∈ 1:(length(Fp) - 1)
@@ -102,11 +105,14 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
     end
     if s ∈ [:q, :p, :R, :Rs]
         if s === :Rs
-            out = pack(unsafe_wrap(Array, _jlmalloc(klu.n, Float64), klu.n); shallow = false)
+            out = similar(klu.A, Float64, klu.n)
+            out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.n, Float64), klu.n); shallow = false)
         elseif s === :R
-            out = pack(unsafe_wrap(Array, _jlmalloc(klu.nblocks + 1, Ti), klu.nblocks + 1); shallow = false)
+            out = similar(klu.A, Ti, klu.nblocks + 1)
+            out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.nblocks + 1, Ti), klu.nblocks + 1); shallow = false)
         else
-            out = pack(unsafe_wrap(Array, _jlmalloc(klu.n, Ti), klu.n); shallow = false)
+            out = similar(klu.A, Ti, klu.n)
+            out = pack(out, unsafe_wrap(Array, _sizedjlmalloc(klu.n, Ti), klu.n); shallow = false)
         end
         # This tuple construction feels hacky, there's a better way I'm sure.
         s === :q && (s = :Q)
@@ -125,10 +131,11 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
         elseif s === :F
             p, i, x, z = klu._F
         end
+        out = similar(klu.A, Tv, klu.n, klu.n)
         if Tv == Float64
-            return pack!(M, p, i, x)
+            return pack!(out, p, i, x)
         else
-            return pack!(M, p, i, Complex.(x, z))
+            return pack!(out, p, i, Complex.(x, z))
         end
     end
 end
@@ -173,7 +180,7 @@ end
 for Tv ∈ KLU.KLUValueTypes, Ti ∈ KLU.KLUIndexTypes
     factor = _klu_name("factor", Tv, Ti)
     @eval begin
-        function klu_factor!(K::KLUFactorization{$Tv, $Ti})
+        function KLU.klu_factor!(K::GB_KLUFactorization{$Tv, $Ti})
             K._symbolic == C_NULL  && klu_analyze!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
             num = $factor(colptr, rowval, vals, K._symbolic, Ref(K.common))
@@ -215,7 +222,7 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
 
         Accurately estimate the 1-norm condition number of the factorization.
         """
-        function condest(K::GB_KLUFactorization{$Tv, $Ti})
+        function KLU.condest(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
             ok = $condest(K.colptr, K.nzval, K._symbolic, K._numeric, Ref(K.common))
@@ -230,7 +237,8 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
 end
 
 function KLU.klu(A::AbstractGBMatrix{Tv}) where {Tv<:Union{Float64, ComplexF64}}
-    return GB_KLUFactorization(A)
+    K = GB_KLUFactorization(A)
+    return klu_factor!(K)
 end
 
 # No refactors for now. TODO: Enable refactors!!!

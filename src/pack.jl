@@ -174,18 +174,6 @@ function pack!(
     return A
 end
 
-function pack!(
-    ::Type{GT}, ptr, idx, values::AbstractVector{T};
-    decrementindices = true, shallow = true, fill = nothing
-) where {GT <:AbstractGBArray, T}
-    if GT <: AbstractGBVector
-        G = GT{T}(size(A, 1); fill)
-    else
-        G = GT{T}(size(A, 1), size(A, 2); fill)
-    end
-    pack!(G, ptr, idx, values; decrementindices, shallow)
-end
-
 function pack!(A::AbstractGBArray, S::SparseMatrixCSC; shallow = true)
     pack!(A, getcolptr(S), getrowval(S), getnzval(S); shallow)
 end
@@ -204,35 +192,15 @@ pack!(
     s::Transpose{<:Any, <:SparseVector}; shallow = true
 ) = transpose(pack!(A, parent(s); shallow))
 
-function pack!(::Type{GT}, A::AbstractArray{T}; fill = nothing, shallow = true) where {GT<:AbstractGBArray, T}
-    if GT <: AbstractGBVector
-        G = GT{T}(size(A, 1); fill)
-    else
-        G = GT{T}(size(A, 1), size(A, 2); fill)
-    end
-    return pack!(G, A; shallow)
-end
-pack!(
-    ::Type{GT}, A::Transpose{<:Any, AbstractArray}; 
-    fill = nothing, shallow = true
-) where {GT<:AbstractGBArray} = 
-    transpose(pack!(GT, parent(A); fill, shallow))
-
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
-function pack(::Type{GT}, A::DenseVecOrMat; fill = nothing, shallow = true) where {GT<:AbstractGBArray}
-    return pack!(GT, A; fill, shallow)
-end
-pack(
-    ::Type{GT}, A::Transpose{<:Any, <:DenseVecOrMat}; 
-    fill = nothing, shallow = true
-) where {GT<:AbstractGBArray} = 
-    transpose(pack(GT, parent(A); fill, shallow))
-
+# they default to GBVector and GBMatrix, since those are the most common/likely types to be used.
 function pack(A::DenseVecOrMat; fill = nothing, shallow = true)
     if A isa AbstractVector
-        return pack!(GBVector, A; fill, shallow)
+        G = GBVector{eltype(A)}(size(A)...; fill, shallow)
+        return pack!(G, A; shallow)
     else
-        return pack!(GBMatrix, A; fill, shallow)
+        G = GBMatrix{eltype(A)}(size(A)...; fill, shallow)
+        return pack!(G, A; shallow)
     end
 end
 pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing, shallow = true) = 

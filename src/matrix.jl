@@ -93,12 +93,12 @@ function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = noth
         M = Matrix(M)
     end
     A = GBMatrix{T}(size(M, 1), size(M, 2); fill)
-    return pack!(A, _copytoraw(M))
+    return pack!(A, _copytoraw(M); shallow = false)
 end
 
 function GBMatrix(v::SparseVector{T}; fill::F = nothing) where {T, F}
     A = GBMatrix{T}(size(v, 1), 1; fill)
-    return pack!(A, _copytoraw(v)...)
+    return pack!(A, _copytoraw(v)...; shallow = false)
 end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:

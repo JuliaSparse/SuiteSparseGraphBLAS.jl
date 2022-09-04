@@ -72,12 +72,12 @@ function GBVector(v::AbstractVector{T}; fill::F = nothing) where {T, F}
         v = collect(v)
     end
     A = GBVector{T}(size(v, 1); fill)
-    return pack!(A, _copytoraw(v))
+    return pack!(A, _copytoraw(v); shallow = false)
 end
 
 function GBVector(v::SparseVector{T}; fill::F = nothing) where {T, F}
     A = GBVector{T}(size(v, 1); fill)
-    return pack!(A, copy(v))
+    return pack!(A, _copytoraw(v)...; shallow = false)
 end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:

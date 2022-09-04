@@ -9,6 +9,10 @@ function _jlfree(p::Union{DenseVecOrMat{T}, Ptr{T}, Ref{T}}) where {T}
     ccall(:jl_free, Cvoid, (Ptr{T}, ), p isa DenseVecOrMat ? pointer(p) : p)
 end
 
+function _sizedjlmalloc(n, ::Type{T}) where {T}
+    return _jlmalloc(n * sizeof(T), T)
+end
+
 function _copytoraw(A::DenseVecOrMat{T}) where {T}
     sz = sizeof(A)
     ptr = _jlmalloc(sz, T)
