@@ -436,26 +436,29 @@ end
 function subassign!(C::AbstractGBArray, x::AbstractMatrix, I, J;
     mask = nothing, accum = nothing, desc = nothing)
     array = x isa VecOrMat ? x : collect(x)
-    array = pack!(GBMatrix, array)
+    A = similar(C, eltype(array), size(array))
+    array = pack!(A, array)
     subassign!(C, array, I, J; mask, accum, desc)
-    unpack!(array, Dense())
+    unpack!(array, Dense(); attachfinalizer = false)
     return x
 end
 
 function subassign!(C::AbstractGBArray, x::AbstractVector, I, J;
     mask = nothing, accum = nothing, desc = nothing)
     array = x isa VecOrMat ? x : collect(x)
-    array = pack!(GBVector, array)
+    A = similar(C, eltype(array), size(array))
+    array = pack!(A, array)
     subassign!(C, array, I, J; mask, accum, desc)
-    unpack!(array, Dense())
+    unpack!(array, Dense(); attachfinalizer = false)
     return x
 end
 
 function subassign!(C::AbstractGBArray, x::Union{SparseMatrixCSC, SparseVector}, I, J;
     mask = nothing, accum = nothing, desc = nothing)
-    array = pack!(GBMatrix, array)
+    array = similar(C, eltype(x), size(x))
+    array = pack!(array, x)
     subassign!(C, array, I, J; mask, accum, desc)
-    unpack!(array, Sparse())
+    unpack!(array, Sparse(); attachfinalizer = false)
     return x
 end
 

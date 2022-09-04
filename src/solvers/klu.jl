@@ -112,7 +112,7 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
             out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.nblocks + 1, Ti), klu.nblocks + 1); shallow = false)
         else
             out = similar(klu.A, Ti, klu.n)
-            out = pack(out, unsafe_wrap(Array, _sizedjlmalloc(klu.n, Ti), klu.n); shallow = false)
+            out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.n, Ti), klu.n); shallow = false)
         end
         # This tuple construction feels hacky, there's a better way I'm sure.
         s === :q && (s = :Q)
