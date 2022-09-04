@@ -1,7 +1,9 @@
+module KLU
+
 using KLU: KLUTypes, KLUITypes, AbstractKLUFactorization, klu_l_common, 
 klu_common, _klu_name, KLUFactorization, KLUValueTypes, KLUIndexTypes,
 _common, klu_factor!, klu_analyze!, klu_analyze, klu_l_analyze, kluerror, 
-klu_factor, klu_l_factor, klu_numeric, klu_l_numeric, _extract!
+klu_factor, klu_l_factor, klu_numeric, klu_l_numeric, _extract!, solve!
 
 mutable struct GB_KLUFactorization{Tv<:KLUTypes, Ti<:KLUITypes, M<:AbstractGBMatrix} <: AbstractKLUFactorization{Tv, Ti}
     common::Union{klu_l_common, klu_common}
@@ -241,5 +243,50 @@ function KLU.klu(A::AbstractGBMatrix{Tv}) where {Tv<:Union{Float64, ComplexF64}}
     return klu_factor!(K)
 end
 
+function KLU.klu(A::AbstractGBMatrix{Tv}) where {Tv<:Real}
+    return klu(Float64.(A))
+end
+
+function KLU.klu(A::AbstractGBMatrix{Tv}) where {Tv<:Complex}
+    return klu(ComplexF64.(A))
+end
+
+function KLU.solve!(
+    klu::Union{
+        GB_KLUFactorization, 
+        <:Adjoint{Any, <:GB_KLUFactorization}, 
+        <:Transpose{<:Any, <:GB_KLUFactorization}
+    }, 
+    B::AbstractGBArray
+)
+    sparsitystatus(B) === Dense() || throw(ArgumentError("B is not dense."))
+    x = unpack!(B, Dense(); attachfinalizer = false)
+    return try
+        KLU.solve!(klu, x)
+        pack!(B, x; shallow = false)
+        return B
+    catch e
+        pack!(B, x; shallow = false)
+        throw(e)
+    end
+end
+
+LinearAlgebra.ldiv!(klu::GB_KLUFactorization{Tv}, B::AbstractGBArray{Tv}) where {Tv<:KLUTypes} =
+    KLU.solve!(klu, B)
+LinearAlgebra.ldiv!(klu::LinearAlgebra.AdjOrTrans{Tv, K}, B::AbstractGBArray{Tv}) where {Tv, Ti, K<:GB_KLUFactorization{Tv, Ti}} =
+    KLU.solve!(klu, B)
+
+function LinearAlgebra.ldiv!(klu::AbstractKLUFactorization{<:AbstractFloat}, B::AbstractGBArray{<:Complex})
+    imagX = solve(klu, imag(B))
+    realX = solve(klu, real(B))
+    map!(complex, B, realX, imagX)
+end
+    
+function LinearAlgebra.ldiv!(klu::LinearAlgebra.AdjOrTrans{Tv, K}, B::AbstractGBArray{<:Complex}) where {Tv<:AbstractFloat, Ti, K<:AbstractKLUFactorization{Tv, Ti}}
+    imagX = KLU.solve(klu, imag(B))
+    realX = KLU.solve(klu, real(B))
+    map!(complex, B, realX, imagX)
+end
 # No refactors for now. TODO: Enable refactors!!!
-# No use of GBVectors for B or X right now. TODO!!!
+
+end

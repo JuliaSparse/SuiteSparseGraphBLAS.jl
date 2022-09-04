@@ -6,7 +6,15 @@
 function GBVector{T}(n; fill::F = nothing) where {T, F}
     m = Ref{LibGraphBLAS.GrB_Matrix}()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), n, 1)
-    v = GBVector{T, F}(finalizer(m) do ref
+    return GBVector{T}(m; fill)
+end
+
+function GBVector{T}(
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; 
+    fill::F = nothing
+) where {T, F}
+
+    v = GBVector{T, F}(finalizer(p) do ref
         @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
     end, fill)
     gbset(v, FORMAT, BYCOL)

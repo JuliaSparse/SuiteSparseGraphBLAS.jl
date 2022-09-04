@@ -10,7 +10,11 @@ Create a GBMatrix of the specified size.
 function GBMatrix{T}(nrows::Integer, ncols::Integer; fill::F = nothing) where {T, F}
     m = Ref{LibGraphBLAS.GrB_Matrix}()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
-    return GBMatrix{T, F}(finalizer(m) do ref
+    return GBMatrix{T}(m; fill)
+end
+
+function GBMatrix{T}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill::F = nothing) where {T, F}
+    return GBMatrix{T, F}(finalizer(p) do ref
         @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
     end, fill)
 end

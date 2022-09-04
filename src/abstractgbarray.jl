@@ -19,6 +19,15 @@ function Base.empty!(A::GBArrayOrTranspose)
     return A
 end
 
+function Base.copyto!(C::AbstractGBArray, A::AbstractGBArray)
+    if C isa AbstractVector
+        C[:] = A
+    else
+        C[:, :] = A
+    end
+    return C
+end
+
 function Base.Matrix(A::GBArrayOrTranspose)
     T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
     return unpack!(T, Dense())

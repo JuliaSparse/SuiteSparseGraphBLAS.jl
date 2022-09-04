@@ -119,6 +119,9 @@ Base.:*(u::GBArrayOrTranspose{T}, x::V; mask = nothing, accum = nothing, desc = 
 
 Base.:-(u::GBArrayOrTranspose) = apply(-, u)
 
+Base.real(A::GBArrayOrTranspose) = real.(A)
+Base.imag(A::GBArrayOrTranspose) = imag.(A)
+
 """
     mask!(C::GBArrayOrTranspose, A::GBArrayOrTranspose, mask::GBVecOrMat)
 
