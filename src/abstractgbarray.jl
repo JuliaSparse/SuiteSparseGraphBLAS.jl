@@ -20,28 +20,40 @@ function Base.empty!(A::GBArrayOrTranspose)
 end
 
 function Base.Matrix(A::GBArrayOrTranspose)
-    sparsity = sparsitystatus(A)
     T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
     return unpack!(T, Dense())
 end
 
-function Base.Vector(v::GBVectorOrTranspose)
-    sparsity = sparsitystatus(v)
-    T = copy(v) # avoid densifying v and destroying v.
-    return unpack!(T, Dense())
+function Base.Vector(A::GBVectorOrTranspose)
+    format = sparsitystatus(A)
+    if format === Dense()
+        T = unpack!(A, Dense(); attachfinalizer = false)
+        M = copy(T)
+        pack!(A, T; shallow = false)
+    else
+        # if A is not dense we end up doing 2x copies. Once to avoid densifying A.
+        T = copy(A)
+        U = unpack!(T, Dense(); attachfinalizer = false)
+        # And again to make this a native Julia Array.
+        # if we didn't copy here a user could not resize
+        M = copy(U)
+        pack!(T, U; shallow = false)
+    end
+    M
 end
 
 function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
-    sparsity = sparsitystatus(A)
     T = copy(A) # avoid changing sparsity of A and destroying it.
     return unpack!(T, SparseMatrixCSC)
 end
 
 function SparseArrays.SparseVector(v::GBVectorOrTranspose)
-    sparsity = sparsitystatus(v)
     T = copy(v) # avoid changing sparsity of v and destroying it.
     return unpack!(T, SparseVector)
 end
+
+# AbstractGBMatrix functions:
+#############################
 
 function reshape!(
     A::AbstractGBMatrix, nrows, ncols; 
@@ -94,9 +106,6 @@ Base.reshape(
 ) = reshape(A, dims...; bycol)
 
 Base.reshape(A::AbstractGBMatrix, n; bycol = true) = reshape(A, n, 1; bycol)
-
-# AbstractGBMatrix functions:
-#############################
 
 function build(A::AbstractGBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
     nnz(A) == 0 || throw(OutputNotEmptyError("Cannot build matrix with existing elements"))
