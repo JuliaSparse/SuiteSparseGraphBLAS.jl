@@ -1,9 +1,15 @@
-module KLU
-
+module GB_KLU
+import KLU
 using KLU: KLUTypes, KLUITypes, AbstractKLUFactorization, klu_l_common, 
 klu_common, _klu_name, KLUFactorization, KLUValueTypes, KLUIndexTypes,
 _common, klu_factor!, klu_analyze!, klu_analyze, klu_l_analyze, kluerror, 
-klu_factor, klu_l_factor, klu_numeric, klu_l_numeric, _extract!, solve!
+klu_factor, klu_l_factor, klu_numeric, klu_l_numeric, _extract!, solve!, rgrowth,
+condest
+
+using LinearAlgebra
+using ..SuiteSparseGraphBLAS: AbstractGBMatrix, pack!, unpack!, GBMatrix, 
+GBVector, AbstractGBArray, LibGraphBLAS, Sparse, Dense, ColMajor, sparsitystatus,
+_sizedjlmalloc, increment!
 
 mutable struct GB_KLUFactorization{Tv<:KLUTypes, Ti<:KLUITypes, M<:AbstractGBMatrix} <: AbstractKLUFactorization{Tv, Ti}
     common::Union{klu_l_common, klu_common}
@@ -107,23 +113,30 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
     end
     if s ∈ [:q, :p, :R, :Rs]
         if s === :Rs
-            out = similar(klu.A, Float64, klu.n)
-            out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.n, Float64), klu.n); shallow = false)
+            v = similar(klu.A, Float64, klu.n)
+            out = unsafe_wrap(Array, _sizedjlmalloc(klu.n, Float64), klu.n)
         elseif s === :R
-            out = similar(klu.A, Ti, klu.nblocks + 1)
-            out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.nblocks + 1, Ti), klu.nblocks + 1); shallow = false)
+            v = similar(klu.A, Ti, klu.nblocks + 1)
+            out = unsafe_wrap(Array, _sizedjlmalloc(klu.nblocks + 1, Ti), klu.nblocks + 1)
         else
-            out = similar(klu.A, Ti, klu.n)
-            out = pack!(out, unsafe_wrap(Array, _sizedjlmalloc(klu.n, Ti), klu.n); shallow = false)
+            v = similar(klu.A, Ti, klu.n)
+            out = unsafe_wrap(Array, _sizedjlmalloc(klu.n, Ti), klu.n)
         end
         # This tuple construction feels hacky, there's a better way I'm sure.
         s === :q && (s = :Q)
         s === :p && (s = :P)
+
         _extract!(klu; NamedTuple{(s,)}((out,))...)
+        if s ∈ [:Q, :P, :R]
+        end
+        # while these will likely be used directly for another GraphBLAS
+        # operation, in which case we will have to decrement,
+        # it will be error prone *not* to increment.
         if s ∈ [:Q, :P, :R]
             increment!(out)
         end
-        return out
+        pack!(v, out)
+        return v
     end
     if s ∈ [:L, :U, :F]
         if s === :L
@@ -202,11 +215,6 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
     rcond = _klu_name("rcond", Tv, Ti)
     condest = _klu_name("condest", Tv, Ti)
     @eval begin
-        """
-            rgrowth(K::KLUFactorization)
-
-        Calculate the reciprocal pivot growth.
-        """
         function KLU.rgrowth(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
@@ -218,12 +226,6 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
                 return K.common.rgrowth
             end
         end
-
-        """
-            condest(K::KLUFactorization)
-
-        Accurately estimate the 1-norm condition number of the factorization.
-        """
         function KLU.condest(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)

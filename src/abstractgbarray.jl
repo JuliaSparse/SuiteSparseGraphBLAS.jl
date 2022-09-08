@@ -806,10 +806,26 @@ end
 
 
 function Base.getindex(
-    A::AbstractGBMatrix, i::Union{Vector, UnitRange, StepRange, Number, Colon}, j::Union{Vector, UnitRange, StepRange, Number, Colon};
+    A::AbstractGBMatrix, 
+    i::Union{Vector, UnitRange, StepRange, Number, Colon}, 
+    j::Union{Vector, UnitRange, StepRange, Number, Colon};
     mask = nothing, accum = nothing, desc = nothing
 )
     return extract(A, i, j; mask, accum, desc)
+end
+
+function Base.getindex(
+    A::AbstractGBMatrix,
+    i::AbstractGBVector{<:Integer},
+    j::AbstractGBVector{<:Integer};
+    mask = nothing, accum = nothing, desc = nothing
+)
+    I = unpack!(i, Dense(); attachfinalizer = false)
+    J = unpack!(j, Dense(); attachfinalizer = false)
+    x = Base.getindex(A, I, J; mask, accum, desc)
+    pack!(i, I; shallow = false)
+    pack!(j, J; shallow = false)
+    return x
 end
 
 """

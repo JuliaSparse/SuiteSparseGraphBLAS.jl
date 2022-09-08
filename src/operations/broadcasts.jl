@@ -37,6 +37,12 @@ GBMatrixStyle(::Val{1}) = GBMatrixStyle()
 GBMatrixStyle(::Val{2}) = GBMatrixStyle()
 GBMatrixStyle(::Val{N}) where N = Broadcast.DefaultArrayStyle{N}()
 Broadcast.BroadcastStyle(::GBMatrixStyle, ::GBVectorStyle) = GBMatrixStyle()
+Broadcast.BroadcastStyle(::GBMatrixStyle, ::Broadcast.DefaultMatrixStyle) = GBMatrixStyle()
+Broadcast.BroadcastStyle(::GBMatrixStyle, ::Broadcast.DefaultVectorStyle) = GBMatrixStyle()
+
+Broadcast.BroadcastStyle(::GBVectorStyle, ::Broadcast.DefaultMatrixStyle) = GBMatrixStyle()
+Broadcast.BroadcastStyle(::GBVectorStyle, ::Broadcast.DefaultVectorStyle) = GBVectorStyle()
+
 
 function Base.similar(
     bc::Broadcast.Broadcasted{GBMatrixStyle},

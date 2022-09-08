@@ -10,14 +10,14 @@ using LinearAlgebra
     A0 = GBMatrix(Ap, Ai, Ax)
     A1 = GBMatrix(increment!([0,4,1,1,2,2,0,1,2,3,4,4]),
                 increment!([0,4,0,2,1,2,1,4,3,2,1,2]),
-                [2.,1.,3.,4.,-1.,-3.,3.,9.,2.,1.,4.,2.], 5, 5)
+                [2.,1.,3.,4.,-1.,-3.,3.,9.,2.,1.,4.,2.], nrows = 5, ncols = 5)
     @testset "Core functionality for $Tv elements" for Tv in (Float64, ComplexF64)
             A = Tv.(A0)
             # test the raw vector construction method.
             klua = klu(A)
             @test nnz(klua) == 18
             R = Diagonal(Tv == ComplexF64 ? complex.(klua.Rs) : klua.Rs)
-            @test R \ A[klua.p, klua.q] ≈ (klua.L * klua.U + klua.F)
+            @test A[klua.p, klua.q] ≈ R * (klua.L * klua.U + klua.F)
 
             b = [8., 45., -3., 3., 19.]
             x = klua \ b

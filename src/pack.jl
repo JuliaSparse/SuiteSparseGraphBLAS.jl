@@ -196,10 +196,10 @@ pack!(
 # they default to GBVector and GBMatrix, since those are the most common/likely types to be used.
 function pack(A::DenseVecOrMat; fill = nothing, shallow = true)
     if A isa AbstractVector
-        G = GBVector{eltype(A)}(size(A)...; fill, shallow)
+        G = GBVector{eltype(A)}(size(A)...; fill)
         return pack!(G, A; shallow)
     else
-        G = GBMatrix{eltype(A)}(size(A)...; fill, shallow)
+        G = GBMatrix{eltype(A)}(size(A)...; fill)
         return pack!(G, A; shallow)
     end
 end
