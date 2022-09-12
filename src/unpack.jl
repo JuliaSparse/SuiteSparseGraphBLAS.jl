@@ -103,17 +103,21 @@ function _unpackcscmatrix!(
         isjumbled,
         desc
     )
-    colvector = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
-    rowvector = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
-    v = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
+    colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
+    rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
+    if isiso[]
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), 1)
+    else
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
+    end
     if attachfinalizer
-        colvector = finalizer(colvector) do x
+        colptr = finalizer(colptr) do x
             _jlfree(x)
         end
-        rowvector = finalizer(rowvector) do x
+        rowidx = finalizer(rowidx) do x
             _jlfree(x)
         end
-        v = finalizer(v) do x
+        vals = finalizer(vals) do x
             _jlfree(x)
         end
     end
@@ -154,17 +158,21 @@ function _unpackcsrmatrix!(
         isjumbled,
         desc
     )
-    rowvector = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
-    colvector = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])
-    v = unsafe_wrap(Array, Ptr{T}(values[]), nnz)
+    rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
+    colidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])
+    if isiso[]
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), 1)
+    else
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
+    end
     if attachfinalizer
-        rowvector = finalizer(rowvector) do x
+        rowptr = finalizer(rowptr) do x
             _jlfree(x)
         end
-        colvector = finalizer(colvector) do x
+        colidx = finalizer(colidx) do x
             _jlfree(x)
         end
-        v = finalizer(v) do x
+        vals = finalizer(vals) do x
             _jlfree(x)
         end
     end

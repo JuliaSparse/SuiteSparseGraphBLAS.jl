@@ -2,6 +2,8 @@ using KLU
 using KLU: increment!, KLUITypes, decrement, klu!, KLUFactorization,
 klu_analyze!, klu_factor!
 using LinearAlgebra
+using GB_KLU
+using GB_KLU: GB_KLUFactorization
 
 @testset "KLU Wrappers" begin
     Ap = increment!([0,4,1,1,2,2,0,1,2,3,4,4])
@@ -61,7 +63,7 @@ using LinearAlgebra
                 @test A*x ≈ b
             end
             @testset "Utility functions" begin
-                K = KLUFactorization(A);
+                K = GB_KLUFactorization(A);
                 @test size(K) == (5, 5)
                 @test size(K, 3) == 1
                 @test_throws ArgumentError K.symbolic
@@ -77,7 +79,7 @@ using LinearAlgebra
                 @test size(K, 3) == 1
             end
             @testset "Refactorization" begin
-                B = convert(SparseMatrixCSC{Tv, Ti}, A1)
+                B = Tv.(A1)
                 b = Tv[8., 45., -3., 3., 19.]
                 F = klu(A)
                 klu!(F, B)

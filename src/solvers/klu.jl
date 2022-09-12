@@ -44,17 +44,17 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
     if s === :symbolic
         klu._symbolic == C_NULL && throw(ArgumentError("This KLUFactorization has not yet been analyzed. Try `klu_analyze!`."))
         if Ti == Int64
-            return unsafe_load(Ptr{klu_l_symbolic}(klu._symbolic))
+            return unsafe_load(Ptr{KLU.klu_l_symbolic}(klu._symbolic))
         else
-            return unsafe_load(Ptr{klu_symbolic}(klu._symbolic))
+            return unsafe_load(Ptr{KLU.klu_symbolic}(klu._symbolic))
         end
     end
     if s === :numeric
         klu._numeric == C_NULL && throw(ArgumentError("This KLUFactorization has not yet been factored. Try `klu_factor!`."))
         if Ti == Int64
-            return unsafe_load(Ptr{klu_l_numeric}(klu._numeric))
+            return unsafe_load(Ptr{KLU.klu_l_numeric}(klu._numeric))
         else
-            return unsafe_load(Ptr{klu_numeric}(klu._numeric))
+            return unsafe_load(Ptr{KLU.klu_numeric}(klu._numeric))
         end
     end
     # Non-overloaded parts:
@@ -164,7 +164,7 @@ function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}) where {Tv, Ti<:KLUITyp
     else
         sym = klu_analyze(K.n, colptr, rowval, Ref(K.common))
     end
-    pack!(K.A, colptr, rowval, vals; decrementindices = false, shallow = false, order = ColMajor())
+    pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
     if sym == C_NULL
         kluerror(K.common)
     else
@@ -183,13 +183,28 @@ function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}, P::Vector{Ti}, Q::Vect
     else
         sym = klu_analyze_given(K.n, colptr, rowval, P, Q, Ref(K.common))
     end
-    pack!(K.A, colptr, rowval, vals; decrementindices = false, shallow = false, order = ColMajor())
+    pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
     if sym == C_NULL
         kluerror(K.common)
     else
         K._symbolic = sym
     end
     return K
+end
+
+function KLU.klu_analyze!(K::GB_KLUFactorization, P::GBVector{Ti}, Q::GBVector{Ti}) where Ti<:KLUITypes
+    p = unpack!(P, Dense(); attachfinalizer = false)
+    q = unpack!(Q, Dense(); attachfinalizer = false)
+    try
+        result = KLU.klu_analyze!(K, p, q)
+        pack!(P, p, false)
+        pack!(Q, q, false)
+        return result
+    catch e
+        pack!(P, p, false)
+        pack!(Q, q, false)
+        rethrow(e)
+    end
 end
 
 for Tv ∈ KLU.KLUValueTypes, Ti ∈ KLU.KLUIndexTypes
@@ -199,7 +214,7 @@ for Tv ∈ KLU.KLUValueTypes, Ti ∈ KLU.KLUIndexTypes
             K._symbolic == C_NULL  && klu_analyze!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
             num = $factor(colptr, rowval, vals, K._symbolic, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals; decrementindices = false, shallow = false, order = ColMajor())
+            pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
             if num == C_NULL
                 kluerror(K.common)
             else
@@ -219,7 +234,7 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
             K._numeric == C_NULL && klu_factor!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
             ok = $rgrowth(K.colptr, K.rowval, K.nzval, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals; decrementindices = false, shallow = false, order = ColMajor())
+            pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
             if ok == 0
                 kluerror(K.common)
             else
@@ -230,7 +245,7 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
             K._numeric == C_NULL && klu_factor!(K)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
             ok = $condest(K.colptr, K.nzval, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals; decrementindices = false, shallow = false, order = ColMajor())
+            pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
             if ok == 0
                 kluerror(K.common)
             else
@@ -253,6 +268,17 @@ function KLU.klu(A::AbstractGBMatrix{Tv}) where {Tv<:Complex}
     return klu(ComplexF64.(A))
 end
 
+function klu!(K::GB_KLUFactorization{T}, A::AbstractGBMatrix{<:Union{Complex, AbstractFloat}}) where {T <: Union{ComplexF64, Float64}}
+    colptr, rowidx, vals = unpack!(A, Sparse(); order = ColMajor(), attachfinalizer = false, incrementindices = false)
+    try
+        result = klu!(K, convert(Vector{T}, vals))
+        pack!(A, colptr, rowidx, vals, false; decrementindicess = falsem order = ColMajor())
+        return result
+    catch e
+        pack!(A, colptr, rowidx, vals, false; decrementindicess = falsem order = ColMajor())
+        rethrow(e)
+    end
+end
 function KLU.solve!(
     klu::Union{
         GB_KLUFactorization, 
@@ -265,10 +291,10 @@ function KLU.solve!(
     x = unpack!(B, Dense(); attachfinalizer = false)
     return try
         KLU.solve!(klu, x)
-        pack!(B, x; shallow = false)
+        pack!(B, x, false)
         return B
     catch e
-        pack!(B, x; shallow = false)
+        pack!(B, x, false)
         throw(e)
     end
 end

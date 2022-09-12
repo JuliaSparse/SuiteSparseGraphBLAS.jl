@@ -608,7 +608,7 @@ function LinearAlgebra.Diagonal(v::AbstractGBVector, k::Integer=0; desc = nothin
     desc = _handledescriptor(desc)
     # Switch ptr to a Vector to trick GraphBLAS.
     # This is allowed since GrB_Vector is a GrB_Matrix internally.
-    @wraperror LibGraphBLAS.GxB_Matrix_diag(C, Ptr{LibGraphBLAS.GrB_Vector}(v), k, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_diag(C, LibGraphBLAS.GrB_Vector(v.p[]), k, desc)
     return C
 end
 
