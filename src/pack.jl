@@ -5,16 +5,8 @@ function _packdensematrix!(
     desc = _handledescriptor(desc)
     Csize = length(A) * sizeof(T)
     ptr = pointer(M)
-    if shallow 
-        lock(memlock)
-        try
-            KEEPALIVE[Ptr{Cvoid}(ptr)] = M
-        finally
-            unlock(memlock)
-        end
-    end
     @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
-        gbpointer(A),
+        A,
         Ref{Ptr{Cvoid}}(ptr),
         Csize,
         false, #isuniform
@@ -30,16 +22,8 @@ function _packdensematrixR!(
     desc = _handledescriptor(desc)
     Csize = length(A) * sizeof(T)
     ptr = pointer(M)
-    if shallow 
-        lock(memlock)
-        try
-            KEEPALIVE[Ptr{Cvoid}(ptr)] = M
-        finally
-            unlock(memlock)
-        end
-    end
     @wraperror LibGraphBLAS.GxB_Matrix_pack_FullR(
-        gbpointer(A),
+        A,
         Ref{Ptr{Cvoid}}(ptr),
         Csize,
         false, #isuniform
@@ -57,8 +41,7 @@ function _packcscmatrix!(
     colptrsize = length(colptr) * sizeof(LibGraphBLAS.GrB_Index),
     rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index),
     valsize = length(values) * sizeof(T),
-    decrementindices = true,
-    shallow = true
+    decrementindices = true
     ) where {T, Ti}
     if decrementindices && colptr[begin] == 1
         decrement!(colptr)
@@ -68,22 +51,12 @@ function _packcscmatrix!(
     colpointer = pointer(colptr)
     rowpointer = pointer(rowidx)
     valpointer = pointer(values)
-    if shallow
-        lock(memlock)
-        try
-            KEEPALIVE[Ptr{LibGraphBLAS.GrB_Index}(colpointer)] = colptr
-            KEEPALIVE[Ptr{LibGraphBLAS.GrB_Index}(rowpointer)] = rowidx
-            KEEPALIVE[Ptr{Cvoid}(valpointer)] = values
-        finally
-            unlock(memlock)
-        end
-    end
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(colpointer)
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(rowpointer)
     values = Ref{Ptr{Cvoid}}(valpointer)
     desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Matrix_pack_CSC(
-        gbpointer(A),
+        A,
         colptr,
         rowidx,
         values,
@@ -106,8 +79,7 @@ function _packcsrmatrix!(
     rowptrsize = length(rowptr) * sizeof(LibGraphBLAS.GrB_Index),
     colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index),
     valsize = length(values) * sizeof(T),
-    decrementindices = true,
-    shallow = true
+    decrementindices = true
     ) where {T, Ti}
     if decrementindices && rowptr[begin] == 1
         decrement!(rowptr)
@@ -117,22 +89,12 @@ function _packcsrmatrix!(
     rowpointer = pointer(rowptr)
     colpointer = pointer(colidx)
     valpointer = pointer(values)
-    if shallow
-        lock(memlock)
-        try
-            KEEPALIVE[Ptr{LibGraphBLAS.GrB_Index}(rowpointer)] = rowptr
-            KEEPALIVE[Ptr{LibGraphBLAS.GrB_Index}(colpointer)] = colidx
-            KEEPALIVE[Ptr{Cvoid}(valpointer)] = values
-        finally
-            unlock(memlock)
-        end
-    end
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(rowpointer)
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(colpointer)
     values = Ref{Ptr{Cvoid}}(valpointer)
 
     @wraperror LibGraphBLAS.GxB_Matrix_pack_CSR(
-        gbpointer(A),
+        A,
         rowptr,
         colidx,
         values,
@@ -147,10 +109,13 @@ function _packcsrmatrix!(
 end
 
 function makeshallow!(A)
-    ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), gbpointer(parent(A)))
+    ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), parent(A))
 end
 
-function pack!(A::AbstractGBArray, M::VecOrMat; order = ColMajor(), shallow = true)
+function pack!(
+    A::AbstractGBArray, M::StridedVecOrMat, shallow::Bool = true; 
+    order = ColMajor(), decrementindices = true # we don't need this, but it avoids another method.
+    )
     if order === ColMajor()
         _packdensematrix!(A, M; shallow)
     else
@@ -161,50 +126,69 @@ function pack!(A::AbstractGBArray, M::VecOrMat; order = ColMajor(), shallow = tr
 end
 
 function pack!(
-    A::AbstractGBArray, ptr, idx, values; 
-    order = ColMajor(), decrementindices = true, shallow = true
+    A::AbstractGBArray, ptr, idx, values, shallow::Bool = true; 
+    order = ColMajor(), decrementindices = true
 )
     
     if order === ColMajor()
-        _packcscmatrix!(A, ptr, idx, values; decrementindices, shallow)
+        _packcscmatrix!(A, ptr, idx, values; decrementindices)
     else
-        _packcsrmatrix!(A, ptr, idx, values; decrementindices, shallow)
+        _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
     shallow && makeshallow!(A)
     return A
 end
 
-function pack!(A::AbstractGBArray, S::SparseMatrixCSC; shallow = true)
-    pack!(A, getcolptr(S), getrowval(S), getnzval(S); shallow)
+function pack!(A::AbstractGBArray, S::SparseMatrixCSC, shallow::Bool = true; decrementindices =  true)
+    pack!(A, getcolptr(S), getrowval(S), getnzval(S), shallow; decrementindices)
 end
 pack!(
     A::AbstractGBArray, 
-    S::Transpose{<:Any, <:SparseMatrixCSC}; shallow = true
-) = transpose(pack!(A, parent(S); shallow))
+    S::Transpose{<:Any, <:SparseMatrixCSC}, shallow; decrementindices = true
+) = transpose(pack!(A, parent(S), shallow; decrementindices))
 
-function pack!(A::AbstractGBArray, s::SparseVector; shallow = true)
+function pack!(A::AbstractGBArray, s::SparseVector, shallow::Bool = true; decrementindices = true)
     ptrvec = [1, length(s.nzind) + 1]
     ptrvec = shallow ? ptrvec : _copytoraw(ptrvec)
-    pack!(A, ptrvec, s.nzind, s.nzval; shallow)
+    pack!(A, ptrvec, s.nzind, s.nzval, shallow; decrementindices)
 end
 pack!(
     A::AbstractGBArray, 
-    s::Transpose{<:Any, <:SparseVector}; shallow = true
-) = transpose(pack!(A, parent(s); shallow))
+    s::Transpose{<:Any, <:SparseVector}, shallow::Bool = true; decrementindices = true
+) = transpose(pack!(A, parent(s), shallow; decrementindices))
+
+
+# if no GBArray is provided then we will always return a GBShallowArray
+# We will also *always* decrementindices here.
+# 
+# function pack!(S::SparseMatrixCSC; fill = nothing)
+#     return GBShallowMatrix(S; fill)
+# end
+# function pack!(S::Transpose{<:Any, <:SparseMatrixCSC}; fill = nothing)
+#     return transpose(pack!(S; fill))
+# end
+# 
+# function pack!(s::SparseVector; fill = nothing)
+#     return GBShallowVector(s; fill)
+# end
+# function pack!(S::Transpose{<:Any, <:SparseVector}; fill = nothing)
+#     return transpose(pack!(parent(S); fill))
+# end
 
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
 # they default to GBVector and GBMatrix, since those are the most common/likely types to be used.
-function pack(A::DenseVecOrMat; fill = nothing, shallow = true)
+function pack(A::StridedVecOrMat; fill = nothing)
     if A isa AbstractVector
-        G = GBVector{eltype(A)}(size(A)...; fill)
-        return pack!(G, A; shallow)
+        return GBShallowVector(A; fill)
     else
-        G = GBMatrix{eltype(A)}(size(A)...; fill)
-        return pack!(G, A; shallow)
+        GBShallowMatrix(A; fill)
     end
 end
-pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing, shallow = true) = 
-    transpose(pack(parent(A); fill, shallow))
+function pack(A::Transpose{<:Any, <:StridedVecOrMat}; fill = nothing)
+    return transpose(parent(A); fill)
+end
+pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing) = 
+    transpose(pack(parent(A); fill))
 
 macro _densepack(xs...)
     syms = xs[1:(end - 1)]

@@ -10,6 +10,7 @@ function select!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     op = SelectOp(op)
     desc = _handledescriptor(desc; in1=A)
     mask = _handlemask!(desc, mask)
@@ -18,7 +19,7 @@ function select!(
     if thunk isa Number
         thunk = GBScalar(thunk)
     end
-    @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, gbpointer(parent(A)), thunk, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, parent(A), thunk, desc)
     return C
 end
 

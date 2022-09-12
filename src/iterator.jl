@@ -11,10 +11,9 @@ struct GBIterator{O}
         return new{storageorder(A)}(p, A)
     end
 end
-gbpointer(I::GBIterator) = I.p[]
 
 function _attach(I::GBIterator{O}, A::AbstractGBArray; desc = nothing) where {O}
     desc = _handledescriptor(desc)
-    @wraperror LibGraphBLAS.GxB_Iterator_attach(gbpointer(I), gbpointer(A), desc)
+    @wraperror LibGraphBLAS.GxB_Iterator_attach(I, A, desc)
 end
 

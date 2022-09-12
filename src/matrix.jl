@@ -2,6 +2,12 @@
 ###############
 
 # Empty constructors:
+function GBMatrix{T}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill::F = nothing) where {T, F}
+    return GBMatrix{T, F}(finalizer(p) do ref
+        @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
+    end, fill)
+end
+
 """
     GBMatrix{T}(nrows, ncols; fill = nothing)
 
@@ -11,12 +17,6 @@ function GBMatrix{T}(nrows::Integer, ncols::Integer; fill::F = nothing) where {T
     m = Ref{LibGraphBLAS.GrB_Matrix}()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
     return GBMatrix{T}(m; fill)
-end
-
-function GBMatrix{T}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill::F = nothing) where {T, F}
-    return GBMatrix{T, F}(finalizer(p) do ref
-        @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
-    end, fill)
 end
 
 GBMatrix{T}(dims::Dims{2}; fill = nothing) where {T} = GBMatrix{T}(dims...; fill)
@@ -39,7 +39,7 @@ function GBMatrix(
     J isa Vector || (J = collect(J))
     X isa Vector || (X = collect(X))
     A = GBMatrix{T}(nrows, ncols; fill)
-    build(A, I, J, X; combine)
+    build!(A, I, J, X; combine)
     return A
 end
 
@@ -61,10 +61,9 @@ each index.
 function GBMatrix(I::AbstractVector, J::AbstractVector, x::T;
     nrows = maximum(I), ncols = maximum(J), fill = nothing) where {T}
     A = GBMatrix{T}(nrows, ncols; fill)
-    build(A, I, J, x)
+    build!(A, I, J, x)
     return A
 end
-
 
 function GBMatrix(dims::Dims{2}, x::T; fill = nothing) where {T}
     A = GBMatrix{T}(dims; fill)
@@ -86,7 +85,7 @@ GBMatrix{T, F}(::Number, ::Number; fill = nothing) where {T, F} = throw(Argument
 
 function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
     A = GBMatrix{T}(size(S)...; fill)
-    return pack!(A, _copytoraw(S)...; shallow = false)
+    return pack!(A, _copytoraw(S)..., false)
 end
 
 function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
@@ -97,25 +96,20 @@ function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = noth
         M = Matrix(M)
     end
     A = GBMatrix{T}(size(M, 1), size(M, 2); fill)
-    return pack!(A, _copytoraw(M); shallow = false)
+    return pack!(A, _copytoraw(M), false)
 end
 
 function GBMatrix(v::SparseVector{T}; fill::F = nothing) where {T, F}
     A = GBMatrix{T}(size(v, 1), 1; fill)
-    return pack!(A, _copytoraw(v)...; shallow = false)
+    return pack!(A, _copytoraw(v)..., false)
 end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
 ###########################################################
 
-Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::GBMatrix) = A.p[]
-
 function Base.copy(A::GBMatrix{T, F}) where {T, F}
-    C = Ref{LibGraphBLAS.GrB_Matrix}()
-    LibGraphBLAS.GrB_Matrix_dup(C, gbpointer(A))
-    return GBMatrix{T, F}(C, A.fill)
+    return GBMatrix{T, F}(_copyGrBMat(A.p), A.fill)
 end
-
 
 # because of the fill kwarg we have to redo a lot of the Base.similar dispatch stack.
 function Base.similar(

@@ -18,10 +18,11 @@ function gbtranspose!(
     C::AbstractGBArray, A::GBArrayOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A)
     mask = _handlemask!(desc, mask)
     accum = _handleaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GrB_transpose(gbpointer(C), mask, accum, gbpointer(parent(A)), desc)
+    @wraperror LibGraphBLAS.GrB_transpose(C, mask, accum, parent(A), desc)
     return C
 end
 """
@@ -52,6 +53,7 @@ function Base.copy!(
     C::GBVecOrMat, A::LinearAlgebra.Transpose{<:Any, <:GBVecOrMat};
     mask = nothing, accum = nothing, desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     return gbtranspose!(C, A.parent; mask, accum, desc)
 end
 

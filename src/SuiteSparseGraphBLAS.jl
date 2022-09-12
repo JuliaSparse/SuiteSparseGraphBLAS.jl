@@ -98,6 +98,7 @@ include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")
 include("solvers/klu.jl")
+include("shallowtypes.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS

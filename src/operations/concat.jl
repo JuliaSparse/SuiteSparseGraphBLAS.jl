@@ -1,6 +1,7 @@
 function cat!(C::GBVecOrMat, tiles::AbstractArray{T}) where {T<:GBVecOrMat}
+    _canbeoutput(C) || throw(ShallowException())
     tiles = permutedims(tiles)
-    @wraperror LibGraphBLAS.GxB_Matrix_concat(gbpointer(C), gbpointer.(tiles), size(tiles,2), size(tiles,1), C_NULL)
+    @wraperror LibGraphBLAS.GxB_Matrix_concat(C, tiles, size(tiles,2), size(tiles,1), C_NULL)
     return C
 end
 

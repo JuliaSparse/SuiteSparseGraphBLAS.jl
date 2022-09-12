@@ -7,6 +7,7 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
@@ -15,7 +16,7 @@ function LinearAlgebra.mul!(
     op = semiring(op, eltype(A), eltype(B))
     accum = _handleaccum(accum, eltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    @wraperror LibGraphBLAS.GrB_mxm(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
+    @wraperror LibGraphBLAS.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
 
@@ -28,6 +29,7 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     return @_densepack A mul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -40,6 +42,7 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     return @_densepack B mul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -52,6 +55,7 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     return @_densepack A B mul!(C, A, B, op; mask, accum, desc)
 end
 

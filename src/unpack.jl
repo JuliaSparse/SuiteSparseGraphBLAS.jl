@@ -8,28 +8,19 @@ function _unpackdensematrix!(
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
-        gbpointer(A),
+        A,
         values,
         Csize,
         isiso,
         desc
     )
-    lock(memlock)
-    v = try
-        if values[] ∈ keys(KEEPALIVE)
-            return pop!(KEEPALIVE, values[])
-        else
-            v = unsafe_wrap(Array, Ptr{T}(values[]), szA...)
-            if attachfinalizer
-                return finalizer(v) do x
-                    _jlfree(x)
-                end
-            else
-                return v
-            end
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA...)
+    if attachfinalizer
+        return finalizer(v) do x
+            _jlfree(x)
         end
-    finally
-        unlock(memlock)
+    else
+        return v
     end
 end
 
@@ -43,33 +34,23 @@ function _unpackdensematrix!(
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
-        gbpointer(A),
+        A,
         values,
         Csize,
         isiso,
         desc
     )
-    lock(memlock)
-    M = try
-        if values[] ∈ keys(KEEPALIVE)
-            v = pop!(KEEPALIVE, values[])
-        else
-            v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
-            if attachfinalizer
-                v = finalizer(v) do x
-                    _jlfree(x)
-                end
-            end
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
+    if attachfinalizer
+        v = finalizer(v) do x
+            _jlfree(x)
         end
-        v
-    finally
-        unlock(memlock)
     end
     # eltype(M) == T || (M = copy(reinterpret(T, M)))
-    if length(M) != length(A)
-        resize!(M, length(A))
+    if length(v) != length(A)
+        resize!(v, length(A))
     end
-    return reshape(M, szA[1], szA[2])::Matrix{T} # reshape may not be necessary.
+    return reshape(v, szA[1], szA[2])::Matrix{T} # reshape may not be necessary.
 end
 
 function _unpackdensematrixR!(
@@ -82,26 +63,17 @@ function _unpackdensematrixR!(
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullR(
-        gbpointer(A),
+        A,
         values,
         Csize,
         isiso,
         desc
     )
-    lock(memlock)
-    M = try
-        if values[] ∈ keys(KEEPALIVE)
-            return pop!(KEEPALIVE, values[])
-        else
-            v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
-            if attachfinalizer
-                return finalizer(v) do x
-                    _jlfree(x)
-                end
-            end
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
+    if attachfinalizer
+        return finalizer(v) do x
+            _jlfree(x)
         end
-    finally
-        unlock(memlock)
     end
 end
 
@@ -120,7 +92,7 @@ function _unpackcscmatrix!(
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
-        gbpointer(A),
+        A,
         colptr,
         rowidx,
         values,
@@ -131,30 +103,19 @@ function _unpackcscmatrix!(
         isjumbled,
         desc
     )
-    lock(memlock)
-    colptr, rowidx, vals = try
-        if values[] ∈ keys(KEEPALIVE) && colptr[] ∈ keys(KEEPALIVE) && rowidx[] ∈ keys(KEEPALIVE)
-            x = (pop!(KEEPALIVE, colptr[]), pop!(KEEPALIVE, rowidx[]), pop!(KEEPALIVE, values[]))
-        else
-            colvector = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
-            rowvector = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
-            v = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
-            if attachfinalizer
-                colvector = finalizer(colvector) do x
-                    _jlfree(x)
-                end
-                rowvector = finalizer(rowvector) do x
-                    _jlfree(x)
-                end
-                v = finalizer(v) do x
-                    _jlfree(x)
-                end
-            end
-            x = (colvector, rowvector, v)
+    colvector = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
+    rowvector = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
+    v = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
+    if attachfinalizer
+        colvector = finalizer(colvector) do x
+            _jlfree(x)
         end
-        x
-    finally
-        unlock(memlock)
+        rowvector = finalizer(rowvector) do x
+            _jlfree(x)
+        end
+        v = finalizer(v) do x
+            _jlfree(x)
+        end
     end
 
     if isiso[]
@@ -182,7 +143,7 @@ function _unpackcsrmatrix!(
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
-        gbpointer(A),
+        A,
         rowptr,
         colidx,
         values,
@@ -193,31 +154,21 @@ function _unpackcsrmatrix!(
         isjumbled,
         desc
     )
-    lock(memlock)
-    rowptr, colidx, vals = try
-        if values[] ∈ keys(KEEPALIVE) && rowptr[] ∈ keys(KEEPALIVE) && colidx[] ∈ keys(KEEPALIVE)
-            x = (pop!(KEEPALIVE, colptr[]), pop!(KEEPALIVE, rowidx[]), pop!(KEEPALIVE, values[]))
-        else
-            rowvector = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
-            colvector = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])
-            v = unsafe_wrap(Array, Ptr{T}(values[]), nnz)
-            if attachfinalizer
-                rowvector = finalizer(rowvector) do x
-                    _jlfree(x)
-                end
-                colvector = finalizer(colvector) do x
-                    _jlfree(x)
-                end
-                v = finalizer(v) do x
-                    _jlfree(x)
-                end
-            end
-            x = (rowvector, colvector, v)
+    rowvector = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
+    colvector = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])
+    v = unsafe_wrap(Array, Ptr{T}(values[]), nnz)
+    if attachfinalizer
+        rowvector = finalizer(rowvector) do x
+            _jlfree(x)
         end
-        x
-    finally
-        unlock(memlock)
+        colvector = finalizer(colvector) do x
+            _jlfree(x)
+        end
+        v = finalizer(v) do x
+            _jlfree(x)
+        end
     end
+
     if isiso[]
         vals = fill(vals[1], nnonzeros)
     end

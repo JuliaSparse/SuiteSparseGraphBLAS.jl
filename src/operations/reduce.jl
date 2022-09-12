@@ -2,14 +2,14 @@ function reduce!(
     op, w::AbstractGBVector, A::GBArrayOrTranspose;
     mask = nothing, accum = nothing, desc = nothing
 )
+    _canbeoutput(w) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A)
     mask = _handlemask!(desc, mask)
     
     op = typedmonoid(op, eltype(w))
     accum = _handleaccum(accum, eltype(w))
     @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(
-        Ptr{LibGraphBLAS.GrB_Vector}(
-            gbpointer(w)), gbpointer(mask), accum, op, gbpointer(parent(A)), desc
+            w, mask, accum, op, parent(A), desc
         )
     return w
 end
@@ -56,7 +56,7 @@ function Base.reduce(
             accum = binaryop(op)
         end
         accum = _handleaccum(accum, typeout)
-        @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, gbpointer(parent(A)), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid_Scalar(c, accum, op, parent(A), desc)
         c[] === nothing  && return getfill(A)
         return c[]
     end

@@ -30,6 +30,7 @@ function emul!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
@@ -37,7 +38,7 @@ function emul!(
     op = binaryop(op, eltype(A), eltype(B))
     accum = _handleaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
-        @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     else
         throw(ArgumentError("$op is not a valid binary operator."))
@@ -115,7 +116,7 @@ function eadd!(
     accum = nothing,
     desc = nothing
 )
-
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
@@ -123,7 +124,7 @@ function eadd!(
     op = binaryop(op, eltype(A), eltype(B))
     accum = _handleaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
-        @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
+        @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
     else
         throw(ArgumentError("$op is not a valid binary op."))
@@ -201,7 +202,7 @@ function eunion!(
     accum = nothing,
     desc = nothing
 ) where {T, U}
-    
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
@@ -209,7 +210,7 @@ function eunion!(
     op = binaryop(op, eltype(A), eltype(B))
     accum = _handleaccum(accum, eltype(C))
     if op isa TypedBinaryOperator
-        @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(gbpointer(C), mask, accum, op, gbpointer(parent(A)), GBScalar(α), gbpointer(parent(B)), GBScalar(β), desc)
+        @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
         return C
     else
         throw(ArgumentError("$op is not a valid binary op."))

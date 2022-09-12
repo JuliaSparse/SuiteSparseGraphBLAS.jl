@@ -1,7 +1,5 @@
 abstract type AbstractGBShallowArray{T, A, N, F} <: AbstractGBArray{T, N, F} end
 
-Base.parent(A::AbstractGBShallowArray) = A.array
-
 StorageOrders.storageorder(A::AbstractGBShallowArray) = storageorder(A.array)
 
 mutable struct GBShallowVector{T, A, F} <: AbstractGBShallowArray{T, A, 1, F}
@@ -17,17 +15,17 @@ mutable struct GBShallowMatrix{T, A, F} <: AbstractGBShallowArray{T, A, 2, F}
 end
 
 function GBShallowVector(v::StridedVector{T}; fill::F = nothing) where {T, F}
-    m = Ref{LibGraphBLAS.GrB_Matrix}()
+    m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(v, 1), size(v, 2))
     gbvec = GBShallowVector{T, typeof(v), F}(m, fill, v)
-    pack!(gbvec, v, false)
+    pack!(gbvec, v, true)
 end
 
 function GBShallowMatrix(M::StridedMatrix{T}; fill::F = nothing) where {T, F}
-    m = Ref{LibGraphBLAS.GrB_Matrix}()
+    m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(M)...)
     gbmat = GBShallowMatrix{T, typeof(M), F}(m, fill, M)
-    pack!(gbmat, M, false)
+    pack!(gbmat, M, true)
 end
 
 function Base.copy(A::GBShallowMatrix{T}) where {T}

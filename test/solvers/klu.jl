@@ -92,15 +92,14 @@ using LinearAlgebra
             end
         end
     end
-    @testset "REPL printing of KLU" begin
-        A = sparse([1, 2], [1, 2], Float64[1.0, 1.0])
-        F = klu(A)
-        facstring = sprint((t, s) -> show(t, "text/plain", s), F)
-        lstring = sprint((t, s) -> show(t, "text/plain", s), F.L)
-        ustring = sprint((t, s) -> show(t, "text/plain", s), F.U)
-        fstring = sprint((t, s) -> show(t, "text/plain", s), F.F)
-        @test facstring == "$(summary(F))\nL factor:\n$lstring\nU factor:\n$ustring\nF factor:\n$fstring"
-    end
+@testset "REPL printing of KLU" begin
+    A = sparse([1, 2], [1, 2], Float64[1.0, 1.0])
+    F = klu(A)
+    facstring = sprint((t, s) -> show(t, "text/plain", s), F)
+    lstring = sprint((t, s) -> show(t, "text/plain", s), F.L)
+    ustring = sprint((t, s) -> show(t, "text/plain", s), F.U)
+    fstring = sprint((t, s) -> show(t, "text/plain", s), F.F)
+    @test facstring == "$(summary(F))\nL factor:\n$lstring\nU factor:\n$ustring\nF factor:\n$fstring"
 end
 
 @testset "Issue #4" begin
