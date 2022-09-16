@@ -2,14 +2,43 @@ module GB_KLU
 import KLU
 using KLU: KLUTypes, KLUITypes, AbstractKLUFactorization, klu_l_common, 
 klu_common, _klu_name, KLUFactorization, KLUValueTypes, KLUIndexTypes,
-_common, klu_factor!, klu_analyze!, klu_analyze, klu_l_analyze, kluerror, 
-klu_factor, klu_l_factor, klu_numeric, klu_l_numeric, _extract!, solve!, rgrowth,
-condest
+_common, klu_factor!, klu_analyze!, klu_analyze, klu_l_analyze, kluerror,
+klu_l_factor,
+klu_factor,
+klu_zl_factor,
+klu_z_factor,
+klu_l_solve,
+klu_zl_solve,
+klu_solve,
+klu_z_solve,
+klu_l_tsolve,
+klu_zl_tsolve,
+klu_tsolve,
+klu_z_tsolve,
+klu_refactor,
+klu_z_refactor,
+klu_l_refactor,
+klu_zl_refactor,
+klu_rgrowth,
+klu_z_rgrowth,
+klu_l_rgrowth,
+klu_zl_rgrowth,
+klu_rcond,
+klu_z_rcond,
+klu_l_rcond,
+klu_zl_rcond,
+klu_condest,
+klu_z_condest,
+klu_l_condest,
+klu_zl_condest,
+_extract!, solve!, rgrowth,
+condest, klu!
 
 using LinearAlgebra
 using ..SuiteSparseGraphBLAS: AbstractGBMatrix, pack!, unpack!, GBMatrix, 
 GBVector, AbstractGBArray, LibGraphBLAS, Sparse, Dense, ColMajor, sparsitystatus,
-_sizedjlmalloc, increment!
+_sizedjlmalloc, increment!, isshallow
+using ..SuiteSparseGraphBLAS
 
 mutable struct GB_KLUFactorization{Tv<:KLUTypes, Ti<:KLUITypes, M<:AbstractGBMatrix} <: AbstractKLUFactorization{Tv, Ti}
     common::Union{klu_l_common, klu_common}
@@ -81,32 +110,28 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
     elseif s === :(_F)
         fnz = klu.nzoff
         # We often don't have an F, so create the right vectors for an empty SparseMatrixCSC
-        if fnz == 0
-            return nothing
-        else
-            Fp = unsafe_wrap(Array, _sizedjlmalloc(klu.n + 1, Ti), klu.n + 1)
-            Fi = unsafe_wrap(Array, _sizedjlmalloc(fnz, Ti), fnz)
-            Fx = unsafe_wrap(Array, _sizedjlmalloc(fnz, Float64), fnz)
-            Fz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _sizedjlmalloc(fnz, Float64), fnz)
-            _extract!(klu; Fp, Fi, Fx, Fz)
-            # F is *not* sorted on output, so we'll have to do it here:
-            for i ∈ 1:(length(Fp) - 1)
-                # find each segment
-                first = Fp[i] + 1
-                last = Fp[i+1]
-                first > last && (continue)
-                first == length(Fi) && (break)
-                # sort each column of rowval, nzval, and Fz for complex numbers if necessary
-                #by the ascending permutation of rowval.
-                Fiview = view(Fi, first:last)
-                Fxview = view(Fx, first:last)
-                P = sortperm(Fiview)
-                Fiview .= Fiview[P]
-                Fxview .= Fxview[P]
-                if Fz != C_NULL && length(Fz) == length(Fx)
-                    Fzview = view(Fz, first:last)
-                    Fzview .= Fzview[P]
-                end
+        Fp = unsafe_wrap(Array, _sizedjlmalloc(klu.n + 1, Ti), klu.n + 1)
+        Fi = unsafe_wrap(Array, _sizedjlmalloc(fnz, Ti), fnz)
+        Fx = unsafe_wrap(Array, _sizedjlmalloc(fnz, Float64), fnz)
+        Fz = Tv == Float64 ? C_NULL : unsafe_wrap(Array, _sizedjlmalloc(fnz, Float64), fnz)
+        _extract!(klu; Fp, Fi, Fx, Fz)
+        # F is *not* sorted on output, so we'll have to do it here:
+        for i ∈ 1:(length(Fp) - 1)
+            # find each segment
+            first = Fp[i] + 1
+            last = Fp[i+1]
+            first > last && (continue)
+            first == length(Fi) && (break)
+            # sort each column of rowval, nzval, and Fz for complex numbers if necessary
+            #by the ascending permutation of rowval.
+            Fiview = view(Fi, first:last)
+            Fxview = view(Fx, first:last)
+            P = sortperm(Fiview)
+            Fiview .= Fiview[P]
+            Fxview .= Fxview[P]
+            if Fz != C_NULL && length(Fz) == length(Fx)
+                Fzview = view(Fz, first:last)
+                Fzview .= Fzview[P]
             end
         end
         return Fp, Fi, Fx, Fz
@@ -135,7 +160,7 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
         if s ∈ [:Q, :P, :R]
             increment!(out)
         end
-        pack!(v, out)
+        pack!(v, out, false)
         return v
     end
     if s ∈ [:L, :U, :F]
@@ -144,13 +169,19 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
         elseif s === :U
             p, i, x, z = klu._U
         elseif s === :F
+            if iszero(klu.nzoff)
+                return similar(klu.A)
+            end
             p, i, x, z = klu._F
         end
         out = similar(klu.A, Tv, klu.n, klu.n)
         if Tv == Float64
-            return pack!(out, p, i, x)
+            return pack!(out, p, i, x, false)
         else
-            return pack!(out, p, i, Complex.(x, z))
+            c = SuiteSparseGraphBLAS._copytoraw(Complex.(x, z))
+            SuiteSparseGraphBLAS._jlfree(x)
+            SuiteSparseGraphBLAS._jlfree(z)
+            return pack!(out, p, i, c, false)
         end
     end
 end
@@ -158,13 +189,14 @@ end
 # klu_analyze! overloads
 function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}) where {Tv, Ti<:KLUITypes}
     if K._symbolic != C_NULL return K end
+    shallow = isshallow(K.A)
     colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
     if Ti == Int64
         sym = klu_l_analyze(K.n, colptr, rowval, Ref(K.common))
     else
         sym = klu_analyze(K.n, colptr, rowval, Ref(K.common))
     end
-    pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
+    pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
     if sym == C_NULL
         kluerror(K.common)
     else
@@ -177,13 +209,14 @@ end
 # User provided permutation vectors:
 function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}, P::Vector{Ti}, Q::Vector{Ti}) where {Tv, Ti<:KLUITypes}
     if K._symbolic != C_NULL return K end
+    shallow = isshallow(K.A)
     colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
     if Ti == Int64
         sym = klu_l_analyze_given(K.n, colptr, rowval, P, Q, Ref(K.common))
     else
         sym = klu_analyze_given(K.n, colptr, rowval, P, Q, Ref(K.common))
     end
-    pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
+    pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
     if sym == C_NULL
         kluerror(K.common)
     else
@@ -193,16 +226,18 @@ function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}, P::Vector{Ti}, Q::Vect
 end
 
 function KLU.klu_analyze!(K::GB_KLUFactorization, P::GBVector{Ti}, Q::GBVector{Ti}) where Ti<:KLUITypes
+    shallowp = isshallow(P)
+    shallowq = isshallow(Q)
     p = unpack!(P, Dense(); attachfinalizer = false)
     q = unpack!(Q, Dense(); attachfinalizer = false)
     try
         result = KLU.klu_analyze!(K, p, q)
-        pack!(P, p, false)
-        pack!(Q, q, false)
+        pack!(P, p, shallowp)
+        pack!(Q, q, shallowq)
         return result
     catch e
-        pack!(P, p, false)
-        pack!(Q, q, false)
+        pack!(P, p, shallowp)
+        pack!(Q, q, shallowq)
         rethrow(e)
     end
 end
@@ -212,9 +247,10 @@ for Tv ∈ KLU.KLUValueTypes, Ti ∈ KLU.KLUIndexTypes
     @eval begin
         function KLU.klu_factor!(K::GB_KLUFactorization{$Tv, $Ti})
             K._symbolic == C_NULL  && klu_analyze!(K)
+            shallow = isshallow(K.A)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
             num = $factor(colptr, rowval, vals, K._symbolic, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
+            pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
             if num == C_NULL
                 kluerror(K.common)
             else
@@ -232,9 +268,10 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
     @eval begin
         function KLU.rgrowth(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
+            shallow = isshallow(K.A)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
-            ok = $rgrowth(K.colptr, K.rowval, K.nzval, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
+            ok = $rgrowth(colptr, rowval, vals, K._symbolic, K._numeric, Ref(K.common))
+            pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
             if ok == 0
                 kluerror(K.common)
             else
@@ -243,9 +280,10 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
         end
         function KLU.condest(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
+            shallow = isshallow(A)
             colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
-            ok = $condest(K.colptr, K.nzval, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals, false; decrementindices = false, order = ColMajor())
+            ok = $condest(colptr, vals, K._symbolic, K._numeric, Ref(K.common))
+            pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
             if ok == 0
                 kluerror(K.common)
             else
@@ -268,17 +306,40 @@ function KLU.klu(A::AbstractGBMatrix{Tv}) where {Tv<:Complex}
     return klu(ComplexF64.(A))
 end
 
-function klu!(K::GB_KLUFactorization{T}, A::AbstractGBMatrix{<:Union{Complex, AbstractFloat}}) where {T <: Union{ComplexF64, Float64}}
+for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
+    refactor = _klu_name("refactor", Tv, Ti)
+    @eval begin
+        function KLU.klu!(K::GB_KLUFactorization{$Tv, $Ti}, nzval::Vector{$Tv})
+            shallow = isshallow(K.A)
+            colptr, rowidx, originalvals = unpack!(K.A, Sparse(); order = ColMajor(), attachfinalizer = false, incrementindices = false)
+            if length(originalvals) != length(nzval)
+                pack!(A, colptr, rowidx, originalvals, false; decrementindices = false)
+                throw(DimensionMismatch())
+            end
+            ok = $refactor(colptr, rowidx, nzval, K._symbolic, K._numeric, Ref(K.common))
+            pack!(K.A, colptr, rowidx, originalvals, shallow; decrementindices = false)
+            if ok == 1
+                return K
+            else
+                kluerror(K.common)
+            end
+        end
+    end
+end
+
+function KLU.klu!(K::GB_KLUFactorization{T}, A::AbstractGBMatrix{<:Union{Complex, AbstractFloat}}) where {T <: Union{ComplexF64, Float64}}
+    shallow = isshallow(K.A)
     colptr, rowidx, vals = unpack!(A, Sparse(); order = ColMajor(), attachfinalizer = false, incrementindices = false)
     try
         result = klu!(K, convert(Vector{T}, vals))
-        pack!(A, colptr, rowidx, vals, false; decrementindicess = falsem order = ColMajor())
+        pack!(A, colptr, rowidx, vals, shallow; decrementindices = false, order = ColMajor())
         return result
     catch e
-        pack!(A, colptr, rowidx, vals, false; decrementindicess = falsem order = ColMajor())
+        pack!(A, colptr, rowidx, vals, shallow; decrementindices = false, order = ColMajor())
         rethrow(e)
     end
 end
+
 function KLU.solve!(
     klu::Union{
         GB_KLUFactorization, 
@@ -288,13 +349,14 @@ function KLU.solve!(
     B::AbstractGBArray
 )
     sparsitystatus(B) === Dense() || throw(ArgumentError("B is not dense."))
+    shallow = isshallow(B)
     x = unpack!(B, Dense(); attachfinalizer = false)
     return try
         KLU.solve!(klu, x)
-        pack!(B, x, false)
+        pack!(B, x, shallow)
         return B
     catch e
-        pack!(B, x, false)
+        pack!(B, x, shallow)
         throw(e)
     end
 end

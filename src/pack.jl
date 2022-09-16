@@ -1,6 +1,6 @@
 function _packdensematrix!(
     A::AbstractGBArray{T}, M::VecOrMat{T};
-    desc = nothing, shallow = true
+    desc = nothing
 ) where {T}
     desc = _handledescriptor(desc)
     Csize = length(A) * sizeof(T)
@@ -17,7 +17,7 @@ end
 
 function _packdensematrixR!(
     A::AbstractGBArray{T}, M::VecOrMat{T};
-    desc = nothing, shallow = true
+    desc = nothing
 ) where {T}
     desc = _handledescriptor(desc)
     Csize = length(A) * sizeof(T)
@@ -117,9 +117,9 @@ function pack!(
     order = ColMajor(), decrementindices = true # we don't need this, but it avoids another method.
     )
     if order === ColMajor()
-        _packdensematrix!(A, M; shallow)
+        _packdensematrix!(A, M)
     else
-        _packdensematrixR!(A, M; shallow)
+        _packdensematrixR!(A, M)
     end
     shallow && makeshallow!(A)
     return A
@@ -176,7 +176,6 @@ pack!(
 # end
 
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
-# they default to GBVector and GBMatrix, since those are the most common/likely types to be used.
 function pack(A::StridedVecOrMat; fill = nothing)
     if A isa AbstractVector
         return GBShallowVector(A; fill)

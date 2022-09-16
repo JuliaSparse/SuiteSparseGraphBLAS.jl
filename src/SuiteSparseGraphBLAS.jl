@@ -32,7 +32,7 @@ include("libutils.jl")
 include("../lib/LibGraphBLAS_gen.jl")
 using .LibGraphBLAS
 
-include("operators/libgbops.jl")
+include("operators/libgbops.jl") 
 
 include("gbtypes.jl")
 include("types.jl")

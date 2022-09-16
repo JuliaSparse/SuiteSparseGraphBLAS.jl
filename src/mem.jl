@@ -1,7 +1,8 @@
 const KEEPALIVE = Dict{Ptr, VecOrMat}()
-
+function isshallow(A)
+    ccall((:GB_is_shallow, libgraphblas), Bool, (LibGraphBLAS.GrB_Matrix,), A)
+end
 const memlock = Threads.SpinLock()
-
 function _jlmalloc(size, ::Type{T}) where {T}
     return ccall(:jl_malloc, Ptr{T}, (UInt, ), size)
 end
