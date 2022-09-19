@@ -35,7 +35,7 @@ _extract!, solve!, rgrowth,
 condest, klu!
 
 using LinearAlgebra
-using ..SuiteSparseGraphBLAS: AbstractGBMatrix, pack!, unpack!, GBMatrix, 
+using ..SuiteSparseGraphBLAS: AbstractGBMatrix, unsafepack!, unsafeunpack!, GBMatrix, 
 GBVector, AbstractGBArray, LibGraphBLAS, Sparse, Dense, ColMajor, sparsitystatus,
 _sizedjlmalloc, increment!, isshallow
 using ..SuiteSparseGraphBLAS
@@ -160,7 +160,7 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
         if s ∈ [:Q, :P, :R]
             increment!(out)
         end
-        pack!(v, out, false)
+        unsafepack!(v, out, false)
         return v
     end
     if s ∈ [:L, :U, :F]
@@ -176,12 +176,12 @@ function Base.getproperty(klu::GB_KLUFactorization{Tv, Ti, M}, s::Symbol) where 
         end
         out = similar(klu.A, Tv, klu.n, klu.n)
         if Tv == Float64
-            return pack!(out, p, i, x, false)
+            return unsafepack!(out, p, i, x, false)
         else
             c = SuiteSparseGraphBLAS._copytoraw(Complex.(x, z))
             SuiteSparseGraphBLAS._jlfree(x)
             SuiteSparseGraphBLAS._jlfree(z)
-            return pack!(out, p, i, c, false)
+            return unsafepack!(out, p, i, c, false)
         end
     end
 end
@@ -190,13 +190,13 @@ end
 function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}) where {Tv, Ti<:KLUITypes}
     if K._symbolic != C_NULL return K end
     shallow = isshallow(K.A)
-    colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
+    colptr, rowval, vals = unsafeunpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false)
     if Ti == Int64
         sym = klu_l_analyze(K.n, colptr, rowval, Ref(K.common))
     else
         sym = klu_analyze(K.n, colptr, rowval, Ref(K.common))
     end
-    pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
+    unsafepack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
     if sym == C_NULL
         kluerror(K.common)
     else
@@ -210,13 +210,13 @@ end
 function KLU.klu_analyze!(K::GB_KLUFactorization{Tv, Ti}, P::Vector{Ti}, Q::Vector{Ti}) where {Tv, Ti<:KLUITypes}
     if K._symbolic != C_NULL return K end
     shallow = isshallow(K.A)
-    colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
+    colptr, rowval, vals = unsafeunpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false)
     if Ti == Int64
         sym = klu_l_analyze_given(K.n, colptr, rowval, P, Q, Ref(K.common))
     else
         sym = klu_analyze_given(K.n, colptr, rowval, P, Q, Ref(K.common))
     end
-    pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
+    unsafepack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
     if sym == C_NULL
         kluerror(K.common)
     else
@@ -228,16 +228,16 @@ end
 function KLU.klu_analyze!(K::GB_KLUFactorization, P::GBVector{Ti}, Q::GBVector{Ti}) where Ti<:KLUITypes
     shallowp = isshallow(P)
     shallowq = isshallow(Q)
-    p = unpack!(P, Dense(); attachfinalizer = false)
-    q = unpack!(Q, Dense(); attachfinalizer = false)
+    p = unsafeunpack!(P, Dense())
+    q = unsafeunpack!(Q, Dense())
     try
         result = KLU.klu_analyze!(K, p, q)
-        pack!(P, p, shallowp)
-        pack!(Q, q, shallowq)
+        unsafepack!(P, p, shallowp)
+        unsafepack!(Q, q, shallowq)
         return result
     catch e
-        pack!(P, p, shallowp)
-        pack!(Q, q, shallowq)
+        unsafepack!(P, p, shallowp)
+        unsafepack!(Q, q, shallowq)
         rethrow(e)
     end
 end
@@ -248,9 +248,9 @@ for Tv ∈ KLU.KLUValueTypes, Ti ∈ KLU.KLUIndexTypes
         function KLU.klu_factor!(K::GB_KLUFactorization{$Tv, $Ti})
             K._symbolic == C_NULL  && klu_analyze!(K)
             shallow = isshallow(K.A)
-            colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
+            colptr, rowval, vals = unsafeunpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false)
             num = $factor(colptr, rowval, vals, K._symbolic, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
+            unsafepack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
             if num == C_NULL
                 kluerror(K.common)
             else
@@ -269,9 +269,9 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
         function KLU.rgrowth(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
             shallow = isshallow(K.A)
-            colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
+            colptr, rowval, vals = unsafeunpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false)
             ok = $rgrowth(colptr, rowval, vals, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
+            unsafepack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
             if ok == 0
                 kluerror(K.common)
             else
@@ -281,9 +281,9 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
         function KLU.condest(K::GB_KLUFactorization{$Tv, $Ti})
             K._numeric == C_NULL && klu_factor!(K)
             shallow = isshallow(A)
-            colptr, rowval, vals = unpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false, attachfinalizer = false)
+            colptr, rowval, vals = unsafeunpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false)
             ok = $condest(colptr, vals, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
+            unsafepack!(K.A, colptr, rowval, vals, shallow; decrementindices = false, order = ColMajor())
             if ok == 0
                 kluerror(K.common)
             else
@@ -311,13 +311,13 @@ for Tv ∈ KLUValueTypes, Ti ∈ KLUIndexTypes
     @eval begin
         function KLU.klu!(K::GB_KLUFactorization{$Tv, $Ti}, nzval::Vector{$Tv})
             shallow = isshallow(K.A)
-            colptr, rowidx, originalvals = unpack!(K.A, Sparse(); order = ColMajor(), attachfinalizer = false, incrementindices = false)
+            colptr, rowidx, originalvals = unsafeunpack!(K.A, Sparse(); order = ColMajor(), incrementindices = false)
             if length(originalvals) != length(nzval)
-                pack!(A, colptr, rowidx, originalvals, false; decrementindices = false)
+                unsafepack!(A, colptr, rowidx, originalvals, false; decrementindices = false)
                 throw(DimensionMismatch())
             end
             ok = $refactor(colptr, rowidx, nzval, K._symbolic, K._numeric, Ref(K.common))
-            pack!(K.A, colptr, rowidx, originalvals, shallow; decrementindices = false)
+            unsafepack!(K.A, colptr, rowidx, originalvals, shallow; decrementindices = false)
             if ok == 1
                 return K
             else
@@ -329,13 +329,13 @@ end
 
 function KLU.klu!(K::GB_KLUFactorization{T}, A::AbstractGBMatrix{<:Union{Complex, AbstractFloat}}) where {T <: Union{ComplexF64, Float64}}
     shallow = isshallow(K.A)
-    colptr, rowidx, vals = unpack!(A, Sparse(); order = ColMajor(), attachfinalizer = false, incrementindices = false)
+    colptr, rowidx, vals = unsafeunpack!(A, Sparse(); order = ColMajor(), incrementindices = false)
     try
         result = klu!(K, convert(Vector{T}, vals))
-        pack!(A, colptr, rowidx, vals, shallow; decrementindices = false, order = ColMajor())
+        unsafepack!(A, colptr, rowidx, vals, shallow; decrementindices = false, order = ColMajor())
         return result
     catch e
-        pack!(A, colptr, rowidx, vals, shallow; decrementindices = false, order = ColMajor())
+        unsafepack!(A, colptr, rowidx, vals, shallow; decrementindices = false, order = ColMajor())
         rethrow(e)
     end
 end
@@ -350,13 +350,13 @@ function KLU.solve!(
 )
     sparsitystatus(B) === Dense() || throw(ArgumentError("B is not dense."))
     shallow = isshallow(B)
-    x = unpack!(B, Dense(); attachfinalizer = false)
+    x = unsafeunpack!(B, Dense())
     return try
         KLU.solve!(klu, x)
-        pack!(B, x, shallow)
+        unsafepack!(B, x, shallow)
         return B
     catch e
-        pack!(B, x, shallow)
+        unsafepack!(B, x, shallow)
         throw(e)
     end
 end

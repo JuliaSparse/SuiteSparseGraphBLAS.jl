@@ -85,7 +85,7 @@ GBMatrix{T, F}(::Number, ::Number; fill = nothing) where {T, F} = throw(Argument
 
 function GBMatrix(S::SparseMatrixCSC{T}; fill::F = nothing) where {T, F}
     A = GBMatrix{T}(size(S)...; fill)
-    return pack!(A, _copytoraw(S)..., false)
+    return unsafepack!(A, _copytoraw(S)..., false)
 end
 
 function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = nothing) where {T, F}
@@ -96,12 +96,12 @@ function GBMatrix(M::Union{AbstractVector{T}, AbstractMatrix{T}}; fill::F = noth
         M = Matrix(M)
     end
     A = GBMatrix{T}(size(M, 1), size(M, 2); fill)
-    return pack!(A, _copytoraw(M), false)
+    return unsafepack!(A, _copytoraw(M), false)
 end
 
 function GBMatrix(v::SparseVector{T}; fill::F = nothing) where {T, F}
     A = GBMatrix{T}(size(v, 1), 1; fill)
-    return pack!(A, _copytoraw(v)..., false)
+    return unsafepack!(A, _copytoraw(v)..., false)
 end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:

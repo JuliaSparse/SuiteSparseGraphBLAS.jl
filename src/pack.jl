@@ -92,7 +92,7 @@ function _packcsrmatrix!(
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}(rowpointer)
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}(colpointer)
     values = Ref{Ptr{Cvoid}}(valpointer)
-
+    desc = _handledescriptor(desc)
     @wraperror LibGraphBLAS.GxB_Matrix_pack_CSR(
         A,
         rowptr,
@@ -112,9 +112,9 @@ function makeshallow!(A)
     ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), parent(A))
 end
 
-function pack!(
+function unsafepack!(
     A::AbstractGBArray, M::StridedVecOrMat, shallow::Bool = true; 
-    order = ColMajor(), decrementindices = true # we don't need this, but it avoids another method.
+    order = ColMajor(), decrementindices = false # we don't need this, but it avoids another method.
     )
     if order === ColMajor()
         _packdensematrix!(A, M)
@@ -125,7 +125,7 @@ function pack!(
     return A
 end
 
-function pack!(
+function unsafepack!(
     A::AbstractGBArray, ptr, idx, values, shallow::Bool = true; 
     order = ColMajor(), decrementindices = true
 )
@@ -139,40 +139,40 @@ function pack!(
     return A
 end
 
-function pack!(A::AbstractGBArray, S::SparseMatrixCSC, shallow::Bool = true; decrementindices =  true)
-    pack!(A, getcolptr(S), getrowval(S), getnzval(S), shallow; decrementindices)
+function unsafepack!(A::AbstractGBArray, S::SparseMatrixCSC, shallow::Bool = true; decrementindices =  true)
+    unsafepack!(A, getcolptr(S), getrowval(S), getnzval(S), shallow; decrementindices)
 end
-pack!(
+unsafepack!(
     A::AbstractGBArray, 
     S::Transpose{<:Any, <:SparseMatrixCSC}, shallow; decrementindices = true
-) = transpose(pack!(A, parent(S), shallow; decrementindices))
+) = transpose(unsafepack!(A, parent(S), shallow; decrementindices))
 
-function pack!(A::AbstractGBArray, s::SparseVector, shallow::Bool = true; decrementindices = true)
+function unsafepack!(A::AbstractGBArray, s::SparseVector, shallow::Bool = true; decrementindices = true)
     ptrvec = [1, length(s.nzind) + 1]
-    ptrvec = shallow ? ptrvec : _copytoraw(ptrvec)
-    pack!(A, ptrvec, s.nzind, s.nzval, shallow; decrementindices)
+    ptrvec = shallow ? ptrvec : _copytoraw(ptrvec) # TODO: potential segfault when ptrvec goes out.
+    unsafepack!(A, ptrvec, s.nzind, s.nzval, shallow; decrementindices)
 end
-pack!(
+unsafepack!(
     A::AbstractGBArray, 
     s::Transpose{<:Any, <:SparseVector}, shallow::Bool = true; decrementindices = true
-) = transpose(pack!(A, parent(s), shallow; decrementindices))
+) = transpose(unsafepack!(A, parent(s), shallow; decrementindices))
 
 
 # if no GBArray is provided then we will always return a GBShallowArray
 # We will also *always* decrementindices here.
 # 
-# function pack!(S::SparseMatrixCSC; fill = nothing)
+# function unsafepack!(S::SparseMatrixCSC; fill = nothing)
 #     return GBShallowMatrix(S; fill)
 # end
-# function pack!(S::Transpose{<:Any, <:SparseMatrixCSC}; fill = nothing)
-#     return transpose(pack!(S; fill))
+# function unsafepack!(S::Transpose{<:Any, <:SparseMatrixCSC}; fill = nothing)
+#     return transpose(unsafepack!(S; fill))
 # end
 # 
-# function pack!(s::SparseVector; fill = nothing)
+# function unsafepack!(s::SparseVector; fill = nothing)
 #     return GBShallowVector(s; fill)
 # end
-# function pack!(S::Transpose{<:Any, <:SparseVector}; fill = nothing)
-#     return transpose(pack!(parent(S); fill))
+# function unsafepack!(S::Transpose{<:Any, <:SparseVector}; fill = nothing)
+#     return transpose(unsafepack!(parent(S); fill))
 # end
 
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)

@@ -37,14 +37,14 @@ function GBShallowVector(v::DenseVector{T}; fill::F = nothing) where {T, F}
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(v, 1), size(v, 2))
     gbvec = GBShallowVector{T}(m, fill, Int64[], Int64[], Int64[], Bool[], v)
-    pack!(gbvec, v, true)
+    unsafepack!(gbvec, v, true)
 end
 
 function GBShallowMatrix(M::StridedMatrix{T}; fill::F = nothing) where {T, F}
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(M)...)
     gbmat = GBShallowMatrix{T}(m, fill, Int64[], Int64[], Int64[], Bool[], M)
-    pack!(gbmat, M, true)
+    unsafepack!(gbmat, M, true)
 end
 
 function GBShallowVector(idx::DenseVector{I}, nzvals::DenseVector{T}, size; fill::F = nothing, decrementindices = true) where {I<:Integer, T, F}
@@ -52,7 +52,7 @@ function GBShallowVector(idx::DenseVector{I}, nzvals::DenseVector{T}, size; fill
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size, 1)
     gbvec = GBShallowVector{T}(m, fill, [1, length(idx) + 1], idx, Int64[], Bool[], nzvals)
-    pack!(gbvec, gbvec.ptr, gbvec.idx, gbvec.nzval, true; decrementindices)
+    unsafepack!(gbvec, gbvec.ptr, gbvec.idx, gbvec.nzval, true; decrementindices)
 end
 
 GBShallowVector(v::SparseVector; fill = nothing, decrementindices = true) = return GBShallowVector(
@@ -65,7 +65,7 @@ function GBShallowMatrix(ptr::DenseVector{I}, idx::DenseVector{I}, nzvals::Dense
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
     gbmat = GBShallowMatrix{T}(m, fill, ptr, idx, Int64[], Bool[], nzvals)
-    pack!(gbmat, gbmat.ptr, gbmat.idx, gbmat.nzval, true; decrementindices)
+    unsafepack!(gbmat, gbmat.ptr, gbmat.idx, gbmat.nzval, true; decrementindices)
 end
 
 GBShallowMatrix(S::SparseMatrixCSC; fill = nothing, decrementindices = true) = GBShallowMatrix(

@@ -44,35 +44,35 @@ end
 
 function Base.Matrix(A::GBArrayOrTranspose)
     T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
-    return unpack!(T, Dense())
+    return unsafeunpack!(T, Dense())
 end
 
 function Base.Vector(A::GBVectorOrTranspose)
     format = sparsitystatus(A)
     if format === Dense()
-        T = unpack!(A, Dense(); attachfinalizer = false)
+        T = unsafeunpack!(A, Dense(); attachfinalizer = false)
         M = copy(T)
-        pack!(A, T, false)
+        unsafepack!(A, T, false)
     else
         # if A is not dense we end up doing 2x copies. Once to avoid densifying A.
         T = copy(A)
-        U = unpack!(T, Dense(); attachfinalizer = false)
+        U = unsafeunpack!(T, Dense(); attachfinalizer = false)
         # And again to make this a native Julia Array.
         # if we didn't copy here a user could not resize
         M = copy(U)
-        pack!(T, U, false)
+        unsafepack!(T, U, false)
     end
     M
 end
 
 function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
     T = copy(A) # avoid changing sparsity of A and destroying it.
-    return unpack!(T, SparseMatrixCSC)
+    return unsafeunpack!(T, SparseMatrixCSC; attachfinalizer = true)
 end
 
 function SparseArrays.SparseVector(v::GBVectorOrTranspose)
     T = copy(v) # avoid changing sparsity of v and destroying it.
-    return unpack!(T, SparseVector)
+    return unsafeunpack!(T, SparseVector; attachfinalizer = true)
 end
 
 # AbstractGBMatrix functions:
@@ -465,7 +465,7 @@ function subassign!(C::AbstractGBArray, x::AbstractMatrix, I, J;
     array = x isa VecOrMat ? x : collect(x)
     array = pack(array)
     subassign!(C, array, I, J; mask, accum, desc)
-    unpack!(array; attachfinalizer = false)
+    unsafeunpack!(array; attachfinalizer = false)
     return x
 end
 
@@ -475,7 +475,7 @@ function subassign!(C::AbstractGBArray, x::AbstractVector, I, J;
     array = x isa VecOrMat ? x : collect(x)
     array = pack(array)
     subassign!(C, array, I, J; mask, accum, desc)
-    unpack!(array; attachfinalizer = false)
+    unsafeunpack!(array; attachfinalizer = false)
     return x
 end
 
@@ -483,9 +483,9 @@ function subassign!(C::AbstractGBArray, x::Union{SparseMatrixCSC, SparseVector},
     mask = nothing, accum = nothing, desc = nothing)
     _canbeoutput(C) || throw(ShallowException())
     array = similar(C, eltype(x), size(x))
-    array = pack!(array, x)
+    array = unsafepack!(array, x)
     subassign!(C, array, I, J; mask, accum, desc)
-    unpack!(array, Sparse(); attachfinalizer = false)
+    unsafeunpack!(array, Sparse(); attachfinalizer = false)
     return x
 end
 
@@ -843,11 +843,11 @@ function Base.getindex(
     j::AbstractGBVector{<:Integer};
     mask = nothing, accum = nothing, desc = nothing
 )
-    I = unpack!(i, Dense(); attachfinalizer = false)
-    J = unpack!(j, Dense(); attachfinalizer = false)
+    I = unsafeunpack!(i, Dense(); attachfinalizer = false)
+    J = unsafeunpack!(j, Dense(); attachfinalizer = false)
     x = extract(A, I, J; mask, accum, desc)
-    pack!(i, I, false)
-    pack!(j, J, false)
+    unsafepack!(i, I, false)
+    unsafepack!(j, J, false)
     return x
 end
 

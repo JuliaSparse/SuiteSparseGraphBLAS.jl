@@ -1,6 +1,6 @@
 function _unpackdensematrix!(
     A::AbstractGBVector{T}; 
-    desc = nothing, attachfinalizer = true
+    desc = nothing, attachfinalizer = false
 ) where {T}
     szA = size(A)
     desc = _handledescriptor(desc)
@@ -26,7 +26,7 @@ end
 
 function _unpackdensematrix!(
     A::AbstractGBMatrix{T}; 
-    desc = nothing, attachfinalizer = true
+    desc = nothing, attachfinalizer = false
 ) where {T}
     szA = size(A)
     desc = _handledescriptor(desc)
@@ -55,7 +55,7 @@ end
 
 function _unpackdensematrixR!(
     A::AbstractGBArray{T}; 
-    desc = nothing, attachfinalizer = true
+    desc = nothing, attachfinalizer = false
 ) where {T}
     szA = size(A)
     desc = _handledescriptor(desc)
@@ -79,7 +79,7 @@ end
 
 function _unpackcscmatrix!(
     A::AbstractGBArray{T}; 
-    desc = nothing, incrementindices = true, attachfinalizer = true
+    desc = nothing, incrementindices = true, attachfinalizer = false
 ) where {T}
     desc = _handledescriptor(desc)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -134,7 +134,7 @@ end
 
 function _unpackcsrmatrix!(
     A::AbstractGBArray{T}; 
-    desc = nothing, incrementindices = true, attachfinalizer = true
+    desc = nothing, incrementindices = true, attachfinalizer = false
 ) where {T}
     desc = _handledescriptor(desc)
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -189,9 +189,9 @@ function _unpackcsrmatrix!(
     vals
 end
 
-function unpack!(
+function unsafeunpack!(
     A::AbstractGBVector{T}, ::Dense; 
-    order = ColMajor(), attachfinalizer = true
+    order = ColMajor(), attachfinalizer = false, incrementindices = false
 ) where {T}
     wait(A)
     sparsity = sparsitystatus(A)
@@ -203,9 +203,10 @@ function unpack!(
     end
 end
 
-function unpack!(
+function unsafeunpack!(
     A::AbstractGBMatrix{T}, ::Dense; 
-    order = ColMajor(), attachfinalizer = true) where {T}
+    order = ColMajor(), attachfinalizer = false, incrementindices = false
+) where {T}
     wait(A)
     sparsity = sparsitystatus(A)
     sparsity === Dense() || (A .+= (similar(A) .= zero(T)))
@@ -216,14 +217,20 @@ function unpack!(
     end
 end
 
-function unpack!(A::AbstractGBArray, ::Type{Vector}; attachfinalizer = true)
-    reshape(unpack!(A, Dense(); attachfinalizer), :)::Vector{T}
+function unsafeunpack!(
+    A::AbstractGBArray, ::Type{Vector}; 
+    order = ColMajor(), attachfinalizer = false, incrementindices = false
+    )
+    reshape(unsafeunpack!(A, Dense(); attachfinalizer, order, incrementindices), :)::Vector{T}
 end
-unpack!(A::AbstractGBArray, ::Type{Matrix}; attachfinalizer = true) = unpack!(A, Dense(); attachfinalizer)
+unsafeunpack!(
+    A::AbstractGBArray, 
+    ::Type{Matrix}; attachfinalizer = false, order = ColMajor(), incrementindices = false
+) = unsafeunpack!(A, Dense(); order, incrementindices, attachfinalizer)
 
-function unpack!(
+function unsafeunpack!(
     A::AbstractGBArray{T}, ::Sparse; 
-    order = ColMajor(), incrementindices = true, attachfinalizer = true
+    order = ColMajor(), incrementindices = true, attachfinalizer = false
 ) where {T}
     wait(A)
     if order === ColMajor()
@@ -232,17 +239,36 @@ function unpack!(
         return _unpackcsrmatrix!(A; incrementindices, attachfinalizer)::Tuple{Vector{Int64}, Vector{Int64}, Vector{T}}
     end
 end
-unpack!(A::AbstractGBArray, ::Type{SparseMatrixCSC}; attachfinalizer = true) = 
-    SparseMatrixCSC(size(A)..., unpack!(A, Sparse(); attachfinalizer)...)
+unsafeunpack!(A::AbstractGBArray, ::Type{SparseMatrixCSC}; attachfinalizer = false) = 
+    SparseMatrixCSC(size(A)..., unsafeunpack!(A, Sparse(); attachfinalizer)...)
 
 # remove colptr for this, colptr doesn't really exist anyway, it should just be [0] (or [1] in 1-based).
-unpack!(A::AbstractGBVector, ::Type{SparseVector}; attachfinalizer = true) = 
-    SparseVector(size(A)..., unpack!(A, Sparse(); attachfinalizer)[2:end]...)
+unsafeunpack!(A::AbstractGBVector, ::Type{SparseVector}; attachfinalizer = false) = 
+    SparseVector(size(A)..., unsafeunpack!(A, Sparse(); attachfinalizer)[2:end]...)
 
-function unpack!(A::AbstractGBArray; attachfinalizer = true)
+function unsafeunpack!(A::AbstractGBArray; attachfinalizer = false, )
     sparsity, order = format(A)
-    return unpack!(A, sparsity; order, attachfinalizer)
+    return unsafeunpack!(A, sparsity; order, attachfinalizer)
+end
+
+# we will never attachfinalizer here because it is assumed that this is a temporary unpack.
+function tempunpack!(A::AbstractGBArray, sparsity::Dense; order = ColMajor(), incrementindices = false)
+    shallowA = isshallow(A)
+    out = unpack!(A, sparsity; order, incrementindices)
+    function repack!(mat, shallow = shallowA; order = order, decrementindices = incrementindices)
+        return unsafepack!(A, mat, shallow; order, decrementindices)
+    end
+    return (out..., repack!)
+end
+
+function tempunpack!(A::AbstractGBArray, sparsity::Sparse; order = ColMajor(), incrementindices = false)
+    shallowA = isshallow(A)
+    out = unsafeunpack!(A, sparsity; order, incrementindices)
+    function repack!(ptr, idx, nzval, shallow = shallowA; order = order, decrementindices = incrementindices)
+        return unsafepack!(A, ptr, idx, nzval, shallow; order, decrementindices)
+    end
+    return (out..., repack!)
 end
 
 # TODO: BITMAP && HYPER
-# TODO: A repack! api?
+# TODO: A reunsafepack! api?
