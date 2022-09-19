@@ -50,13 +50,13 @@ end
 function Base.Vector(A::GBVectorOrTranspose)
     format = sparsitystatus(A)
     if format === Dense()
-        T = unsafeunpack!(A, Dense(); attachfinalizer = false)
+        T = unsafeunpack!(A, Dense())
         M = copy(T)
         unsafepack!(A, T, false)
     else
         # if A is not dense we end up doing 2x copies. Once to avoid densifying A.
         T = copy(A)
-        U = unsafeunpack!(T, Dense(); attachfinalizer = false)
+        U = unsafeunpack!(T, Dense())
         # And again to make this a native Julia Array.
         # if we didn't copy here a user could not resize
         M = copy(U)
@@ -465,7 +465,7 @@ function subassign!(C::AbstractGBArray, x::AbstractMatrix, I, J;
     array = x isa VecOrMat ? x : collect(x)
     array = pack(array)
     subassign!(C, array, I, J; mask, accum, desc)
-    unsafeunpack!(array; attachfinalizer = false)
+    unsafeunpack!(array)
     return x
 end
 
@@ -475,7 +475,7 @@ function subassign!(C::AbstractGBArray, x::AbstractVector, I, J;
     array = x isa VecOrMat ? x : collect(x)
     array = pack(array)
     subassign!(C, array, I, J; mask, accum, desc)
-    unsafeunpack!(array; attachfinalizer = false)
+    unsafeunpack!(array)
     return x
 end
 
@@ -485,7 +485,7 @@ function subassign!(C::AbstractGBArray, x::Union{SparseMatrixCSC, SparseVector},
     array = similar(C, eltype(x), size(x))
     array = unsafepack!(array, x)
     subassign!(C, array, I, J; mask, accum, desc)
-    unsafeunpack!(array, Sparse(); attachfinalizer = false)
+    unsafeunpack!(array, Sparse())
     return x
 end
 
@@ -843,8 +843,8 @@ function Base.getindex(
     j::AbstractGBVector{<:Integer};
     mask = nothing, accum = nothing, desc = nothing
 )
-    I = unsafeunpack!(i, Dense(); attachfinalizer = false)
-    J = unsafeunpack!(j, Dense(); attachfinalizer = false)
+    I = unsafeunpack!(i, Dense())
+    J = unsafeunpack!(j, Dense())
     x = extract(A, I, J; mask, accum, desc)
     unsafepack!(i, I, false)
     unsafepack!(j, J, false)

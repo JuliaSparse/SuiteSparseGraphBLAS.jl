@@ -121,5 +121,5 @@ end
     klua = klu(A);
     F = klua.F
     @test !SuiteSparseGraphBLAS.isshallow(F)
-    unsafeunpack!(A, SuiteSparseGraphBLAS.Sparse(); attachfinalizer = false)
+    unsafeunpack!(A, SuiteSparseGraphBLAS.Sparse())
 end
