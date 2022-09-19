@@ -21,7 +21,7 @@ using SuiteSparseGraphBLAS
 
 op = unaryop(sin, Float64)
 
-map(typedop, GBVector([1.5, 0, pi]))
+map(op, GBVector([1.5, 0, pi]))
 ```
 
 ## Built-Ins

@@ -24,9 +24,9 @@ The `GBMatrix` is an opaque sparse matrix structure, which adapts to the sparsit
 3. **Sparse Compressed** - [Compressed Sparse Column (CSC)](http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000) or [Compressed Sparse Row(CSR)](http://netlib.org/linalg/html_templates/node91.html)
 4. **Doubly Compressed** or **Hypersparse** - Doubly Compressed Sparse Column (DCSC or Hypersparse CSC) and Doubly Compressed Sparse Row (DCSR or Hypersparse CSR). See this paper for more information: [pdf](https://people.eecs.berkeley.edu/~aydin/hypersparse-ipdps08.pdf).
 
-Additionally a when the stored values in a `GBMatrix` are uniform the value array may be stored in the **iso** version of one of the formats above. Rather than storing the full value array, an iso `GBMatrix` will only store the single scalar to improve performance. This is useful for matrices like the unweighted adjacency matrix, where all stored values may be `true`. 
+Additionally, when the stored values in a `GBMatrix` are uniform the value array may be stored in the **iso** version of one of the formats above. Rather than storing the full value array, an iso `GBMatrix` will only store the single scalar to improve performance. This is useful for matrices like the unweighted adjacency matrix, where all stored values may be `true`. 
 
-Users should never need to directly interact with the underlying storage format, SuiteSparse:GraphBLAS will automatically convert between them as necessary.
+Users should rarely need to directly interact with the underlying storage format, SuiteSparse:GraphBLAS will automatically convert between them as necessary.
 
 ### Construction
 

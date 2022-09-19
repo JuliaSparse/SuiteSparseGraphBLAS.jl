@@ -117,10 +117,12 @@ function Base.similar(
     dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill = parent(A).fill
 ) where {T, TNew, N}
     if dims isa Dims{1}
-        return GBVector{TNew}(dims...; fill)
+        x = GBVector{TNew}(dims...; fill)
     else
-        return GBMatrix{TNew}(dims...; fill)
+        x = GBMatrix{TNew}(dims...; fill)
     end
+    setstorageorder!(x, storageorder(A))
+    return x
 end
 
 function Base.similar(A::GBMatrixOrTranspose{T}, dims::Tuple; fill = parent(A).fill) where {T}

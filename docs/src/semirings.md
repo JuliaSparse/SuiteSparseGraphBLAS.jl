@@ -8,10 +8,8 @@ The second, $\otimes$ or "multiply", is a binary operator defined on $D_1 \times
 
 A semiring is denoted by a tuple $(D_1, D_2, D_3, \oplus, \otimes, \mathbb{0})$. However in the vast majority of cases $D_1 = D_2 = D_3$ so this is often shortened to $(\oplus, \otimes)$.
 
-Semirings are used in a single GraphBLAS operation, [`mul!`](@ref).
+Semirings are used in two GraphBLAS operations, `mul!` and [`*`](@ref).
 
 ## Passing to Functions
 
 `mul!` and `*` are the only functions which accept semirings, and the best method to do so is a tuple of binary functions like `*(A, B, (max, +))`. An operator form is also available as `*(min, +)(A, B)`.
-
-Semiring objects may be constructed in a similar fashion: `Semiring(max, +)`.

@@ -5,7 +5,7 @@ However, the vast majority of binary operators are defined on a single domain.
 
 `BinaryOp`s are in almost every GraphBLAS operation. They are the primary `op` argument for [`emul`](@ref), [`eadd`](@ref), and [`apply`](@ref). `BinaryOp`s which are also monoids may be used in [`reduce`](@ref). And every GraphBLAS operation which takes an `accum` keyword argument accepts a `BinaryOp`.
 
-In 99% of cases you should pass Julia functions, which will be mapped to built-in operators, or used to create a new user-defined operator.
+In almost all cases you should pass Julia functions, which will be mapped to built-in operators, or used to create a new user-defined operator.
 
 ```@repl
 using SuiteSparseGraphBLAS

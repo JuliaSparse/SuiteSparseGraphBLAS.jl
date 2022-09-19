@@ -64,8 +64,9 @@ The accumulation step is performed **before** masking.
 ### `mask` - `GBArray`:
 
 The `mask` keyword argument determines whether each index from the result of an operation appears in the output. 
-The mask may be structural, where the presence of a value indicates the mask is `true`, or valued where the value of the mask indicates its truth value. 
-The mask may also be complemented. These options are controlled by the `desc` argument.
+The mask may be structural, where the presence of a value indicates the mask is `true`, or valued where the value of the mask indicates its truth value. `mask = SuiteSparseGraphBLAS.Structural(A)` will use a structural mask.
+
+The mask may also be complemented. `mask = SuiteSparseGraphBLAS.Complement(A)` or `mask = ~A` will complement a mask. These two options may be combined, for example `mask = ~SuiteSparseGraphBLAS.Structural(A)`.
 
 
 ## Operation Documentation

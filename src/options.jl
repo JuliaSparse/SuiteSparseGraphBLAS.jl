@@ -121,12 +121,36 @@ function gbget(A::AbstractGBArray, option)
     return GxB_Matrix_Option_get(A, option)
 end
 
+"""
+    sparsitystatus(A::AbstractGBArray)::AbstractSparsity
+
+Return the current sparsity of `A`, which is one of `Dense`,
+`Bitmap`, `Sparse`, or `Hypersparse`.
+"""
 function sparsitystatus(A::AbstractGBArray)
     t = GBSparsity(gbget(A, SPARSITY_STATUS))
     return consttoshape(t)
 end
+
+"""
+    format(A::AbstractGBArray) -> (s::AbstractSparsity, o::StorageOrders.StorageOrder)
+
+Return the sparsity status and storage order of `A` as a tuple.
+"""
 function format(A::AbstractGBArray)
     return (sparsitystatus(A), storageorder(A))
+end
+
+"""
+    setstorageorder!(A::AbstractGBArray, o::StorageOrders.StorageOrder)
+
+Set the storage order of A, either `StorageOrders.RowMajor()` or `StorageOrders.ColMajor()`.
+
+Users must call `wait(A)` before this will be reflected in `A`, 
+however operations will perform this `wait` automatically on input.
+"""
+function setstorageorder!(A::AbstractGBArray, o::StorageOrders.StorageOrder)
+    gbset(A, :format, o)
 end
 
 shapetoconst(::Dense) = GBDENSE

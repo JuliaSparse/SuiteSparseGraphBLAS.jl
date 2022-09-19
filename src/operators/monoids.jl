@@ -8,6 +8,17 @@ using ..SuiteSparseGraphBLAS: BinaryOps, isGxB, isGrB, TypedMonoid, AbstractMono
 using ..LibGraphBLAS
 export Monoid, typedmonoid, defaultmonoid
 
+
+"""
+    Monoid{F, I, T}
+
+A Monoid is a binary function `fn` along with an identity and an optional terminal value.
+
+The `identity` and `terminal` should be functions of a type, or `nothing` for the `terminal`.
+For instance `Monoid(*, one, zero)` would be the `Monoid` for scalar multiplication.
+
+Monoids are translated into `TypedMonoids` before calling into GraphBLAS itself.
+"""
 struct Monoid{F, I, T} <: AbstractMonoid
     fn::F
     identity::I
@@ -42,8 +53,6 @@ defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = throw(
 typedmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = typedmonoid(defaultmonoid(f, T), T)
 
 BinaryOps.binaryop(op::TypedMonoid) = op.binaryop
-
-# Can't really do ephemeral monoid fallbacks... Need the identity and possibly terminal.
 
 function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     if type ∈ Ztypes && isGrB(namestr)

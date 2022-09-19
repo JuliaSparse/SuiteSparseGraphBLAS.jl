@@ -36,7 +36,7 @@ A simple BFS is just a matrix-vector multiplication, where `A` is the adjacency 
 
 ## GBArrays
 
-The core SuiteSparseGraphBLAS.jl array types are `GBVector` and `GBMatrix` which are subtypes `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively. There are also several auxiliary array types that restrict one or more behaviors, like row or column orientation. More info on those types can be found ### HERE ###
+The core SuiteSparseGraphBLAS.jl array types are `GBVector` and `GBMatrix` which are subtypes `SparseArrays.AbstractSparseVector` and `SparseArrays.AbstractSparseMatrix` respectively.
 
 !!! note "GBArray"
     These docs will often refer to the `GBArray` type, which is the union of `AbstractGBVector`, `AbstractGBMatrix` and their lazy Transpose objects.
@@ -68,7 +68,7 @@ Different matrices may be better suited to storage in one of those formats, and 
     The default orientation of a `GBMatrix` is by-row, the opposite of Julia arrays. However, a `GBMatrix` constructed from a `SparseMatrixCSC` or 
     `Matrix` will be stored by-column.\
     The orientation of a `GBMatrix` can be modified using
-    `gbset(A, :format, :byrow)` or `gbset(A, :format, :bycol)`, and queried by `gbget(A, :format)`
+    `setstorageorder!(A, RowMajor())` or `setstorageorder!(A, ColMajor())`, and queried by `StorageOrders.storageorder(A)`
 
 Information about storage formats, orientation, conversion, construction and more can be found in [Arrays](@ref).
 
@@ -151,9 +151,6 @@ map(increment, M)
 Unfortunately this has a couple problems. The first is that it's slow.\
 Compared to `A .+ 1` which lowers to `apply(+, A, 1)` the `map` call above is ~2.5x slower due to function pointer overhead.
 
-The second is that everytime we call `map(increment, M)` we will be re-creating the function pointer for `increment` matched to the type of `M`.\
-To avoid this the convenience macro `@unop` will provide a permanent constant which is used internally every time `increment` is called with a GraphBLAS operation. See [Operators](@ref) for more information.
-
 !!! warning "Performance of User Defined Functions"
     Operators which are not already built-in are automatically constructed using function pointers when called. 
     Note, however, that their performance is significantly degraded compared to built-in operators,
@@ -187,7 +184,7 @@ sandia(M)
 
 # Citing
 
-Please cite the following papers:
+Please cite the following papers if you use SuiteSparseGraphBLAS.jl in your work:
 
 [pdf](https://doi.org/10.1145/3322125):
 ```bibtex

@@ -5,7 +5,7 @@ This binary operator must be associative, that is $f(a, f(b, c)) = f(f(a, b), c)
 
 The operator is also be equipped with an identity such that $f(x, 0) = f(0, x) = x$. Some monoids are equipped with a terminal or annihilator such that $z = f(z, x) \forall x$.
 
-Monoids are used primarily in the `reduce`(@ref) operation. Their other use is as a component of semirings in the [`mul!`](@ref) operation.
+Monoids are used primarily in the [`reduce`](@ref) operation. Their other use is as a component of semirings in the [`mul!`](@ref) operation.
 
 ## Built-Ins
 
@@ -26,3 +26,7 @@ Monoids are used primarily in the `reduce`(@ref) operation. Their other use is a
 |                |                |                                                                       |
 |                |                |                                                                       |
 |                |                |                                                                       |
+
+```@docs
+Monoid
+```

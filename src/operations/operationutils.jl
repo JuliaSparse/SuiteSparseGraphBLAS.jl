@@ -17,10 +17,25 @@ inferbinarytype(::Type{X}, ::Type{X}, op::TypedMonoid{F, X, Z}) where {F, X, Z} 
 inferbinarytype(::Type{X}, ::Type{Y}, op::TypedSemiring{F, X, Y, Z}) where {F, X, Y, Z} = ztype(op)
 inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X2, Y2, Z}) where {F, X, X2, Y, Y2, Z} = ztype(op)
 
+"""
+    Complement{T}
+
+The complement of a GraphBLAS mask. 
+This wrapper will set the mask argument of a GraphBLAS operation to be the negation of the
+original mask.
+
+It may be nested an arbitrary number of times.
+"""
 struct Complement{T}
     parent::T
 end
 
+"""
+    Structural{T}
+
+This wrapper will set a GraphBLAS mask to use the presence of values in the mask rather
+than their values to determine the mask.
+"""
 struct Structural{T}
     parent::T
 end
@@ -30,6 +45,7 @@ Complement(A::T) where {
     Structural{<:GBArrayOrTranspose}, 
     Complement{<:GBArrayOrTranspose}}
 } = Complement{T}(A)
+
 Base.:~(A::T) where {
     T<:Union{GBArrayOrTranspose, 
     Structural{<:GBArrayOrTranspose}, 
@@ -83,7 +99,7 @@ Determine type of the second argument to a typed operator.
 function ytype end
 
 """
-    ytype(op::GrBOp)::DataType
+    ztype(op::GrBOp)::DataType
 
 Determine type of the output of a typed operator.
 """
