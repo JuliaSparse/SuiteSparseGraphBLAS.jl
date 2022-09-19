@@ -37,6 +37,12 @@ GBMatrixStyle(::Val{1}) = GBMatrixStyle()
 GBMatrixStyle(::Val{2}) = GBMatrixStyle()
 GBMatrixStyle(::Val{N}) where N = Broadcast.DefaultArrayStyle{N}()
 Broadcast.BroadcastStyle(::GBMatrixStyle, ::GBVectorStyle) = GBMatrixStyle()
+Broadcast.BroadcastStyle(::GBMatrixStyle, ::Broadcast.DefaultMatrixStyle) = GBMatrixStyle()
+Broadcast.BroadcastStyle(::GBMatrixStyle, ::Broadcast.DefaultVectorStyle) = GBMatrixStyle()
+
+Broadcast.BroadcastStyle(::GBVectorStyle, ::Broadcast.DefaultMatrixStyle) = GBMatrixStyle()
+Broadcast.BroadcastStyle(::GBVectorStyle, ::Broadcast.DefaultVectorStyle) = GBVectorStyle()
+
 
 function Base.similar(
     bc::Broadcast.Broadcasted{GBMatrixStyle},
@@ -79,6 +85,12 @@ modifying(::typeof(emul)) = emul!
         end
         if right isa Broadcast.Broadcasted
             right = copy(right)
+        end
+        if left isa StridedArray
+            left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
+        end
+        if right isa StridedArray
+            right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
         end
         if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
@@ -139,6 +151,12 @@ mutatingop(::typeof(apply)) = apply!
                     # If they're further nested broadcasts we can't fuse them, so just copy.
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
+                    if subargleft isa StridedArray
+                        subargleft = pack(subargleft; fill = subargright isa GBArrayOrTranspose ? getfill(right) : nothing)
+                    end
+                    if subargright isa StridedArray
+                        subargright = pack(subargright; fill = subargleft isa GBArrayOrTranspose ? getfill(subargleft) : nothing)
+                    end
                     if subargleft isa GBArrayOrTranspose && subargright isa GBArrayOrTranspose
                         add = mutatingop(defaultadd(f))
                         return add(C, subargleft, subargright, f; accum)
@@ -155,6 +173,12 @@ mutatingop(::typeof(apply)) = apply!
             end
             if right isa Broadcast.Broadcasted
                 right = copy(right)
+            end
+            if left isa StridedArray
+                left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
+            end
+            if right isa StridedArray
+                right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
             end
             if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(f))
@@ -188,6 +212,12 @@ end
         end
         if right isa Broadcast.Broadcasted
             right = copy(right)
+        end
+        if left isa StridedArray
+            left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
+        end
+        if right isa StridedArray
+            right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
         end
         if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
@@ -246,6 +276,12 @@ end
                     # If they're further nested broadcasts we can't fuse them, so just copy.
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
+                    if subargleft isa StridedArray
+                        subargleft = pack(subargleft; fill = subargright isa GBArrayOrTranspose ? getfill(right) : nothing)
+                    end
+                    if subargright isa StridedArray
+                        subargright = pack(subargright; fill = subargleft isa GBArrayOrTranspose ? getfill(subargleft) : nothing)
+                    end
                     if subargleft isa GBArrayOrTranspose && subargright isa GBArrayOrTranspose
                         add = mutatingop(defaultadd(f))
                         return add(C, subargleft, subargright, f; accum)
@@ -262,6 +298,12 @@ end
             end
             if right isa Broadcast.Broadcasted
                 right = copy(right)
+            end
+            if left isa StridedArray
+                left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
+            end
+            if right isa StridedArray
+                right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
             end
             if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(f))

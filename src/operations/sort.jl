@@ -10,6 +10,7 @@ function Base.sort!(
     # We only support a limited set of the keywords for now.
     # Missing by, rev, order, alg
 )
+    _canbeoutput(C) || throw(ShallowException())
     A isa GBMatrixOrTranspose && dims === nothing && throw(ArgumentError("dims must be either 1 (sort columns) or 2 (sort rows) for matrix arguments."))
     A isa GBVector && (dims = 1)
     C === nothing && (C = C_NULL)
@@ -25,7 +26,7 @@ function Base.sort!(
     end
     desc = _handledescriptor(desc; in1=A)
     desc.transpose_input1 = transpose
-    @wraperror LibGraphBLAS.GxB_Matrix_sort(C, P, op, gbpointer(parent(A)), desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_sort(C, P, op, parent(A), desc)
     return C
 end
 

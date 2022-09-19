@@ -23,6 +23,7 @@ using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
 using Serialization
 using StorageOrders
+using KLU
 
 export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 include("abstracts.jl")
@@ -31,7 +32,7 @@ include("libutils.jl")
 include("../lib/LibGraphBLAS_gen.jl")
 using .LibGraphBLAS
 
-include("operators/libgbops.jl")
+include("operators/libgbops.jl") 
 
 include("gbtypes.jl")
 include("types.jl")
@@ -61,7 +62,12 @@ include("vector.jl")
 include("matrix.jl")
 include("abstractgbarray.jl")
 include("random.jl")
-# 
+# Miscellaneous Operations
+include("print.jl")
+include("pack.jl")
+include("unpack.jl")
+include("options.jl")
+# Core operations (mul, elementwise, etc)
 include("operations/operationutils.jl")
 include("operations/transpose.jl")
 include("operations/mul.jl")
@@ -74,10 +80,6 @@ include("operations/concat.jl")
 include("operations/resize.jl")
 include("operations/sort.jl")
 # 
-include("print.jl")
-include("pack.jl")
-include("unpack.jl")
-include("options.jl")
 
 include("operations/broadcasts.jl")
 include("chainrules/chainruleutils.jl")
@@ -95,6 +97,9 @@ include("misc.jl")
 include("mmread.jl")
 # include("iterator.jl")
 include("oriented.jl")
+include("solvers/klu.jl")
+include("solvers/umfpack.jl")
+include("shallowtypes.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS

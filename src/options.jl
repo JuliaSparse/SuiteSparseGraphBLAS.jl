@@ -68,7 +68,7 @@ function GxB_Matrix_Option_get(A::AbstractGBArray, field)
         (:GxB_Matrix_Option_get, libgraphblas),
         Cvoid,
         (LibGraphBLAS.GrB_Matrix, UInt32, Ptr{Cvoid}),
-        gbpointer(A),
+        A,
         field,
         v
     )
@@ -81,7 +81,7 @@ function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
             (LibGraphBLAS.GrB_Matrix, UInt32, Cdouble),
-            gbpointer(A),
+            A,
             field,
             value
         )
@@ -90,7 +90,7 @@ function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
             (:GxB_Matrix_Option_set, libgraphblas),
             Cvoid,
             (LibGraphBLAS.GrB_Matrix, UInt32, UInt32),
-            gbpointer(A),
+            A,
             field,
             value
         )

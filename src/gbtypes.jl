@@ -45,8 +45,6 @@ mutable struct GBType{T} <: AbstractGBType
     end
 end
 
-gbpointer(T::GBType) = T.p
-
 
 
 const GBTYPES = IdDict{DataType, GBType}()

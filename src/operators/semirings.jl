@@ -21,8 +21,15 @@ function semiring(
     end)
 end
 
-semiring(addop::Function, mulop::Function, ::Type{T}, ::Type{U}) where {T,U} = 
-    semiring(defaultmonoid(addop, Base._return_type(mulop, Tuple{T, U})), mulop, T, U)
+function semiring(addop::Function, mulop::Function, ::Type{T}, ::Type{U}) where {T,U}
+    returntype = Base._return_type(mulop, Tuple{T, U})
+    monoid = defaultmonoid(addop, returntype)
+    if T <: valid_union && U <: valid_union # we'll rely on internal promotion when possible.
+        return semiring(monoid, mulop, returntype, returntype)
+    else
+        semiring(monoid, mulop, T, U)
+    end
+end
 semiring(tup::Tuple{<:Union{Function, Monoid}, Function}, ::Type{T}, ::Type{U}) where {T,U} = semiring(tup..., T, U)
 semiring(op::TypedSemiring, ::Type{T}, ::Type{U}) where {T,U} = op
 
@@ -61,9 +68,17 @@ function typedrigconstexpr(addfunc, mulfunc, builtin, namestr, xtype, ytype, out
             ) where {T<:valid_union}= $(esc(namesym))
         end
     else
+        # the addition of the monoid here is quite annoying.
+        # TODO: Merge all this into the dictionary above
+        # avoiding this issue entirely.
         quote
             $(esc(:semiring))(
                 ::$(esc(:typeof))($(esc(addfunc))), 
+                ::$(esc(:typeof))($(esc(mulfunc))), 
+                ::Type{$xsym}, ::Type{$ysym}
+            ) = $(esc(namesym))
+            $(esc(:semiring))(
+                ::$(esc(:Monoid)){$(esc(:typeof))($(esc(addfunc)))},
                 ::$(esc(:typeof))($(esc(mulfunc))), 
                 ::Type{$xsym}, ::Type{$ysym}
             ) = $(esc(namesym))
@@ -132,6 +147,17 @@ macro rig(expr...)
     constquote = typedrigexprs(reducer, binop, builtin, name, xtypes, ytypes, outtypes)
     return constquote
 end
+
+# (PLUS, TIMES, ANY) × (FIRST, SECOND, PAIR(ONEB), PLUS, MINUS, RMINUS, TIMES, DIV, RDIV) × Z
+@rig (+, first) GxB_PLUS_FIRST Z=>Z
+@rig (+, second) GxB_PLUS_SECOND Z=>Z
+@rig (+, pair) GxB_PLUS_PAIR Z=>Z
+@rig (+, +) GxB_PLUS_PLUS Z=>Z
+@rig (+, -) GxB_PLUS_MINUS Z=>Z
+@rig (+, rminus) GxB_PLUS_RMINUS Z=>Z
+@rig (+, *) GxB_PLUS_TIMES Z=>Z
+@rig (+, /) GxB_PLUS_DIV Z=>Z
+@rig (+, \) GxB_PLUS_RDIV Z=>Z
 
 # (MIN, MAX, PLUS, TIMES, ANY) × 
 # (FIRST, SECOND, PAIR(ONEB), MIN, MAX, PLUS, MINUS, RMINUS, TIMES, DIV, RDIV, ISEQ, 
@@ -339,17 +365,6 @@ end
 @rig (any, <) GxB_ANY_LT Bool=>Bool
 @rig (any, >=) GxB_ANY_GE Bool=>Bool
 @rig (any, <=) GxB_ANY_LE Bool=>Bool
-
-# (PLUS, TIMES, ANY) × (FIRST, SECOND, PAIR(ONEB), PLUS, MINUS, RMINUS, TIMES, DIV, RDIV) × Z
-@rig (+, first) GxB_PLUS_FIRST Z=>Z
-@rig (+, second) GxB_PLUS_SECOND Z=>Z
-@rig (+, pair) GxB_PLUS_PAIR Z=>Z
-@rig (+, +) GxB_PLUS_PLUS Z=>Z
-@rig (+, -) GxB_PLUS_MINUS Z=>Z
-@rig (+, rminus) GxB_PLUS_RMINUS Z=>Z
-@rig (+, *) GxB_PLUS_TIMES Z=>Z
-@rig (+, /) GxB_PLUS_DIV Z=>Z
-@rig (+, \) GxB_PLUS_RDIV Z=>Z
 
 @rig (*, first) GxB_TIMES_FIRST Z=>Z
 @rig (*, second) GxB_TIMES_SECOND Z=>Z

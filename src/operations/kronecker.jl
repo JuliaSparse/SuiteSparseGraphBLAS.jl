@@ -12,11 +12,12 @@ function LinearAlgebra.kron!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     op = binaryop(op, eltype(A), eltype(B))
     accum = _handleaccum(accum, eltype(C))
-    @wraperror LibGraphBLAS.GxB_kron(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
+    @wraperror LibGraphBLAS.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
 
@@ -51,3 +52,17 @@ function LinearAlgebra.kron(
     kron!(C, A, B, op; mask, accum, desc)
     return C
 end
+
+LinearAlgebra.kron!(C::GBVecOrMat, A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) = 
+    @_densepack A kron!(C, A, B, op; kwargs...)
+LinearAlgebra.kron!(C::GBVecOrMat, A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack B kron!(C, A, B, op; kwargs...)
+LinearAlgebra.kron!(C::GBVecOrMat, A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack A B kron!(C, A, B, op; kwargs...)
+
+LinearAlgebra.kron(A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) = 
+    @_densepack A kron(A, B, op; kwargs...)
+LinearAlgebra.kron(A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack B kron(A, B, op; kwargs...)
+LinearAlgebra.kron(A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) = 
+    @_densepack A B kron(A, B, op; kwargs...)

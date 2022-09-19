@@ -7,5 +7,5 @@ abstract type AbstractTypedOp{Z} end
 
 abstract type AbstractGBArray{T, N, F} <: AbstractSparseArray{T, UInt64, N} end
 
-abstract type AbstractGBMatrix{T, F} <: AbstractGBArray{T, 2, F} end
-abstract type AbstractGBVector{T, F} <: AbstractGBArray{T, 1, F} end
+const AbstractGBMatrix{T, F} = AbstractGBArray{T, 2, F}
+const AbstractGBVector{T, F} = AbstractGBArray{T, 1, F}

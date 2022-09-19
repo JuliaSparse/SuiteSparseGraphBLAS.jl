@@ -21,15 +21,15 @@ function gxbstring(x, name = "", level::LibGraphBLAS.GxB_Print_Level = LibGraphB
             @wraperror LibGraphBLAS.GxB_Descriptor_fprint(x, name, level, cf)
         elseif x isa AbstractGBVector
             if level == LibGraphBLAS.GxB_SUMMARY
-                @wraperror LibGraphBLAS.GxB_Matrix_fprint(gbpointer(x), name, LibGraphBLAS.GxB_SHORT, cf)
+                @wraperror LibGraphBLAS.GxB_Matrix_fprint(x, name, LibGraphBLAS.GxB_SHORT, cf)
             else
-                @wraperror LibGraphBLAS.GxB_Matrix_fprint(gbpointer(x), name, level, cf)
+                @wraperror LibGraphBLAS.GxB_Matrix_fprint(x, name, level, cf)
             end
         elseif x isa AbstractGBMatrix
             if level == LibGraphBLAS.GxB_SUMMARY
-                @wraperror LibGraphBLAS.GxB_Matrix_fprint(gbpointer(x), name, LibGraphBLAS.GxB_SHORT, cf)
+                @wraperror LibGraphBLAS.GxB_Matrix_fprint(x, name, LibGraphBLAS.GxB_SHORT, cf)
             else
-                @wraperror LibGraphBLAS.GxB_Vector_fprint(gbpointer(x), name, level, cf)
+                @wraperror LibGraphBLAS.GxB_Vector_fprint(x, name, level, cf)
             end
         elseif x isa GBScalar
             @wraperror LibGraphBLAS.GxB_Scalar_fprint(x, name, LibGraphBLAS.GxB_SHORT, cf)

@@ -4,7 +4,7 @@ function Serialization.serialize(s::AbstractSerializer, A::GBVecOrMat)
     Serialization.serialize(s, A.fill)
     v = Vector{UInt8}(undef, serialize_sizehint(A))
     sz = Ref{LibGraphBLAS.GrB_Index}()
-    @wraperror LibGraphBLAS.GrB_Matrix_serialize(v, sz, gbpointer(A))
+    @wraperror LibGraphBLAS.GrB_Matrix_serialize(v, sz, A)
     resize!(v, sz[])
     serialize(s, v)
     return nothing
@@ -27,6 +27,6 @@ end
 
 function serialize_sizehint(A::GBVecOrMat)
     sz = Ref{LibGraphBLAS.GrB_Index}()
-    @wraperror LibGraphBLAS.GrB_Matrix_serializeSize(sz, gbpointer(A))
+    @wraperror LibGraphBLAS.GrB_Matrix_serializeSize(sz, A)
     return sz[]
 end

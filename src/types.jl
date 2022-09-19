@@ -10,8 +10,9 @@ mutable struct TypedUnaryOperator{F, X, Z} <: AbstractTypedOp{Z}
     typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
     p::LibGraphBLAS.GrB_UnaryOp
     fn::F
+    keepalive::Any
     function TypedUnaryOperator{F, X, Z}(builtin, loaded, typestr, p, fn) where {F, X, Z}
-        unop = new(builtin, loaded, typestr, p, fn)
+        unop = new(builtin, loaded, typestr, p, fn, nothing)
         return finalizer(unop) do op
             @wraperror LibGraphBLAS.GrB_UnaryOp_free(Ref(op.p))
         end
@@ -36,7 +37,6 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
     if !op.loaded
         if op.builtin
             op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
-            
         else
             fn = op.fn
             function unaryopfn(z, x)
@@ -45,6 +45,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
             end
             opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
             unaryopfn_C = @cfunction($unaryopfn, Cvoid, (Ptr{Z}, Ref{X}))
+            op.keepalive = (unaryopfn, unaryopfn_C)
             # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
             LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(fn), "")
             op.p = opref[]
@@ -64,8 +65,9 @@ mutable struct TypedBinaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
     typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
     p::LibGraphBLAS.GrB_BinaryOp
     fn::F
+    keepalive::Any
     function TypedBinaryOperator{F, X, Y, Z}(builtin, loaded, typestr, p, fn::F) where {F, X, Y, Z}
-        binop = new(builtin, loaded, typestr, p, fn)
+        binop = new(builtin, loaded, typestr, p, fn, nothing)
         return finalizer(binop) do op
             @wraperror LibGraphBLAS.GrB_BinaryOp_free(Ref(op.p))
         end
@@ -96,6 +98,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryO
             end
             opref = Ref{LibGraphBLAS.GrB_BinaryOp}()
             binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{Z}, Ref{X}, Ref{Y}))
+            op.keepalive = (binaryopfn, binaryopfn_C)
             @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
             op.p = opref[]
         end
@@ -289,12 +292,6 @@ mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
 end
-
-# Most likely this will be the case for all AbstractGBArray.
-# However, if one (for some reason) wraps another AbstractGBArray
-# this should be overloaded.
-gbpointer(A::AbstractGBArray) = A.p[]
-gbpointer(A::Ptr) = A
 
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 

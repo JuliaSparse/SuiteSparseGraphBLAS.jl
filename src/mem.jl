@@ -1,12 +1,17 @@
 const KEEPALIVE = Dict{Ptr, VecOrMat}()
-
+function isshallow(A)
+    ccall((:GB_is_shallow, libgraphblas), Bool, (LibGraphBLAS.GrB_Matrix,), A)
+end
 const memlock = Threads.SpinLock()
-
 function _jlmalloc(size, ::Type{T}) where {T}
     return ccall(:jl_malloc, Ptr{T}, (UInt, ), size)
 end
 function _jlfree(p::Union{DenseVecOrMat{T}, Ptr{T}, Ref{T}}) where {T}
     ccall(:jl_free, Cvoid, (Ptr{T}, ), p isa DenseVecOrMat ? pointer(p) : p)
+end
+
+function _sizedjlmalloc(n, ::Type{T}) where {T}
+    return _jlmalloc(n * sizeof(T), T)
 end
 
 function _copytoraw(A::DenseVecOrMat{T}) where {T}

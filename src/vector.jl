@@ -6,7 +6,15 @@
 function GBVector{T}(n; fill::F = nothing) where {T, F}
     m = Ref{LibGraphBLAS.GrB_Matrix}()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), n, 1)
-    v = GBVector{T, F}(finalizer(m) do ref
+    return GBVector{T}(m; fill)
+end
+
+function GBVector{T}(
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; 
+    fill::F = nothing
+) where {T, F}
+
+    v = GBVector{T, F}(finalizer(p) do ref
         @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
     end, fill)
     gbset(v, FORMAT, BYCOL)
@@ -27,7 +35,7 @@ function GBVector(I::AbstractVector{U}, X::AbstractVector{T}; combine = +, nrows
     I isa Vector || (I = collect(I))
     X isa Vector || (X = collect(X))
     v = GBVector{T}(nrows; fill)
-    build(v, I, X; combine)
+    build!(v, I, X; combine)
     return v
 end
 
@@ -48,7 +56,7 @@ each index.
 function GBVector(I::AbstractVector{U}, x::T;
     nrows = maximum(I), fill = nothing) where {U<:Integer, T}
     A = GBVector{T}(nrows; fill)
-    build(A, I, x)
+    build!(A, I, x)
     return A
 end
 
@@ -72,12 +80,12 @@ function GBVector(v::AbstractVector{T}; fill::F = nothing) where {T, F}
         v = collect(v)
     end
     A = GBVector{T}(size(v, 1); fill)
-    return pack!(A, _copytoraw(v))
+    return unsafepack!(A, _copytoraw(v), false)
 end
 
 function GBVector(v::SparseVector{T}; fill::F = nothing) where {T, F}
     A = GBVector{T}(size(v, 1); fill)
-    return pack!(A, copy(v))
+    return unsafepack!(A, _copytoraw(v)..., false)
 end
 
 # Some Base and basic SparseArrays/LinearAlgebra functions:
@@ -86,7 +94,7 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, v::GBVector) = v.p[]
 
 function Base.copy(A::GBVector{T, F}) where {T, F}
     C = Ref{LibGraphBLAS.GrB_Matrix}()
-    LibGraphBLAS.GrB_Matrix_dup(C, gbpointer(A))
+    LibGraphBLAS.GrB_Matrix_dup(C, A)
     return GBVector{T, F}(C, A.fill)
 end
 

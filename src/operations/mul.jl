@@ -1,7 +1,3 @@
-# TODO:
-# vxm shouldn't be done "magically"
-# Instead it should be required that we have AdjTrans{<:GBVector} = AdjTrans{<:GBVector} * GBArray.
-
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
     A::GBArrayOrTranspose,
@@ -11,6 +7,7 @@ function LinearAlgebra.mul!(
     accum = nothing,
     desc = nothing
 )
+    _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
@@ -19,38 +16,47 @@ function LinearAlgebra.mul!(
     op = semiring(op, eltype(A), eltype(B))
     accum = _handleaccum(accum, eltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
-    @wraperror LibGraphBLAS.GrB_mxm(gbpointer(C), mask, accum, op, gbpointer(parent(A)), gbpointer(parent(B)), desc)
+    @wraperror LibGraphBLAS.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
 
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
-    A::VecOrMat,
+    A::VecMatOrTrans,
     B::GBArrayOrTranspose,
     op = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    AGB = GBMatrix{eltype(A)}(size(A, 1), size(A, 2))
-    _packdensematrix!(AGB, A)
-    _makeshallow!(AGB)
-    return mul!(C, AGB, B, op; mask, accum, desc)
+    _canbeoutput(C) || throw(ShallowException())
+    return @_densepack A mul!(C, A, B, op; mask, accum, desc)
 end
 
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
     A::GBArrayOrTranspose,
-    B::VecOrMat,
+    B::VecMatOrTrans,
     op = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    BGB = GBMatrix{eltype(A)}(size(B, 1), size(B, 2))
-    _packdensematrix!(BGB, B)
-    _makeshallow!(BGB)
-    return mul!(C, A, BGB, op; mask, accum, desc)
+    _canbeoutput(C) || throw(ShallowException())
+    return @_densepack B mul!(C, A, B, op; mask, accum, desc)
+end
+
+function LinearAlgebra.mul!(
+    C::GBVecOrMat,
+    A::VecMatOrTrans,
+    B::VecMatOrTrans,
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    _canbeoutput(C) || throw(ShallowException())
+    return @_densepack A B mul!(C, A, B, op; mask, accum, desc)
 end
 
 """
@@ -89,9 +95,9 @@ function Base.:*(
     fill = _promotefill(parent(A).fill, parent(B).fill)
     if A isa GBMatrixOrTranspose && B isa AbstractGBVector
         C = similar(A, t, size(A, 1); fill)
-    elseif A isa GBVector && B isa GBMatrixOrTranspose
+    elseif A isa AbstractGBVector && B isa GBMatrixOrTranspose
         C = similar(A, t, size(B, 2); fill)
-    elseif A isa Transpose{<:Any, <:GBVector} && B isa GBVector
+    elseif A isa Transpose{<:Any, <:AbstractGBVector} && B isa AbstractGBVector
         C = similar(A, t, 1; fill)
     else
         C = similar(A, t, (size(A, 1), size(B, 2)); fill)
@@ -101,31 +107,25 @@ function Base.:*(
 end
 
 function Base.:*(
-    A::VecOrMat,
+    A::VecMatOrTrans,
     B::GBArrayOrTranspose,
     op = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    AGB = GBMatrix{eltype(A)}(size(A, 1), size(A, 2))
-    _packdensematrix!(AGB, A)
-    _makeshallow!(AGB)
-    return *(AGB, B, op; mask, accum, desc)
+    return @_densepack A (*(A, B, op; mask, accum, desc))
 end
 
 function Base.:*(
     A::GBArrayOrTranspose,
-    B::VecOrMat,
+    B::VecMatOrTrans,
     op = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
 )
-    BGB = GBMatrix{eltype(B)}(size(B, 1), size(B, 2))
-    _packdensematrix!(BGB, B)
-    _makeshallow!(BGB)
-    return *(A, BGB, op; mask, accum, desc)
+    return @_densepack B (*(A, B, op; mask, accum, desc))
 end
 
 # clear up some ambiguities:
@@ -147,6 +147,28 @@ function Base.:*(
     desc = nothing
 ) where {T <: Real}
     return *(A, B, (+, *); mask, accum, desc)
+end
+
+function Base.:*(
+    A::Transpose{<:T, <:DenseVecOrMat},
+    B::GBArrayOrTranspose,
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where T<:Real
+    return @_densepack A (*(A, B, op; mask, accum, desc))
+end
+
+function Base.:*(
+    A::GBArrayOrTranspose,
+    B::Transpose{<:T, <:DenseVecOrMat},
+    op = (+, *);
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+) where T<:Real
+    return @_densepack B (*(A, B, op; mask, accum, desc))
 end
 
 function Base.:*((⊕)::Union{<:Base.Callable, Monoid}, (⊗)::Function)

@@ -1,98 +1,86 @@
-function _unpackdensematrix!(A::AbstractGBVector{T}; desc = nothing) where {T}
+function _unpackdensematrix!(
+    A::AbstractGBVector{T}; 
+    desc = nothing, attachfinalizer = false
+) where {T}
     szA = size(A)
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
-        gbpointer(A),
+        A,
         values,
         Csize,
         isiso,
         desc
     )
-    lock(memlock)
-    v = try
-        if values[] ∈ keys(KEEPALIVE)
-            return pop!(KEEPALIVE, values[])
-        else
-            v = unsafe_wrap(Array, Ptr{T}(values[]), szA...)
-            return finalizer(v) do x
-                _jlfree(x)
-            end
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA...)
+    if attachfinalizer
+        return finalizer(v) do x
+            _jlfree(x)
         end
-    finally
-        unlock(memlock)
+    else
+        return v
     end
+end
+
+function _unpackdensematrix!(
+    A::AbstractGBMatrix{T}; 
+    desc = nothing, attachfinalizer = false
+) where {T}
+    szA = size(A)
+    desc = _handledescriptor(desc)
+    Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
+    values = Ref{Ptr{Cvoid}}(Ptr{T}())
+    isiso = Ref{Bool}(false)
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
+        A,
+        values,
+        Csize,
+        isiso,
+        desc
+    )
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
+    if attachfinalizer
+        v = finalizer(v) do x
+            _jlfree(x)
+        end
+    end
+    # eltype(M) == T || (M = copy(reinterpret(T, M)))
     if length(v) != length(A)
         resize!(v, length(A))
     end
-    return v::Vector{T}
+    return reshape(v, szA[1], szA[2])::Matrix{T} # reshape may not be necessary.
 end
 
-function _unpackdensematrix!(A::AbstractGBMatrix{T}; desc = nothing) where {T}
-    szA = size(A)
-    desc = _handledescriptor(desc)
-    Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
-    values = Ref{Ptr{Cvoid}}(Ptr{T}())
-    isiso = Ref{Bool}(false)
-    @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
-        gbpointer(A),
-        values,
-        Csize,
-        isiso,
-        desc
-    )
-    lock(memlock)
-    M = try
-        if values[] ∈ keys(KEEPALIVE)
-            v = pop!(KEEPALIVE, values[])
-        else
-            v = finalizer(unsafe_wrap(Array, Ptr{T}(values[]), szA)) do x
-                _jlfree(x)
-            end
-        end
-        v
-    finally
-        unlock(memlock)
-    end
-    # eltype(M) == T || (M = copy(reinterpret(T, M)))
-    if length(M) != length(A)
-        resize!(M, length(A))
-    end
-    return reshape(M, szA[1], szA[2])::Matrix{T} # reshape may not be necessary.
-end
-
-function _unpackdensematrixR!(A::AbstractGBArray{T}; desc = nothing) where {T}
+function _unpackdensematrixR!(
+    A::AbstractGBArray{T}; 
+    desc = nothing, attachfinalizer = false
+) where {T}
     szA = size(A)
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(Ptr{T}())
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullR(
-        gbpointer(A),
+        A,
         values,
         Csize,
         isiso,
         desc
     )
-    lock(memlock)
-    M = try
-        if values[] ∈ keys(KEEPALIVE)
-            return pop!(KEEPALIVE, values[])
-        else
-            v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
-            return finalizer(v) do x
-                _jlfree(x)
-            end
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA)
+    if attachfinalizer
+        return finalizer(v) do x
+            _jlfree(x)
         end
-    finally
-        unlock(memlock)
     end
-    return reshape(M, szA...)::Matrix{T}
 end
 
-function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindices = true) where {T}
+function _unpackcscmatrix!(
+    A::AbstractGBArray{T}; 
+    desc = nothing, incrementindices = true, attachfinalizer = false
+) where {T}
     desc = _handledescriptor(desc)
     colptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     rowidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -104,7 +92,7 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
-        gbpointer(A),
+        A,
         colptr,
         rowidx,
         values,
@@ -115,25 +103,23 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
         isjumbled,
         desc
     )
-    lock(memlock)
-    colptr, rowidx, vals = try
-        if values[] ∈ keys(KEEPALIVE) && colptr[] ∈ keys(KEEPALIVE) && rowidx[] ∈ keys(KEEPALIVE)
-            x = (pop!(KEEPALIVE, colptr[]), pop!(KEEPALIVE, rowidx[]), pop!(KEEPALIVE, values[]))
-        else
-            colvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)) do x
-                _jlfree(x)
-            end
-            rowvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)) do x
-                _jlfree(x)
-            end
-            v = finalizer(unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)) do x
-                _jlfree(x)
-            end
-            x = (colvector, rowvector, v)
+    colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
+    rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
+    if isiso[]
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), 1)
+    else
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
+    end
+    if attachfinalizer
+        colptr = finalizer(colptr) do x
+            _jlfree(x)
         end
-        x
-    finally
-        unlock(memlock)
+        rowidx = finalizer(rowidx) do x
+            _jlfree(x)
+        end
+        vals = finalizer(vals) do x
+            _jlfree(x)
+        end
     end
 
     if isiso[]
@@ -143,12 +129,13 @@ function _unpackcscmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
         increment!(colptr)
         increment!(rowidx)
     end
-    return resize!(colptr, size(A, 2) + 1),
-    rowidx,
-    vals
+    return colptr, rowidx, vals
 end
 
-function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindices = true) where {T}
+function _unpackcsrmatrix!(
+    A::AbstractGBArray{T}; 
+    desc = nothing, incrementindices = true, attachfinalizer = false
+) where {T}
     desc = _handledescriptor(desc)
     rowptr = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
     colidx = Ref{Ptr{LibGraphBLAS.GrB_Index}}()
@@ -160,7 +147,7 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
-        gbpointer(A),
+        A,
         rowptr,
         colidx,
         values,
@@ -171,26 +158,25 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
         isjumbled,
         desc
     )
-    lock(memlock)
-    rowptr, colidx, vals = try
-        if values[] ∈ keys(KEEPALIVE) && rowptr[] ∈ keys(KEEPALIVE) && colidx[] ∈ keys(KEEPALIVE)
-            x = (pop!(KEEPALIVE, colptr[]), pop!(KEEPALIVE, rowidx[]), pop!(KEEPALIVE, values[]))
-        else
-            rowvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)) do x
-                _jlfree(x)
-            end
-            colvector = finalizer(unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])) do x
-                _jlfree(x)
-            end
-            v = finalizer(unsafe_wrap(Array, Ptr{T}(values[]), nnz)) do x
-                _jlfree(x)
-            end
-            x = (rowvector, colvector, v)
-        end
-        x
-    finally
-        unlock(memlock)
+    rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
+    colidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])
+    if isiso[]
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), 1)
+    else
+        vals = unsafe_wrap(Array, Ptr{T}(values[]), nnonzeros)
     end
+    if attachfinalizer
+        rowptr = finalizer(rowptr) do x
+            _jlfree(x)
+        end
+        colidx = finalizer(colidx) do x
+            _jlfree(x)
+        end
+        vals = finalizer(vals) do x
+            _jlfree(x)
+        end
+    end
+
     if isiso[]
         vals = fill(vals[1], nnonzeros)
     end
@@ -203,50 +189,86 @@ function _unpackcsrmatrix!(A::AbstractGBArray{T}; desc = nothing, incrementindic
     vals
 end
 
-function unpack!(A::AbstractGBVector{T}, ::Dense; order = ColMajor()) where {T}
+function unsafeunpack!(
+    A::AbstractGBVector{T}, ::Dense; 
+    order = ColMajor(), attachfinalizer = false, incrementindices = false
+) where {T}
     wait(A)
     sparsity = sparsitystatus(A)
     sparsity === Dense() || (A .+= (similar(A) .= zero(T)))
     if order === ColMajor()
-        return _unpackdensematrix!(A)::Vector{T}
+        return _unpackdensematrix!(A; attachfinalizer)::Vector{T}
     else
-        return _unpackdensematrixR!(A)::Vector{T}
+        return _unpackdensematrixR!(A; attachfinalizer)::Vector{T}
     end
 end
 
-function unpack!(A::AbstractGBMatrix{T}, ::Dense; order = ColMajor()) where {T}
+function unsafeunpack!(
+    A::AbstractGBMatrix{T}, ::Dense; 
+    order = ColMajor(), attachfinalizer = false, incrementindices = false
+) where {T}
     wait(A)
     sparsity = sparsitystatus(A)
     sparsity === Dense() || (A .+= (similar(A) .= zero(T)))
     if order === ColMajor()
-        return _unpackdensematrix!(A)::Matrix{T}
+        return _unpackdensematrix!(A; attachfinalizer)::Matrix{T}
     else
-        return _unpackdensematrixR!(A)::Matrix{T}
+        return _unpackdensematrixR!(A; attachfinalizer)::Matrix{T}
     end
 end
 
-function unpack!(A::AbstractGBArray, ::Type{Vector})
-    reshape(unpack!(A, Dense()), :)::Vector{T}
+function unsafeunpack!(
+    A::AbstractGBArray, ::Type{Vector}; 
+    order = ColMajor(), attachfinalizer = false, incrementindices = false
+    )
+    reshape(unsafeunpack!(A, Dense(); attachfinalizer, order, incrementindices), :)::Vector{T}
 end
-unpack!(A::AbstractGBArray, ::Type{Matrix}) = unpack!(A, Dense())
+unsafeunpack!(
+    A::AbstractGBArray, 
+    ::Type{Matrix}; attachfinalizer = false, order = ColMajor(), incrementindices = false
+) = unsafeunpack!(A, Dense(); order, incrementindices, attachfinalizer)
 
-function unpack!(A::AbstractGBArray{T}, ::Sparse; order = ColMajor(), incrementindices = true) where {T}
+function unsafeunpack!(
+    A::AbstractGBArray{T}, ::Sparse; 
+    order = ColMajor(), incrementindices = true, attachfinalizer = false
+) where {T}
     wait(A)
     if order === ColMajor()
-        return _unpackcscmatrix!(A; incrementindices)::Tuple{Vector{Int64}, Vector{Int64}, Vector{T}}
+        return _unpackcscmatrix!(A; incrementindices, attachfinalizer)::Tuple{Vector{Int64}, Vector{Int64}, Vector{T}}
     else
-        return _unpackcsrmatrix!(A; incrementindices)::Tuple{Vector{Int64}, Vector{Int64}, Vector{T}}
+        return _unpackcsrmatrix!(A; incrementindices, attachfinalizer)::Tuple{Vector{Int64}, Vector{Int64}, Vector{T}}
     end
 end
-unpack!(A::AbstractGBArray, ::Type{SparseMatrixCSC}) = SparseMatrixCSC(size(A)..., unpack!(A, Sparse())...)
+unsafeunpack!(A::AbstractGBArray, ::Type{SparseMatrixCSC}; attachfinalizer = false) = 
+    SparseMatrixCSC(size(A)..., unsafeunpack!(A, Sparse(); attachfinalizer)...)
 
 # remove colptr for this, colptr doesn't really exist anyway, it should just be [0] (or [1] in 1-based).
-unpack!(A::AbstractGBVector, ::Type{SparseVector}) = SparseVector(size(A)..., unpack!(A, Sparse())[2:end]...)
+unsafeunpack!(A::AbstractGBVector, ::Type{SparseVector}; attachfinalizer = false) = 
+    SparseVector(size(A)..., unsafeunpack!(A, Sparse(); attachfinalizer)[2:end]...)
 
-function unpack!(A::AbstractGBArray)
+function unsafeunpack!(A::AbstractGBArray; attachfinalizer = false, )
     sparsity, order = format(A)
-    return unpack!(A, sparsity; order)
+    return unsafeunpack!(A, sparsity; order, attachfinalizer)
+end
+
+# we will never attachfinalizer here because it is assumed that this is a temporary unpack.
+function tempunpack!(A::AbstractGBArray, sparsity::Dense; order = ColMajor(), incrementindices = false)
+    shallowA = isshallow(A)
+    out = unpack!(A, sparsity; order, incrementindices)
+    function repack!(mat, shallow = shallowA; order = order, decrementindices = incrementindices)
+        return unsafepack!(A, mat, shallow; order, decrementindices)
+    end
+    return (out..., repack!)
+end
+
+function tempunpack!(A::AbstractGBArray, sparsity::Sparse; order = ColMajor(), incrementindices = false)
+    shallowA = isshallow(A)
+    out = unsafeunpack!(A, sparsity; order, incrementindices)
+    function repack!(ptr, idx, nzval, shallow = shallowA; order = order, decrementindices = incrementindices)
+        return unsafepack!(A, ptr, idx, nzval, shallow; order, decrementindices)
+    end
+    return (out..., repack!)
 end
 
 # TODO: BITMAP && HYPER
-# TODO: A repack! api?
+# TODO: A reunsafepack! api?
