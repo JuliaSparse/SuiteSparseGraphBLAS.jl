@@ -356,22 +356,6 @@ See also [`lu`](@ref)
 
 !!! compat "Julia 1.5"
     `lu!` for `UmfpackLU` requires at least Julia 1.5.
-
-# Examples
-```jldoctest
-julia> A = sparse(Float64[1.0 2.0; 0.0 3.0]);
-
-julia> F = lu(A);
-
-julia> B = sparse(Float64[1.0 1.0; 0.0 1.0]);
-
-julia> lu!(F, B);
-
-julia> F \\ ones(2)
-2-element Vector{Float64}:
- 0.0
- 1.0
-```
 """
 function lu!(F::GBUmfpackLU{Tv}, S::AbstractGBMatrix;
   check::Bool=true, reuse_symbolic::Bool=true, q=nothing) where {Tv}
