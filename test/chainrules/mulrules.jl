@@ -49,9 +49,9 @@
     end
 
     @testset "Sparse" begin
-        M = GBMatrix(sprand(100, 10, 0.25))
+        M = GBMatrix(sprand(20, 10, 0.25))
         Y = GBMatrix(sprand(10, 0.1))
-        N = GBMatrix(sprand(10, 75, 0.05))
+        N = GBMatrix(sprand(10, 30, 0.05))
         @testset "+.*" begin
             test_frule(*, M, Y)
             test_frule(*, M, Y, (+, *))

@@ -25,7 +25,7 @@ import ..increment, ..increment!, ..decrement, ..decrement!
 using SuiteSparse.UMFPACK
 using SuiteSparse.UMFPACK: umferror, @isok, 
 UMFVTypes,
-show_umf_ctrl, show_umf_info, _signperm
+show_umf_ctrl, show_umf_info
 using SuiteSparse.LibSuiteSparse
 import SuiteSparse.LibSuiteSparse:
     SuiteSparse_long,
