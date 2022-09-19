@@ -64,14 +64,7 @@ function GxB_Matrix_Option_get(A::AbstractGBArray, field)
         T = Cint
     end
     v = Ref{T}()
-    ccall(
-        (:GxB_Matrix_Option_get, libgraphblas),
-        Cvoid,
-        (LibGraphBLAS.GrB_Matrix, UInt32, Ptr{Cvoid}),
-        A,
-        field,
-        v
-    )
+    LibGraphBLAS.GxB_Matrix_Option_get(A, field, v)
     return v[]
 end
 
