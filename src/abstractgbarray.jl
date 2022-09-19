@@ -43,8 +43,21 @@ function Base.copyto!(C::AbstractGBArray, A::GBArrayOrTranspose)
 end
 
 function Base.Matrix(A::GBArrayOrTranspose)
-    T = copy(A) # We copy here to 1. avoid densifying A, and 2. to avoid destroying A.
-    return unsafeunpack!(T, Dense())
+    format = sparsitystatus(A)
+    if format === Dense()
+        T = unsafeunpack!(A, Dense())
+        M = copy(T)
+        unsafepack!(A, T, false)
+    else
+        # if A is not dense we end up doing 2x copies. Once to avoid densifying A.
+        T = copy(A)
+        U = unsafeunpack!(T, Dense())
+        # And again to make this a native Julia Array.
+        # if we didn't copy here a user could not resize
+        M = copy(U)
+        unsafepack!(T, U, false)
+    end
+    return M
 end
 
 function Base.Vector(A::GBVectorOrTranspose)
@@ -62,7 +75,7 @@ function Base.Vector(A::GBVectorOrTranspose)
         M = copy(U)
         unsafepack!(T, U, false)
     end
-    M
+    return M
 end
 
 function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
