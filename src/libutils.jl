@@ -122,7 +122,7 @@ function load_global(str, type::Type{Ptr{T}} = Ptr{Nothing}) where {T}
     try
         dlsym(libgraphblas_handle[], str)
     catch e
-        @warn "Symbol not available " * str
+        @warn "Symbol $str not available "
         return type(C_NULL)
     end
     return unsafe_load(cglobal(x, type))
