@@ -12,7 +12,7 @@ function select!(
 )
     _canbeoutput(C) || throw(ShallowException())
     op = SelectOp(op)
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
     thunk === nothing && (thunk = C_NULL)
     accum = _handleaccum(accum, eltype(C))

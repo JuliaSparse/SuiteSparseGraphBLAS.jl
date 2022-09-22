@@ -433,7 +433,7 @@ function subassign!(
     nj_sizecheck = J isa Colon ? size(C, 2) : length(J)
     I, ni = idx(I)
     J, nj = idx(J)
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
     J = decrement!(J)
@@ -464,7 +464,7 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     J, nj = idx(J)
     I = decrement!(I)
     J = decrement!(J)
-    desc = _handledescriptor(desc)
+    desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
     _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, eltype(C)), desc)
     increment!(I)
@@ -533,7 +533,7 @@ function assign!(
     _canbeoutput(C) || throw(ShallowException())
     I, ni = idx(I)
     J, nj = idx(J)
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; in1=A, out=C)
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
     J = decrement!(J)
@@ -552,7 +552,8 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     J, nj = idx(J)
     I = decrement!(I)
     J = decrement!(J)
-    desc = _handledescriptor(desc)
+    desc = _handledescriptor(desc; out=C)
+    mask = _handlemask!(desc, mask)
     _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, eltype(C)), desc)
     increment!(I)
     increment!(J)
@@ -569,11 +570,6 @@ function Base.setindex!(
     desc = nothing
 )
     subassign!(C, A, I, J; mask, accum, desc)
-end
-
-#Help wanted: This isn't really centered for a lot of eltypes.
-function Base.replace_in_print_matrix(A::AbstractGBMatrix, i::Integer, j::Integer, s::AbstractString)
-    Base.isstored(A, i, j) ? s : Base.replace_with_centered_mark(s)
 end
 
 # AbstractGBVector functions:

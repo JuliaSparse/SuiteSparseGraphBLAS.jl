@@ -3,7 +3,7 @@ function reduce!(
     mask = nothing, accum = nothing, desc = nothing
 )
     _canbeoutput(w) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=w, in1=A)
     mask = _handlemask!(desc, mask)
     
     op = typedmonoid(op, eltype(w))

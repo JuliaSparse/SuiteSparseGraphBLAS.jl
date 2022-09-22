@@ -3,7 +3,7 @@ function FiniteDifferences.to_vec(M::GBMatrix)
     x, back = FiniteDifferences.to_vec(Matrix(M))
     function backtomat(xvec)
         M2 = GBMatrix(back(xvec))
-        return mask(M2, M; structural=true)
+        return mask!(M2, Structural(M))
     end
     return x, backtomat
 end
@@ -12,7 +12,7 @@ function FiniteDifferences.to_vec(v::GBVector)
     x, back = FiniteDifferences.to_vec(Vector(v))
     function backtovec(xvec)
         v2 = GBVector(back(xvec))
-        return mask(v2, v; structural=true)
+        return mask!(v2, Structural(v))
     end
     return x, backtovec
 end

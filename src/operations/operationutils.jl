@@ -77,7 +77,6 @@ function _handlemask!(desc, mask)
     return mask
 end
 
-
 _handleaccum(::Nothing, t) = C_NULL
 _handleaccum(::Ptr{Nothing}, t) = C_NULL
 _handleaccum(op::Function, t) = binaryop(op, t, t)

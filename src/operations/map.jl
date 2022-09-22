@@ -3,7 +3,7 @@ function apply!(
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
     op = unaryop(op, eltype(A))
     accum = _handleaccum(accum, eltype(C))
@@ -54,7 +54,7 @@ function apply!(
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in2=A)
+    desc = _handledescriptor(desc; out=C, in2=A)
     mask = _handlemask!(desc, mask)
     op = binaryop(op, eltype(A), typeof(x))
     accum = _handleaccum(accum, eltype(C))
@@ -82,7 +82,7 @@ function apply!(
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
     op = binaryop(op, eltype(A), typeof(x))
     accum = _handleaccum(accum, eltype(C))
@@ -124,31 +124,3 @@ Base.:-(u::GBArrayOrTranspose) = apply(-, u)
 
 Base.real(A::GBArrayOrTranspose) = real.(A)
 Base.imag(A::GBArrayOrTranspose) = imag.(A)
-
-"""
-    mask!(C::GBArrayOrTranspose, A::GBArrayOrTranspose, mask::GBVecOrMat)
-
-Apply a mask to matrix `A`, storing the results in C.
-"""
-function mask!(C::GBVecOrMat, A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
-    _canbeoutput(C) || throw(ShallowException())
-    desc = Descriptor()
-    structural && (desc.structural_mask=true)
-    complement && (desc.complement_mask=true)
-    mask = mask isa Transpose || mask isa Adjoint ? copy(mask) : mask
-    apply!(identity, C, A; mask, desc)
-    return C
-end
-
-function mask!(A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
-    mask!(A, A, mask; structural, complement)
-end
-
-"""
-    mask(A::GBArrayOrTranspose, mask::GBVecOrMat)
-
-Apply a mask to matrix `A`.
-"""
-function mask(A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
-    return mask!(similar(A), A, mask; structural, complement)
-end

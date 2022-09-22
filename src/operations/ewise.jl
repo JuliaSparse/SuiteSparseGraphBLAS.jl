@@ -31,7 +31,7 @@ function emul!(
     desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A, in2=B)
+    desc = _handledescriptor(desc; out=C, in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
@@ -117,7 +117,7 @@ function eadd!(
     desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A, in2 = B)
+    desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
@@ -203,7 +203,7 @@ function eunion!(
     desc = nothing
 ) where {T, U}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A, in2 = B)
+    desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())

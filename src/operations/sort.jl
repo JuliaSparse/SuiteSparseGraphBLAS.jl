@@ -24,7 +24,7 @@ function Base.sort!(
     else
         throw(ArgumentError("dims must be either 1 (sort columns) or 2 (sort rows)"))
     end
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     desc.transpose_input1 = transpose
     @wraperror LibGraphBLAS.GxB_Matrix_sort(C, P, op, parent(A), desc)
     return C

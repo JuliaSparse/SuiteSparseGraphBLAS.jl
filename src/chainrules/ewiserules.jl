@@ -55,8 +55,8 @@ function rrule(::typeof(eadd), A::AbstractGBArray, B::AbstractGBArray, ::typeof(
     function pluspullback(ΔΩ)
         return (
             NoTangent(),
-            mask(unthunk(ΔΩ), A; structural = true),
-            mask(unthunk(ΔΩ), B; structural = true),
+            mask(unthunk(ΔΩ), Structural(A)),
+            mask(unthunk(ΔΩ), Structural(B)),
             NoTangent()
         )
     end
