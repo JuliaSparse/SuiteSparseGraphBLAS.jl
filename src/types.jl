@@ -1,3 +1,4 @@
+using FunctionWrappers: FunctionWrapper, do_ccall
 abstract type AbstractSparsity end
 struct Dense <: AbstractSparsity end
 struct Bitmap <: AbstractSparsity end
@@ -31,14 +32,14 @@ function TypedUnaryOperator(fn::F, ::Type{X}) where {F, X}
     return TypedUnaryOperator(fn, X, Base._return_type(fn, Tuple{X}))
 end
 
-@generated function getcfunc(f::F, ::Type{Z}, ::Type{X}) where {X, Z, F}
-    pmodule = Symbol(parentmodule(F))
-    name = Symbol(F.instance)
-    newname = Symbol(name, :(___))
-    quote
-        return @cfunction($pmodule.$name, Cvoid, (Ptr{$Z}, Ref{$X}))
-    end
-end
+# @generated function getcfunc(f::F, ::Type{Z}, ::Type{X}) where {X, Z, F}
+#     pmodule = Symbol(parentmodule(F))
+#     name = Symbol(F.instance)
+#     newname = Symbol(name, :(___))
+#     quote
+#         return @cfunction($pmodule.$name, Cvoid, (Ptr{$Z}, Ref{$X}))
+#     end
+# end
 
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
     # We can lazily load the built-ins since they are already constants. 
@@ -47,27 +48,21 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
         if op.builtin
             op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
         else
-            # function unaryopfn(z, x)
-            #     unsafe_store!(z, fn(x))
-            #     return nothing
-            # end
-            pmodule = Symbol(parentmodule(F))
-            name = Symbol(F.instance)
-            newname = Symbol(name, :(___))
-            println(newname)
-            eval(
-            quote
-                function $newname(z, x)
-                    unsafe_store!(z, $pmodule.$name(x))
-                    return nothing
-                end
+            fn = op.fn
+            function unaryopfn(z, x)
+                o = fn(x)
+                println(unsafe_load(z))
+                println(o)
+                unsafe_store!(z, fn(x))
+                println(unsafe_load(z))
+                return nothing
             end
-            )
+            
             opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
-            unaryopfn_C = getcfunc(eval(:($newname)), Z, X)
-            op.keepalive = unaryopfn_C
+            unaryopfn_C = FunctionWrapper{Cvoid, Tuple{Ptr{Z}, X}}(unaryopfn)
+            op.keepalive = (unaryopfn, unaryopfn_C)
             # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
-            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(op.fn), "")
+            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C.ptr, gbtype(Z), gbtype(X), string(fn), "")
             op.p = opref[]
         end
         op.loaded = true
