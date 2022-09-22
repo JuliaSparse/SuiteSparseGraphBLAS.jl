@@ -254,11 +254,11 @@ end
 # we will never attachfinalizer here because it is assumed that this is a temporary unpack.
 function tempunpack!(A::AbstractGBArray, sparsity::Dense; order = ColMajor(), incrementindices = false)
     shallowA = isshallow(A)
-    out = unpack!(A, sparsity; order, incrementindices)
+    out = unsafeunpack!(A, sparsity; order, incrementindices)
     function repack!(mat, shallow = shallowA; order = order, decrementindices = incrementindices)
         return unsafepack!(A, mat, shallow; order, decrementindices)
     end
-    return (out..., repack!)
+    return (out, repack!)
 end
 
 function tempunpack!(A::AbstractGBArray, sparsity::Sparse; order = ColMajor(), incrementindices = false)

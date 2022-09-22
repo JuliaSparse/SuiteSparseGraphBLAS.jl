@@ -1,4 +1,3 @@
-using FunctionWrappers: FunctionWrapper, do_ccall
 abstract type AbstractSparsity end
 struct Dense <: AbstractSparsity end
 struct Bitmap <: AbstractSparsity end
@@ -41,6 +40,14 @@ end
 #     end
 # end
 
+@generated function cunary(f::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
+    if Base.issingletontype(F)
+        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X})))
+    else
+        throw("Unsupported function $f")
+    end
+end
+
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
     # We can lazily load the built-ins since they are already constants. 
     # Could potentially do this with UDFs, but probably not worth the effort.
@@ -50,19 +57,15 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
         else
             fn = op.fn
             function unaryopfn(z, x)
-                o = fn(x)
-                println(unsafe_load(z))
-                println(o)
                 unsafe_store!(z, fn(x))
-                println(unsafe_load(z))
                 return nothing
             end
             
             opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
-            unaryopfn_C = FunctionWrapper{Cvoid, Tuple{Ptr{Z}, X}}(unaryopfn)
+            unaryopfn_C = cunary(unaryopfn, X, Z)
             op.keepalive = (unaryopfn, unaryopfn_C)
             # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
-            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C.ptr, gbtype(Z), gbtype(X), string(fn), "")
+            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(fn), "")
             op.p = opref[]
         end
         op.loaded = true
@@ -101,6 +104,14 @@ function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F,
 end
 (op::TypedBinaryOperator)(T) = op(T, T)
 
+@generated function cbinary(f::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
+    if Base.issingletontype(F)
+        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X}, Ref{Y})))
+    else
+        throw("Unsupported function $f")
+    end
+end
+
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
     if !op.loaded
         if op.builtin
@@ -112,7 +123,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryO
                 return nothing
             end
             opref = Ref{LibGraphBLAS.GrB_BinaryOp}()
-            binaryopfn_C = @cfunction($binaryopfn, Cvoid, (Ptr{Z}, Ref{X}, Ref{Y}))
+            binaryopfn_C = cbinary(binaryopfn, X, Y, Z)
             op.keepalive = (binaryopfn, binaryopfn_C)
             @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
             op.p = opref[]

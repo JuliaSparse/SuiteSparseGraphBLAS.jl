@@ -5,7 +5,6 @@ version = "0.8.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-FunctionWrappers = "069b7b12-0de2-55c6-9aab-29f3d0a68a2e"
 KLU = "ef3ab10e-7fda-4108-b977-705223b18434"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
