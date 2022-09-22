@@ -112,7 +112,7 @@ function Base.map!(f, C::GBVecOrMat, A::GBArrayOrTranspose{T}; mask = nothing, a
     apply!(f, C, A; mask, accum, desc)
 end
 function Base.map!(f, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
-    apply!(f, C, A; mask, accum, desc)
+    apply!(f, A, A; mask, accum, desc)
 end
 
 Base.:*(x::V, u::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T, <:Number}} =
