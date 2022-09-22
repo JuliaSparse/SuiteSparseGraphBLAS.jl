@@ -27,8 +27,8 @@ function rrule(
     ::typeof((+, *))
 )
     function mulpullback(ΔΩ)
-        ∂A = *(unthunk(ΔΩ), B', (+, *); mask=A)
-        ∂B = *(A', unthunk(ΔΩ), (+, *); mask=B)
+        ∂A = *(unthunk(ΔΩ), B', (+, *); mask=Structural(A))
+        ∂B = *(A', unthunk(ΔΩ), (+, *); mask=Structural(B))
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B), mulpullback
@@ -55,8 +55,8 @@ function rrule(
     ::typeof((+, /))
 )
     function mulpullback(ΔΩ)
-        ∂A = *(unthunk(ΔΩ), one(eltype(A)) ./ B', (+, *); mask=A)
-        ∂B = (zero(eltype(A)) .- *(A', unthunk(ΔΩ); mask=B)) ./ (B .^ 2.)
+        ∂A = *(unthunk(ΔΩ), one(eltype(A)) ./ B', (+, *); mask=Structural(A))
+        ∂B = (zero(eltype(A)) .- *(A', unthunk(ΔΩ); mask=Structural(B))) ./ (B .^ 2.)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B, (+, /)), mulpullback
@@ -82,8 +82,8 @@ function rrule(
     ::typeof((+, +))
 )
     function mulpullback(ΔΩ)
-        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=A)
-        ∂B = *(A', unthunk(ΔΩ), (+, second); mask=B)
+        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=Structural(A))
+        ∂B = *(A', unthunk(ΔΩ), (+, second); mask=Structural(B))
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B, (+, +)), mulpullback
@@ -109,8 +109,8 @@ function rrule(
     ::typeof((+, -))
 )
     function mulpullback(ΔΩ)
-        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=A)
-        ∂B = *(A', zero(eltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), (+, second); mask=B)
+        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=Structural(A))
+        ∂B = *(A', zero(eltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), (+, second); mask=Structural(B))
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B, (+, -)), mulpullback
@@ -136,7 +136,7 @@ function rrule(
     ::typeof((+, first))
 )
     function mulpullback(ΔΩ)
-        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=A)
+        ∂A = *(unthunk(ΔΩ), B', (+, first); mask=Structural(A))
         ∂B = NoTangent() # perhaps this should be ZeroTangent(), not sure.
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
@@ -164,7 +164,7 @@ function rrule(
 )
     function mulpullback(ΔΩ)
         ∂A = NoTangent()
-        ∂B = *(A', unthunk(ΔΩ), (+, second); mask=B)
+        ∂B = *(A', unthunk(ΔΩ), (+, second); mask=Structural(B))
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B, (+, second)), mulpullback

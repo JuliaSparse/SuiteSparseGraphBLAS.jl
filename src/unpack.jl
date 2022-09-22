@@ -5,7 +5,7 @@ function _unpackdensematrix!(
     szA = size(A)
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
-    values = Ref{Ptr{Cvoid}}(Ptr{T}())
+    values = Ref{Ptr{Cvoid}}(C_NULL)
     isiso = Ref{Bool}(false)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
         A,
@@ -189,6 +189,59 @@ function _unpackcsrmatrix!(
     vals
 end
 
+function _unpackbitmapmatrix!(
+    A::AbstractGBArray{T};
+    desc = nothing, attachfinalizer = false
+)
+    szA = size(A)
+    desc = _handledescriptor(desc)
+    Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
+    Bsize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(Bool))
+    values = Ref{Ptr{Cvoid}}(C_NULL)
+    bytemap = Ref{Ptr{Bool}}(C_NULL)
+    isiso = Ref{Bool}(false)
+    nnz = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_BitmapC(
+        A,
+        bytemap,
+        values,
+        Bsize,
+        Csize,
+        isiso,
+        nnz,
+        desc
+    )
+    v = unsafe_wrap(Array, Ptr{T}(values[]), szA...)
+    b = unsafe_wrap(Array, bytemap[], szA...)
+    if attachfinalizer
+        v = finalizer(v) do f
+            _jlfree(f)
+        end
+        b = finalizer(b) do f
+            _jlfree(f)
+        end
+    end
+    return v, b
+end
+
+function _unpackbitmapmatrixR!(
+    A::AbstractGBArray{T};
+    desc = nothing, attachfinalizer = false
+)
+
+end
+
+function _unpackhypermatrix!(
+    A::AbstractGBArray{T};
+    desc = nothing, incrementindices = false, attachfinalizer = false
+)
+end
+
+function _unpackhypermatrixR!(
+    A::AbstractGBArray{T};
+    desc = nothing, incrementindices = false, attachfinalizer = false
+)
+end
 function unsafeunpack!(
     A::AbstractGBVector{T}, ::Dense; 
     order = ColMajor(), attachfinalizer = false, incrementindices = false

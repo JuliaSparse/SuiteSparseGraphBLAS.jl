@@ -315,6 +315,9 @@ end
     end
 end
 
+# function Base.broadcasted(::Union{<:GBMatrixStyle}, ::Type{X}, A::AbstractGBMatrix)
+#     
+# end
 ## Really ugly overloads to make A .= 3 work correctly
 # TODO go through the broadcast code and figuring out how this should be done.
 function Base.materialize!(
