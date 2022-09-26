@@ -18,7 +18,7 @@ function _copytoraw(A::DenseVecOrMat{T}) where {T}
     sz = sizeof(A)
     ptr = _jlmalloc(sz, T)
     unsafe_copyto!(ptr, pointer(A), length(A))
-    return unsafe_wrap(Array, ptr, length(A))
+    return unsafe_wrap(Array, ptr, size(A))
 end
 
 function _copytoraw(A::SparseMatrixCSC)

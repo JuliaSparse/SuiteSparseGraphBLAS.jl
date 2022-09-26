@@ -1,35 +1,73 @@
 function _packdensematrix!(
     A::AbstractGBArray{T}, M::VecOrMat{T};
-    desc = nothing
+    desc = nothing, order = ColMajor()
 ) where {T}
     desc = _handledescriptor(desc)
-    Csize = length(A) * sizeof(T)
+    Csize = length(M) * sizeof(T)
     ptr = pointer(M)
-    @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
-        A,
-        Ref{Ptr{Cvoid}}(ptr),
-        Csize,
-        false, #isuniform
-        desc
-    )
+    isiso = length(M) == 1 && length(A) != 1
+    if order === ColMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
+            A,
+            Ref{Ptr{Cvoid}}(ptr),
+            Csize,
+            isiso, #isuniform
+            desc
+        )
+    elseif order === RowMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_FullR(
+            A,
+            Ref{Ptr{Cvoid}}(ptr),
+            Csize,
+            isiso, #isuniform
+            desc
+        )
+    else
+        throw(ArgumentError("order must be either RowMajor() or ColMajor()"))
+    end
     return A
 end
 
-function _packdensematrixR!(
-    A::AbstractGBArray{T}, M::VecOrMat{T};
-    desc = nothing
-) where {T}
+function _packbitmap!(
+    A::AbstractGBArray{T}, bytemap::VecOrMat{Int8}, values::VecOrMat{T};
+    desc = nothing, order = ColMajor()
+) where T
     desc = _handledescriptor(desc)
-    Csize = length(A) * sizeof(T)
-    ptr = pointer(M)
-    @wraperror LibGraphBLAS.GxB_Matrix_pack_FullR(
-        A,
-        Ref{Ptr{Cvoid}}(ptr),
-        Csize,
-        false, #isuniform
-        desc
-    )
-    return A
+    valsize = length(A) * sizeof(T)
+    bytesize = length(A) * sizeof(eltype(bytemap))
+    isiso = (length(values) == 1) && (length(A) != 1)
+    nvals = sum(bytemap)
+    bytepointer = pointer(bytemap)
+    valpointer = pointer(values)
+    bytepointer = Ref{Ptr{Int8}}(bytepointer)
+    valpointer = Ref{Ptr{Cvoid}}(valpointer)
+
+    if order === ColMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_BitmapC(
+            A,
+            bytepointer,
+            valpointer,
+            bytesize,
+            valsize,
+            isiso,
+            nvals,
+            desc
+        )
+    elseif order === RowMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_BitmapR(
+            A,
+            bytepointer,
+            valpointer,
+            bytesize,
+            valsize,
+            isiso,
+            nvals,
+            desc
+        )
+    else
+        throw(ArgumentError("order must be either RowMajor() or ColMajor()"))
+    end
+
 end
 
 function _packcscmatrix!(

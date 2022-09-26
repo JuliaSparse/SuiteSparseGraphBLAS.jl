@@ -1,6 +1,6 @@
 abstract type AbstractSparsity end
 struct Dense <: AbstractSparsity end
-struct Bitmap <: AbstractSparsity end
+struct Bytemap <: AbstractSparsity end
 struct Sparse <: AbstractSparsity end
 struct Hypersparse <: AbstractSparsity end
 
@@ -30,15 +30,6 @@ end
 function TypedUnaryOperator(fn::F, ::Type{X}) where {F, X}
     return TypedUnaryOperator(fn, X, Base._return_type(fn, Tuple{X}))
 end
-
-# @generated function getcfunc(f::F, ::Type{Z}, ::Type{X}) where {X, Z, F}
-#     pmodule = Symbol(parentmodule(F))
-#     name = Symbol(F.instance)
-#     newname = Symbol(name, :(___))
-#     quote
-#         return @cfunction($pmodule.$name, Cvoid, (Ptr{$Z}, Ref{$X}))
-#     end
-# end
 
 @generated function cunary(f::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
     if Base.issingletontype(F)

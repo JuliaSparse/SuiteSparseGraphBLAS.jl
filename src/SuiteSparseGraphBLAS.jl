@@ -61,6 +61,12 @@ include("scalar.jl")
 include("vector.jl")
 include("matrix.jl")
 include("abstractgbarray.jl")
+
+# EXPERIMENTAL array types:
+include("shallowtypes.jl")
+include("oriented.jl")
+
+include("convert.jl")
 include("random.jl")
 # Miscellaneous Operations
 include("print.jl")
@@ -96,10 +102,8 @@ include("serialization.jl")
 include("misc.jl")
 include("mmread.jl")
 # include("iterator.jl")
-include("oriented.jl")
 include("solvers/klu.jl")
 include("solvers/umfpack.jl")
-include("shallowtypes.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS

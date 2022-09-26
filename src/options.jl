@@ -147,13 +147,13 @@ function setstorageorder!(A::AbstractGBArray, o::StorageOrders.StorageOrder)
 end
 
 shapetoconst(::Dense) = GBDENSE
-shapetoconst(::Bitmap) = GBBITMAP
+shapetoconst(::Bytemap) = GBBITMAP
 shapetoconst(::Sparse) = GBSPARSE
 shapetoconst(::Hypersparse) = GBHYPER
 
 function consttoshape(c)
     c == GBDENSE && (return Dense())
-    c == GBBITMAP && (return Bitmap())
+    c == GBBITMAP && (return Bytemap())
     c == GBSPARSE && (return Sparse())
     c == GBHYPER && (return Hypersparse())
 end
