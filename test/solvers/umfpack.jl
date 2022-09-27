@@ -167,8 +167,8 @@ end
 
     # based on deps/Suitesparse-4.0.2/UMFPACK/Demo/umfpack_di_demo.c
 
-    A0 = GBMatrix(increment!([0,4,1,1,2,2,0,1,2,3,4,4]),
-                increment!([0,4,0,2,1,2,1,4,3,2,1,2]),
+    A0 = GBMatrix([1, 5, 2, 2, 3, 3, 1, 2, 3, 4, 5, 5],
+                [1, 5, 1, 3, 2, 3, 2, 5, 4, 3, 2, 3],
                 [2.,1.,3.,4.,-1.,-3.,3.,6.,2.,1.,4.,2.], nrows = 5, ncols = 5)
 
     @testset "Core functionality for $Tv elements" for Tv in (Float64, ComplexF64)
