@@ -8,3 +8,5 @@ LocalPreferences.toml
 benchmarks/results.txt
 /Manifest.toml
 *.cov
+test/Manifest.toml
+.gitignore
