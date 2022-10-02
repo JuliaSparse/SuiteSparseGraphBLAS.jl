@@ -17,12 +17,12 @@
             x = sprand(Int64, 100, 100, 0.05)
             m = GBMatrix(x)
             deleteat!(m, 1, 2)
-            @test m[1, 2] === nothing
-            @test m[:, 2] == GBVector(x[:, 2])
+            @test m[1, 2] === getfill(m)
+            @test m[:, 3] == GBVector(x[:, 3])
             @test m[2, :] == GBVector(x[2, :])
             @test m[:, :] == m
-            @test m[1:2:5, 1:2] == GBMatrix(x[1:2:5, 1:2])
-            @test m[1:2:5, :] == GBMatrix(x[1:2:5, :])
+            @test m[1:2:5, 3:5] == GBMatrix(x[1:2:5, 3:5])
+            @test m[3:2:9, :] == GBMatrix(x[3:2:9, :])
 
             A = GBMatrix([[1,2] [3,4]])
             @test A[[1,2], [1,1]] == [[1,2] [1,2]]
@@ -64,7 +64,9 @@
         mask = GBMatrix([[true, true, false] [false, true, true] [true, false,true]])
         m[8:10, 8:10, mask = mask, accum = *, desc = Descriptor(replace_output=true)] =
             fill(10, 3, 3)
-        @test m[9, 10] === nothing
+        @test m[9, 10] == zero(eltype(m))
+        n = setfill(m, nothing)
+        @test n[9, 10] === nothing
         @test m[10, 10] == 90
 
         #vectors

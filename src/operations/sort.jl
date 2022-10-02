@@ -16,7 +16,7 @@ function Base.sort!(
     C === nothing && (C = C_NULL)
     P === nothing && (P = C_NULL)
     C == C_NULL && P == C_NULL && throw(ArgumentError("One (or both) of C and P must not be nothing."))
-    op = binaryop(lt, eltype(A))
+    op = binaryop(lt, A, A)
     if dims == 1
         transpose = true
     elseif dims == 2

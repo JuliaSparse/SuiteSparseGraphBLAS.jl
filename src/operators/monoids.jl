@@ -33,7 +33,7 @@ function Monoid(fn, identity)
     return Monoid(fn, identity, nothing)
 end
 
-function typedmonoid(m::Monoid{F, I, Term}, ::Type{T}) where {F<:Base.Callable, I, Term, T}
+function typedmonoid(m::Monoid{F, I, Term}, ::Type{T}) where {F, I, Term, T}
     return (get!(MONOIDS, (m, T)) do
         TypedMonoid(binaryop(m.fn, T), m.identity, m.terminal)
     end)
@@ -42,7 +42,7 @@ end
 typedmonoid(op::TypedMonoid, x...) = op
 
 # We default to no available monoid.
-defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = throw(
+defaultmonoid(f::F, ::Type{T}) where {F, T} = throw(
     ArgumentError("Function $f does not have a default monoid.
     You must either extend defaultmonoid(::$F, ::Type{T}) = 
     Monoid($f, <identity> [, <terminal>]) or pass the struct
@@ -50,9 +50,7 @@ defaultmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = throw(
     )
 
 # Use defaultmonoid when available. User should verify that this results in the correct monoid.
-typedmonoid(f::F, ::Type{T}) where {F<:Base.Callable, T} = typedmonoid(defaultmonoid(f, T), T)
-
-BinaryOps.binaryop(op::TypedMonoid) = op.binaryop
+typedmonoid(f::F, ::Type{T}) where {F, T} = typedmonoid(defaultmonoid(f, T), T)
 
 function typedmonoidconstexpr(jlfunc, builtin, namestr, type, identity, term)
     if type ∈ Ztypes && isGrB(namestr)

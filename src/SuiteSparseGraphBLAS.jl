@@ -110,9 +110,9 @@ export LibGraphBLAS
 # export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export unaryop, binaryop, Monoid, semiring #UDFs
 export Descriptor #Types
-export gbset, gbget # global and object specific options.
+export gbset, gbget, getfill, setfill # global and object specific options.
 # export xtype, ytype, ztype #Determine input/output types of operators
-export GBScalar, GBVector, GBMatrix #arrays
+export GBScalar, GBVector, GBMatrix, GBMatrixC, GBMatrixR #arrays
 export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
 
 # Function arguments not found elsewhere in Julia

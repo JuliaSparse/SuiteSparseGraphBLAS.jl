@@ -17,6 +17,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StorageOrders = "e9177fbf-8fde-426c-9425-4eed0f22262a"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
+Tricks = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 
 [compat]
 ChainRulesCore = "1"

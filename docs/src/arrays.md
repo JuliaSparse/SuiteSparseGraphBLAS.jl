@@ -3,7 +3,7 @@
 There are two primary array types in SuiteSparseGraphBLAS.jl: [`GBVector`](@ref) and [`GBMatrix`](@ref), as well as a few specialized versions of those array types. The full type hierarchy is:
 
 ```
-AbstractGBArray{T, N, F} <: AbstractSparseArray{T, N}
+AbstractGBArray{T, F, N} <: AbstractSparseArray{Union{T, F}, N}
  ├ N = 2 ─ AbstractGBMatrix{T, F} 
  │   ├─ GBMatrix{T, F}
  │   └─ OrientedGBMatrix{T, F, O}

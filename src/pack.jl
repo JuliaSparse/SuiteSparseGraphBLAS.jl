@@ -154,6 +154,8 @@ function unsafepack!(
     A::AbstractGBArray, M::StridedVecOrMat, shallow::Bool = true; 
     order = ColMajor(), decrementindices = false # we don't need this, but it avoids another method.
     )
+    _hasconstantorder(A) && (storageorder(A) !== order) && 
+        (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
     if order === ColMajor()
         _packdensematrix!(A, M)
     else
@@ -167,7 +169,8 @@ function unsafepack!(
     A::AbstractGBArray, ptr, idx, values, shallow::Bool = true; 
     order = ColMajor(), decrementindices = true
 )
-    
+    _hasconstantorder(A) && (storageorder(A) !== order) && 
+        (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
     if order === ColMajor()
         _packcscmatrix!(A, ptr, idx, values; decrementindices)
     else

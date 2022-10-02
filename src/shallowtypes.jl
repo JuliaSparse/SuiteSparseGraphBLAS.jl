@@ -1,37 +1,6 @@
-abstract type AbstractGBShallowArray{T, P, B, A, N, F} <: AbstractGBArray{T, N, F} end
-
 # fall back to nzval, this may need to change eventually, as it's currently not possible to know the storage order.
 # Either a new parameter or something else.
 StorageOrders.storageorder(A::AbstractGBShallowArray) = storageorder(A.nzval)
-
-
-mutable struct GBShallowVector{T, P, B, A, F} <: AbstractGBShallowArray{T, P, B, A, 1, F}
-    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
-    fill::F
-    # storage for sparse formats supported by SS:GraphBLAS
-    ptr::P #colptr / rowptr
-    idx::P # rowidx / colidx
-    h::P # hypersparse-only
-    bitmap::B # bitmap only
-    nzval::A # array storage for dense arrays, nonzero values storage for everyone else.
-end
-
-function GBShallowVector{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::A) where {T, P, B, A, F}
-    GBShallowVector{T, P, B, A, F}(p, fill, ptr, idx, h, bitmap, nzval)
-end
-mutable struct GBShallowMatrix{T, P, B, A, F} <: AbstractGBShallowArray{T, P, B, A, 2, F}
-    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
-    fill::F
-    # storage for sparse formats supported by SS:GraphBLAS
-    ptr::P #colptr / rowptr
-    idx::P # rowidx / colidx
-    h::P # hypersparse-only
-    bitmap::B # bitmap only
-    nzval::A # array storage for dense arrays, nonzero values storage for everyone else.
-end
-function GBShallowMatrix{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::A) where {T, P, B, A, F}
-    GBShallowVector{T, P, B, A, F}(p, fill, ptr, idx, h, bitmap, nzval)
-end
 
 function GBShallowVector(v::DenseVector{T}; fill::F = nothing) where {T, F}
     m = _newGrBRef()
@@ -115,8 +84,6 @@ end
 
 struct ShallowException <: Exception end
 Base.showerror(io::IO, ::ShallowException) = print(io, "An AbstractGBShallowArray has been passed to a function which may modify it.")
-
-_canbeoutput(A::AbstractGBShallowArray) = false
 
 Base.empty!(::AbstractGBShallowArray) = throw(ShallowException())
 Base.copyto!(::AbstractGBShallowArray, A::GBArrayOrTranspose) = throw(ShallowException())

@@ -21,7 +21,7 @@ function gbtranspose!(
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
-    accum = _handleaccum(accum, eltype(C))
+    accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GrB_transpose(C, mask, accum, parent(A), desc)
     return C
 end
@@ -58,7 +58,7 @@ function Base.copy!(
 end
 
 function Base.copy(
-    A::LinearAlgebra.Transpose{<:Any, <:GBVecOrMat};
+    A::LinearAlgebra.Transpose{<:Any, <:AbstractGBArray};
     mask = nothing, accum = nothing, desc = nothing
 )
     return gbtranspose(parent(A); mask, accum, desc)

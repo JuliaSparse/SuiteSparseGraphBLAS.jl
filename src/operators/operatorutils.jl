@@ -53,4 +53,10 @@ function symtotype(sym)
     end
 end
 
-function juliaop end
+juliaop(op) = op
+juliaop(op::Tuple) = throw(ArgumentError("You must request either the mulop or addop of a semiring before conversion to a julia operator."))
+
+function binaryop end
+function monoid end
+# const mulop = binaryop
+# const addop = monoid

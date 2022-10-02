@@ -15,7 +15,7 @@ function select!(
     desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
     thunk === nothing && (thunk = C_NULL)
-    accum = _handleaccum(accum, eltype(C))
+    accum = _handleaccum(accum, storedeltype(C))
     if thunk isa Number
         thunk = GBScalar(thunk)
     end

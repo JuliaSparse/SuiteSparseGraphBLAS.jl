@@ -46,7 +46,6 @@ function _unpackdensematrix!(
             _jlfree(x)
         end
     end
-    # eltype(M) == T || (M = copy(reinterpret(T, M)))
     if length(v) != length(A)
         resize!(v, length(A))
     end

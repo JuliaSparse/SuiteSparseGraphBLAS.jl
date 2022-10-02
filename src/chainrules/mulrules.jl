@@ -55,8 +55,8 @@ function rrule(
     ::typeof((+, /))
 )
     function mulpullback(ΔΩ)
-        ∂A = *(unthunk(ΔΩ), one(eltype(A)) ./ B', (+, *); mask=Structural(A))
-        ∂B = (zero(eltype(A)) .- *(A', unthunk(ΔΩ); mask=Structural(B))) ./ (B .^ 2.)
+        ∂A = *(unthunk(ΔΩ), one(storedeltype(A)) ./ B', (+, *); mask=Structural(A))
+        ∂B = (zero(storedeltype(A)) .- *(A', unthunk(ΔΩ); mask=Structural(B))) ./ (B .^ 2.)
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B, (+, /)), mulpullback
@@ -110,7 +110,7 @@ function rrule(
 )
     function mulpullback(ΔΩ)
         ∂A = *(unthunk(ΔΩ), B', (+, first); mask=Structural(A))
-        ∂B = *(A', zero(eltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), (+, second); mask=Structural(B))
+        ∂B = *(A', zero(storedeltype(unthunk(ΔΩ))) .- unthunk(ΔΩ), (+, second); mask=Structural(B))
         return NoTangent(), ∂A, ∂B, NoTangent()
     end
     return *(A, B, (+, -)), mulpullback

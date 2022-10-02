@@ -13,8 +13,8 @@ function LinearAlgebra.mul!(
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
-    op = semiring(op, eltype(A), eltype(B))
-    accum = _handleaccum(accum, eltype(C))
+    op = semiring(op, storedeltype(A), storedeltype(B))
+    accum = _handleaccum(accum, storedeltype(C))
     op isa TypedSemiring || throw(ArgumentError("$op is not a valid TypedSemiring"))
     @wraperror LibGraphBLAS.GrB_mxm(C, mask, accum, op, parent(A), parent(B), desc)
     return C
@@ -91,8 +91,8 @@ function Base.:*(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(eltype(A), eltype(B), op)
-    fill = _promotefill(parent(A).fill, parent(B).fill)
+    t = inferbinarytype(parent(A), parent(B), op)
+    fill = _promotefill(parent(A), parent(B), op)
     if A isa GBMatrixOrTranspose && B isa AbstractGBVector
         C = similar(A, t, size(A, 1); fill)
     elseif A isa AbstractGBVector && B isa GBMatrixOrTranspose
@@ -171,7 +171,7 @@ function Base.:*(
     return @_densepack B (*(A, B, op; mask, accum, desc))
 end
 
-function Base.:*((⊕)::Union{<:Base.Callable, Monoid}, (⊗)::Function)
+function Base.:*((⊕)::Union{<:Function, Monoid}, (⊗)::Function)
     return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
         *(A, B, (⊕, ⊗); mask, accum, desc)
     end

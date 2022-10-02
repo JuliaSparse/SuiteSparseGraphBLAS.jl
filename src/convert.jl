@@ -4,7 +4,7 @@
 # pass through for most cases
 conform(M::AbstractGBArray) = M
 
-function Base.convert(::Type{M}, A::AbstractGBArray; fill = getfill(A)) where {T, M<:AbstractGBArray{T}}
+function Base.convert(::Type{M}, A::N; fill = getfill(A)) where {M<:AbstractGBArray, N<:AbstractGBArray}
     isabstracttype(M) && throw(ArgumentError("$M is an abstract type, which cannot be constructed."))
     sparsity = sparsitystatus(A)
     x = tempunpack_noformat!(A)
@@ -17,9 +17,13 @@ function Base.convert(::Type{M}, A::AbstractGBArray; fill = getfill(A)) where {T
     display(typeof(newvalues))
     copyto!(newvalues, values)
     newindices = _copytoraw.(indices)
+    repack!()
     B = M(size(A); fill)
     unsafepack!(B, newindices..., newvalues, false)
+    
 end
+
+Base.convert(::Type{M}, A::M; fill = nothing) where {M<:AbstractGBArray} = A
 
 # TODO: Implement this? No strong reason not to? 
 Base.convert(::Type{M}, ::AbstractGBArray; fill = nothing) where {M<:AbstractGBShallowArray} = 

@@ -1,18 +1,26 @@
 # AbstractGBArray functions:
 
-Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::AbstractGBArray) = A.p[]
-Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Vector}, A::AbstractGBVector) = LibGraphBLAS.GrB_Vector(A.p[])
+# AbstractGBArray "traits":
 
-_newGrBRef() = finalizer(Ref{LibGraphBLAS.GrB_Matrix}()) do ref
-    @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
-end
-function _copyGrBMat(r::Base.RefValue{LibGraphBLAS.GrB_Matrix})
-    C = Ref{LibGraphBLAS.GrB_Matrix}()
-    LibGraphBLAS.GrB_Matrix_dup(C, r[])
-    return C
-end
+# output checking
 
-_canbeoutput(A::AbstractGBArray) = true
+"""
+    _canbeoutput(A::AbstractGBArray)::Bool
+
+Whether `A` may be used as the output argument to a GraphBLAS function.
+"""
+_canbeoutput(::AbstractGBArray) = true
+_canbeoutput(::AbstractGBShallowArray) = false
+
+"""
+    _hasconstantorder(A::AbstractGBArray)::Bool
+
+Whether `A` may have its storageorder changed.
+"""
+_hasconstantorder(::AbstractGBArray) = true
+# GBMatrix is the only one which may, under ordinary circumstances
+# have its order changed.
+_hasconstantorder(::GBMatrix) = false
 
 function SparseArrays.nnz(A::GBArrayOrTranspose)
     nvals = Ref{LibGraphBLAS.GrB_Index}()
@@ -20,7 +28,19 @@ function SparseArrays.nnz(A::GBArrayOrTranspose)
     return Int64(nvals[])
 end
 
-Base.eltype(::Type{GBArrayOrTranspose{T}}) where{T} = T
+# Base functions:
+
+Base.IndexStyle(::AbstractGBArray) = IndexCartesian()
+Base.eltype(::AbstractGBArray{T, F}) where {T, F} = Union{T, F}
+Base.eltype(::Type{<:AbstractGBArray{T, F}}) where{T, F} = Union{T, F}
+
+storedeltype(x) = eltype(x)
+storedeltype(::AbstractGBArray{T}) where T = T
+# TODO: The transpose
+
+Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::AbstractGBArray) = A.p[]
+Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Vector}, A::AbstractGBVector) = 
+    LibGraphBLAS.GrB_Vector(A.p[])
 
 """
     empty!(A::AbstractGBArray)
@@ -275,14 +295,15 @@ for T ∈ valid_vec
 end
 
 function build!(
-        A::AbstractGBMatrix{T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector{T};
+        A::AbstractGBMatrix{T}, I::AbstractVector{<:Integer}, J::AbstractVector{<:Integer}, X::AbstractVector;
         combine = +
-    ) where {T}
+    ) where T
     _canbeoutput(A) || throw(ShallowException())
     combine = binaryop(combine, T)
     I isa Vector || (I = collect(I))
     J isa Vector || (J = collect(J))
     X isa Vector || (X = collect(X))
+    X = convert(Vector{T}, X)
     nnz(A) == 0 || throw(OutputNotEmptyError("Cannot build matrix with existing elements"))
     length(X) == length(I) == length(J) ||
         DimensionMismatch("I, J and X must have the same length")
@@ -445,7 +466,7 @@ function subassign!(
         rereshape = true
     end
     @wraperror LibGraphBLAS.GxB_Matrix_subassign(C, mask, 
-        _handleaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
+        _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
     if rereshape # undo the reshape. Need size(A, 2) here
         @wraperror LibGraphBLAS.GxB_Matrix_reshape(
         parent(A), true, sz1, 1, C_NULL)
@@ -466,7 +487,7 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     J = decrement!(J)
     desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
-    _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, eltype(C)), desc)
+    _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
     increment!(I)
     increment!(J)
     return x
@@ -537,7 +558,7 @@ function assign!(
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
     J = decrement!(J)
-    @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, _handleaccum(accum, eltype(C)), parent(A), I, ni, J, nj, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
     increment!(I)
     increment!(J)
     return A
@@ -554,7 +575,7 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     J = decrement!(J)
     desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
-    _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, eltype(C)), desc)
+    _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
     increment!(I)
     increment!(J)
     return x
@@ -579,8 +600,6 @@ function Base.size(v::AbstractGBVector)
     @wraperror LibGraphBLAS.GrB_Matrix_nrows(nrows, v)
     return (Int64(nrows[]),)
 end
-
-Base.eltype(::Type{AbstractGBVector{T}}) where{T} = T
 
 function Base.deleteat!(v::AbstractGBVector, i)
     @wraperror LibGraphBLAS.GrB_Matrix_removeElement(v, decrement!(i), 0)
@@ -613,7 +632,7 @@ end
 # This does not conform to the normal definition with a lazy wrapper.
 function LinearAlgebra.Diagonal(v::AbstractGBVector, k::Integer=0; desc = nothing)
     s = size(v, 1)
-    C = GBMatrix{eltype(v)}(s, s; fill = v.fill)
+    C = GBMatrix{storedeltype(v)}(s, s; fill = v.fill)
     desc = _handledescriptor(desc)
     # Switch ptr to a Vector to trick GraphBLAS.
     # This is allowed since GrB_Vector is a GrB_Matrix internally.
@@ -717,17 +736,17 @@ function Base.isstored(v::AbstractGBVector, i::Int)
 end
 
 # UDT versions of Vector functions, which just require one def of each.
-
-function build!(v::AbstractGBVector{T}, I::Vector{<:Integer}, X::Vector{T}; combine = +) where {T}
+function build!(v::AbstractGBVector{T}, I::AbstractVector{<:Integer}, X::AbstractVector; combine = +) where T
     nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
     _canbeoutput(v) || throw(ShallowException())
     I isa Vector || (I = collect(I))
     X isa Vector || (X = collect(X))
+    X = convert(Vector{T}, X)
     length(X) == length(I) || DimensionMismatch("I and X must have the same length")
     combine = binaryop(combine, T)
     decrement!(I)
     @wraperror LibGraphBLAS.GrB_Matrix_build_UDT(
-        Ptr{LibGraphBLAS.GrB_Vector}(v.p[]), 
+        v, 
         I, 
         # TODO, fix this ugliness by switching to the GBVector build internally.
         zeros(LibGraphBLAS.GrB_Index, length(I)), 
@@ -782,10 +801,10 @@ function SparseArrays.nonzeroinds(v::GBVector{T}) where {T}
     return increment!(I)
 end
 
-function build!(v::GBVector{T}, I::Vector{<:Integer}, x::T) where {T}
+function build!(v::GBVector{T}, I::Vector{<:Integer}, x::T2) where {T, T2}
     _canbeoutput(v) || throw(ShallowException())
     nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
-    x = GBScalar(x)
+    x = GBScalar(convert(T2, x))
     decrement!(I)
     @wraperror LibGraphBLAS.GxB_Matrix_build_Scalar(
             v,
@@ -861,7 +880,7 @@ function Base.getindex(
 end
 
 """
-    setfill!(A::AbstractGBArray{T, N, F}, x::F)
+    setfill!(A::AbstractGBArray{T, F, N}, x::F)
 
 Modify the fill value of `A`. 
 The fill type of `A` and the type of `x` must be the same.
@@ -871,7 +890,7 @@ function setfill!(A::AbstractGBArray, x)
 end
 
 """
-    setfill(A::AbstractGBArray{T, N, F}, x::F2)
+    setfill(A::AbstractGBArray{T, F, N}, x::F2)
 
 Create a new AbstractGBArray with the same underlying data but a new fill `x`.
 The fill type of `A` and the type of `x` may be different.

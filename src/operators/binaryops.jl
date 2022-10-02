@@ -2,7 +2,7 @@ module BinaryOps
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
-    Ntypes, Ttypes, suffix, valid_union
+    Ntypes, Ttypes, suffix, valid_union, GBArrayOrTranspose, binaryop
 using ..LibGraphBLAS
 export BinaryOp, binaryop
 
@@ -10,11 +10,11 @@ export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor,
 bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, 
 secondj, pair
 
-const BINARYOPS = IdDict{Tuple{<:Base.Callable, DataType, DataType}, TypedBinaryOperator}()
+const BINARYOPS = IdDict{Tuple{<:Any, DataType, DataType}, TypedBinaryOperator}()
 
 function fallback_binaryop(
     f::F, ::Type{X}, ::Type{Y}
-) where {F<:Base.Callable, X, Y}
+) where {F, X, Y}
     return get!(BINARYOPS, (f, X, Y)) do
         TypedBinaryOperator(f, X, Y)
     end
@@ -22,11 +22,11 @@ end
 
 # If we have the same type we know we must fallback, 
 # more specific methods will be captured by dispatch.
-binaryop(f::F, ::Type{X}, ::Type{X}) where {F<:Base.Callable, X} = fallback_binaryop(f, X, X)
+SuiteSparseGraphBLAS.binaryop(f::F, ::Type{X}, ::Type{X}) where {F, X} = fallback_binaryop(f, X, X)
 
-function binaryop(
+function SuiteSparseGraphBLAS.binaryop(
     f::F, ::Type{X}, ::Type{Y}
-) where {F<:Base.Callable, X, Y}
+) where {F, X, Y}
     P = promote_type(X, Y)
     if isconcretetype(P)
         return binaryop(f, P, P)
@@ -35,8 +35,13 @@ function binaryop(
     end
 end
 
-binaryop(f, type) = binaryop(f, type, type)
-binaryop(op::TypedBinaryOperator, x...) = op
+SuiteSparseGraphBLAS.binaryop(f, ::GBArrayOrTranspose{T}, ::GBArrayOrTranspose{U}) where {T, U} = 
+    binaryop(f, T, U)
+SuiteSparseGraphBLAS.binaryop(f, ::GBArrayOrTranspose{T}, ::Type{U}) where {T, U} = binaryop(f, T, U)
+SuiteSparseGraphBLAS.binaryop(f, ::Type{T}, ::GBArrayOrTranspose{U}) where {T, U} = binaryop(f, T, U)
+
+SuiteSparseGraphBLAS.binaryop(f, type) = binaryop(f, type, type)
+SuiteSparseGraphBLAS.binaryop(op::TypedBinaryOperator, x...) = op
 
 SuiteSparseGraphBLAS.juliaop(op::TypedBinaryOperator) = op.fn
 
@@ -68,9 +73,9 @@ function typedbinopconstexpr(jlfunc, builtin, namestr, xtype, ytype, outtype)
         constquote = :(const $(esc(namesym)) = TypedBinaryOperator($(esc(jlfunc)), $(esc(xsym)), $(esc(ysym)), $(esc(outsym))))
     end
     dispatchquote = if xtype === :Any && ytype === :Any
-        :($(esc(:(SuiteSparseGraphBLAS.BinaryOps.binaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type, ::Type) = $(esc(namesym)))
+        :($(esc(:(SuiteSparseGraphBLAS.binaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type, ::Type) = $(esc(namesym)))
     else
-        :($(esc(:(SuiteSparseGraphBLAS.BinaryOps.binaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
+        :($(esc(:(SuiteSparseGraphBLAS.binaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type{$xsym}, ::Type{$ysym}) = $(esc(namesym)))
     end
     return quote
         $(constquote)
@@ -177,8 +182,8 @@ function ∧(x::T, y::T) where T
     return (x != zero(T)) && (y != zero(T))
 end
 @binop (∧) GxB_LAND R=>R
-binaryop(::typeof(|), ::Type{Bool}, ::Type{Bool}) = LOR_BOOL
-binaryop(::typeof(&), ::Type{Bool}, ::Type{Bool}) = LAND_BOOL
+SuiteSparseGraphBLAS.binaryop(::typeof(|), ::Type{Bool}, ::Type{Bool}) = LOR_BOOL
+SuiteSparseGraphBLAS.binaryop(::typeof(&), ::Type{Bool}, ::Type{Bool}) = LAND_BOOL
 
 lxor(x::T, y::T) where T = xor((x != zero(T)), (y != zero(T)))
 @binop lxor GxB_LXOR R=>R
@@ -210,7 +215,7 @@ xnor(x::T, y::T) where T = !(lxor(x, y))
 @binop (⊻) GrB_BXOR I=>I
 bxnor(x::T, y::T) where T = ~⊻(x, y)
 @binop bxnor GrB_BXNOR I=>I
-binaryop(::typeof(⊻), ::Type{Bool}, ::Type{Bool}) = LXOR_BOOL
+SuiteSparseGraphBLAS.binaryop(::typeof(⊻), ::Type{Bool}, ::Type{Bool}) = LXOR_BOOL
 
 # leaving these without any equivalent Julia functions
 # probably should only operate on Ints anyway.
