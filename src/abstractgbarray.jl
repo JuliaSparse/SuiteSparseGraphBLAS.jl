@@ -42,6 +42,46 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::AbstractGBArray) = A.p[]
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Vector}, A::AbstractGBVector) = 
     LibGraphBLAS.GrB_Vector(A.p[])
 
+# similar for transpose of GBArrays:
+function Base.similar(
+    A::Transpose{<:Any,<:AbstractGBArray{T}}, ::Type{TNew} = T,
+    dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill = getfill(A)
+) where {T, TNew, N}
+    similar(parent(A), TNew, dims; fill)
+end
+
+function Base.similar(A::Transpose{<:Any,<:AbstractGBArray{T}}, dims::Tuple; fill = getfill(A)) where T
+    return similar(A, T, dims; fill)
+end
+
+function Base.similar(
+    A::Transpose{<:Any,<:AbstractGBArray}, ::Type{TNew},
+    dims::Integer; fill = getfill(A)
+) where TNew
+    return similar(A, TNew, (dims,); fill)
+end
+
+function Base.similar(
+    A::Transpose{<:Any,<:AbstractGBArray}, ::Type{TNew},
+    dim1::Integer, dim2::Integer; fill = getfill(A)
+) where TNew
+    return similar(A, TNew, (dim1, dim2); fill)
+end
+
+function Base.similar(
+    A::Transpose{<:Any,<:AbstractGBArray},
+    dims::Integer; fill = getfill(A)
+)
+    return similar(A, (dims,); fill)
+end
+
+function Base.similar(
+    A::Transpose{<:Any,<:AbstractGBArray},
+    dim1::Integer, dim2::Integer; fill = getfill(A)
+)
+    return similar(A, (dim1, dim2); fill)
+end
+
 """
     empty!(A::AbstractGBArray)
 

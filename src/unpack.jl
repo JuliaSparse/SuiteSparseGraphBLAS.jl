@@ -209,7 +209,7 @@ function _unpackbitmapmatrix!(
             _jlfree(f)
         end
     end
-    return v, b
+    return b, v
 end
 
 function _unpackbitmapmatrixR!(
@@ -245,7 +245,7 @@ function _unpackbitmapmatrixR!(
             _jlfree(f)
         end
     end
-    return v, b
+    return b, v
 end
 
 function _unpackhypermatrix!(

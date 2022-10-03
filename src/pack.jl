@@ -156,11 +156,18 @@ function unsafepack!(
     )
     _hasconstantorder(A) && (storageorder(A) !== order) && 
         (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
-    if order === ColMajor()
-        _packdensematrix!(A, M)
-    else
-        _packdensematrixR!(A, M)
-    end
+    _packdensematrix!(A, M; order)
+    shallow && makeshallow!(A)
+    return A
+end
+
+function unsafepack!(
+    A::AbstractGBArray, M::DenseVecOrMat{Int8}, V::DenseVecOrMat, shallow::Bool = true;
+    order = ColMajor(), decrementindices = false
+)
+    _hasconstantorder(A) && (storageorder(A) !== order) && 
+        (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
+    _packbitmap!(A, M, V; order)
     shallow && makeshallow!(A)
     return A
 end
@@ -217,17 +224,17 @@ unsafepack!(
 # end
 
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
-function pack(A::StridedVecOrMat; fill = nothing)
+function pack(A::StridedVecOrMat; fill = defaultfill(eltype(A)))
     if A isa AbstractVector
         return GBShallowVector(A; fill)
     else
         GBShallowMatrix(A; fill)
     end
 end
-function pack(A::Transpose{<:Any, <:StridedVecOrMat}; fill = nothing)
+function pack(A::Transpose{<:Any, <:StridedVecOrMat}; fill = defaultfill(eltype(A)))
     return transpose(parent(A); fill)
 end
-pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing) = 
+pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = defaultfill(eltype(A))) = 
     transpose(pack(parent(A); fill))
 
 macro _densepack(xs...)

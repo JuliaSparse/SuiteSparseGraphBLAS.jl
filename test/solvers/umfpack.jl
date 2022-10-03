@@ -169,7 +169,7 @@ end
 
     A0 = GBMatrix(increment!([0,4,1,1,2,2,0,1,2,3,4,4]),
                 increment!([0,4,0,2,1,2,1,4,3,2,1,2]),
-                [2.,1.,3.,4.,-1.,-3.,3.,6.,2.,1.,4.,2.], nrows = 5, ncols = 5)
+                [2.,1.,3.,4.,-1.,-3.,3.,6.,2.,1.,4.,2.], 5, 5)
 
     @testset "Core functionality for $Tv elements" for Tv in (Float64, ComplexF64)
         # We might be able to support two index sizes one day

@@ -85,52 +85,6 @@ function Base.copy(A::GBVector{T, F}) where {T, F}
     return GBVector{T, F}(C, A.fill)
 end
 
-
-# because of the fill kwarg we have to redo a lot of the Base.similar dispatch stack.
-function Base.similar(
-    v::GBVectorOrTranspose{T}, ::Type{TNew} = T,
-    dims::Tuple{Int64, Vararg{Int64, N}} = size(v); fill = parent(v).fill
-) where {T, TNew, N}
-    if dims isa Dims{1}
-        x = GBVector{TNew}(dims...; fill)
-    else
-        x = GBMatrix{TNew}(dims...; fill)
-    end
-    setstorageorder!(x, storageorder(v))
-    return x
-end
-
-function Base.similar(v::GBVectorOrTranspose{T}, dims::Tuple; fill = v.fill) where {T}
-    return similar(v, T, dims; fill)
-end
-
-function Base.similar(
-    v::GBVectorOrTranspose{T}, ::Type{TNew},
-    dims::Integer; fill = parent(v).fill
-) where {T, TNew}
-    return similar(v, TNew, (dims,); fill)
-end
-
-function Base.similar(
-    v::GBVectorOrTranspose{T},
-    dims::Integer; fill = parent(v).fill
-) where {T}
-    return similar(v, (dims,); fill)
-end
-
-function Base.similar(
-    v::GBVectorOrTranspose{T}, ::Type{TNew},
-    dim1::Integer, dim2::Integer; fill = parent(v).fill
-) where {T, TNew}
-    return similar(v, TNew, (dim1, dim2); fill)
-end
-
-function Base.similar(
-    v::GBVectorOrTranspose{T}, dim1::Integer, dim2::Integer; fill = parent(v).fill
-) where {T}
-    return similar(v, (dim1, dim2); fill)
-end
-
 #We need these until I can get a SparseArrays.nonzeros implementation
 # TODO: REMOVE
 function Base.show(io::IO, ::MIME"text/plain", v::GBVector)

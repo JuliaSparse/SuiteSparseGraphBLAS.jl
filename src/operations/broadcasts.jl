@@ -330,3 +330,5 @@ function Base.materialize!(
 ) where {S, T}
     return setindex!(A, bc.args[begin], :)
 end 
+
+Base.Broadcast.broadcasted(::Type{T}, A::AbstractGBArray) where T = copy_similar(A, T)

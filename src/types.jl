@@ -312,6 +312,8 @@ macro gbmatrixtype(typename)
     esc(quote
         # Empty Constructors:
         function $typename{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F)) where {T, F}
+            ((F === Nothing) || (F === Missing) || (T === F)) || 
+                throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
             m = _newGrBRef()
             @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
             return $typename{T, F}(m; fill)
@@ -477,15 +479,16 @@ macro gbmatrixtype(typename)
         # similar
         function Base.similar(
             A::$typename{T}, ::Type{TNew} = T,
-            dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill = getfill(A)
-        ) where {T, TNew, N}
+            dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill::F = getfill(A)
+        ) where {T, TNew, N, F}
+            !(F <: Union{Nothing, Missing}) && (fill = convert(TNew, fill))
             if dims isa Dims{1}
                 # TODO: When new Vector types are added this will be incorrect.
                 x = GBVector{TNew}(dims...; fill)
             else
                 x = $typename{TNew}(dims...; fill)
+                _hasconstantorder(x) || setstorageorder!(x, storageorder(A))
             end
-            _hasconstantorder(x) || setstorageorder!(x, storageorder(A))
             return x
         end
         
@@ -526,6 +529,8 @@ end
 macro gbvectortype(typename)
     esc(quote
         function $typename{T, F}(n::Integer; fill = defaultfill(F)) where {T, F}
+            ((F === Nothing) || (F === Missing) || (T === F)) || 
+                throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
             m = _newGrBRef()
             @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), n, 1)
             return $typename{T, F}(m; fill)
@@ -672,15 +677,16 @@ macro gbvectortype(typename)
         # similar
         function Base.similar(
             v::$typename{T}, ::Type{TNew} = T,
-            dims::Tuple{Int64, Vararg{Int64, N}} = size(v); fill = getfill(v)
-        ) where {T, TNew, N}
+            dims::Tuple{Int64, Vararg{Int64, N}} = size(v); fill::F = getfill(v)
+        ) where {T, TNew, N, F}
+            !(F <: Union{Nothing, Missing}) && (fill = convert(TNew, fill))
             if dims isa Dims{1}
                 # TODO: Check this for correctness!!!
                 x = $typename{TNew}(dims...; fill)
             else
                 x = $GBMatrix{TNew}(dims...; fill)
+                _hasconstantorder(x) || setstorageorder!(x, storageorder(v))
             end
-            _hasconstantorder(x) || setstorageorder!(x, storageorder(v))
             return x
         end
         
@@ -734,6 +740,8 @@ mutable struct GBVector{T, F} <: AbstractGBVector{T, F}
 end
 
 function GBVector{T, F}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill = defaultfill(F)) where {T, F}
+    ((F === Nothing) || (F === Missing) || (T === F)) || 
+        throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
     fill = convert(F, fill) # conversion to F happens at the last possible moment.
     return GBVector{T, F}(p, fill)
 end
@@ -765,6 +773,8 @@ mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F}
 end
 
 function GBMatrix{T, F}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill = defaultfill(F)) where {T, F}
+    ((F === Nothing) || (F === Missing) || (T === F)) || 
+        throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
     fill = convert(F, fill) # conversion to F happens at the last possible moment.
     return GBMatrix{T, F}(p, fill)
 end

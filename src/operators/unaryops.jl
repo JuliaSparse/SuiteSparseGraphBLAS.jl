@@ -20,6 +20,7 @@ function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
 end
 
 unaryop(f, ::GBArrayOrTranspose{T}) where T = unaryop(f, T)
+unaryop(op::TypedUnaryOperator, ::GBArrayOrTranspose{T}) where T = op
 unaryop(op::TypedUnaryOperator, x...) = op
 
 SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn

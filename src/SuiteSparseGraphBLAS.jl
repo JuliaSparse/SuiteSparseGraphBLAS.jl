@@ -18,6 +18,7 @@ using SparseArrays
 using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval
 using MacroTools
 using LinearAlgebra
+using LinearAlgebra: copy_similar
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
