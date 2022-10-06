@@ -59,8 +59,8 @@ include("indexutils.jl")
 # 
 include("operations/extract.jl")
 include("scalar.jl")
-include("vector.jl")
-include("matrix.jl")
+include("gbvector.jl")
+include("gbmatrix.jl")
 include("abstractgbarray.jl")
 
 # EXPERIMENTAL array types:

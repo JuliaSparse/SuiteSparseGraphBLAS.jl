@@ -299,7 +299,9 @@ copy `r` to a new Ref. This copy shares nothing with `r`.
 function _copyGrBMat(r::Base.RefValue{LibGraphBLAS.GrB_Matrix})
     C = Ref{LibGraphBLAS.GrB_Matrix}()
     LibGraphBLAS.GrB_Matrix_dup(C, r[])
-    return C
+    return finalizer(C) do ref
+        @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
+    end
 end
 
 
@@ -441,38 +443,6 @@ macro gbmatrixtype(typename)
         ) where {T, F} = $typename{T, F}(A; fill)
         $typename(
             A::Union{<:AbstractVector{T}, <:AbstractMatrix{T}}; 
-            fill::F = defaultfill(T)
-        ) where {T, F} = $typename{T, F}(A; fill)
-
-        function $typename{T, F}(
-            A::SparseVector; 
-            fill = defaultfill(F)
-        ) where {T, F}
-            C = $typename{T, F}(size(A, 1), 1; fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
-        end
-        $typename{T}(
-            A::SparseVector; 
-            fill::F = defaultfill(T)
-        ) where {T, F} = $typename{T, F}(A; fill)
-        $typename(
-            A::SparseVector{T}; 
-            fill::F = defaultfill(T)
-        ) where {T, F} = $typename{T, F}(A; fill)
-
-        function $typename{T, F}(
-            A::SparseMatrixCSC; 
-            fill = defaultfill(F)
-        ) where {T, F}
-            C = $typename{T, F}(size(A)...; fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
-        end
-        $typename{T}(
-            A::SparseMatrixCSC; 
-            fill::F = defaultfill(T)
-        ) where {T, F} = $typename{T, F}(A; fill)
-        $typename(
-            A::SparseMatrixCSC{T}; 
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
 

@@ -81,7 +81,8 @@ end
 
 function gbset(A::AbstractGBArray, option, value)
     option = option_toconst(option)
-    if option == GxB_FORMAT && _hasconstantorder(A)
+    if option == GxB_FORMAT && _hasconstantorder(A) && 
+            (option_toconst(storageorder(A)) != option_toconst(storageorder(A)))
         throw(ArgumentError("$(typeof(A)) may not have its storage order changed."))
     end
     value = option_toconst(value)

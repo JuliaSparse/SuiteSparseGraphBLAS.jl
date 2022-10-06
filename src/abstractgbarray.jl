@@ -102,6 +102,10 @@ function Base.copyto!(C::AbstractGBArray, A::GBArrayOrTranspose)
     return C
 end
 
+function Base.copy(A::M) where {M<:AbstractGBArray}
+    M(_copyGrBMat(A.p), A.fill)
+end
+
 function Base.Matrix(A::GBArrayOrTranspose)
     format = sparsitystatus(A)
     if format === Dense()
@@ -894,6 +898,12 @@ function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback pri
     gxbprint(io, A)
 end
 
+function Base.show(io::IO, A::AbstractGBArray)
+    gxbprint(io, A)
+end
+function Base.show(io::IOContext, A::AbstractGBArray)
+    gxbprint(io, A)
+end
 
 
 function Base.getindex(
@@ -918,6 +928,25 @@ function Base.getindex(
     unsafepack!(j, J, false)
     return x
 end
+
+function Base.getindex(
+    u::AbstractGBVector, I;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return extract(u, I; mask, accum, desc)
+end
+
+function Base.getindex(u::AbstractGBVector, ::Colon; mask = nothing, accum = nothing, desc = nothing)
+    return extract(u, :)
+end
+
+function Base.getindex(
+    u::AbstractGBVector, i::Union{Vector, UnitRange, StepRange};
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return extract(u, i; mask, accum, desc)
+end
+
 
 """
     setfill!(A::AbstractGBArray{T, F, N}, x::F)

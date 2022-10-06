@@ -140,7 +140,7 @@ function _unpackcsrmatrix!(
     isiso = Ref{Bool}(allowiso ? true : C_NULL)
     isjumbled = C_NULL
     nnonzeros = nnz(A)
-    @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
         A,
         rowptr,
         colidx,
@@ -153,7 +153,7 @@ function _unpackcsrmatrix!(
         desc
     )
     rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
-    colidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), colidxsize[])
+    colidx = unsafe_wrap(Array, Ptr{Int64}(colidx[]), nnonzeros)
     nstored = isiso[] ? 1 : nnonzeros
     vals = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
     if attachfinalizer
@@ -185,9 +185,9 @@ function _unpackbitmapmatrix!(
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     Bsize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(Bool))
     values = Ref{Ptr{Cvoid}}(C_NULL)
-    bytemap = Ref{Ptr{Bool}}(C_NULL)
+    bytemap = Ref{Ptr{Int8}}(C_NULL)
     isiso = Ref{Bool}(allowiso ? true : C_NULL)
-    nnz = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+    nnonzeros = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_BitmapC(
         A,
         bytemap,
@@ -195,12 +195,12 @@ function _unpackbitmapmatrix!(
         Bsize,
         Csize,
         isiso,
-        nnz,
+        nnonzeros,
         desc
     )
     nstored = isiso[] ? 1 : szA
     v = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
-    b = unsafe_wrap(Array, bytemap[], szA)
+    b = unsafe_wrap(Array, Ptr{Bool}(bytemap[]), szA)
     if attachfinalizer
         v = finalizer(v) do f
             _jlfree(f)
@@ -505,7 +505,7 @@ function tempunpack!(A::AbstractGBArray, sparsity::Hypersparse; order = ColMajor
     return (ptr, idx1, idx2, nzval, repack!)
 end
 
-function tempunpack_noformat!(A::AbstractGBArray, incrementindices = false)
+function tempunpack!(A::AbstractGBArray, incrementindices = false)
     sparsity, order = format(A)
     return tempunpack!(A, sparsity; order, incrementindices)
 end

@@ -7,16 +7,15 @@ conform(M::AbstractGBArray) = M
 function Base.convert(::Type{M}, A::N; fill::F = getfill(A)) where {F, M<:AbstractGBArray, N<:AbstractGBArray}
     !(F <: Union{Nothing, Missing}) && (fill = convert(eltype(M), fill))
     isabstracttype(M) && throw(ArgumentError("$M is an abstract type, which cannot be constructed."))
-    x = tempunpack_noformat!(A)
+    x = tempunpack!(A)
     repack! = x[end]
     values = x[end - 1]
     indices = x[begin:end-2]
-    newvalues = unsafe_wrap(Array, _sizedjlmalloc(length(values), T), size(values))
-    display(typeof(newvalues))
+    newvalues = unsafe_wrap(Array, _sizedjlmalloc(length(values), eltype(M)), size(values))
     copyto!(newvalues, values)
     newindices = _copytoraw.(indices)
     repack!()
-    B = M(size(A); fill)
+    B = M(size(A, 1), size(A, 2); fill)
     unsafepack!(B, newindices..., newvalues, false; decrementindices = false)
 end
 
@@ -25,7 +24,7 @@ Base.convert(::Type{M}, A::M; fill = nothing) where {M<:AbstractGBArray} = A
 function LinearAlgebra.copy_similar(A::GBArrayOrTranspose, ::Type{T}) where T
     order = storageorder(A)
     C = similar(A, T, size(A))
-    x = tempunpack_noformat!(A)
+    x = tempunpack!(A)
     repack! = x[end]
     values = x[end - 1]
     indices = x[begin:end-2]

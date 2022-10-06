@@ -29,15 +29,15 @@ function _packdensematrix!(
 end
 
 function _packbitmap!(
-    A::AbstractGBArray{T}, bytemap::VecOrMat{Int8}, values::VecOrMat{T};
+    A::AbstractGBArray{T}, bytemap::VecOrMat{B}, values::VecOrMat{T};
     desc = nothing, order = ColMajor()
-) where T
+) where {T, B<:Union{Int8, Bool}}
     desc = _handledescriptor(desc)
     valsize = length(A) * sizeof(T)
     bytesize = length(A) * sizeof(eltype(bytemap))
     isiso = (length(values) == 1) && (length(A) != 1)
     nvals = sum(bytemap)
-    bytepointer = pointer(bytemap)
+    bytepointer = Ptr{Int8}(pointer(bytemap))
     valpointer = pointer(values)
     bytepointer = Ref{Ptr{Int8}}(bytepointer)
     valpointer = Ref{Ptr{Cvoid}}(valpointer)
@@ -154,21 +154,19 @@ function unsafepack!(
     A::AbstractGBArray, M::StridedVecOrMat, shallow::Bool = true; 
     order = ColMajor(), decrementindices = false # we don't need this, but it avoids another method.
     )
-    _hasconstantorder(A) && (storageorder(A) !== order) && 
-        (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
     _packdensematrix!(A, M; order)
     shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
 function unsafepack!(
-    A::AbstractGBArray, M::DenseVecOrMat{Int8}, V::DenseVecOrMat, shallow::Bool = true;
+    A::AbstractGBArray, M::DenseVecOrMat{T}, V::DenseVecOrMat, shallow::Bool = true;
     order = ColMajor(), decrementindices = false
-)
-    _hasconstantorder(A) && (storageorder(A) !== order) && 
-        (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
+) where {T <: Union{Int8, Bool}}
     _packbitmap!(A, M, V; order)
     shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -176,14 +174,13 @@ function unsafepack!(
     A::AbstractGBArray, ptr, idx, values, shallow::Bool = true; 
     order = ColMajor(), decrementindices = true
 )
-    _hasconstantorder(A) && (storageorder(A) !== order) && 
-        (throw(ArgumentError("Cannot change the storage order of $(typeof(A))")))
     if order === ColMajor()
         _packcscmatrix!(A, ptr, idx, values; decrementindices)
     else
         _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
     shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -204,24 +201,6 @@ unsafepack!(
     A::AbstractGBArray, 
     s::Transpose{<:Any, <:SparseVector}, shallow::Bool = true; decrementindices = true
 ) = transpose(unsafepack!(A, parent(s), shallow; decrementindices))
-
-
-# if no GBArray is provided then we will always return a GBShallowArray
-# We will also *always* decrementindices here.
-# 
-# function unsafepack!(S::SparseMatrixCSC; fill = nothing)
-#     return GBShallowMatrix(S; fill)
-# end
-# function unsafepack!(S::Transpose{<:Any, <:SparseMatrixCSC}; fill = nothing)
-#     return transpose(unsafepack!(S; fill))
-# end
-# 
-# function unsafepack!(s::SparseVector; fill = nothing)
-#     return GBShallowVector(s; fill)
-# end
-# function unsafepack!(S::Transpose{<:Any, <:SparseVector}; fill = nothing)
-#     return transpose(unsafepack!(parent(S); fill))
-# end
 
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
 function pack(A::StridedVecOrMat; fill = defaultfill(eltype(A)))
