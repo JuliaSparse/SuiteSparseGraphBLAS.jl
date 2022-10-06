@@ -331,4 +331,4 @@ function Base.materialize!(
     return setindex!(A, bc.args[begin], :)
 end 
 
-Base.Broadcast.broadcasted(::Type{T}, A::AbstractGBArray) where T = copy_similar(A, T)
+Base.Broadcast.broadcasted(::Type{T}, A::AbstractGBArray) where T = LinearAlgebra.copy_similar(A, T)
