@@ -750,6 +750,7 @@ GBVector{T}(
     fill::F = defaultfill(T)
 ) where {T, F} = return GBVector{T, F}(p; fill)
 
+StorageOrders.storageorder(::GBVector) = ColMajor()
 # we call @gbvectortype GBVector below GBMatrix defn.
 
 """
