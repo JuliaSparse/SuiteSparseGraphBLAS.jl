@@ -21,7 +21,7 @@ end
 
 Base.convert(::Type{M}, A::M; fill = nothing) where {M<:AbstractGBArray} = A
 
-function LinearAlgebra.copy_similar(A::GBArrayOrTranspose, ::Type{T}) where T
+function LinearAlgebra.copy_oftype(A::GBArrayOrTranspose, ::Type{T}) where T
     order = storageorder(A)
     C = similar(A, T, size(A))
     x = tempunpack!(A)
