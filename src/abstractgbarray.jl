@@ -508,7 +508,7 @@ function subassign!(
     rereshape = false
     sz1 = size(A, 1)
     if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
-        A = LinearAlgebra.copy_similar(A, eltype(C))
+        A = LinearAlgebra.copy_oftype(A, eltype(C))
     end
     # reshape A: nx1 -> 1xn
     if A isa GBVector && (ni_sizecheck == size(A, 2) && nj_sizecheck == sz1)
@@ -609,7 +609,7 @@ function assign!(
     I = decrement!(I)
     J = decrement!(J)
     if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
-        A = LinearAlgebra.copy_similar(A, eltype(C))
+        A = LinearAlgebra.copy_oftype(A, eltype(C))
     end
     @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
     increment!(I)
