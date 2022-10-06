@@ -115,7 +115,7 @@
         @test m[10, 10] == 90
 
         #vectors
-        x = sprand(Float32, 100, 0.35)
+        x = sprand(ComplexF16, 100, 0.35)
         v = GBVector(x)
         empty!(v)
         @test nnz(v) == 0

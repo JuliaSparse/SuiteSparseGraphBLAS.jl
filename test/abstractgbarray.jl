@@ -35,7 +35,7 @@
             @test resize!(B, 1, 4) == GBMatrix([1, 1], [1, 2], [1, 3], 1, 4)
             @test resize!(B, 1, 1) === B
         end
-        @tesetset "isstored" begin
+        @testset "isstored" begin
             @test deleteat!(A, 1, 1) isa SuiteSparseGraphBLAS.AbstractGBArray
             @test !Base.isstored(A, 1, 1)
             @test Base.isstored(A, 2, 2)

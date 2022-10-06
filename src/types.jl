@@ -825,7 +825,7 @@ mutable struct GBShallowMatrix{T, F, P, B, A} <: AbstractGBShallowArray{T, F, P,
     nzval::A # array storage for dense arrays, nonzero values storage for everyone else.
 end
 function GBShallowMatrix{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::A) where {T, F, P, B, A}
-    GBShallowVector{T, F, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
+    GBShallowMatrix{T, F, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
 end
 
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
