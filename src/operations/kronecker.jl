@@ -15,8 +15,8 @@ function LinearAlgebra.kron!(
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
     mask = _handlemask!(desc, mask)
-    op = binaryop(op, eltype(A), eltype(B))
-    accum = _handleaccum(accum, eltype(C))
+    op = binaryop(op, A, B)
+    accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
@@ -47,8 +47,8 @@ function LinearAlgebra.kron(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, (size(A, 1) * size(B, 1), size(A, 2) * size(B, 2)); fill = _promotefill(parent(A).fill, parent(B).fill))
+    t = inferbinarytype(parent(A), parent(B), op)
+    C = similar(A, t, (size(A, 1) * size(B, 1), size(A, 2) * size(B, 2)); fill = _promotefill(parent(A), parent(B), op))
     kron!(C, A, B, op; mask, accum, desc)
     return C
 end

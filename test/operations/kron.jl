@@ -9,6 +9,6 @@
     mask[17:20, 5:8] = false #don't care value, using structural
     #mask out bottom chunk using structural complement
     o2 = kron(m1, n1; mask, desc=Descriptor(structural_mask=true, complement_mask=true))
-    @test o2[20, 5] === nothing #We don't want values in masked out area
+    @test o2[20, 5] === getfill(o2) #We don't want values in masked out area
     @test o2[1:2:15, :] == o1[1:2:15, :] #The rest should match, test indexing too.
 end

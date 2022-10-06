@@ -1,7 +1,7 @@
 name = "SuiteSparseGraphBLAS"
 uuid = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
 authors = ["Will Kimmerer <wrkimmerer@outlook.com", "Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
-version = "0.8"
+version = "0.8.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -17,14 +17,14 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StorageOrders = "e9177fbf-8fde-426c-9425-4eed0f22262a"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
+Tricks = "410a4b4d-49e4-4fbc-ab6d-cb71b17b3775"
 
 [compat]
 ChainRulesCore = "1"
+KLU = "0.4"
 MacroTools = "0.5"
 Preferences = "1"
 SSGraphBLAS_jll = "7.2"
 SpecialFunctions = "2"
 StorageOrders = "0.2"
 julia = "1.7"
-KLU = "0.4"
-

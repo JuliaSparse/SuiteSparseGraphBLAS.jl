@@ -27,34 +27,19 @@ function GxB_Global_Option_get(field)
         T = Bool
     end
     v = Ref{T}()
-    ccall(
-        (:GxB_Global_Option_get, libgraphblas),
-        Cvoid,
-        (UInt32, Ptr{Cvoid}),
-        field,
-        v
-    )
+    LibGraphBLAS.GxB_Global_Option_get(field, v)
     return v[]
 end
 
 function GxB_Global_Option_set(field, value)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH, GxB_GLOBAL_CHUNK]
-        ccall(
-            (:GxB_Global_Option_set, libgraphblas),
-            Cvoid,
-            (UInt32, Cdouble),
-            field,
-            value
-        )
+        value isa Cdouble || throw(ArgumentError("$field specifies a value of type Float64"))
     elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT]
-        ccall(
-            (:GxB_Global_Option_set, libgraphblas),
-            Cvoid,
-            (UInt32, Cint),
-            field,
-            value
-        )
+        value = Cint(value)
+    else
+        throw(ArgumentError("$field is not a valid Matrix option."))
     end
+    LibGraphBLAS.GxB_Global_Option_set(field, value)
 end
 
 function GxB_Matrix_Option_get(A::AbstractGBArray, field)
@@ -70,24 +55,16 @@ end
 
 function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
     if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        ccall(
-            (:GxB_Matrix_Option_set, libgraphblas),
-            Cvoid,
-            (LibGraphBLAS.GrB_Matrix, UInt32, Cdouble),
-            A,
-            field,
-            value
-        )
-    elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_CONTROL]
-        ccall(
-            (:GxB_Matrix_Option_set, libgraphblas),
-            Cvoid,
-            (LibGraphBLAS.GrB_Matrix, UInt32, UInt32),
-            A,
-            field,
-            value
-        )
+        value isa Cdouble || throw(ArgumentError("$field specifies a value of type Float64"))
+    elseif field == GxB_FORMAT
+        value isa LibGraphBLAS.GxB_Format_Value || 
+            throw(ArgumentError("$field specifies a value of type GxB_Format_Value"))
+    elseif field == GxB_SPARSITY_CONTROL
+        value isa Cint || throw(ArgumentError("$field specifies a value of type Cint"))
+    else
+        throw(ArgumentError("$field is not a valid Matrix option."))
     end
+    LibGraphBLAS.GxB_Matrix_Option_set(A, field, value)
 end
 
 function gbset(option, value)
@@ -104,6 +81,10 @@ end
 
 function gbset(A::AbstractGBArray, option, value)
     option = option_toconst(option)
+    if option == GxB_FORMAT && _hasconstantorder(A) && 
+            (option_toconst(storageorder(A)) != option_toconst(storageorder(A)))
+        throw(ArgumentError("$(typeof(A)) may not have its storage order changed."))
+    end
     value = option_toconst(value)
     GxB_Matrix_Option_set(A, option, value)
     return nothing
@@ -147,13 +128,13 @@ function setstorageorder!(A::AbstractGBArray, o::StorageOrders.StorageOrder)
 end
 
 shapetoconst(::Dense) = GBDENSE
-shapetoconst(::Bitmap) = GBBITMAP
+shapetoconst(::Bytemap) = GBBITMAP
 shapetoconst(::Sparse) = GBSPARSE
 shapetoconst(::Hypersparse) = GBHYPER
 
 function consttoshape(c)
     c == GBDENSE && (return Dense())
-    c == GBBITMAP && (return Bitmap())
+    c == GBBITMAP && (return Bytemap())
     c == GBSPARSE && (return Sparse())
     c == GBHYPER && (return Hypersparse())
 end

@@ -6,7 +6,7 @@ function frule(
     A::AbstractGBArray
 )
     Ω = select(op, A)
-    ∂Ω = mask(unthunk(ΔA), Ω, structural = true)
+    ∂Ω = mask(unthunk(ΔA), Structural(Ω))
     return Ω, ∂Ω
 end
 
@@ -19,7 +19,7 @@ function frule(
     thunk::Union{GBScalar, Nothing, valid_union}
 )
     Ω = select(op, A, thunk)
-    ∂Ω = mask(unthunk(ΔA), Ω, structural = true)
+    ∂Ω = mask(unthunk(ΔA), Structural(Ω))
     return Ω, ∂Ω
 end
 
@@ -30,7 +30,7 @@ function rrule(
 )
     out = select(op, A)
     function selectback(ΔΩ)
-        ∂A = mask(unthunk(ΔΩ), out, structural = true)
+        ∂A = mask(unthunk(ΔΩ), Structural(out))
         return NoTangent(), NoTangent(), ∂A
     end
     return out, selectback
@@ -44,7 +44,7 @@ function rrule(
 )
     out = select(op, A, thunk)
     function selectback(ΔΩ)
-        ∂A = mask(unthunk(ΔΩ), out, structural = true)
+        ∂A = mask(unthunk(ΔΩ), Structural(out))
         return NoTangent(), NoTangent(), ∂A, NoTangent()
     end
     return out, selectback

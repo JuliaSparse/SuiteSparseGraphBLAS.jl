@@ -1,35 +1,73 @@
 function _packdensematrix!(
     A::AbstractGBArray{T}, M::VecOrMat{T};
-    desc = nothing
+    desc = nothing, order = ColMajor()
 ) where {T}
     desc = _handledescriptor(desc)
-    Csize = length(A) * sizeof(T)
+    Csize = length(M) * sizeof(T)
     ptr = pointer(M)
-    @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
-        A,
-        Ref{Ptr{Cvoid}}(ptr),
-        Csize,
-        false, #isuniform
-        desc
-    )
+    isiso = length(M) == 1 && length(A) != 1
+    if order === ColMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_FullC(
+            A,
+            Ref{Ptr{Cvoid}}(ptr),
+            Csize,
+            isiso, #isuniform
+            desc
+        )
+    elseif order === RowMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_FullR(
+            A,
+            Ref{Ptr{Cvoid}}(ptr),
+            Csize,
+            isiso, #isuniform
+            desc
+        )
+    else
+        throw(ArgumentError("order must be either RowMajor() or ColMajor()"))
+    end
     return A
 end
 
-function _packdensematrixR!(
-    A::AbstractGBArray{T}, M::VecOrMat{T};
-    desc = nothing
-) where {T}
+function _packbitmap!(
+    A::AbstractGBArray{T}, bytemap::VecOrMat{B}, values::VecOrMat{T};
+    desc = nothing, order = ColMajor()
+) where {T, B<:Union{Int8, Bool}}
     desc = _handledescriptor(desc)
-    Csize = length(A) * sizeof(T)
-    ptr = pointer(M)
-    @wraperror LibGraphBLAS.GxB_Matrix_pack_FullR(
-        A,
-        Ref{Ptr{Cvoid}}(ptr),
-        Csize,
-        false, #isuniform
-        desc
-    )
-    return A
+    valsize = length(A) * sizeof(T)
+    bytesize = length(A) * sizeof(eltype(bytemap))
+    isiso = (length(values) == 1) && (length(A) != 1)
+    nvals = sum(bytemap)
+    bytepointer = Ptr{Int8}(pointer(bytemap))
+    valpointer = pointer(values)
+    bytepointer = Ref{Ptr{Int8}}(bytepointer)
+    valpointer = Ref{Ptr{Cvoid}}(valpointer)
+
+    if order === ColMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_BitmapC(
+            A,
+            bytepointer,
+            valpointer,
+            bytesize,
+            valsize,
+            isiso,
+            nvals,
+            desc
+        )
+    elseif order === RowMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_BitmapR(
+            A,
+            bytepointer,
+            valpointer,
+            bytesize,
+            valsize,
+            isiso,
+            nvals,
+            desc
+        )
+    else
+        throw(ArgumentError("order must be either RowMajor() or ColMajor()"))
+    end
+
 end
 
 function _packcscmatrix!(
@@ -116,12 +154,19 @@ function unsafepack!(
     A::AbstractGBArray, M::StridedVecOrMat, shallow::Bool = true; 
     order = ColMajor(), decrementindices = false # we don't need this, but it avoids another method.
     )
-    if order === ColMajor()
-        _packdensematrix!(A, M)
-    else
-        _packdensematrixR!(A, M)
-    end
+    _packdensematrix!(A, M; order)
     shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    return A
+end
+
+function unsafepack!(
+    A::AbstractGBArray, M::DenseVecOrMat{T}, V::DenseVecOrMat, shallow::Bool = true;
+    order = ColMajor(), decrementindices = false
+) where {T <: Union{Int8, Bool}}
+    _packbitmap!(A, M, V; order)
+    shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -129,13 +174,13 @@ function unsafepack!(
     A::AbstractGBArray, ptr, idx, values, shallow::Bool = true; 
     order = ColMajor(), decrementindices = true
 )
-    
     if order === ColMajor()
         _packcscmatrix!(A, ptr, idx, values; decrementindices)
     else
         _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
     shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -157,36 +202,18 @@ unsafepack!(
     s::Transpose{<:Any, <:SparseVector}, shallow::Bool = true; decrementindices = true
 ) = transpose(unsafepack!(A, parent(s), shallow; decrementindices))
 
-
-# if no GBArray is provided then we will always return a GBShallowArray
-# We will also *always* decrementindices here.
-# 
-# function unsafepack!(S::SparseMatrixCSC; fill = nothing)
-#     return GBShallowMatrix(S; fill)
-# end
-# function unsafepack!(S::Transpose{<:Any, <:SparseMatrixCSC}; fill = nothing)
-#     return transpose(unsafepack!(S; fill))
-# end
-# 
-# function unsafepack!(s::SparseVector; fill = nothing)
-#     return GBShallowVector(s; fill)
-# end
-# function unsafepack!(S::Transpose{<:Any, <:SparseVector}; fill = nothing)
-#     return transpose(unsafepack!(parent(S); fill))
-# end
-
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
-function pack(A::StridedVecOrMat; fill = nothing)
+function pack(A::StridedVecOrMat; fill = defaultfill(eltype(A)))
     if A isa AbstractVector
         return GBShallowVector(A; fill)
     else
         GBShallowMatrix(A; fill)
     end
 end
-function pack(A::Transpose{<:Any, <:StridedVecOrMat}; fill = nothing)
+function pack(A::Transpose{<:Any, <:StridedVecOrMat}; fill = defaultfill(eltype(A)))
     return transpose(parent(A); fill)
 end
-pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = nothing) = 
+pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = defaultfill(eltype(A))) = 
     transpose(pack(parent(A); fill))
 
 macro _densepack(xs...)

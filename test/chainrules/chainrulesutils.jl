@@ -1,21 +1,23 @@
 #Required for ChainRulesTestUtils
-function FiniteDifferences.to_vec(M::GBMatrix)
+function FiniteDifferences.to_vec(M::SuiteSparseGraphBLAS.AbstractGBMatrix)
     x, back = FiniteDifferences.to_vec(Matrix(M))
     function backtomat(xvec)
         M2 = GBMatrix(back(xvec))
-        return mask(M2, M; structural=true)
+        return mask!(M2, Structural(M))
     end
     return x, backtomat
 end
 
-function FiniteDifferences.to_vec(v::GBVector)
+function FiniteDifferences.to_vec(v::SuiteSparseGraphBLAS.AbstractGBVector)
     x, back = FiniteDifferences.to_vec(Vector(v))
     function backtovec(xvec)
         v2 = GBVector(back(xvec))
-        return mask(v2, v; structural=true)
+        return mask!(v2, Structural(v))
     end
     return x, backtovec
 end
+
+FiniteDifferences.to_vec(P::SuiteSparseGraphBLAS.Structural) = FiniteDifferences.to_vec(parent(P))
 
 function test_to_vec(x::T; check_inferred=true) where {T}
     check_inferred && @inferred FiniteDifferences.to_vec(x)

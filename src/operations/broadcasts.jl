@@ -315,6 +315,9 @@ end
     end
 end
 
+# function Base.broadcasted(::Union{<:GBMatrixStyle}, ::Type{X}, A::AbstractGBMatrix)
+#     
+# end
 ## Really ugly overloads to make A .= 3 work correctly
 # TODO go through the broadcast code and figuring out how this should be done.
 function Base.materialize!(
@@ -327,3 +330,5 @@ function Base.materialize!(
 ) where {S, T}
     return setindex!(A, bc.args[begin], :)
 end 
+
+Base.Broadcast.broadcasted(::Type{T}, A::AbstractGBArray) where T = LinearAlgebra.copy_oftype(A, T)

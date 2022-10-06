@@ -2,7 +2,8 @@ module UnaryOps
 
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, GBType,
-    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix
+    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix,
+    GBArrayOrTranspose
 using ..LibGraphBLAS
 export unaryop, @unop
 
@@ -18,6 +19,8 @@ function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
     end
 end
 
+unaryop(f, ::GBArrayOrTranspose{T}) where T = unaryop(f, T)
+unaryop(op::TypedUnaryOperator, ::GBArrayOrTranspose{T}) where T = op
 unaryop(op::TypedUnaryOperator, x...) = op
 
 SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn

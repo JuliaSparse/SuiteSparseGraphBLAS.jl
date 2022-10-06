@@ -3,10 +3,10 @@ function apply!(
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
-    op = unaryop(op, eltype(A))
-    accum = _handleaccum(accum, eltype(C))
+    op = unaryop(op, A)
+    accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
     return C
 end
@@ -45,7 +45,7 @@ function apply(
     op, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
-    t = inferunarytype(eltype(A), op)
+    t = inferunarytype(A, op)
     return apply!(op, similar(A, t), A; mask, accum, desc)
 end
 
@@ -54,10 +54,10 @@ function apply!(
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in2=A)
+    desc = _handledescriptor(desc; out=C, in2=A)
     mask = _handlemask!(desc, mask)
-    op = binaryop(op, eltype(A), typeof(x))
-    accum = _handleaccum(accum, eltype(C))
+    op = binaryop(op, A, typeof(x))
+    accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(C, mask, accum, op, GBScalar(x), parent(A), desc)
     return C
 end
@@ -73,7 +73,7 @@ function apply(
     op, x, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
-    t = inferbinarytype(typeof(x), eltype(A), op)
+    t = inferbinarytype(typeof(x), parent(A), op)
     return apply!(op, similar(A, t), x, A; mask, accum, desc)
 end
 
@@ -82,10 +82,10 @@ function apply!(
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
-    op = binaryop(op, eltype(A), typeof(x))
-    accum = _handleaccum(accum, eltype(C))
+    op = binaryop(op, A, typeof(x))
+    accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp2nd(C, mask, accum, op, parent(A), GBScalar(x), desc)
     return C
 end
@@ -98,57 +98,34 @@ function apply!(
 end
 
 function apply(
-    op, A::GBArrayOrTranspose{T}, x;
+    op, A::GBArrayOrTranspose, x;
     mask = nothing, accum = nothing, desc = nothing
-) where {T}
-    t = inferbinarytype(eltype(A), typeof(x), op)
+)
+    t = inferbinarytype(parent(A), typeof(x), op)
     return apply!(op, similar(A, t), A, x; mask, accum, desc)
 end
 
-function Base.map(f, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+function Base.map(f, A::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing)
     apply(f, A; mask, accum, desc)
 end
-function Base.map!(f, C::GBVecOrMat, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
+function Base.map!(f, C::GBVecOrMat, A::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing)
     apply!(f, C, A; mask, accum, desc)
 end
-function Base.map!(f, A::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T}
-    apply!(f, C, A; mask, accum, desc)
+function Base.map!(f, A::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing)
+    apply!(f, A, A; mask, accum, desc)
 end
 
-Base.:*(x::V, u::GBArrayOrTranspose{T}; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T, <:Number}} =
+Base.:*(x, u::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing) =
     apply(*, x, u; mask, accum, desc)
-Base.:*(u::GBArrayOrTranspose{T}, x::V; mask = nothing, accum = nothing, desc = nothing) where {T, V<:Union{<:valid_union, T, <:Number}} =
+Base.:*(u::GBArrayOrTranspose, x; mask = nothing, accum = nothing, desc = nothing) =
+    apply(*, u, x; mask, accum, desc)
+
+Base.:*(x::Number, u::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing) =
+    apply(*, x, u; mask, accum, desc)
+Base.:*(u::GBArrayOrTranspose, x::Number; mask = nothing, accum = nothing, desc = nothing) =
     apply(*, u, x; mask, accum, desc)
 
 Base.:-(u::GBArrayOrTranspose) = apply(-, u)
 
 Base.real(A::GBArrayOrTranspose) = real.(A)
 Base.imag(A::GBArrayOrTranspose) = imag.(A)
-
-"""
-    mask!(C::GBArrayOrTranspose, A::GBArrayOrTranspose, mask::GBVecOrMat)
-
-Apply a mask to matrix `A`, storing the results in C.
-"""
-function mask!(C::GBVecOrMat, A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
-    _canbeoutput(C) || throw(ShallowException())
-    desc = Descriptor()
-    structural && (desc.structural_mask=true)
-    complement && (desc.complement_mask=true)
-    mask = mask isa Transpose || mask isa Adjoint ? copy(mask) : mask
-    apply!(identity, C, A; mask, desc)
-    return C
-end
-
-function mask!(A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
-    mask!(A, A, mask; structural, complement)
-end
-
-"""
-    mask(A::GBArrayOrTranspose, mask::GBVecOrMat)
-
-Apply a mask to matrix `A`.
-"""
-function mask(A::GBArrayOrTranspose, mask::GBVecOrMat; structural = false, complement = false)
-    return mask!(similar(A), A, mask; structural, complement)
-end

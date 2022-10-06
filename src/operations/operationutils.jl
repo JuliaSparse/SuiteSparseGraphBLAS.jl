@@ -1,11 +1,17 @@
-inferunarytype(::Type{T}, f::F) where {T, F<:Base.Callable} = Base._return_type(f, Tuple{T})
+inferunarytype(::Type{T}, f::F) where {T, F} = Base._return_type(f, Tuple{T})
 inferunarytype(::Type{X}, op::TypedUnaryOperator{F, X}) where {F, X} = ztype(op)
 
-inferbinarytype(::Type{T}, ::Type{U}, f::F) where {T, U, F<:Base.Callable} = Base._return_type(f, Tuple{T, U})
+inferunarytype(::GBArrayOrTranspose{T}, op) where T = inferunarytype(T, op)
+
+inferbinarytype(::Type{T}, ::Type{U}, f) where {T, U} = Base._return_type(f, Tuple{T, U})
 # manual overload for `any` which will give Union{} normally:
 inferbinarytype(::Type{T}, ::Type{U}, ::typeof(any)) where {T, U} = promote_type(T, U)
 # Overload for `first`, which will give Vector{T} normally:
 inferbinarytype(::Type{T}, ::Type{U}, f::typeof(first)) where {T, U} = T
+
+inferbinarytype(::AbstractGBArray{T}, ::AbstractGBArray{U}, f) where {T, U} = inferbinarytype(T, U, f)
+inferbinarytype(::AbstractGBArray{T}, ::Type{U}, f) where {T, U} = inferbinarytype(T, U, f)
+inferbinarytype(::Type{T}, B::AbstractGBArray{U}, f) where {T, U} = inferbinarytype(T, U, f)
 
 inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.fn)
 #semirings are technically binary so we'll just overload that
@@ -77,7 +83,6 @@ function _handlemask!(desc, mask)
     return mask
 end
 
-
 _handleaccum(::Nothing, t) = C_NULL
 _handleaccum(::Ptr{Nothing}, t) = C_NULL
 _handleaccum(op::Function, t) = binaryop(op, t, t)
@@ -105,15 +110,22 @@ Determine type of the output of a typed operator.
 """
 function ztype end
 
-_promotefill(::Nothing, ::Nothing) = nothing
-_promotefill(::Nothing, x) = nothing
-_promotefill(x, ::Nothing) = nothing
-_promotefill(::Missing, ::Missing) = missing
-_promotefill(::Missing, x) = missing
-_promotefill(x, ::Missing) = missing
-# I'd prefer that this be nothing on x != y. But for type inference reasons this seems better.
-# It's not a serious issue for several reasons.
-# The first is that GrB methods don't know anything about fill, they don't care.
-# The second is that it's free to setfill(A, nothing). Methods that are sensitive to this can enforce that.
-# And third a future GBGraph type can manage this for the user.
-_promotefill(x::X, y::Y) where {X, Y} = x == y ? (return promote_type(X, Y)(x)) : (return zero(promote_type(X, Y)))
+_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Nothing}, y, op) = nothing
+_promotefill(x, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, Missing}, op) = missing
+_promotefill(::AbstractGBArray{<:Any, Missing}, y, op) = nothing
+_promotefill(x, ::AbstractGBArray{<:Any, Missing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, Missing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, <:Any}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, <:Any}, op) = missing
+_promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Missing}, op) = missing
+
+_promotefill(x, op) = x
+
+function _promotefill(x::AbstractGBArray{<:Any, T}, y::AbstractGBArray{<:Any, U}, op) where {T, U}
+    getfill(x) ≈ getfill(y) && (return inferbinarytype(T, U, op)(getfill(x)))
+    return defaultfill(inferbinarytype(T, U, op)) # fallback to defaultfill.
+end

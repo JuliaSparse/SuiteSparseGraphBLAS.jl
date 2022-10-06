@@ -6,7 +6,7 @@ using ChainRulesTestUtils
 using ChainRulesCore
 using FiniteDifferences
 using SuiteSparseGraphBLAS
-using SuiteSparseGraphBLAS: pair, second, xtype, ytype, ztype
+using SuiteSparseGraphBLAS: pair, second, xtype, ytype, ztype, Structural, Complement
 Random.seed!(1)
 
 function include_test(path)
@@ -21,7 +21,7 @@ function ChainRulesTestUtils.rand_tangent(
     n = nnz(x)
     v = rand(rng, -9:0.01:9, n)
     I, J, _ = findnz(x)
-    return GBMatrix(I, J, v; nrows = size(x, 1), ncols = size(x, 2))
+    return GBMatrix(I, J, v, size(x, 1), size(x, 2))
 end
 
 function ChainRulesTestUtils.rand_tangent(
@@ -31,7 +31,7 @@ function ChainRulesTestUtils.rand_tangent(
     n = nnz(x)
     v = rand(rng, -9:0.01:9, n)
     I, _ = findnz(x)
-    return GBVector(I, v; nrows = size(x, 1))
+    return GBVector(I, v, size(x, 1))
 end
 
 # Inefficient, but doesn't matter, only doing small matrices
@@ -73,7 +73,9 @@ println("$(SuiteSparseGraphBLAS.get_lib())")
     include_test("libutils.jl")
     include_test("operatorutils.jl")
     include_test("ops.jl")
+    include_test("abstractgbarray.jl")
     include_test("gbarray.jl")
+    include_test("types.jl")
     include_test("issues.jl")
     include_test("operations/ewise.jl")
     include_test("operations/kron.jl")
@@ -92,5 +94,5 @@ println("$(SuiteSparseGraphBLAS.get_lib())")
     include_test("chainrules/constructorrules.jl")
     include_test("chainrules/maprules.jl")
     include_test("solvers/klu.jl")
-    #include_test("solvers/umfpack.jl")
+    # include_test("solvers/umfpack.jl")
 end

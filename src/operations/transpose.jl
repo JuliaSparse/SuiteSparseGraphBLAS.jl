@@ -19,9 +19,9 @@ function gbtranspose!(
     mask = nothing, accum = nothing, desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
-    accum = _handleaccum(accum, eltype(C))
+    accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GrB_transpose(C, mask, accum, parent(A), desc)
     return C
 end
@@ -58,7 +58,7 @@ function Base.copy!(
 end
 
 function Base.copy(
-    A::LinearAlgebra.Transpose{<:Any, <:GBVecOrMat};
+    A::LinearAlgebra.Transpose{<:Any, <:AbstractGBArray};
     mask = nothing, accum = nothing, desc = nothing
 )
     return gbtranspose(parent(A); mask, accum, desc)
@@ -73,3 +73,31 @@ LinearAlgebra.transpose(::Nothing) = nothing
 
 Base.unsafe_convert(::Type{Ptr{T}}, A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) where {T} = 
 throw(ArgumentError("Cannot convert $(typeof(A)) directly to a pointer. Please use copy."))
+
+"""
+    mask!(C::GBArrayOrTranspose, A::GBArrayOrTranspose, mask::GBVecOrMat)
+
+Apply a mask to matrix `A`, storing the results in C.
+"""
+function mask!(C::GBVecOrMat, A::GBArrayOrTranspose, mask; desc = nothing, replace_output = true)
+    _canbeoutput(C) || throw(ShallowException())
+    desc = _handledescriptor(desc; out=C, in1 = A)
+    desc.transpose_input1 = true # double transpose to cancel out transpose.
+    desc.replace_output = replace_output # we must replace 
+    mask = _handlemask!(desc, mask)
+    gbtranspose!(C, A; mask, desc)
+    return C
+end
+
+function mask!(A::GBArrayOrTranspose, mask; desc = nothing, replace_output = true)
+    mask!(A, A, mask; desc)
+end
+
+"""
+    mask(A::GBArrayOrTranspose, mask::GBVecOrMat)
+
+Apply a mask to matrix `A`.
+"""
+function mask(A::GBArrayOrTranspose, mask; desc = nothing, replace_output = true)
+    return mask!(similar(A), A, mask; desc)
+end

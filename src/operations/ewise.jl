@@ -31,12 +31,12 @@ function emul!(
     desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A, in2=B)
+    desc = _handledescriptor(desc; out=C, in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
-    op = binaryop(op, eltype(A), eltype(B))
-    accum = _handleaccum(accum, eltype(C))
+    op = binaryop(op, A, B)
+    accum = _handleaccum(accum, storedeltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
@@ -77,8 +77,9 @@ function emul(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A).fill, parent(B).fill))
+    t = inferbinarytype(parent(A), parent(B), op)
+    
+    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A), parent(B), op))
     return emul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -117,12 +118,12 @@ function eadd!(
     desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A, in2 = B)
+    desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
-    op = binaryop(op, eltype(A), eltype(B))
-    accum = _handleaccum(accum, eltype(C))
+    op = binaryop(op, A, B)
+    accum = _handleaccum(accum, storedeltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
@@ -162,8 +163,8 @@ function eadd(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A).fill, parent(B).fill))
+    t = inferbinarytype(parent(A), parent(B), op)
+    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A), parent(B), op))
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
@@ -203,12 +204,12 @@ function eunion!(
     desc = nothing
 ) where {T, U}
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A, in2 = B)
+    desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
-    op = binaryop(op, eltype(A), eltype(B))
-    accum = _handleaccum(accum, eltype(C))
+    op = binaryop(op, A, B)
+    accum = _handleaccum(accum, storedeltype(C))
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
         return C
@@ -248,8 +249,8 @@ function eunion(
     accum = nothing,
     desc = nothing
 ) where {T, U}
-    t = inferbinarytype(eltype(A), eltype(B), op)
-    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A).fill, parent(B).fill))
+    t = inferbinarytype(parent(A), parent(B), op)
+    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A), parent(B), op))
     return eunion!(C, A, α, B, β, op; mask, accum, desc)
 end
 

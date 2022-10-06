@@ -18,6 +18,7 @@ using SparseArrays
 using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval
 using MacroTools
 using LinearAlgebra
+using LinearAlgebra: copy_oftype
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
 using SpecialFunctions: lgamma, gamma, erf, erfc
 using Base.Broadcast
@@ -58,9 +59,15 @@ include("indexutils.jl")
 # 
 include("operations/extract.jl")
 include("scalar.jl")
-include("vector.jl")
-include("matrix.jl")
+include("gbvector.jl")
+include("gbmatrix.jl")
 include("abstractgbarray.jl")
+
+# EXPERIMENTAL array types:
+include("shallowtypes.jl")
+include("oriented.jl")
+
+include("convert.jl")
 include("random.jl")
 # Miscellaneous Operations
 include("print.jl")
@@ -96,19 +103,17 @@ include("serialization.jl")
 include("misc.jl")
 include("mmread.jl")
 # include("iterator.jl")
-include("oriented.jl")
 include("solvers/klu.jl")
 include("solvers/umfpack.jl")
-include("shallowtypes.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS
 # export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export unaryop, binaryop, Monoid, semiring #UDFs
 export Descriptor #Types
-export gbset, gbget # global and object specific options.
+export gbset, gbget, getfill, setfill # global and object specific options.
 # export xtype, ytype, ztype #Determine input/output types of operators
-export GBScalar, GBVector, GBMatrix #arrays
+export GBScalar, GBVector, GBMatrix, GBMatrixC, GBMatrixR #arrays
 export lgamma, gamma, erf, erfc #reexport of SpecialFunctions.
 
 # Function arguments not found elsewhere in Julia

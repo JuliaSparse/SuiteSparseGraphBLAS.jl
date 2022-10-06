@@ -504,6 +504,4 @@ for Ti in Base.uniontypes(UMFPACK.UMFITypes)
     UMFPACK.umfpack_report_symbolic(Af, 0)
 end
 
-end # Base.USE_GPL_LIBS
-
-end # module
+end

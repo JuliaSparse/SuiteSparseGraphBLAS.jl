@@ -3,11 +3,11 @@ function reduce!(
     mask = nothing, accum = nothing, desc = nothing
 )
     _canbeoutput(w) || throw(ShallowException())
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=w, in1=A)
     mask = _handlemask!(desc, mask)
     
-    op = typedmonoid(op, eltype(w))
-    accum = _handleaccum(accum, eltype(w))
+    op = typedmonoid(op, storedeltype(w))
+    accum = _handleaccum(accum, storedeltype(w))
     @wraperror LibGraphBLAS.GrB_Matrix_reduce_Monoid(
             w, mask, accum, op, parent(A), desc
         )
@@ -27,9 +27,9 @@ function Base.reduce(
     desc = _handledescriptor(desc; in1=A)
     mask = _handlemask!(desc, mask)
     if typeout === nothing
-        typeout = inferbinarytype(eltype(A), eltype(A), op)
+        typeout = inferbinarytype(parent(A), parent(A), op)
     end
-    if typeout != eltype(A)
+    if typeout != storedeltype(A)
         throw(ArgumentError(
             "The SuiteSparse:GraphBLAS reduce function only supports monoids where T x T -> T.
             Please pass a function whose output type matches both input types."))

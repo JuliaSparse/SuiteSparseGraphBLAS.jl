@@ -16,7 +16,7 @@ function Base.sort!(
     C === nothing && (C = C_NULL)
     P === nothing && (P = C_NULL)
     C == C_NULL && P == C_NULL && throw(ArgumentError("One (or both) of C and P must not be nothing."))
-    op = binaryop(lt, eltype(A))
+    op = binaryop(lt, A, A)
     if dims == 1
         transpose = true
     elseif dims == 2
@@ -24,7 +24,7 @@ function Base.sort!(
     else
         throw(ArgumentError("dims must be either 1 (sort columns) or 2 (sort rows)"))
     end
-    desc = _handledescriptor(desc; in1=A)
+    desc = _handledescriptor(desc; out=C, in1=A)
     desc.transpose_input1 = transpose
     @wraperror LibGraphBLAS.GxB_Matrix_sort(C, P, op, parent(A), desc)
     return C

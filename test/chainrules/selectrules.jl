@@ -17,8 +17,9 @@
         test_frule(select, <=, X, 0.)
         test_rrule(select, <=, X, 0.)
     end
+    
     @testset "Sparse" begin
-        X = GBMatrix(sprand(50, 50, 0.15))
+        X = GBMatrix(sprand(4, 4, 0.5))
         test_frule(select, diag, X)
         test_rrule(select, diag, X)
         test_frule(select, offdiag, X)
