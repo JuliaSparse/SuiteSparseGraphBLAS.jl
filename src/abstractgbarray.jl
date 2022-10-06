@@ -36,7 +36,6 @@ Base.eltype(::Type{<:AbstractGBArray{T, F}}) where{T, F} = Union{T, F}
 
 storedeltype(x) = eltype(x)
 storedeltype(::AbstractGBArray{T}) where T = T
-# TODO: The transpose
 
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::AbstractGBArray) = A.p[]
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Vector}, A::AbstractGBVector) = 
@@ -175,26 +174,28 @@ reshape!(A::AbstractGBMatrix, dims...; bycol = true) =
 reshape!(A::AbstractGBMatrix, n; bycol = true) =
     reshape!(A, n, 1; bycol)
 function Base.reshape(
-    A::AbstractGBMatrix, nrows, ncols; 
+    A::AbstractGBMatrix, nrows::Int, ncols::Int; 
     bycol = true, desc = nothing)
     desc = _handledescriptor(desc)
-    lenA = length(A)
-    nrows isa Colon && ncols isa Colon && throw(
-        ArgumentError("nrows and ncols may not both be Colon"))
-    nrows isa Colon && (nrows = lenA ÷ ncols)
-    ncols isa Colon && (ncols = lenA ÷ nrows)
     C = Ref{LibGraphBLAS.GrB_Matrix}()
     @wraperror LibGraphBLAS.GxB_Matrix_reshapeDup(
         C, A, 
         bycol, nrows, ncols, desc
     )
-    # TODO, do better. This is ugly and allocates twice.
     out = similar(A)
     out.p = finalizer(C) do ref
         @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
     end
     return out
 end
+
+Base.reshape(A::AbstractGBMatrix, ::Colon, ncols::Int; bycol = true) = 
+    reshape(A, length(A) ÷ ncols, ncols; bycol)
+Base.reshape(A::AbstractGBMatrix, nrows::Int, ::Colon; bycol = true) = 
+    reshape(A, nrows, length(A) ÷ nrows; bycol)
+Base.reshape(::AbstractGBMatrix, ::Colon, ::Colon; bycol = true) = 
+    throw(ArgumentError("nrows and ncols may not both be Colon"))
+
 Base.reshape(A::AbstractGBMatrix, dims::Tuple{Vararg{Int64, N}}; bycol = true) where N =
     reshape(A, dims...; bycol)
 Base.reshape(A::AbstractGBMatrix, dims::Tuple{Vararg{Union{Colon, Int64}}}; bycol = true) =
@@ -205,10 +206,10 @@ Base.reshape(
     bycol = true
 ) = reshape(A, dims...; bycol)
 
-Base.reshape(A::AbstractGBMatrix, n; bycol = true) = reshape(A, n, 1; bycol)
+Base.reshape(A::AbstractGBMatrix, n::Union{Int, Colon}; bycol = true) = reshape(A, n, 1; bycol)
 
 function build!(A::AbstractGBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
-    nnz(A) == 0 || throw(OutputNotEmptyError("Cannot build matrix with existing elements"))
+    nnz(A) == 0 || throw(OutputNotEmptyError())
     length(I) == length(J) || DimensionMismatch("I, J and X must have the same length")
     x = GBScalar(x)
 
@@ -260,7 +261,7 @@ for T ∈ valid_vec
             I isa Vector || (I = collect(I))
             J isa Vector || (J = collect(J))
             X isa Vector || (X = collect(X))
-            nnz(A) == 0 || throw(OutputNotEmptyError("Cannot build matrix with existing elements"))
+            nnz(A) == 0 || throw(OutputNotEmptyError())
             length(X) == length(I) == length(J) ||
                 DimensionMismatch("I, J and X must have the same length")
             decrement!(I)
@@ -275,6 +276,7 @@ for T ∈ valid_vec
             )
             increment!(I)
             increment!(J)
+            return A
         end
     end
     # Setindex functions
@@ -348,7 +350,7 @@ function build!(
     J isa Vector || (J = collect(J))
     X isa Vector || (X = collect(X))
     X = convert(Vector{T}, X)
-    nnz(A) == 0 || throw(OutputNotEmptyError("Cannot build matrix with existing elements"))
+    nnz(A) == 0 || throw(OutputNotEmptyError())
     length(X) == length(I) == length(J) ||
         DimensionMismatch("I, J and X must have the same length")
     decrement!(I)
@@ -363,6 +365,7 @@ function build!(
     )
     increment!(I)
     increment!(J)
+    return A
 end
 
 function Base.setindex!(A::AbstractGBMatrix{T}, x, i::Integer, j::Integer) where {T}
@@ -384,7 +387,7 @@ function Base.getindex(A::AbstractGBMatrix{T}, i::Integer, j::Integer) where {T}
     end
 end
 # Fix ambiguity
-function Base.getindex(A::Transpose{T, <:AbstractGBMatrix{T}}, i::Integer, j::Integer) where {T}
+function Base.getindex(A::Transpose{T, <:AbstractGBMatrix{T}}, i::Int, j::Int) where T
     return getindex(parent(A), j, i)
 end
 
@@ -439,7 +442,7 @@ for T ∈ valid_vec
     end
 end
 
-function Base.isstored(A::AbstractGBMatrix, i::Int, j::Int)
+function Base.isstored(A::AbstractGBArray, i::Int, j::Int = 1)
     result = LibGraphBLAS.GxB_Matrix_isStoredElement(A, decrement!(i), decrement!(j))
     if result == LibGraphBLAS.GrB_SUCCESS
         true
@@ -504,6 +507,9 @@ function subassign!(
     J = decrement!(J)
     rereshape = false
     sz1 = size(A, 1)
+    if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
+        A = copy_similar(A, eltype(C))
+    end
     # reshape A: nx1 -> 1xn
     if A isa GBVector && (ni_sizecheck == size(A, 2) && nj_sizecheck == sz1)
         @wraperror LibGraphBLAS.GxB_Matrix_reshape(parent(A), true, 1, sz1, C_NULL)
@@ -537,20 +543,20 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     return x
 end
 
-function subassign!(C::AbstractGBArray, x::AbstractMatrix, I, J;
-    mask = nothing, accum = nothing, desc = nothing)
+function subassign!(C::AbstractGBArray{T}, x::AbstractMatrix, I, J;
+    mask = nothing, accum = nothing, desc = nothing) where T
     _canbeoutput(C) || throw(ShallowException())
-    array = x isa VecOrMat ? x : collect(x)
+    array = x isa Matrix{T} ? x : copyto!(Matrix{T}(undef, size(x)...), x)
     array = pack(array)
     subassign!(C, array, I, J; mask, accum, desc)
     unsafeunpack!(array)
     return x
 end
 
-function subassign!(C::AbstractGBArray, x::AbstractVector, I, J;
-    mask = nothing, accum = nothing, desc = nothing)
+function subassign!(C::AbstractGBArray{T}, x::AbstractVector, I, J;
+    mask = nothing, accum = nothing, desc = nothing) where T
     _canbeoutput(C) || throw(ShallowException())
-    array = x isa VecOrMat ? x : collect(x)
+    array = x isa Vector{T} ? x : copyto!(Vector{T}(undef, size(x)...), x)
     array = pack(array)
     subassign!(C, array, I, J; mask, accum, desc)
     unsafeunpack!(array)
@@ -602,6 +608,9 @@ function assign!(
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
     J = decrement!(J)
+    if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
+        A = copy_similar(A, eltype(C))
+    end
     @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
     increment!(I)
     increment!(J)
@@ -712,6 +721,7 @@ for T ∈ valid_vec
                 combine
             )
             increment!(I)
+            return v
         end
     end
     # Setindex functions
@@ -799,6 +809,7 @@ function build!(v::AbstractGBVector{T}, I::AbstractVector{<:Integer}, X::Abstrac
         combine
     )
     increment!(I)
+    return v
 end
 
 function Base.setindex!(v::AbstractGBVector{T}, x, i::Integer) where {T}
@@ -845,7 +856,7 @@ function SparseArrays.nonzeroinds(v::GBVector{T}) where {T}
     return increment!(I)
 end
 
-function build!(v::GBVector{T}, I::Vector{<:Integer}, x::T2) where {T, T2}
+function build!(v::AbstractGBVector{T}, I::Vector{<:Integer}, x::T2) where {T, T2}
     _canbeoutput(v) || throw(ShallowException())
     nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
     x = GBScalar(convert(T2, x))

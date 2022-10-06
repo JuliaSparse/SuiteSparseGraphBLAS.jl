@@ -71,7 +71,7 @@ function Base.similar(
     A::GBShallowVector{T}, 
     ::Type{TNew}, dims::Tuple{Int64} = size(A);
     fill = A.fill) where {T, TNew}
-    return GBVector{TNew}(dims..., fill)
+    return GBVector{TNew}(dims...; fill)
 end
 
 function Base.similar(

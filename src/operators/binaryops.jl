@@ -28,7 +28,7 @@ function SuiteSparseGraphBLAS.binaryop(
     f::F, ::Type{X}, ::Type{Y}
 ) where {F, X, Y}
     P = promote_type(X, Y)
-    if isconcretetype(P)
+    if isconcretetype(P) && (X <: valid_union && Y <: valid_union)
         return binaryop(f, P, P)
     else
         return fallback_binaryop(f, X, Y)
