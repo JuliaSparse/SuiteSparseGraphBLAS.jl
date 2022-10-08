@@ -1,7 +1,5 @@
 # fall back to nzval, this may need to change eventually, as it's currently not possible to know the storage order.
 # Either a new parameter or something else.
-StorageOrders.storageorder(A::AbstractGBShallowArray) = storageorder(A.nzval)
-
 function GBShallowVector(v::DenseVector{T}; fill::F = nothing) where {T, F}
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(v, 1), size(v, 2))

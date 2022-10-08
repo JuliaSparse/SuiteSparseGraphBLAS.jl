@@ -1,5 +1,4 @@
-StorageOrders.storageorder(::OrientedGBMatrix{T, F, O}) where {T, F, O} = O
-
+StorageOrders.comptime_storageorder(::OrientedGBMatrix{T, F, O}) where {T, F, O} = O
 function GBMatrixC{T, F}(
     A::SparseVector; 
     fill = defaultfill(F)

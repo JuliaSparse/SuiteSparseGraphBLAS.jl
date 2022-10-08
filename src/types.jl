@@ -720,7 +720,6 @@ GBVector{T}(
     fill::F = defaultfill(T)
 ) where {T, F} = return GBVector{T, F}(p; fill)
 
-StorageOrders.storageorder(::GBVector) = ColMajor()
 # we call @gbvectortype GBVector below GBMatrix defn.
 
 """
@@ -830,7 +829,8 @@ end
 
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 
-StorageOrders.storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
+StorageOrders.runtime_storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
+StorageOrders.comptime_storageorder(::AbstractGBMatrix) = StorageOrders.RuntimeOrder()
 StorageOrders.storageorder(::AbstractGBVector) = ColMajor()
 
 defaultfill(::Type{T}) where T = zero(T)
