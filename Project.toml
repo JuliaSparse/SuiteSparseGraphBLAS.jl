@@ -4,6 +4,7 @@ authors = ["Will Kimmerer <wrkimmerer@outlook.com", "Abhinav Mehndiratta <abhina
 version = "0.8.0"
 
 [deps]
+Blobs = "163b9779-6631-5f90-a265-3de947924de8"
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 KLU = "ef3ab10e-7fda-4108-b977-705223b18434"
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"

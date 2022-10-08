@@ -25,6 +25,7 @@ using Base.Broadcast
 using Serialization
 using StorageOrders
 using KLU
+using Blobs
 
 export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 include("abstracts.jl")
@@ -102,7 +103,7 @@ include("serialization.jl")
 #EXPERIMENTAL
 include("misc.jl")
 include("mmread.jl")
-# include("iterator.jl")
+include("iterator.jl")
 include("solvers/klu.jl")
 include("solvers/umfpack.jl")
 

@@ -704,7 +704,7 @@ compressed sparse vector.
 
 See also: [`GBMatrix`](@ref).
 """
-mutable struct GBVector{T, F} <: AbstractGBVector{T, F}
+mutable struct GBVector{T, F} <: AbstractGBVector{T, F, ColMajor()}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix} # a GBVector is a GBMatrix internally.
     fill::F
 end
@@ -737,7 +737,7 @@ the following in either row or column orientation:
 
 The storage type is automatically determined by the library.
 """
-mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F}
+mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F, RuntimeOrder()}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
 end
@@ -756,7 +756,7 @@ GBMatrix{T}(
 @gbmatrixtype GBMatrix
 @gbvectortype GBVector
 
-mutable struct OrientedGBMatrix{T, F, O} <: AbstractGBMatrix{T, F}
+mutable struct OrientedGBMatrix{T, F, O} <: AbstractGBMatrix{T, F, O}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
     function OrientedGBMatrix{T, F, O}(
@@ -799,7 +799,7 @@ const GBMatrixR{T, F} = OrientedGBMatrix{T, F, StorageOrders.RowMajor()}
 These types do not have the general constructors created by `@gbmatrixtype` since they
 should *never* be constructed by a user directly. Only through the `pack` interface.
 =#
-mutable struct GBShallowVector{T, F, P, B, A} <: AbstractGBShallowArray{T, F, P, B, A, 1}
+mutable struct GBShallowVector{T, F, P, B, A} <: AbstractGBShallowArray{T, F, ColMajor(), P, B, A, 1}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
     # storage for sparse formats supported by SS:GraphBLAS
@@ -813,7 +813,7 @@ function GBShallowVector{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::
     GBShallowVector{T, F, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
 end
 
-mutable struct GBShallowMatrix{T, F, P, B, A} <: AbstractGBShallowArray{T, F, P, B, A, 2}
+mutable struct GBShallowMatrix{T, F, O, P, B, A} <: AbstractGBShallowArray{T, F, O, P, B, A, 2}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
     # storage for sparse formats supported by SS:GraphBLAS
@@ -823,15 +823,14 @@ mutable struct GBShallowMatrix{T, F, P, B, A} <: AbstractGBShallowArray{T, F, P,
     bitmap::B # bitmap only
     nzval::A # array storage for dense arrays, nonzero values storage for everyone else.
 end
-function GBShallowMatrix{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::A) where {T, F, P, B, A}
-    GBShallowMatrix{T, F, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
+function GBShallowMatrix{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::A, order = ColMajor()) where {T, F, P, B, A}
+    GBShallowMatrix{T, F, order, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
 end
 
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 
 StorageOrders.runtime_storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
-StorageOrders.comptime_storageorder(::AbstractGBMatrix) = StorageOrders.RuntimeOrder()
-StorageOrders.storageorder(::AbstractGBVector) = ColMajor()
+StorageOrders.comptime_storageorder(::AbstractGBArray{<:Any, <:Any, O}) where O = O
 
 defaultfill(::Type{T}) where T = zero(T)
 defaultfill(::Type{Nothing}) = nothing
