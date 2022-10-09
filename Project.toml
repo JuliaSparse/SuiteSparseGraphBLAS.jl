@@ -20,6 +20,7 @@ StorageOrders = "e9177fbf-8fde-426c-9425-4eed0f22262a"
 SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [compat]
+Blobs = "0.5"
 ChainRulesCore = "1"
 KLU = "0.4"
 MacroTools = "0.5"
