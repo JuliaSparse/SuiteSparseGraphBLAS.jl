@@ -67,10 +67,6 @@ end
 #This is ok per the GraphBLAS Slack channel. Should change its effect on Complex input.
 LinearAlgebra.adjoint(A::GBVecOrMat) = transpose(A)
 
-#arrrrgh, type piracy.
-# TODO: avoid this if possible
-LinearAlgebra.transpose(::Nothing) = nothing
-
 Base.unsafe_convert(::Type{Ptr{T}}, A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) where {T} = 
 throw(ArgumentError("Cannot convert $(typeof(A)) directly to a pointer. Please use copy."))
 

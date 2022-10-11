@@ -110,16 +110,9 @@ Determine type of the output of a typed operator.
 """
 function ztype end
 
-_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
-_promotefill(::AbstractGBArray{<:Any, Nothing}, y, op) = nothing
-_promotefill(x, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
 _promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, Missing}, op) = missing
-_promotefill(::AbstractGBArray{<:Any, Missing}, y, op) = nothing
-_promotefill(x, ::AbstractGBArray{<:Any, Missing}, op) = nothing
-_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, Missing}, op) = nothing
-_promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
-_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, <:Any}, op) = nothing
-_promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Missing}, y, op) = missing
+_promotefill(x, ::AbstractGBArray{<:Any, Missing}, op) = missing
 _promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, <:Any}, op) = missing
 _promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Missing}, op) = missing
 
