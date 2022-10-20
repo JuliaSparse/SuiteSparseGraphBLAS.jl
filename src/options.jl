@@ -60,7 +60,8 @@ function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
         value isa LibGraphBLAS.GxB_Format_Value || 
             throw(ArgumentError("$field specifies a value of type GxB_Format_Value"))
     elseif field == GxB_SPARSITY_CONTROL
-        value isa Cint || throw(ArgumentError("$field specifies a value of type Cint"))
+        value isa Integer || value isa GBSparsity || 
+            throw(ArgumentError("$field specifies a value of type Int"))
     else
         throw(ArgumentError("$field is not a valid Matrix option."))
     end
@@ -124,6 +125,11 @@ Users must call `wait(A)` before this will be reflected in `A`,
 however operations will perform this `wait` automatically on input.
 """
 function setstorageorder!(A::AbstractGBArray, o::StorageOrders.StorageOrder)
+    gbset(A, :format, o)
+end
+
+function setstorageorder(A::AbstractGBArray, o::StorageOrders.StorageOrder)
+    B = copy(A)
     gbset(A, :format, o)
 end
 

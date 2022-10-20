@@ -35,7 +35,7 @@ end
     if Base.issingletontype(F)
         :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X})))
     else
-        throw("Unsupported function $f")
+        throw("Unsupported function $f. Closure functions are not supported.")
     end
 end
 
