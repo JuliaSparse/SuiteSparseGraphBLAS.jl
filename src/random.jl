@@ -22,9 +22,9 @@ Any input which supports `eltype(typeorrange)`.
 - `GBMatrix`
 """
 function gbrand(
-    rng::AbstractRNG, typeorrange, nrows::Integer, ncols::Integer, density::AbstractFloat;
+    rng::AbstractRNG, fn::F, typeorrange, nrows::Integer, ncols::Integer, density::AbstractFloat;
     symmetric=false, pattern=false, skewsymmetric=false, hermitian=false, nodiagonal=false
-)
+) where F
     type = eltype(typeorrange)
     A = GBMatrix{type}(nrows, ncols)
     (type <: Unsigned || type == Bool) && (skewsymmetric = false)
@@ -52,7 +52,7 @@ function gbrand(
         if pattern
             x = one(type)
         else
-            x = rand(rng, typeorrange)
+            x = fn(rng, typeorrange)
         end
         A[i, j] = x
         symmetric && (A[j, i] = x)
@@ -68,7 +68,27 @@ function gbrand(
     symmetric=false, pattern=false, skewsymmetric=false, hermitian=false, nodiagonal=false
 )
     return gbrand(
-        default_rng(), typeorrange, nrows, ncols, density;
+        default_rng(), rand, typeorrange, nrows, ncols, density;
+        symmetric, pattern, skewsymmetric, hermitian, nodiagonal
+    )
+end
+
+function gbrandn(
+    rng::AbstractRNG, type::DataType, nrows::Integer, ncols::Integer, density::AbstractFloat;
+    symmetric=false, pattern=false, skewsymmetric=false, hermitian=false, nodiagonal=false
+)
+    return gbrand(
+        rng, randn, type, nrows, ncols, density;
+        symmetric, pattern, skewsymmetric, hermitian, nodiagonal
+    )
+end
+
+function gbrandn(
+    type::DataType, nrows::Integer, ncols::Integer, density::AbstractFloat;
+    symmetric=false, pattern=false, skewsymmetric=false, hermitian=false, nodiagonal=false
+)
+    return gbrand(
+        default_rng(), randn, type, nrows, ncols, density;
         symmetric, pattern, skewsymmetric, hermitian, nodiagonal
     )
 end

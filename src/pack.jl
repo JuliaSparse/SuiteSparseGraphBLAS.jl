@@ -67,7 +67,6 @@ function _packbitmap!(
     else
         throw(ArgumentError("order must be either RowMajor() or ColMajor()"))
     end
-
 end
 
 function _packcscmatrix!(
@@ -146,6 +145,60 @@ function _packcsrmatrix!(
     return A
 end
 
+function _packhypermatrix!(
+    A::AbstractGBArray{T}, ptr::Vector{Ti}, idx1::Vector{Ti}, idx2::Vector{Ti}, values::Vector{T};
+    desc = nothing, order = ColMajor()
+) where {T}
+    desc = _handledescriptor(desc)
+    valsize = length(A) * sizeof(T)
+    ptrsize = length(ptr) * sizeof(Ti)
+    idx1size = length(idx1) * sizeof(Ti)
+    idx2size = length(idx2) * sizeof(Ti)
+    nvec = length(ptr) - 1
+    isiso = (length(values) == 1) && (length(A) != 1)
+    ptrpointer = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(ptr))
+    idx1pointer = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(idx1))
+    idx2pointer = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(idx2))
+    valpointer = Ref{Ptr{Cvoid}}(pointer(values))
+
+    if order === ColMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_HyperCSC(
+            A,
+            ptrpointer,
+            idx1pointer,
+            idx2pointer,
+            valpointer,
+            ptrsize,
+            idx1size,
+            idx2size,
+            valsize,
+            isiso,
+            nvec,
+            false,
+            desc
+        )
+    elseif order === RowMajor()
+        @wraperror LibGraphBLAS.GxB_Matrix_pack_HyperCSR(
+            A,
+            ptrpointer,
+            idx1pointer,
+            idx2pointer,
+            valpointer,
+            ptrsize,
+            idx1size,
+            idx2size,
+            valsize,
+            isiso,
+            nvec,
+            false,
+            desc
+        )
+    else
+        throw(ArgumentError("order must be either RowMajor() or ColMajor()"))
+    end
+
+end
+
 function makeshallow!(A)
     ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), parent(A))
 end
@@ -179,6 +232,16 @@ function unsafepack!(
     else
         _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
+    shallow && makeshallow!(A)
+    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    return A
+end
+
+function unsafepack!(
+    A::AbstractGBArray, ptr, idx1, idx2, values, shallow::Bool = true;
+    order = ColMajor(), decrementindices = true
+)
+    _packhypermatrix!(A, ptr, idx1, idx2, values; decrementindices)
     shallow && makeshallow!(A)
     LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A

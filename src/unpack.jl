@@ -281,8 +281,9 @@ function _unpackhypermatrix!(
         isjumbled,
         desc
     )
-    colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
-    colidx = unsafe_wrap(Array, Ptr{Int64}(colidx), colidxsize[])
+    nvec = nvec[]
+    colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), nvec + 1)
+    colidx = unsafe_wrap(Array, Ptr{Int64}(colidx), nvec)
     rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx), nnonzeros)
     nstored = isiso[] ? 1 : nnonzeros
     vals = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
@@ -343,8 +344,9 @@ desc = _handledescriptor(desc)
         isjumbled,
         desc
     )
-    rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 2) + 1)
-    rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), rowidxsize[])
+    nvec = nvec[] + 1
+    rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), nvec + 1)
+    rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nvec)
     colidx = unsafe_wrap(Array, Ptr{Int64}(colidx[]), nnonzeros)
     nstored = isiso[] ? 1 : nnonzeros
     vals = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
