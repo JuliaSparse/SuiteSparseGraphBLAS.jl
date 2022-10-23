@@ -5,7 +5,7 @@ using LinearAlgebra
 using SuiteSparseGraphBLAS.GB_KLU
 using SuiteSparseGraphBLAS.GB_KLU: GB_KLUFactorization, unsafepack!, unsafeunpack!
 using SparseArrays
-
+using SuiteSparseGraphBLAS: GBDiagonal
 @testset "KLU Wrappers" begin
     Ap = increment!([0,4,1,1,2,2,0,1,2,3,4,4])
     Ai = increment!([0,4,0,2,1,2,1,4,3,2,1,2])
@@ -19,7 +19,7 @@ using SparseArrays
             # test the raw vector construction method.
             klua = klu(A)
             @test nnz(klua) == 18
-            R = Diagonal(Tv == ComplexF64 ? complex.(klua.Rs) : klua.Rs)
+            R = GBDiagonal(Tv == ComplexF64 ? complex.(klua.Rs) : klua.Rs)
             @test A[klua.p, klua.q] ≈ R * (klua.L * klua.U + klua.F)
 
             b = [8., 45., -3., 3., 19.]

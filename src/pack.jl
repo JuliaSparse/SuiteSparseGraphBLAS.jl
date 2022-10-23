@@ -120,7 +120,7 @@ function _packcsrmatrix!(
     ) where {T, Ti}
     if decrementindices && rowptr[begin] == 1
         decrement!(rowptr)
-        decrement(colidx)
+        decrement!(colidx)
     end
 
     rowpointer = pointer(rowptr)
@@ -147,8 +147,8 @@ end
 
 function _packhypermatrix!(
     A::AbstractGBArray{T}, ptr::Vector{Ti}, idx1::Vector{Ti}, idx2::Vector{Ti}, values::Vector{T};
-    desc = nothing, order = ColMajor()
-) where {T}
+    desc = nothing, order = ColMajor(), decrementindices = true
+) where {T, Ti}
     desc = _handledescriptor(desc)
     valsize = length(A) * sizeof(T)
     ptrsize = length(ptr) * sizeof(Ti)
@@ -160,7 +160,11 @@ function _packhypermatrix!(
     idx1pointer = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(idx1))
     idx2pointer = Ref{Ptr{LibGraphBLAS.GrB_Index}}(pointer(idx2))
     valpointer = Ref{Ptr{Cvoid}}(pointer(values))
-
+    if decrementindices
+        decrement!(ptr)
+        decrement!(idx1)
+        decrement!(idx2)
+    end
     if order === ColMajor()
         @wraperror LibGraphBLAS.GxB_Matrix_pack_HyperCSC(
             A,
@@ -241,7 +245,7 @@ function unsafepack!(
     A::AbstractGBArray, ptr, idx1, idx2, values, shallow::Bool = true;
     order = ColMajor(), decrementindices = true
 )
-    _packhypermatrix!(A, ptr, idx1, idx2, values; decrementindices)
+    _packhypermatrix!(A, ptr, idx1, idx2, values; order, decrementindices)
     shallow && makeshallow!(A)
     LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A

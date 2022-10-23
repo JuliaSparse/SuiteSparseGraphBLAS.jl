@@ -103,6 +103,7 @@ Return the current sparsity of `A`, which is one of `Dense`,
 `Bitmap`, `Sparse`, or `Hypersparse`.
 """
 function sparsitystatus(A::AbstractGBArray)
+    wait(A) # We need to do this to ensure we're actually unpacking correctly.
     t = GBSparsity(gbget(A, SPARSITY_STATUS))
     return consttoshape(t)
 end

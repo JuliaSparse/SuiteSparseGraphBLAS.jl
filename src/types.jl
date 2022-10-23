@@ -446,6 +446,31 @@ macro gbmatrixtype(typename)
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
 
+        # Diagonal ctor
+        function $typename{T, F}(
+            A::Diagonal; fill = defaultfill(F)
+        ) where {T, F}
+            C = $typename{T, F}(size(A); fill)
+            GBDiagonal!(C, A)
+        end
+        $typename{T}(A::Diagonal; fill::F = defaultfill(T)) where {T, F} = 
+            $typename{T, F}(A; fill)
+        $typename(A::Diagonal{T}; fill::F = defaultfill(T)) where {T, F} =
+            $typename{T, F}(A; fill)
+
+        # 
+        function $typename{T, F}(
+            A::UniformScaling, args...; fill = defaultfill(F)
+        ) where {T, F}
+            C = $typename{T, F}(args...; fill)
+            GBDiagonal!(C, A(size(C, 1)))
+        end
+        $typename{T}(A::UniformScaling, args...; fill::F = defaultfill(T)) where {T, F} = 
+            $typename{T, F}(A, args...; fill)
+        $typename(A::UniformScaling{T}, args...; fill::F = defaultfill(T)) where {T, F} =
+            $typename{T, F}(A, args...; fill)
+        $typename(A::UniformScaling{T}, n::Integer; fill::F = defaultfill(T)) where {T, F} =
+            $typename{T, F}(A, n, n; fill)
         # similar
         function Base.similar(
             A::$typename{T}, ::Type{TNew} = T,

@@ -74,6 +74,10 @@ function _unpackdensematrixR!(
             _jlfree(x)
         end
     end
+    if length(v) != length(A)
+        resize!(v, length(A))
+    end
+    return reshape(v, szA[1], szA[2])::Matrix{T}
 end
 
 function _unpackcscmatrix!(
@@ -329,7 +333,7 @@ desc = _handledescriptor(desc)
     isjumbled = C_NULL
     nnonzeros = nnz(A)
 
-    @wraperror LibGraphBLAS.GxB_Matrix_unpack_HyperCSC(
+    @wraperror LibGraphBLAS.GxB_Matrix_unpack_HyperCSR(
         A,
         rowptr,
         rowidx,
@@ -344,7 +348,7 @@ desc = _handledescriptor(desc)
         isjumbled,
         desc
     )
-    nvec = nvec[] + 1
+    nvec = nvec[]
     rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), nvec + 1)
     rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nvec)
     colidx = unsafe_wrap(Array, Ptr{Int64}(colidx[]), nnonzeros)
@@ -508,6 +512,7 @@ function tempunpack!(A::AbstractGBArray, sparsity::Hypersparse; order = ColMajor
 end
 
 function tempunpack!(A::AbstractGBArray, incrementindices = false)
+    wait(A)
     sparsity, order = format(A)
     return tempunpack!(A, sparsity; order, incrementindices)
 end

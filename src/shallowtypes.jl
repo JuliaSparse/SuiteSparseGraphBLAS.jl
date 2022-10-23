@@ -1,20 +1,20 @@
 # fall back to nzval, this may need to change eventually, as it's currently not possible to know the storage order.
 # Either a new parameter or something else.
-function GBShallowVector(v::DenseVector{T}; fill::F = nothing) where {T, F}
+function GBShallowVector(v::DenseVector{T}; fill::F = defaultfill(T)) where {T, F}
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(v, 1), size(v, 2))
     gbvec = GBShallowVector{T}(m, fill, Int64[], Int64[], Int64[], Bool[], v)
     unsafepack!(gbvec, v, true)
 end
 
-function GBShallowMatrix(M::StridedMatrix{T}; fill::F = nothing) where {T, F}
+function GBShallowMatrix(M::StridedMatrix{T}; fill::F = defaultfill(T)) where {T, F}
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size(M)...)
     gbmat = GBShallowMatrix{T}(m, fill, Int64[], Int64[], Int64[], Bool[], M)
     unsafepack!(gbmat, M, true)
 end
 
-function GBShallowVector(idx::DenseVector{I}, nzvals::DenseVector{T}, size; fill::F = nothing, decrementindices = true) where {I<:Integer, T, F}
+function GBShallowVector(idx::DenseVector{I}, nzvals::DenseVector{T}, size; fill::F = defaultfill(T), decrementindices = true) where {I<:Integer, T, F}
     I isa Integer && sizeo(I) == 8 || throw(ArgumentError("$I is not a 64 bit signed or unsigned Integer."))
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), size, 1)
@@ -27,7 +27,7 @@ GBShallowVector(v::SparseVector; fill = nothing, decrementindices = true) = retu
     fill, decrementindices
 )
 
-function GBShallowMatrix(ptr::DenseVector{I}, idx::DenseVector{I}, nzvals::DenseVector{T}, nrows, ncols; fill::F = nothing, decrementindices = true) where {I<:Integer, T, F}
+function GBShallowMatrix(ptr::DenseVector{I}, idx::DenseVector{I}, nzvals::DenseVector{T}, nrows, ncols; fill::F = defaultfill(T), decrementindices = true) where {I<:Integer, T, F}
     I isa Integer && sizeo(I) == 8 || throw(ArgumentError("$I is not a 64 bit signed or unsigned Integer."))
     m = _newGrBRef()
     @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
@@ -35,7 +35,7 @@ function GBShallowMatrix(ptr::DenseVector{I}, idx::DenseVector{I}, nzvals::Dense
     unsafepack!(gbmat, gbmat.ptr, gbmat.idx, gbmat.nzval, true; decrementindices)
 end
 
-GBShallowMatrix(S::SparseMatrixCSC; fill = nothing, decrementindices = true) = GBShallowMatrix(
+GBShallowMatrix(S::SparseMatrixCSC{T}; fill = defaultfill(T), decrementindices = true) where T = GBShallowMatrix(
     S.colptr, S.rowval, s.nzval, size(S, 1), size(S, 2);
     fill, decrementindices
 )

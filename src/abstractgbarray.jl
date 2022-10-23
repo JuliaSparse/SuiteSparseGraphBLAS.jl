@@ -678,20 +678,33 @@ function LinearAlgebra.diag(A::AbstractGBMatrix{T}, k::Integer = 0; desc = nothi
     if A isa Transpose
         k = -k
     end
-    @wraperror LibGraphBLAS.GxB_Vector_diag(LibGraphBLAS.GrB_Vector(v), parent(A), k, desc)
-    return v
+    @wraperror LibGraphBLAS.GxB_Vector_diag(v, parent(A), k, desc)
+    return Vector(v)
 end
 
-# This does not conform to the normal definition with a lazy wrapper.
-function LinearAlgebra.Diagonal(v::AbstractGBVector, k::Integer=0; desc = nothing)
-    s = size(v, 1)
-    C = GBMatrix{storedeltype(v)}(s, s; fill = v.fill)
+function GBDiagonal!(C::AbstractGBMatrix, v::AbstractGBVector, k::Integer=0; desc = nothing)
     desc = _handledescriptor(desc)
-    # Switch ptr to a Vector to trick GraphBLAS.
-    # This is allowed since GrB_Vector is a GrB_Matrix internally.
-    @wraperror LibGraphBLAS.GxB_Matrix_diag(C, LibGraphBLAS.GrB_Vector(v.p[]), k, desc)
+    @wraperror LibGraphBLAS.GxB_Matrix_diag(C, v, k, desc)
     return C
 end
+function GBDiagonal!(C::AbstractGBMatrix{T}, v::AbstractVector, k::Integer=0; desc = nothing) where T
+    v2 = GBShallowVector(convert(DenseVector{T}, v))
+    GBDiagonal!(C, v2, k; desc)
+end
+function GBDiagonal!(C::AbstractGBMatrix, D::Diagonal; desc = nothing)
+    GBDiagonal!(C, D.diag; desc)
+end
+function GBDiagonal(v, k::Integer=0; desc = nothing)
+    s = size(v, 1)
+    C = GBMatrix{storedeltype(v)}(s, s; fill = defaultfill(storedeltype(v)))
+    GBDiagonal!(C, v, k; desc)
+end
+function GBDiagonal(v::AbstractGBVector, k::Integer=0; desc = nothing)
+    s = size(v, 1)
+    C = GBMatrix{storedeltype(v)}(s, s; fill = getfill(v))
+    GBDiagonal!(C, v, k; desc)
+end
+
 
 # Type dependent functions build, setindex, getindex, and findnz:
 for T ∈ valid_vec

@@ -16,7 +16,8 @@ using Serialization
 using SparseArrays
 using ..SuiteSparseGraphBLAS: AbstractGBMatrix, unsafepack!, unsafeunpack!, GBMatrix, 
 GBVector, AbstractGBArray, LibGraphBLAS, Sparse, Dense, ColMajor, sparsitystatus,
-_sizedjlmalloc, increment!, isshallow, nnz, tempunpack!
+_sizedjlmalloc, increment!, isshallow, nnz, tempunpack!, storedeltype
+using SuiteSparseGraphBLAS
 
 using StorageOrders
 
@@ -26,6 +27,8 @@ using SuiteSparse.UMFPACK
 using SuiteSparse.UMFPACK: umferror, @isok, 
 UMFVTypes,
 show_umf_ctrl, show_umf_info
+import SuiteSparse.UMFPACK: umfpack_numeric!, _AqldivB_kernel!, umfpack_extract, umfpack_symbolic!,
+_Aq_ldiv_B!, solve!, umf_lunz
 using SuiteSparse.LibSuiteSparse
 import SuiteSparse.LibSuiteSparse:
     SuiteSparse_long,
@@ -173,6 +176,17 @@ mutable struct GBUmfpackLU{Tv<:UMFVTypes, M} <: Factorization{Tv}
     lock::ReentrantLock
 end
 
+function GBUmfpackLU(S::AbstractGBMatrix{Tv};
+    control=get_umfpack_control(Tv, Int64)) where
+    {Tv<:UMFVTypes}
+    return GBUmfpackLU(Symbolic{Tv}(C_NULL), Numeric{Tv}(C_NULL),
+                    size(S, 1), size(S, 2),
+                    S, 0, UmfpackWS(S, has_refinement(control)),
+                    copy(control), Vector{Float64}(undef, UMFPACK_INFO),
+                    ReentrantLock()
+    )
+end
+
 workspace_W_size(F::GBUmfpackLU) = workspace_W_size(F, has_refinement(F))
 workspace_W_size(S::Union{GBUmfpackLU{<:AbstractFloat}, AbstractGBMatrix{<:AbstractFloat}}, refinement::Bool) = refinement ? 5 * size(S, 2) : size(S, 2)
 workspace_W_size(S::Union{GBUmfpackLU{<:Complex}, AbstractGBMatrix{<:Complex}}, refinement::Bool) = refinement ? 10 * size(S, 2) : 4 * size(S, 2)
@@ -302,12 +316,7 @@ See also [`lu!`](@ref)
 function lu(S::AbstractGBMatrix{Tv};
     check::Bool = true, q=nothing, control=get_umfpack_control(Tv, Int64)) where
     {Tv<:UMFVTypes}
-    res = GBUmfpackLU(Symbolic{Tv}(C_NULL), Numeric{Tv}(C_NULL),
-                    size(S, 1), size(S, 2),
-                    S, 0, UmfpackWS(S, has_refinement(control)),
-                    copy(control), Vector{Float64}(undef, UMFPACK_INFO),
-                    ReentrantLock()
-    )
+    res = GBUmfpackLU(S; control)
     umfpack_numeric!(res; q)
     check && (issuccess(res) || throw(LinearAlgebra.SingularException(0)))
     return res
@@ -359,7 +368,8 @@ See also [`lu`](@ref)
 """
 function lu!(F::GBUmfpackLU{Tv}, S::AbstractGBMatrix;
   check::Bool=true, reuse_symbolic::Bool=true, q=nothing) where {Tv}
-
+    # TODO::: Make this less dangerous!!!!
+    storedeltype(S) != Tv && (S = Tv.(S))
     F.m = size(S, 1)
     F.n = size(S, 2)
 
@@ -458,95 +468,95 @@ lunz_z = Symbol(umf_name("get_lunz", :ComplexF64))
 get_num_r = Symbol(umf_name("get_numeric", :Float64))
 get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
 @eval begin
-    function umfpack_symbolic!(U::GBUmfpackLU{Float64}, q::Union{Nothing, StridedVector{Int64}})
-        _isnotnull(U.symbolic) && return U
-        @lock U begin
+    function umfpack_symbolic!(lu::GBUmfpackLU{Float64}, q::Union{Nothing, StridedVector{Int64}})
+        _isnotnull(lu.symbolic) && return lu
+        @lock lu begin
             tmp = Ref{Ptr{Cvoid}}(C_NULL)
             # TODO: Relax ColMajor restriction, and enable transpose tricks
-            colptr, rowval, nzval, repack! = tempunpack!(U.A, Sparse(); order = ColMajor())
+            colptr, rowval, nzval, repack! = tempunpack!(lu.A, Sparse(); order = ColMajor())
             if q === nothing
-                m = U.m
-                n = U.n
-                ctrl = U.control
-                info = U.info
+                m = lu.m
+                n = lu.n
+                ctrl = lu.control
+                info = lu.info
                 res = $sym_r(m, n, colptr, rowval, nzval, tmp, ctrl, info)
             else
                 qq = minimum(q) == 1 ? q .- one(eltype(q)) : q
-                res = $symq_r(U.m, U.n, colptr, rowval, nzval, qq, tmp, U.control, U.info)
+                res = $symq_r(lu.m, lu.n, colptr, rowval, nzval, qq, tmp, lu.control, lu.info)
             end
-            repack!(colptr, rowval, nzval)
+            repack!()
             @isok res
-            if _isnull(U.symbolic)
-                U.symbolic.p = tmp[]
+            if _isnull(lu.symbolic)
+                lu.symbolic.p = tmp[]
             else
-                U.symbolic = Symbolic{Float64}(tmp[])
+                lu.symbolic = Symbolic{Float64}(tmp[])
             end
         end
-        return U
+        return lu
     end
-    function umfpack_symbolic!(U::GBUmfpackLU{ComplexF64}, q::Union{Nothing, StridedVector{Int64}})
-        _isnotnull(U.symbolic) && return U
-        @lock U begin
+    function umfpack_symbolic!(lu::GBUmfpackLU{ComplexF64}, q::Union{Nothing, StridedVector{Int64}})
+        _isnotnull(lu.symbolic) && return lu
+        @lock lu begin
             tmp = Ref{Ptr{Cvoid}}(C_NULL)
             # TODO: Relax ColMajor restriction, and enable transpose tricks
-            colptr, rowval, nzval, repack! = tempunpack!(U.A, Sparse(); order = ColMajor())
+            colptr, rowval, nzval, repack! = tempunpack!(lu.A, Sparse(); order = ColMajor())
             if q === nothing
-                res = $sym_c(U.m, U.n, colptr, rowval, real(nzval), imag(nzval), tmp,
-                             U.control, U.info)
+                res = $sym_c(lu.m, lu.n, colptr, rowval, real(nzval), imag(nzval), tmp,
+                             lu.control, lu.info)
             else
                 qq = minimum(q) == 1 ? q .- one(eltype(q)) : q
-                res = $symq_c(U.m, U.n, colptr, rowval, real(nzval), imag(nzval), qq, tmp, U.control, U.info)
+                res = $symq_c(lu.m, lu.n, colptr, rowval, real(nzval), imag(nzval), qq, tmp, lu.control, lu.info)
             end
-            repack!(colptr, rowval, nzval)
+            repack!()
             @isok res
-            if _isnull(U.symbolic)
-                U.symbolic.p = tmp[]
+            if _isnull(lu.symbolic)
+                lu.symbolic.p = tmp[]
             else
-                U.symbolic = Symbolic{ComplexF64}(tmp[])
+                lu.symbolic = Symbolic{ComplexF64}(tmp[])
             end
         end
-        return U
+        return lu
     end
-    function umfpack_numeric!(U::GBUmfpackLU{Float64}; reuse_numeric=true, q=nothing)
-        @lock U begin
-            (reuse_numeric && _isnotnull(U.numeric)) && return U
-            if _isnull(U.symbolic)
-                umfpack_symbolic!(U, q)
+    function umfpack_numeric!(lu::GBUmfpackLU{Float64}; reuse_numeric=true, q=nothing)
+        @lock lu begin
+            (reuse_numeric && _isnotnull(lu.numeric)) && return lu
+            if _isnull(lu.symbolic)
+                umfpack_symbolic!(lu, q)
             end
             tmp = Ref{Ptr{Cvoid}}(C_NULL)
             # TODO: Relax ColMajor restriction, and enable transpose tricks
-            colptr, rowval, nzval, repack! = tempunpack!(U.A, Sparse(); order = ColMajor())
-            status = $num_r(colptr, rowval, nzval, U.symbolic, tmp, U.control, U.info)
-            repack!(colptr, rowval, nzval)
-            U.status = status
+            colptr, rowval, nzval, repack! = tempunpack!(lu.A, Sparse(); order = ColMajor())
+            status = $num_r(colptr, rowval, nzval, lu.symbolic, tmp, lu.control, lu.info)
+            repack!()
+            lu.status = status
             if status != UMFPACK_WARNING_singular_matrix
                 umferror(status)
             end
-            if _isnull(U.numeric)
-                U.numeric.p = tmp[]
+            if _isnull(lu.numeric)
+                lu.numeric.p = tmp[]
             else
-                U.numeric = Numeric{Float64}(tmp[])
+                lu.numeric = Numeric{Float64}(tmp[])
             end
         end
-        return U
+        return lu
     end
-    function umfpack_numeric!(U::GBUmfpackLU{ComplexF64}; reuse_numeric=true, q=nothing)
-        @lock U begin
-            (reuse_numeric && _isnotnull(U.numeric)) && return U
-            _isnull(U.symbolic) && umfpack_symbolic!(U, q)
+    function umfpack_numeric!(lu::GBUmfpackLU{ComplexF64}; reuse_numeric=true, q=nothing)
+        @lock lu begin
+            (reuse_numeric && _isnotnull(lu.numeric)) && return lu
+            _isnull(lu.symbolic) && umfpack_symbolic!(lu, q)
             tmp = Ref{Ptr{Cvoid}}(C_NULL)
             # TODO: Relax ColMajor restriction, and enable transpose tricks
-            colptr, rowval, nzval, repack! = tempunpack!(U.A, Sparse(); order = ColMajor())
-            status = $num_c(colptr, rowval, real(nzval), imag(nzval), U.symbolic, tmp,
-                U.control, U.info)
-            repack!(colptr, rowval, nzval)
-            U.status = status
+            colptr, rowval, nzval, repack! = tempunpack!(lu.A, Sparse(); order = ColMajor())
+            status = $num_c(colptr, rowval, real(nzval), imag(nzval), lu.symbolic, tmp,
+                lu.control, lu.info)
+            repack!()
+            lu.status = status
             if status != UMFPACK_WARNING_singular_matrix
                 umferror(status)
             end
-            U.numeric.p = tmp[]
+            lu.numeric.p = tmp[]
         end
-        return U
+        return lu
     end
     function solve!(x::StridedVector{Float64},
         lu::GBUmfpackLU{Float64}, b::StridedVector{Float64},
@@ -566,11 +576,11 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
         @lock lu begin
             umfpack_numeric!(lu)
             (size(b, 1) == lu.m) && (size(b) == size(x)) || throw(DimensionMismatch())
-            colptr, rowval, nzval, repack! = tempunpack!(U.A, Sparse(); order = storageorder(U.A))
+            colptr, rowval, nzval, repack! = tempunpack!(lu.A, Sparse(); order = storageorder(lu.A))
             res = $wsol_r(typ, colptr, rowval, nzval,
                 x, b, lu.numeric, lu.control,
                 lu.info, workspace.Wi, workspace.W)
-            repack!(colptr, rowval, nzval)
+            repack!()
             @isok res
         end
         return x
@@ -593,10 +603,10 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
         @lock lu begin
             umfpack_numeric!(lu)
             (size(b, 1) == lu.m) && (size(b) == size(x)) || throw(DimensionMismatch())
-            colptr, rowval, nzval, repack! = tempunpack!(U.A, Sparse(); order = storageorder(U.A))
+            colptr, rowval, nzval, repack! = tempunpack!(lu.A, Sparse(); order = storageorder(lu.A))
             res = $wsol_c(typ, colptr, rowval, nzval, C_NULL, x, C_NULL, b,
                 C_NULL, lu.numeric, lu.control, lu.info, workspace.Wi, workspace.W)
-            repack!(colptr, rowval, nzval)
+            repack!()
             @isok res
         end
         return x
@@ -660,20 +670,20 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
                         C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, lu.numeric)
-            out = similar(lu.A, Float64, size(lu.A)...)
+            out = similar(lu.A, Float64, n_row, min(n_row, n_col))
             return unsafepack!(out, Lp, Lj, Lx, false; order = RowMajor())
         elseif d === :U
             umfpack_numeric!(lu)        # ensure the numeric decomposition exists
             (lnz, unz, n_row, n_col, nz_diag) = umf_lunz(lu)
             Up = unsafe_wrap(Array, _sizedjlmalloc(n_col + 1, Int64), n_col + 1)
-            Ui = unsafe_wrap(Array, _sizedjlmalloc(lnz, Int64), unz)
-            Ux = unsafe_wrap(Array, _sizedjlmalloc(lnz, Float64), unz)
+            Ui = unsafe_wrap(Array, _sizedjlmalloc(unz, Int64), unz)
+            Ux = unsafe_wrap(Array, _sizedjlmalloc(unz, Float64), unz)
             @isok $get_num_r(
                         C_NULL, C_NULL, C_NULL,
                         Up, Ui, Ux,
                         C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, lu.numeric)
-            out = similar(lu.A, Float64, size(lu.A)...)
+            out = similar(lu.A, Float64, min(n_row, n_col), n_col)
             return unsafepack!(out, Up, Ui, Ux, false)
         elseif d === :p
             umfpack_numeric!(lu)        # ensure the numeric decomposition exists
@@ -727,7 +737,7 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
                         C_NULL, C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, lu.numeric)
-            out = similar(lu.A, ComplexF64, size(lu.A)...)
+            out = similar(lu.A, ComplexF64, n_row, min(n_row, n_col))
             return unsafepack!(out, Lp, Lj, 
                 SuiteSparseGraphBLAS._copytoraw(Complex.(Lx, Lz)), false; order = RowMajor()
             )
@@ -743,19 +753,19 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
                         Up, Ui, Ux, Uz,
                         C_NULL, C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, lu.numeric)
-            out = similar(lu.A, ComplexF64, size(lu.A)...)
+            out = similar(lu.A, ComplexF64, min(n_row, n_col), n_col)
             return unsafepack!(
-                out, Lp, Lj, 
-                SuiteSparseGraphBLAS._copytoraw(Complex.(Lx, Lz)), false
+                out, Up, Ui, 
+                SuiteSparseGraphBLAS._copytoraw(Complex.(Ux, Uz)), false
             )
         elseif d === :p
             umfpack_numeric!(lu)        # ensure the numeric decomposition exists
             (lnz, unz, n_row, n_col, nz_diag) = umf_lunz(lu)
             P = unsafe_wrap(Array, _sizedjlmalloc(n_row, Int64), n_row)
-            @isok $get_num_r(
-                        C_NULL, C_NULL, C_NULL,
-                        C_NULL, C_NULL, C_NULL,
-                        P, C_NULL, C_NULL,
+            @isok $get_num_z(
+                        C_NULL, C_NULL, C_NULL, C_NULL,
+                        C_NULL, C_NULL, C_NULL, C_NULL,
+                        P, C_NULL, C_NULL, C_NULL,
                         C_NULL, C_NULL, lu.numeric)
             out = similar(lu.A, Int64, n_row)
             return unsafepack!(out, increment!(P), false)
@@ -763,10 +773,10 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
             umfpack_numeric!(lu)        # ensure the numeric decomposition exists
             (lnz, unz, n_row, n_col, nz_diag) = umf_lunz(lu)
             Q = unsafe_wrap(Array, _sizedjlmalloc(n_col, Int64), n_col)
-            @isok $get_num_r(
-                        C_NULL, C_NULL, C_NULL,
-                        C_NULL, C_NULL, C_NULL,
-                        C_NULL, Q, C_NULL,
+            @isok $get_num_z(
+                        C_NULL, C_NULL, C_NULL, C_NULL,
+                        C_NULL, C_NULL, C_NULL, C_NULL,
+                        C_NULL, Q, C_NULL, C_NULL,
                         C_NULL, C_NULL, lu.numeric)
             out = similar(lu.A, Int64, n_col)
             return unsafepack!(out, increment!(Q), false)
@@ -774,10 +784,10 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
             umfpack_numeric!(lu)        # ensure the numeric decomposition exists
             (lnz, unz, n_row, n_col, nz_diag) = umf_lunz(lu)
             Rs = unsafe_wrap(Array, _sizedjlmalloc(n_row, Float64), n_row)
-            @isok $get_num_r(
-                        C_NULL, C_NULL, C_NULL,
-                        C_NULL, C_NULL, C_NULL,
-                        C_NULL, C_NULL, C_NULL,
+            @isok $get_num_z(
+                        C_NULL, C_NULL, C_NULL, C_NULL,
+                        C_NULL, C_NULL, C_NULL, C_NULL,
+                        C_NULL, C_NULL, C_NULL, C_NULL,
                         C_NULL, Rs, lu.numeric)
             out = similar(lu.A, Float64, n_row)
             return unsafepack!(out, Rs, false)
@@ -786,6 +796,27 @@ get_num_z = Symbol(umf_name("get_numeric", :ComplexF64))
         else
             return getfield(lu, d)
         end
+    end
+end
+
+function UMFPACK.solve!(
+    lu::Union{
+        GBUmfpackLU, 
+        <:Adjoint{Any, <:GBUmfpackLU}, 
+        <:Transpose{<:Any, <:GBUmfpackLU}
+    }, 
+    B::AbstractGBArray
+)
+    sparsitystatus(B) === Dense() || throw(ArgumentError("B is not dense."))
+    shallow = isshallow(B)
+    x = unsafeunpack!(B, Dense())
+    return try
+        UMFPACK.solve!(lu, x)
+        unsafepack!(B, x, shallow)
+        return B
+    catch e
+        unsafepack!(B, x, shallow)
+        throw(e)
     end
 end
 
@@ -802,6 +833,26 @@ LinearAlgebra.issuccess(lu::GBUmfpackLU) = lu.status == UMFPACK_OK
 ### Solve with Factorization
 
 import LinearAlgebra.ldiv!
+function ldiv!(
+    lu::Union{
+        GBUmfpackLU, 
+        <:Adjoint{Any, <:GBUmfpackLU}, 
+        <:Transpose{<:Any, <:GBUmfpackLU}
+    }, 
+    B::AbstractGBArray)
+
+    sparsitystatus(B) === Dense() || throw(ArgumentError("B is not dense."))
+    shallow = isshallow(B)
+    x = unsafeunpack!(B, Dense())
+    return try
+        UMFPACK.ldiv!(lu, x)
+        unsafepack!(B, x, shallow)
+        return B
+    catch e
+        unsafepack!(B, x, shallow)
+        throw(e)
+    end
+end
 
 ldiv!(lu::GBUmfpackLU{T}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     ldiv!(B, lu, copy(B))
