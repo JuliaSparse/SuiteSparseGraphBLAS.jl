@@ -106,6 +106,7 @@ include("mmread.jl")
 include("iterator.jl")
 include("solvers/klu.jl")
 include("solvers/umfpack.jl")
+include("solvers/cholmod.jl")
 
 export SparseArrayCompat
 export LibGraphBLAS
