@@ -66,6 +66,7 @@ end
 
 #This is ok per the GraphBLAS Slack channel. Should change its effect on Complex input.
 LinearAlgebra.adjoint(A::GBVecOrMat) = transpose(A)
+LinearAlgebra.adjoint(A::GBVecOrMat{<:Complex}) = transpose(map(conj, A))
 
 Base.unsafe_convert(::Type{Ptr{T}}, A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) where {T} = 
 throw(ArgumentError("Cannot convert $(typeof(A)) directly to a pointer. Please use copy."))
@@ -97,3 +98,6 @@ Apply a mask to matrix `A`.
 function mask(A::GBArrayOrTranspose, mask; desc = nothing, replace_output = true)
     return mask!(similar(A), A, mask; desc)
 end
+
+# Gross, and should be better. But no real way around it currently:
+

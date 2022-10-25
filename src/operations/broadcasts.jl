@@ -48,14 +48,14 @@ function Base.similar(
     bc::Broadcast.Broadcasted{GBMatrixStyle},
     ::Type{ElType}
 ) where {ElType}
-    return GBMatrix{ElType}(axes(bc))
+    return GBMatrix{ElType}(axes(bc)) # Unfortunate default.
 end
 
 function Base.similar(
     bc::Broadcast.Broadcasted{GBVectorStyle},
     ::Type{ElType}
 ) where {ElType}
-    return GBVector{ElType}(axes(bc))
+    return GBVector{ElType}(axes(bc)) # Okay default.
 end
 
 #Find the modifying version of a function.
@@ -96,7 +96,13 @@ modifying(::typeof(emul)) = emul!
             add = defaultadd(f)
             return add(left, right, f)
         else
-            return apply(f, left, right)
+            leftscalar = !(left isa AbstractArray)
+            rightscalar = !(right isa AbstractArray)
+            if leftscalar || rightscalar
+                return apply(f, left, right)
+            end
+            # TODO: WE NEED TO SUPPORT SARRAY ELTYPES HERE!!!
+            return map(f, left, right)
         end
     end
 end

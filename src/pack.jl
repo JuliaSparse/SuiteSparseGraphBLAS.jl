@@ -78,7 +78,8 @@ function _packcscmatrix!(
     colptrsize = length(colptr) * sizeof(LibGraphBLAS.GrB_Index),
     rowidxsize = length(rowidx) * sizeof(LibGraphBLAS.GrB_Index),
     valsize = length(values) * sizeof(T),
-    decrementindices = true
+    decrementindices = true,
+    jumbled = false
     ) where {T, Ti}
     if decrementindices && colptr[begin] == 1
         decrement!(colptr)
@@ -101,7 +102,7 @@ function _packcscmatrix!(
         rowidxsize,
         valsize,
         false,
-        false,
+        jumbled,
         desc
     )
     return A
@@ -116,7 +117,8 @@ function _packcsrmatrix!(
     rowptrsize = length(rowptr) * sizeof(LibGraphBLAS.GrB_Index),
     colidxsize = length(colidx) * sizeof(LibGraphBLAS.GrB_Index),
     valsize = length(values) * sizeof(T),
-    decrementindices = true
+    decrementindices = true,
+    jumbled = false
     ) where {T, Ti}
     if decrementindices && rowptr[begin] == 1
         decrement!(rowptr)
@@ -139,7 +141,7 @@ function _packcsrmatrix!(
         colidxsize,
         valsize,
         false,
-        false,
+        jumbled,
         desc
     )
     return A
@@ -147,7 +149,7 @@ end
 
 function _packhypermatrix!(
     A::AbstractGBArray{T}, ptr::Vector{Ti}, idx1::Vector{Ti}, idx2::Vector{Ti}, values::Vector{T};
-    desc = nothing, order = ColMajor(), decrementindices = true
+    desc = nothing, order = ColMajor(), decrementindices = true, jumbled = false
 ) where {T, Ti}
     desc = _handledescriptor(desc)
     valsize = length(A) * sizeof(T)
@@ -178,7 +180,7 @@ function _packhypermatrix!(
             valsize,
             isiso,
             nvec,
-            false,
+            jumbled,
             desc
         )
     elseif order === RowMajor()
@@ -194,7 +196,7 @@ function _packhypermatrix!(
             valsize,
             isiso,
             nvec,
-            false,
+            jumbled,
             desc
         )
     else
@@ -229,7 +231,7 @@ end
 
 function unsafepack!(
     A::AbstractGBArray, ptr, idx, values, shallow::Bool = true; 
-    order = ColMajor(), decrementindices = true
+    order = ColMajor(), decrementindices = true, jumbled = false
 )
     if order === ColMajor()
         _packcscmatrix!(A, ptr, idx, values; decrementindices)
@@ -243,7 +245,7 @@ end
 
 function unsafepack!(
     A::AbstractGBArray, ptr, idx1, idx2, values, shallow::Bool = true;
-    order = ColMajor(), decrementindices = true
+    order = ColMajor(), decrementindices = true, jumbled = false
 )
     _packhypermatrix!(A, ptr, idx1, idx2, values; order, decrementindices)
     shallow && makeshallow!(A)

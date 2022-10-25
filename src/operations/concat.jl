@@ -29,7 +29,7 @@ function Base.cat(tiles::VecOrMat{<:Union{AbstractGBMatrix{T, F}, AbstractGBVect
     end
     sz = (tiles isa AbstractArray && ncols == 1) ? (nrows,) : (nrows, ncols)
 
-    C = similar(tiles[1], t, sz; fill)
+    C = similar(tiles[1], t, sz; fill) # TODO: FIXME, we want this to use promotion, but it's complicated.
     return cat!(C, tiles)
 end
 

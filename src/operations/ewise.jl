@@ -77,9 +77,10 @@ function emul(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(parent(A), parent(B), op)
-    
-    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A), parent(B), op))
+    T = inferbinarytype(parent(A), parent(B), op)
+    fill=_promotefill(parent(A), parent(B), op)
+    M = gbpromote_strip(A, B)
+    C = M{T}(_combinesizes(A, B); fill)
     return emul!(C, A, B, op; mask, accum, desc)
 end
 
@@ -163,8 +164,10 @@ function eadd(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(parent(A), parent(B), op)
-    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A), parent(B), op))
+    T = inferbinarytype(parent(A), parent(B), op)
+    fill=_promotefill(parent(A), parent(B), op)
+    M = gbpromote_strip(A, B)
+    C = M{T}(_combinesizes(A, B); fill)
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
@@ -250,9 +253,17 @@ function eunion(
     desc = nothing
 ) where {T, U}
     t = inferbinarytype(parent(A), parent(B), op)
-    C = similar(A, t, _combinesizes(A, B); fill=_promotefill(parent(A), parent(B), op))
+    fill=_promotefill(parent(A), parent(B), op)
+    M = gbpromote_strip(A, B)
+    C = M{t}(_combinesizes(A, B); fill)
     return eunion!(C, A, α, B, β, op; mask, accum, desc)
 end
+
+eunion(
+    A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, β, op = +;
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion(A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; mask, accum, desc)
+
 
 function Base.:+(A::GBArrayOrTranspose, B::GBArrayOrTranspose)
     eadd(A, B, +)
@@ -300,3 +311,16 @@ eadd(A::GBArrayOrTranspose, B::VecMatOrTrans, op = +; kwargs...) =
     @_densepack B eadd(A, B, op; kwargs...)
 eadd(A::VecMatOrTrans, B::VecMatOrTrans, op = +; kwargs...) = 
     @_densepack A B eadd(A, B, op; kwargs...)
+
+eunion!(C::GBVecOrMat, A::VecMatOrTrans, α, B::GBArrayOrTranspose, β, op = +; kwargs...) = 
+    @_densepack A eunion!(C, A, α, B, β, op; kwargs...)
+eunion!(C::GBVecOrMat, A::GBArrayOrTranspose, α, B::VecMatOrTrans, β, op = +; kwargs...) = 
+    @_densepack B eunion!(C, A, α, B, β, op; kwargs...)
+eunion!(C::GBVecOrMat, A::VecMatOrTrans, α, B::VecMatOrTrans, β, op = +; kwargs...) = 
+    @_densepack A B eunion!(C, A, α, B, β, op; kwargs...)
+eunion(A::VecMatOrTrans, α, B::GBArrayOrTranspose, β, op = +; kwargs...) = 
+    @_densepack A eunion(A, α, B, β, op; kwargs...)
+eunion(A::GBArrayOrTranspose, α, B::VecMatOrTrans, β, op = +; kwargs...) = 
+    @_densepack B eunion(A, α, B, β, op; kwargs...)
+eunion(A::VecMatOrTrans, α, B::VecMatOrTrans, β, op = +; kwargs...) = 
+    @_densepack A B eunion(A, B, op; kwargs...)

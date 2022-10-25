@@ -28,7 +28,38 @@ function SparseArrays.nnz(A::GBArrayOrTranspose)
     return Int64(nvals[])
 end
 
+function strip_parameters end
+promote_storage(::S, ::S) where {S <: StorageOrders.StorageOrder} = S()
+promote_storage(::S1, ::S2) where {S1 <: StorageOrders.StorageOrder, S2 <:StorageOrders.StorageOrder} = 
+    StorageOrders.RuntimeOrder()
+
 # Base functions:
+# default to GBMatrix: 
+Base.promote_rule(::Type{<:AbstractGBMatrix{T, F}}, ::Type{<:AbstractGBMatrix{T2, F2}}) where {T, F, T2, F2} = 
+    GBMatrix{promote_type(T, T2), promote_type(F, F2)}
+Base.promote_rule(::Type{GBMatrix}, ::Type{GBMatrixC}) = GBMatrix
+Base.promote_rule(::Type{GBMatrix}, ::Type{GBMatrixR}) = GBMatrix
+Base.promote_rule(::Type{GBMatrix}, ::Type{GBShallowMatrix}) = GBMatrix
+Base.promote_rule(::Type{GBMatrixC}, ::Type{GBMatrixC}) = GBMatrixC
+Base.promote_rule(::Type{GBMatrixR}, ::Type{GBMatrixR}) = GBMatrixR
+Base.promote_rule(::Type{GBMatrixC}, ::Type{GBMatrixR}) = GBMatrix
+Base.promote_rule(::Type{GBMatrixC}, ::Type{GBShallowMatrix}) = GBMatrixC
+Base.promote_rule(::Type{GBMatrixR}, ::Type{GBShallowMatrix}) = GBMatrixR
+
+Base.promote_rule(::Type{G}, ::Type{<:AbstractGBVector}) where {G<:AbstractGBMatrix} = G
+Base.promote_rule(::Type{GBShallowMatrix}, ::Type{<:AbstractGBVector}) = GBMatrix
+
+Base.promote_rule(::Type{<:AbstractGBVector}, ::Type{<:AbstractGBVector}) = GBVector
+Base.promote_rule(::Type{<:AbstractGBVector{T, F}}, ::Type{<:AbstractGBVector{T2, F2}}) where {T, F, T2, F2} =
+    GBVector{promote_type(T, T2), promote_type(F, F2)}
+
+function gbpromote_strip(A, B)
+    if A isa Transpose{<:Any, <:AbstractGBVector} && B isa Transpose{<:Any, <:AbstractGBVector}
+        return GBMatrix
+    else
+        return promote_type(strip_parameters(typeof(parent(A))), strip_parameters(typeof(parent(B))))
+    end
+end
 
 Base.IndexStyle(::AbstractGBArray) = IndexCartesian()
 Base.eltype(::AbstractGBArray{T, F}) where {T, F} = Union{T, F}

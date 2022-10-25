@@ -419,14 +419,27 @@ macro gbmatrixtype(typename)
         $typename(size::Tuple{Base.OneTo, Base.OneTo}, x::T; fill = defaultfill(T)) where T = 
             $typename{T}(size[1].stop, size[2].stop, x; fill)
         
+        # Convert based ctors:
         function $typename{T, F}(v::AbstractGBVector; fill = getfill(v)) where {T, F}
             return convert($typename{T, F}, v; fill)
         end
         function $typename{T}(v::AbstractGBVector; fill::F = getfill(v)) where {T, F}
             return $typename{T, F}(v; fill)
         end
-
+        function $typename(v::AbstractGBVector{T}; fill::F = getfill(v)) where {T, F}
+            return $typename{T, F}(v; fill)
+        end
+        function $typename{T, F}(A::AbstractGBMatrix; fill = getfill(A)) where {T, F}
+            return convert($typename{T, F}, A; fill)
+        end
+        function $typename{T}(A::AbstractGBMatrix; fill::F = getfill(A)) where {T, F}
+            return $typename{T, F}(A; fill)
+        end
+        function $typename(A::AbstractGBMatrix{T}; fill::F = getfill(A)) where {T, F}
+            return $typename{T, F}(A; fill)
+        end
         # Pack based constructors:
+        # General matrices!
         function $typename{T, F}(
             A::Union{<:AbstractVector, <:AbstractMatrix}; 
             fill = defaultfill(F)
@@ -446,6 +459,39 @@ macro gbmatrixtype(typename)
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
 
+        # Sparse Matrices:
+        function $typename{T, F}(
+            A::SparseVector; 
+            fill = defaultfill(F)
+        ) where {T, F}
+            C = $typename{T, F}(size(A, 1), 1; fill)
+            return unsafepack!(C, _copytoraw(A)..., false)
+        end
+        $typename{T}(
+            A::SparseVector; 
+            fill::F = defaultfill(T)
+        ) where {T, F} = $typename{T, F}(A; fill)
+        $typename(
+            A::SparseVector{T}; 
+            fill::F = defaultfill(T)
+        ) where {T, F} = $typename{T, F}(A; fill)
+        
+        function $typename{T, F}(
+            A::SparseMatrixCSC; 
+            fill = defaultfill(F)
+        ) where {T, F}
+            C = $typename{T, F}(size(A)...; fill)
+            return unsafepack!(C, _copytoraw(A)..., false)
+        end
+        $typename{T}(
+            A::SparseMatrixCSC; 
+            fill::F = defaultfill(T)
+        ) where {T, F} = $typename{T, F}(A; fill)
+        $typename(
+            A::SparseMatrixCSC{T}; 
+            fill::F = defaultfill(T)
+        ) where {T, F} = $typename{T, F}(A; fill)
+
         # Diagonal ctor
         function $typename{T, F}(
             A::Diagonal; fill = defaultfill(F)
@@ -458,7 +504,7 @@ macro gbmatrixtype(typename)
         $typename(A::Diagonal{T}; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(A; fill)
 
-        # 
+        # Uniform Scaling
         function $typename{T, F}(
             A::UniformScaling, args...; fill = defaultfill(F)
         ) where {T, F}
@@ -518,6 +564,7 @@ macro gbmatrixtype(typename)
         )
             return similar(A, (dim1, dim2); fill)
         end
+        strip_parameters(::Type{<:$typename}) = $typename
     end)
 end
 
@@ -716,6 +763,8 @@ macro gbvectortype(typename)
         )
             return similar(v, (dim1, dim2); fill)
         end
+        # misc utilities: 
+        strip_parameters(::Type{<:$typename}) = $typename
     end)
 end
 
@@ -852,6 +901,9 @@ function GBShallowMatrix{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::
     GBShallowMatrix{T, F, order, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
 end
 
+
+strip_parameters(::Type{<:GBShallowMatrix}) = GBShallowMatrix
+strip_parameters(::Type{<:GBShallowVector}) = GBShallowVector
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 
 StorageOrders.runtime_storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()

@@ -16,7 +16,7 @@ function Base.convert(::Type{M}, A::N; fill::F = getfill(A)) where {F, M<:Abstra
     newindices = _copytoraw.(indices)
     repack!()
     B = M(size(A, 1), size(A, 2); fill)
-    unsafepack!(B, newindices..., newvalues, false; decrementindices = false)
+    unsafepack!(B, newindices..., newvalues, false; decrementindices = false, order = storageorder(A))
 end
 
 Base.convert(::Type{M}, A::M; fill = nothing) where {M<:AbstractGBArray} = A

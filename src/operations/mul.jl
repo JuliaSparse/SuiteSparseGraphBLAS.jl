@@ -91,16 +91,17 @@ function Base.:*(
     accum = nothing,
     desc = nothing
 )
-    t = inferbinarytype(parent(A), parent(B), op)
+    T = inferbinarytype(parent(A), parent(B), op)
     fill = _promotefill(parent(A), parent(B), op)
     if A isa GBMatrixOrTranspose && B isa AbstractGBVector
-        C = similar(A, t, size(A, 1); fill)
+        C = similar(A, T, size(A, 1); fill)
     elseif A isa AbstractGBVector && B isa GBMatrixOrTranspose
-        C = similar(A, t, size(B, 2); fill)
+        C = similar(A, T, size(B, 2); fill)
     elseif A isa Transpose{<:Any, <:AbstractGBVector} && B isa AbstractGBVector
-        C = similar(A, t, 1; fill)
+        C = similar(A, T, 1; fill)
     else
-        C = similar(A, t, (size(A, 1), size(B, 2)); fill)
+        M = gbpromote_strip(A, B)
+        C = M{T}((size(A, 1), size(B, 2)); fill)
     end
     mul!(C, A, B, op; mask, accum, desc)
     return C
