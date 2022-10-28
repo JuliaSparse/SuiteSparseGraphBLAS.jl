@@ -95,4 +95,5 @@ println("$(SuiteSparseGraphBLAS.get_lib())")
     include_test("chainrules/maprules.jl")
     include_test("solvers/klu.jl")
     include_test("solvers/umfpack.jl")
+    include_test("solvers/cholmod.jl")
 end

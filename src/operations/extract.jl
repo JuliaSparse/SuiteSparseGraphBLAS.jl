@@ -68,10 +68,10 @@ function extract!(
     desc = _handledescriptor(desc; out=C, in1 = A)
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
-    J = decrement!(J)
+    I !== J && (J = decrement!(J))
     @wraperror LibGraphBLAS.GrB_Matrix_extract(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
-    I isa AbstractVector && increment!(I)
-    J isa AbstractVector && increment!(J)
+    increment!(I)
+    I !== J && increment!(J)
     return C
 end
 """
@@ -140,7 +140,7 @@ function extract!(
     desc = _handledescriptor(desc; out=w)
     mask = _handlemask!(desc, mask)
     @wraperror LibGraphBLAS.GrB_Matrix_extract(w, mask, _handleaccum(accum, storedeltype(w)), u, I, ni, UInt64[0], 1, desc)
-    I isa AbstractVector && increment!(I)
+    increment!(I)
     return w
 end
 

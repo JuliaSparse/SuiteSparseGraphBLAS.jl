@@ -191,13 +191,13 @@ function Base.:*(rig::TypedSemiring)
 end
 
 # Diagonal
-function Base.:*(D::Diagonal, A::G) where 
+function Base.:*(D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
     {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
-    return *(G(D), A)
+    return *(G(D), A, op; mask, accum, desc)
 end
-function Base.:*(A::G, D::Diagonal) where 
+function Base.:*(A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
     {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
-    return *(G(D), A)
+    return *(A, G(D), op; mask, accum, desc)
 end

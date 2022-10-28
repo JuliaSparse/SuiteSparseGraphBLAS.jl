@@ -63,6 +63,11 @@ modifying(::typeof(*)) = mul!
 modifying(::typeof(eadd)) = eadd!
 modifying(::typeof(emul)) = emul!
 
+# TODO: Fix this horrifically ugly function.
+# TODO: Remove the requirement that vector -> matrix
+# broadcast be done on certain side.
+# We can add an `iscommutative` to solve this.
+# as well as some function to get the reversed version of the operator.
 @inline function Base.copy(bc::Broadcast.Broadcasted{GBMatrixStyle})
     f = bc.f
     l = length(bc.args)
@@ -91,6 +96,28 @@ modifying(::typeof(emul)) = emul!
         end
         if right isa StridedArray
             right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
+        end
+        # TODO: We want to expose the broadcasting of Vectors into Matrices.
+        # The only problem is we need a notion of commutativity.
+        # This works fine for builtins, we can define commutativity pretty easily
+        # for many operations. But for non-builtins we'd need an API of sorts.
+        # To get around this for now we will require that Vectors be on the left
+        # and transposed vectors be on the right.
+        if left isa AbstractGBVector && right isa GBMatrixOrTranspose
+            return *(Diagonal(left), right, (any, f))
+        end
+        if left isa GBMatrixOrTranspose && right isa Transpose{<:Any, <:AbstractGBVector}
+            return *(left, Diagonal(right), (any, f))
+        end
+        if left isa GBMatrixOrTranspose && right isa AbstractGBVector
+            throw(ArgumentError(
+                "Broadcasting a GBVector into a GBMatrix is only currently " *
+                "supported with the GBVector on the left."))
+        end
+        if right isa GBMatrixOrTranspose && left isa Transpose{<:Any, <:AbstractGBVector}
+            throw(ArgumentError(
+                "Broadcasting a Transpose{<:Any, <:AbstractGBVector} into a GBMatrix" *
+                " is only currently supported with the GBVector on the right."))
         end
         if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)

@@ -1,9 +1,16 @@
 # TODO: Make this file less loathsome.
 
+# These iterators are only somewhat useful.
+# The biggest issue is that we can't, at the moment, use one to change values in another.
+# So in place map! is doable like this, as is just simply getting values.
+# But if you wanted to say `C[I] = <transform>(A[I])` even with identical structures
+# there's no method. Non-identical patterns are off the table entirely.
+
 abstract type IndexIteratorType end
 struct IndicesIterator <: IndexIteratorType end # return the indices as integers
 struct NeighborIterator <: IndexIteratorType end # Used only for Vector iterators
 struct NoIndexIterator <: IndexIteratorType end # Used when we don't want the indices, just the value
+struct IteratorIterator <: IndexIteratorType end # return the iterator object itself. Spooky!
 # just returns the free index, only useful for single column/row iterators.
 
 abstract type AbstractGBIterator end
@@ -143,6 +150,11 @@ end
     return unsafe_load(Ptr{T}(I.p.Ax[]), I.p.iso[] ? 1 : I.p.p[] + 1)
 end
 
+@inline function setval(I::GxBIterator{<:Any, T}, x::T) where T
+    I.p.iso[] && throw(ArgumentError("Cannot set value of iso valued matrix using iterator."))
+    unsafe_store!(Ptr{T}(I.p.Ax[]), x, I.p.p[] + 1)
+end
+
 # TODO: Inelegant
 @inline get_element(I::GxBIterator{<:Any, <:Any, true, IndicesIterator()}) = ((getrow(I), getcol(I)), getval(I))
 @inline get_element(I::GxBIterator{<:Any, <:Any, false, IndicesIterator()}) = (getrow(I), getcol(I))
@@ -150,6 +162,8 @@ end
 @inline get_element(I::GxBIterator{<:Any, <:Any, false, NeighborIterator()}) = increment(_rc_geti(I))
 @inline get_element(I::GxBIterator{<:Any, <:Any, true, NoIndexIterator()}) = getval(I)
 @inline get_element(::GxBIterator{<:Any, <:Any, false, NoIndexIterator()}) = throw(ArgumentError("Must iterate over either indices or values."))
+@inline get_element(I::GxBIterator{<:Any, <:Any, <:Any, IteratorIterator()}) = I
+
 
 struct VectorIterator{B, O, T, IterateValues, IterationType, I<:GxBIterator}
     iterator::I
@@ -228,9 +242,13 @@ end
 end
 
 get_element(I::VectorIterator) = get_element(I.iterator)
+get_element(I::VectorIterator{<:Any, <:Any, <:Any, <:Any, IteratorIterator()}) = I
 
 const RowIterator{B, T, IterateValues, IterationType} = VectorIterator{B, RowMajor(), T, IterateValues, IterationType}
 const ColIterator{B, T, IterateValues, IterationType} = VectorIterator{B, ColMajor(), T, IterateValues, IterationType}
+
+defaultiteration(::Integer) = NeighborIterator()
+defaultiteration(::AbstractVector) = IndicesIterator()
 
 RowIterator(A::AbstractGBArray, v, iteratevalues::Bool, indexiteration::IndexIteratorType = NeighborIterator()) =
     storageorder(A) === RowMajor() ? VectorIterator{iteratevalues, indexiteration}(A, v) : 
@@ -256,3 +274,8 @@ function Base.iterate(I::VectorIterator)
     return _seek(I.iterator, I.v isa Int64 ? I.v : I.v.start) == LibGraphBLAS.GrB_NO_VALUE ? knext(I) : (get_element(I), nothing)
 end
 Base.iterate(I::VectorIterator, ::Nothing) = inext(I)
+
+Base.getindex(A::AbstractArray, I::GxBIterator) = getindex(A, getrow(I), getcol(I))
+Base.getindex(A::AbstractArray, v::VectorIterator) = getindex(A, v.iterator)
+Base.setindex!(A::AbstractArray, x, I::GxBIterator) = setindex!(A, x, getrow(I), getcol(I))
+Base.setindex!(A::AbstractArray, x, v::VectorIterator) = setindex!(A, x, v.iterator)

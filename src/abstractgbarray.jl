@@ -247,12 +247,12 @@ function build!(A::AbstractGBMatrix{T}, I::AbstractVector, J::AbstractVector, x:
     @wraperror LibGraphBLAS.GxB_Matrix_build_Scalar(
         A,
         Vector{LibGraphBLAS.GrB_Index}(decrement!(I)),
-        Vector{LibGraphBLAS.GrB_Index}(decrement!(J)),
+        Vector{LibGraphBLAS.GrB_Index}(I !== J ? decrement!(J) : J),
         x,
         length(I)
     )
     increment!(I)
-    increment!(J)
+    I !== J && (increment!(J))
     return A
 end
 
@@ -296,7 +296,7 @@ for T ∈ valid_vec
             length(X) == length(I) == length(J) ||
                 DimensionMismatch("I, J and X must have the same length")
             decrement!(I)
-            decrement!(J)
+            I !== J && (decrement!(J))
             @wraperror LibGraphBLAS.$func(
                 A,
                 I,
@@ -306,7 +306,7 @@ for T ∈ valid_vec
                 combine
             )
             increment!(I)
-            increment!(J)
+            I !== J && (increment!(J))
             return A
         end
     end
@@ -535,7 +535,7 @@ function subassign!(
     desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
-    J = decrement!(J)
+    I !== J && (J = decrement!(J))
     rereshape = false
     sz1 = size(A, 1)
     if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
@@ -553,7 +553,7 @@ function subassign!(
         parent(A), true, sz1, 1, C_NULL)
     end
     increment!(I)
-    increment!(J)
+    I !== J && (increment!(J))
     return A
 end
 
@@ -565,12 +565,12 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     I, ni = idx(I)
     J, nj = idx(J)
     I = decrement!(I)
-    J = decrement!(J)
+    I !== J && (J = decrement!(J))
     desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
     _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
     increment!(I)
-    increment!(J)
+    I !== J && (decrement!(J))
     return x
 end
 
@@ -638,13 +638,13 @@ function assign!(
     desc = _handledescriptor(desc; in1=A, out=C)
     mask = _handlemask!(desc, mask)
     I = decrement!(I)
-    J = decrement!(J)
+    I !== J && (J = decrement!(J))
     if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
         A = LinearAlgebra.copy_oftype(A, eltype(C))
     end
     @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
     increment!(I)
-    increment!(J)
+    I !== J && (decrement!(J))
     return A
 end
 
@@ -656,12 +656,12 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     I, ni = idx(I)
     J, nj = idx(J)
     I = decrement!(I)
-    J = decrement!(J)
+    I !== J && (J = decrement!(J))
     desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
     _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
     increment!(I)
-    increment!(J)
+    I !== J && (decrement!(J))
     return x
 end
 
@@ -719,7 +719,7 @@ function GBDiagonal!(C::AbstractGBMatrix, v::AbstractGBVector, k::Integer=0; des
     return C
 end
 function GBDiagonal!(C::AbstractGBMatrix{T}, v::AbstractVector, k::Integer=0; desc = nothing) where T
-    v2 = GBShallowVector(convert(DenseVector{T}, v))
+    v2 = GBShallowVector(convert(Vector{T}, v))
     GBDiagonal!(C, v2, k; desc)
 end
 function GBDiagonal!(C::AbstractGBMatrix, D::Diagonal; desc = nothing)
@@ -735,7 +735,6 @@ function GBDiagonal(v::AbstractGBVector, k::Integer=0; desc = nothing)
     C = GBMatrix{storedeltype(v)}(s, s; fill = getfill(v))
     GBDiagonal!(C, v, k; desc)
 end
-
 
 # Type dependent functions build, setindex, getindex, and findnz:
 for T ∈ valid_vec

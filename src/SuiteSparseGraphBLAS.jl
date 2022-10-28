@@ -101,6 +101,7 @@ include("chainrules/constructorrules.jl")
 include("serialization.jl")
 
 #EXPERIMENTAL
+include("linalg.jl")
 include("misc.jl")
 include("mmread.jl")
 include("iterator.jl")
@@ -133,7 +134,7 @@ export extract, extract!, subassign!, assign!, hvcat! #array functions
 
 #operations
 export select, select!, eadd, eadd!, emul, emul!, gbtranspose, gbtranspose!,
-gbrand, eunion, eunion!, mask, mask!, apply, apply!, setfill, setfill!
+gbrand, eunion, eunion!, mask, mask!, apply, apply!, setfill, setfill!, gbrandn
 # Reexports from LinAlg
 export diag, diagm, mul!, kron, kron!, transpose, reduce, tril, triu
 
