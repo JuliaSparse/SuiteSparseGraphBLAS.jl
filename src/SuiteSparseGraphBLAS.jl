@@ -38,6 +38,7 @@ include("operators/libgbops.jl")
 
 include("gbtypes.jl")
 include("types.jl")
+include("scalar.jl")
 include("mem.jl")
 
 
@@ -55,11 +56,11 @@ using .UnaryOps
 using .BinaryOps
 using .Monoids
 using .Semirings
+using .IndexUnaryOps
 
 include("indexutils.jl")
 # 
 include("operations/extract.jl")
-include("scalar.jl")
 include("gbvector.jl")
 include("gbmatrix.jl")
 include("abstractgbarray.jl")
@@ -159,8 +160,6 @@ function __init__()
     for type ∈ valid_vec
         Base.unsafe_convert(LibGraphBLAS.GrB_Type, gbtype(type))
     end
-    # Eagerly load selectops constants.
-    _loadselectops()
     ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)
     # Set printing done by SuiteSparse:GraphBLAS to base-1 rather than base-0.
     gbset(BASE1, 1)

@@ -13,7 +13,7 @@ function gxbstring(x, name = "", level::LibGraphBLAS.GxB_Print_Level = LibGraphB
             @wraperror LibGraphBLAS.GxB_BinaryOp_fprint(x, name, level, cf)
         elseif x isa LibGraphBLAS.GrB_Monoid
             @wraperror LibGraphBLAS.GxB_Monoid_fprint(x, name, level, cf)
-        elseif x isa SelectUnion
+        elseif x isa LibGraphBLAS.GrB_IndexUnaryOp
             @wraperror LibGraphBLAS.GxB_SelectOp_fprint(x, name, level, cf)
         elseif x isa LibGraphBLAS.GrB_Semiring
             @wraperror LibGraphBLAS.GxB_Semiring_fprint(x, name, level, cf)

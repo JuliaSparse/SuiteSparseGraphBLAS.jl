@@ -25,8 +25,8 @@ end
 SuiteSparseGraphBLAS.binaryop(f::F, ::Type{X}, ::Type{X}) where {F, X} = fallback_binaryop(f, X, X)
 
 function SuiteSparseGraphBLAS.binaryop(
-    f::F, ::Type{X}, ::Type{Y}
-) where {F, X, Y}
+    f, ::Type{X}, ::Type{Y}
+) where {X, Y}
     P = promote_type(X, Y)
     if isconcretetype(P) && (X <: valid_union && Y <: valid_union)
         return binaryop(f, P, P)
@@ -41,8 +41,8 @@ SuiteSparseGraphBLAS.binaryop(f, ::GBArrayOrTranspose{T}, ::Type{U}) where {T, U
 SuiteSparseGraphBLAS.binaryop(f, ::Type{T}, ::GBArrayOrTranspose{U}) where {T, U} = binaryop(f, T, U)
 
 SuiteSparseGraphBLAS.binaryop(f, type) = binaryop(f, type, type)
-SuiteSparseGraphBLAS.binaryop(op::TypedBinaryOperator, x...) = op
-
+SuiteSparseGraphBLAS.binaryop(op::TypedBinaryOperator, ::Type{X}, ::Type{Y}) where {X, Y} = op
+SuiteSparseGraphBLAS.binaryop(op::TypedBinaryOperator, ::Type{X}) where X = op
 SuiteSparseGraphBLAS.juliaop(op::TypedBinaryOperator) = op.fn
 
 # TODO, clean up this function, it allocates typedop and is otherwise perhaps a little slow.

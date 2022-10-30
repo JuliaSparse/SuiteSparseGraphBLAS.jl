@@ -11,9 +11,9 @@ export positioni, positionj, frexpx, frexpe
 
 using SpecialFunctions
 
-const UNARYOPS = IdDict{Tuple{<:Base.Callable, DataType}, TypedUnaryOperator}()
+const UNARYOPS = IdDict{Tuple{<:Any, DataType}, TypedUnaryOperator}()
 
-function unaryop(f::F, ::Type{T}) where {F<:Base.Callable, T}
+function unaryop(f, ::Type{T}) where T
     return get!(UNARYOPS, (f, T)) do
         TypedUnaryOperator(f, T)
     end
@@ -21,7 +21,7 @@ end
 
 unaryop(f, ::GBArrayOrTranspose{T}) where T = unaryop(f, T)
 unaryop(op::TypedUnaryOperator, ::GBArrayOrTranspose{T}) where T = op
-unaryop(op::TypedUnaryOperator, x...) = op
+unaryop(op::TypedUnaryOperator, ::Type{X}) where X = op
 
 SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn
 

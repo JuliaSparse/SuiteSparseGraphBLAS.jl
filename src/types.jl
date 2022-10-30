@@ -62,7 +62,67 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
         op.loaded = true
     end
     if !op.loaded
-        error("This operator could not be loaded, and is invalid.")
+        error("This operator $(op.fn) could not be loaded, and is invalid.")
+    else
+        return op.p
+    end
+end
+
+mutable struct TypedIndexUnaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
+    builtin::Bool
+    loaded::Bool
+    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
+    p::LibGraphBLAS.GrB_IndexUnaryOp
+    fn::F
+    keepalive::Any
+    function TypedIndexUnaryOperator{F, X, Y, Z}(builtin, loaded, typestr, p, fn::F) where {F, X, Y, Z}
+        binop = new(builtin, loaded, typestr, p, fn, nothing)
+        return finalizer(binop) do op
+            @wraperror LibGraphBLAS.GrB_IndexUnaryOp_free(Ref(op.p))
+        end
+    end
+end
+function TypedIndexUnaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
+    return TypedIndexUnaryOperator{F, X, Y, Z}(false, false, string(fn), LibGraphBLAS.GrB_IndexUnaryOp(), fn)
+end
+
+function TypedIndexUnaryOperator(fn::F, ::Type{X}, ::Type{Y}) where {F, X, Y}
+    return TypedIndexUnaryOperator(fn, X, Y, Base._return_type(fn, Tuple{LibGraphBLAS.GrB_Index, LibGraphBLAS.GrB_Index, X, Y}))
+end
+
+function (op::TypedIndexUnaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
+    return op
+end
+(op::TypedIndexUnaryOperator)(T) = op(T, T)
+
+@generated function cidxunary(f::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
+    if Base.issingletontype(F)
+        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X}, LibGraphBLAS.GrB_Index, LibGraphBLAS.GrB_Index, Ref{Y})))
+    else
+        throw("Unsupported function $f")
+    end
+end
+
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_IndexUnaryOp}, op::TypedIndexUnaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
+    if !op.loaded
+        if op.builtin
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_IndexUnaryOp)
+        else
+            fn = op.fn
+            function idxunaryopfn(z, x, i, j, y)
+                unsafe_store!(z, fn(x, i + 1, j + 1, y))
+                return nothing
+            end
+            opref = Ref{LibGraphBLAS.GrB_IndexUnaryOp}()
+            idxunaryopfn_C = cidxunary(idxunaryopfn, X, Y, Z)
+            op.keepalive = (idxunaryopfn, idxunaryopfn_C)
+            @wraperror LibGraphBLAS.GxB_IndexUnaryOp_new(opref, idxunaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn), "")
+            op.p = opref[]
+        end
+        op.loaded = true
+    end
+    if !op.loaded
+        error("This operator $(op.fn) could not be loaded, and is invalid.")
     else
         return op.p
     end
@@ -122,7 +182,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryO
         op.loaded = true
     end
     if !op.loaded
-        error("This operator could not be loaded, and is invalid.")
+        error("This operator $(op.fn) could not be loaded, and is invalid.")
     else
         return op.p
     end

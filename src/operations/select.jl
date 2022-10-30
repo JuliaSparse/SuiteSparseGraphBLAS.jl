@@ -1,35 +1,48 @@
 # TODO: update to modern op system.
 
+function defaultselectthunk(op, T)
+    if op ∈ (rowindex, colindex, diagindex)
+        return one(Int64)
+    elseif op ∈ (tril, triu, diag, offdiag)
+        return zero(Int64)
+    elseif op === ==
+        return zero(T)
+    else
+        throw(ArgumentError("You must pass `thunk` to select for this function."))
+    end
+end
+
 "In place version of `select`."
 function select!(
     op,
     C::GBVecOrMat,
-    A::GBArrayOrTranspose,
-    thunk = nothing;
+    A::GBArrayOrTranspose{T},
+    thunk::TH = defaultselectthunk(op, T);
     mask = nothing,
     accum = nothing,
     desc = nothing
-)
+) where {T, TH}
+    op ∈ (rowindex, colindex, diagindex, tril, triu, diag, offdiag) && 
+        (thunk = convert(Int64, thunk))
     _canbeoutput(C) || throw(ShallowException())
-    op = SelectOp(op)
+    op = indexunaryop(op, T, TH)
     desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
-    thunk === nothing && (thunk = C_NULL)
     accum = _handleaccum(accum, storedeltype(C))
-    if thunk isa Number
-        thunk = GBScalar(thunk)
-    end
-    @wraperror LibGraphBLAS.GxB_Matrix_select(C, mask, accum, op, parent(A), thunk, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_select_Scalar(C, mask, accum, op, parent(A), GBScalar(thunk), desc)
     return C
 end
 
-function select!(op, A::GBArrayOrTranspose, thunk = nothing; mask = nothing, accum = nothing, desc = nothing)
+function select!(
+    op, A::GBArrayOrTranspose{T}, thunk = defaultselectthunk(op, T); 
+    mask = nothing, accum = nothing, desc = nothing
+) where T
     return select!(op, A, A, thunk; mask, accum, desc)
 end
 
 """
-    select(op::Union{Function, SelectUnion}, A::GBArrayOrTranspose; kwargs...)::GBArrayOrTranspose
-    select(op::Union{Function, SelectUnion}, A::GBArrayOrTranspose, thunk; kwargs...)::GBArrayOrTranspose
+    select(op::Function, A::GBArrayOrTranspose; kwargs...)::GBArrayOrTranspose
+    select(op::Function, A::GBArrayOrTranspose, thunk; kwargs...)::GBArrayOrTranspose
 
 Return a `GBArray` whose elements satisfy the predicate defined by `op`.
 Some SelectOps or functions may require an additional argument `thunk`, for use in
@@ -37,7 +50,7 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
     performed by `select(>, A, thunk)`.
 
 # Arguments
-- `op::Union{Function, SelectUnion}`: A select operator from the SelectOps submodule.
+- `op::Function`: A select operator from the SelectOps submodule.
 - `A::GBArrayOrTranspose`
 - `thunk::Union{GBScalar, nothing, valid_union}`: Optional value used to evaluate `op`.
 
@@ -53,19 +66,19 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 """
 function select(
     op,
-    A::GBArrayOrTranspose,
-    thunk = nothing;
+    A::GBArrayOrTranspose{T},
+    thunk::TH = defaultselectthunk(op, T);
     mask = nothing,
     accum = nothing,
     desc = nothing
-)
-    op = SelectOp(op)
-    C = similar(A)
+) where {T, TH}
+    op = indexunaryop(op, T, TH)
+    C = similar(A) # we keep the same type!! not the ztype of op.
     select!(op, C, A, thunk; accum, mask, desc)
     return C
 end
 
 LinearAlgebra.tril(A::GBArrayOrTranspose, k::Integer = 0) = select(tril, A, k)
 LinearAlgebra.triu(A::GBArrayOrTranspose, k::Integer = 0) = select(triu, A, k)
-SparseArrays.dropzeros(A::GBArrayOrTranspose) = select(nonzeros, A)
-SparseArrays.dropzeros!(A::GBArrayOrTranspose) = select!(nonzeros, A)
+SparseArrays.dropzeros(A::GBArrayOrTranspose{T}) where T = select(!=, A, zero(T))
+SparseArrays.dropzeros!(A::GBArrayOrTranspose{T}) where T = select!(!=, A, zero(T))
