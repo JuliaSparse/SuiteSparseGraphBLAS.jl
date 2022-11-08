@@ -91,6 +91,14 @@ modifying(::typeof(emul)) = emul!
         if right isa Broadcast.Broadcasted
             right = copy(right)
         end
+        if left isa AbstractVector && right isa GBMatrixOrTranspose && 
+            !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
+            return *(Diagonal(left), right, (any, f))
+        end
+        if left isa GBMatrixOrTranspose && right isa Transpose{<:Any, <:AbstractVector} && 
+            !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
+            return *(left, Diagonal(right), (any, f))
+        end
         if left isa StridedArray
             left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
         end
@@ -103,14 +111,7 @@ modifying(::typeof(emul)) = emul!
         # for many operations. But for non-builtins we'd need an API of sorts.
         # To get around this for now we will require that Vectors be on the left
         # and transposed vectors be on the right.
-        if left isa AbstractVector && right isa GBMatrixOrTranspose && 
-            !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
-            return *(Diagonal(left), right, (any, f))
-        end
-        if left isa GBMatrixOrTranspose && right isa Transpose{<:Any, <:AbstractVector} && 
-            !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
-            return *(left, Diagonal(right), (any, f))
-        end
+        
         if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
             return add(left, right, f)
