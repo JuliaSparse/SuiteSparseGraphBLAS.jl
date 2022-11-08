@@ -1,7 +1,7 @@
 name = "SuiteSparseGraphBLAS"
 uuid = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
-authors = ["Will Kimmerer <wrkimmerer@outlook.com", "Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
-version = "0.8.0"
+authors = ["Will Kimmerer <kimmerer@mit.edu>", "Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
+version = "0.9.0"
 
 [deps]
 Blobs = "163b9779-6631-5f90-a265-3de947924de8"
