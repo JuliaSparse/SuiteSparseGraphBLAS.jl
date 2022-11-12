@@ -416,6 +416,40 @@ eunion(
     mask = nothing, accum = nothing, desc = nothing
 ) = eunion(A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; mask, accum, desc)
 
+eunion(
+    A::GBArrayOrTranspose, B::GBArrayOrTranspose, op::Function = +; 
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion(A, getfill(A), B, getfill(B), op; mask, accum, desc)
+
+eunion(
+    A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, op::Function = +; 
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion(A, α, B, getfill(B), op; mask, accum, desc)
+
+eunion(
+    A::GBArrayOrTranspose, B::GBArrayOrTranspose, β, op::Function = +; 
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion(A, getfill(A), B, β, op; mask, accum, desc)
+
+eunion!(
+    C::GBVecOrMat, A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, β, op = +;
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion!(C, A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; mask, accum, desc)
+
+eunion!(
+    C::GBVecOrMat, A::GBArrayOrTranspose, B::GBArrayOrTranspose, op::Function = +; 
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion!(C, A, getfill(A), B, getfill(B), op; mask, accum, desc)
+
+eunion!(
+    C::GBVecOrMat, A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, op::Function = +; 
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion!(C, A, α, B, getfill(B), op; mask, accum, desc)
+
+eunion!(
+    C::GBVecOrMat, A::GBArrayOrTranspose, B::GBArrayOrTranspose, β, op::Function = +; 
+    mask = nothing, accum = nothing, desc = nothing
+) = eunion!(C, A, getfill(A), B, β, op; mask, accum, desc)
 
 function Base.:+(A::GBArrayOrTranspose, B::GBArrayOrTranspose)
     eadd(A, B, +)
