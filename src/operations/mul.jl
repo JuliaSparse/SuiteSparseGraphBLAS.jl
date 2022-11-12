@@ -191,6 +191,16 @@ function Base.:*(rig::TypedSemiring)
 end
 
 # Diagonal
+function LinearAlgebra.mul!(C::GBVecOrMat, D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
+    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
+        SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
+    return mul!(C, G(D), A, op; mask, accum, desc)
+end
+function LinearAlgebra.mul!(C::GBVecOrMat, A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
+    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
+        SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
+    return mul!(C, A, G(D), op; mask, accum, desc)
+end
 function Base.:*(D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
     {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}

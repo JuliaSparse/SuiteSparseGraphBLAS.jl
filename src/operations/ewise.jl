@@ -31,10 +31,10 @@ function emul!(
     desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    desc = _handledescriptor(desc; out=C, in1=A, in2=B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
-    size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
+    size(C, 2) == size(A, 2) == size(B, 2) || (return _bcastemul!(C, A, B, op; mask, accum, desc))
+    desc = _handledescriptor(desc; out=C, in1=A, in2=B)
     op = binaryop(op, A, B)
     accum = _handleaccum(accum, storedeltype(C))
     if op isa TypedBinaryOperator
@@ -84,6 +84,116 @@ function emul(
     return emul!(C, A, B, op; mask, accum, desc)
 end
 
+# we assume mismatched sizes here.
+# function _bcastemul!(
+#     C::GBVecOrMat,
+#     A::GBArrayOrTranspose,
+#     B::GBArrayOrTranspose,
+#     op = *;
+#     mask = nothing,
+#     accum = nothing,
+#     desc = nothing
+# )
+#     # bcast A[1] into B
+#     length(A) == 1 && (return apply!(C, op, A[1], B; mask, accum, desc))
+#     # bcast B[1] into A
+#     length(B) == 1 && (return apply!(C, op, A, B[1]; mask, accum, desc))
+# 
+#     if size(A, 2) != size(B, 2) && size(A, 1) == size(B, 1)
+#         if size(A, 2) == 1
+#             vec, mat = A, B
+#         elseif size(B, 2) == 1
+#             vec, mat = B, A
+#             op = _swapop(op)
+#         else
+#             throw(DimensionMismatch("arrays could not be broadcast to a common size;" * 
+#                 "got a dimension with lengths $(size(A, 2)) and $(size(B, 2))"))
+#         end
+#         return mul!(C, Diagonal(vec), mat, (any, op); mask, accum, desc)
+#     end
+#     if size(A, 2) == size(B, 2) && size(A, 1) != size(B, 1)
+#         if size(A, 1) == 1
+#             vec, mat = B, A
+#             op = _swapop(op)
+#         elseif size(B, 1) == 1
+#             vec, mat = A, B
+#         else
+#             throw(DimensionMismatch("arrays could not be broadcast to a common size;" * 
+#                 "got a dimension with lengths $(size(A, 1)) and $(size(right, 1))"))
+#         end
+#         return mul!(C, mat, Diagonal(parent(vec)), (any, op); mask, accum, desc)
+#     end
+#     throw(DimensionMismatch())
+# end
+
+# outer prod
+function _bcastemul!(
+    C::AbstractGBArray, A::AbstractGBVector, B::Transpose{<:Any, <:AbstractGBVector}, op;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return mul!(C, A, B, (any, op); mask, accum, desc)
+end
+# also outer prod
+function _bcastemul!(
+    C::AbstractGBArray, A::Transpose{<:Any, <:AbstractGBVector}, B::AbstractGBVector, op;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    op2 = _swapop(op)
+    if op2 === nothing # worst possible fallback
+        full = similar(B)
+        full[:] = 0
+        T1 = *(full, A, (any, second); mask)
+        full = similar(A)
+        full[:] = 0
+        T2 = *(B, full, (any, first); mask)
+        return emul!(C, T1, T2, op; mask, accum, desc)
+    end
+    return mul!(C, B, A, (any, op2); mask, accum, desc)
+end
+# A::Matrix .* v::Vector
+function _bcastemul!(
+    C::AbstractGBArray, A::GBMatrixOrTranspose, B::AbstractGBVector, op;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    op2 = _swapop(op)
+    if op2 === nothing # manually bcast:
+        full = similar(B)
+        full[:] = 0
+        T = *(B, full', (any, first); mask)
+        return emul!(C, A, T, op; mask, accum, desc)
+    end
+    return mul!(C, Diagonal(B), A, (any, op2); mask, accum, desc)
+end
+# v .* A
+function _bcastemul!(
+    C::AbstractGBArray, A::AbstractGBVector,  B::GBMatrixOrTranspose, op;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return mul!(C, Diagonal(A), B, (any, op); mask, accum, desc)
+end
+
+# A::Matrix .* v::Vector'
+function _bcastemul!(
+    C::AbstractGBArray, A::GBMatrixOrTranspose, B::Transpose{<:Any, <:AbstractGBVector}, op;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    return mul!(C, A, Diagonal(parent(B)), (any, op); mask, accum, desc)
+end
+# v' .* A
+function _bcastemul!(
+    C::AbstractGBArray, A::Transpose{<:Any, <:AbstractGBVector},  B::GBMatrixOrTranspose, op;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    op2 = _swapop(op)
+    if op2 === nothing
+        full = similar(A)
+        full[:] = 0
+        T = *(A, full', (any, first); mask)
+        return emul!(C, T, B, op; mask, accum, desc)
+    end
+    return mul!(C, B, Diagonal(parent(A)), (any, op2); mask, accum, desc)
+end
+
 """
     eadd!(C::GBVecOrMat, A::GBArrayOrTranspose, B::GBArrayOrTranspose, op = +; kwargs...)::GBVecOrMat
 
@@ -122,7 +232,7 @@ function eadd!(
     desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
     mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
-    size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
+    size(C, 2) == size(A, 2) == size(B, 2) || (return _bcasteadd!(C, A, B, op; mask, accum, desc))
     op = binaryop(op, A, B)
     accum = _handleaccum(accum, storedeltype(C))
     if op isa TypedBinaryOperator
@@ -171,6 +281,48 @@ function eadd(
     return eadd!(C, A, B, op; mask, accum, desc)
 end
 
+function _bcasteadd!(
+    C::GBMatrix,
+    A::GBVectorOrTranspose,
+    B::GBMatrixOrTranspose,
+    op = *;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    full = similar(A)
+    full[:] = 0
+    T = *(A, full', (any, first); mask)
+    eadd!(C, T, B, op; mask, accum, desc)
+end
+function _bcasteadd!(
+    C::GBMatrix,
+    A::GBMatrixOrTranspose,
+    B::GBVectorOrTranspose,
+    op = *;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    full = similar(B)
+    full[:] = 0
+    T = *(B, full', (any, first); mask)
+    eadd!(C, A, T, op; mask, accum, desc)
+end
+function _bcasteadd!(
+    C::GBMatrix,
+    A::GBVectorOrTranspose,
+    B::GBVectorOrTranspose,
+    op = *;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    full = similar(B)
+    full[:] = 0
+    T = *(B, full', (any, first); mask)
+    eadd!(C, A, T, op; mask, accum, desc)
+end
 
 """
     eunion!(C::GBVecOrMat, A::GBArrayOrTranspose{T}, α::T B::GBArrayOrTranspose, β::T, op = +; kwargs...)::GBVecOrMat

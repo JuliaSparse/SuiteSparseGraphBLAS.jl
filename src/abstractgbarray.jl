@@ -54,12 +54,13 @@ Base.promote_rule(::Type{<:AbstractGBVector{T, F}}, ::Type{<:AbstractGBVector{T2
     GBVector{promote_type(T, T2), promote_type(F, F2)}
 
 function gbpromote_strip(A, B)
-    if A isa Transpose{<:Any, <:AbstractGBVector} && B isa Transpose{<:Any, <:AbstractGBVector}
-        return GBMatrix
-    else
-        return promote_type(strip_parameters(typeof(parent(A))), strip_parameters(typeof(parent(B))))
-    end
+    return promote_type(strip_parameters(typeof(parent(A))), strip_parameters(typeof(parent(B))))
 end
+gbpromote_strip(::Transpose{<:Any, <:AbstractGBVector}, ::Transpose{<:Any, <:AbstractGBVector}) = GBMatrix
+gbpromote_strip(::AbstractGBVector, ::Transpose{<:Any, <:AbstractGBVector}) = GBMatrix
+gbpromote_strip(::Transpose{<:Any, <:AbstractGBVector}, ::AbstractGBVector) = GBMatrix
+
+
 
 Base.IndexStyle(::AbstractGBArray) = IndexCartesian()
 Base.eltype(::AbstractGBArray{T, F}) where {T, F} = Union{T, F}
@@ -534,6 +535,7 @@ function subassign!(
     J, nj = idx(J)
     desc = _handledescriptor(desc; out=C, in1=A)
     mask = _handlemask!(desc, mask)
+    mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
     I = decrement!(I)
     I !== J && (J = decrement!(J))
     rereshape = false
@@ -568,6 +570,7 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     I !== J && (J = decrement!(J))
     desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
+    mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
     _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
     increment!(I)
     I !== J && (decrement!(J))
@@ -637,6 +640,7 @@ function assign!(
     J, nj = idx(J)
     desc = _handledescriptor(desc; in1=A, out=C)
     mask = _handlemask!(desc, mask)
+    mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
     I = decrement!(I)
     I !== J && (J = decrement!(J))
     if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
@@ -659,6 +663,7 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     I !== J && (J = decrement!(J))
     desc = _handledescriptor(desc; out=C)
     mask = _handlemask!(desc, mask)
+    mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
     _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
     increment!(I)
     I !== J && (decrement!(J))

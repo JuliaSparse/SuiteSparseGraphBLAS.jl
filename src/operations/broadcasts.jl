@@ -26,6 +26,8 @@ Base.BroadcastStyle(::Type{<:AbstractGBVector}) = GBVectorStyle()
 Base.BroadcastStyle(::Type{<:AbstractGBMatrix}) = GBMatrixStyle()
 Base.BroadcastStyle(::Type{<:Transpose{T, <:AbstractGBMatrix} where T}) = GBMatrixStyle()
 Base.BroadcastStyle(::Type{<:Adjoint{T, <:AbstractGBMatrix} where T}) = GBMatrixStyle()
+Base.BroadcastStyle(::Type{<:Transpose{T, <:AbstractGBVector} where T}) = GBVectorStyle()
+Base.BroadcastStyle(::Type{<:Adjoint{T, <:AbstractGBVector} where T}) = GBVectorStyle()
 
 #
 GBVectorStyle(::Val{0}) = GBVectorStyle()
@@ -90,14 +92,6 @@ modifying(::typeof(emul)) = emul!
         end
         if right isa Broadcast.Broadcasted
             right = copy(right)
-        end
-        if left isa AbstractVector && right isa GBMatrixOrTranspose && 
-            !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
-            return *(Diagonal(left), right, (any, f))
-        end
-        if left isa GBMatrixOrTranspose && right isa Transpose{<:Any, <:AbstractVector} && 
-            !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
-            return *(left, Diagonal(right), (any, f))
         end
         if left isa StridedArray
             left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
@@ -177,14 +171,6 @@ mutatingop(::typeof(apply)) = apply!
                     # If they're further nested broadcasts we can't fuse them, so just copy.
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
-                    if left isa AbstractVector && right isa GBMatrixOrTranspose && 
-                        !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
-                        return *(Diagonal(left), right, (any, f); accum)
-                    end
-                    if left isa GBMatrixOrTranspose && right isa Transpose{<:Any, <:AbstractVector} && 
-                        !(size(left, 1) == size(right, 1) && size(left, 2) == size(right, 2))
-                        return *(left, Diagonal(right), (any, f); accum)
-                    end
                     if subargleft isa StridedArray
                         subargleft = pack(subargleft; fill = subargright isa GBArrayOrTranspose ? getfill(right) : 0)
                     end
@@ -366,3 +352,68 @@ function Base.materialize!(
 end 
 
 Base.Broadcast.broadcasted(::Type{T}, A::AbstractGBArray) where T = LinearAlgebra.copy_oftype(A, T)
+
+# This is overly verbose, perhaps a macro?
+# return an operator that swaps the order of the operands.
+# * -> *, first -> second, second -> first, - -> rminus, etc.
+_swapop(op) = throw(ArgumentError("Cannot swap order of operands automatically. Swap the order of the broadcast statement or overload `_swapop`"))
+_swapop(::typeof(first)) = second
+_swapop(::typeof(second)) = first
+
+_swapop(::typeof(any)) = any
+
+_swapop(::typeof(pair)) = pair
+
+_swapop(::typeof(+)) = +
+_swapop(::typeof(-)) = rminus
+_swapop(::typeof(rminus)) = -
+
+_swapop(::typeof(*)) = *
+_swapop(::typeof(/)) = \
+_swapop(::typeof(\)) = /
+
+# ^ / POW doesn't have an equivalent builtin... Error for now.
+
+_swapop(::typeof(iseq)) = iseq
+_swapop(::typeof(isne)) = isne
+
+_swapop(::typeof(min)) = min
+_swapop(::typeof(max)) = max
+
+_swapop(::typeof(isgt)) = isle
+_swapop(::typeof(isle)) = isgt
+
+_swapop(::typeof(isge)) = islt
+_swapop(::typeof(islt)) = isge
+
+_swapop(::typeof(∨)) = ∨
+_swapop(::typeof(∧)) = ∧
+
+_swapop(::typeof(lxor)) = lxor
+_swapop(::typeof(xnor)) = xnor
+
+_swapop(::typeof(==)) = ==
+_swapop(::typeof(!=)) = !=
+
+_swapop(::typeof(>)) = <=
+_swapop(::typeof(<=)) = >
+_swapop(::typeof(<)) = >=
+_swapop(::typeof(>=)) = <
+
+# I'm not going to bother with the trig/mod/sign/complex/etc. If you need them please open an issue.
+
+_swapop(::typeof(|)) = |
+_swapop(::typeof(&)) = &
+_swapop(::typeof(⊻)) = ⊻
+_swapop(::typeof(bxnor)) = bxnor
+# bshift has no obvious equivalent in the builtins
+
+_swapop(::typeof(firsti0)) = secondi0
+_swapop(::typeof(secondi0)) = firsti0
+_swapop(::typeof(firsti)) = secondi
+_swapop(::typeof(secondi)) = firsti
+
+_swapop(::typeof(firstj0)) = secondj0
+_swapop(::typeof(secondj0)) = firstj0
+_swapop(::typeof(firstj)) = secondj
+_swapop(::typeof(secondj)) = firstj

@@ -34,18 +34,46 @@ function idx(I)
     end
 end
 
-# This function assumes that szA and szB are
-# technically equal and that
-# 1 <= length(szA | szB) <= 2
-# size checks should be done elsewhere.
-function _combinesizes(A, B)
-    if A isa Transpose{<:Any, <:AbstractVector} && B isa Transpose{<:Any, <:AbstractVector}
-        return size(A)
-    end
-    if (A isa AbstractVector && B isa AbstractMatrix) ||
-        (B isa AbstractVector && A isa AbstractMatrix)
-        return (size(A, 1), size(A, 2))
-    else
-        return size(A)
-    end
+# Combine sizes for bcasting purposes
+# This is quite inelegant :(, does this already exist somewhere?
+function _combinesizes(A::AbstractGBVector, B::AbstractGBVector)
+    size(A) == size(B) && (return size(A)) # same size
+    size(A, 1) == 1 && (return size(B)) # bcast A into B
+    size(B, 1) == 1 && (return size(A)) # bcast B into A
+    throw(DimensionMismatch("Got mismatched dimensions $(size(A)), $(size(B))"))
 end
+function _combinesizes(A::Transpose{<:Any, <:AbstractGBVector}, B::Transpose{<:Any, <:AbstractGBVector})
+    size(A) == size(B) && (return size(A)) # same size 
+    size(A, 2) == 1 && (return size(B)) # bcast A into B
+    size(B, 2) == 1 && (return size(A)) # bcast B into A
+    throw(DimensionMismatch("Got mismatched dimensions $(size(A)), $(size(B))"))
+end
+# Outer products (dot is done by mul[!])
+function _combinesizes(A::AbstractGBVector, B::Transpose{<:Any, <:AbstractGBVector})
+    return (size(A, 1), size(B, 2))
+end
+function _combinesizes(A::Transpose{<:Any, <:AbstractGBVector}, B::AbstractGBVector)
+    return (size(B, 1), size(A, 2))
+end
+
+function _combinesizes(A::GBMatrixOrTranspose, v::AbstractGBVector)
+    length(v)
+    size(A, 1) == size(v, 1) && (return size(A))
+    throw(DimensionMismatch("Got mismatched dimensions $(size(A, 1)) and $(size(v, 1))"))
+end
+function _combinesizes(v::AbstractGBVector, A::GBMatrixOrTranspose)
+    size(A, 1) == size(v, 1) && (return size(A))
+    throw(DimensionMismatch("Got mismatched dimensions $(size(v, 1)) and $(size(A, 1))"))
+end
+
+function _combinesizes(A::GBMatrixOrTranspose, v::Transpose{<:Any, <:AbstractGBVector})
+    size(A, 2) == size(v, 2) && (return size(A))
+    throw(DimensionMismatch("Got mismatched dimensions $(size(A, 2)) and $(size(v, 2))"))
+end
+function _combinesizes(v::Transpose{<:Any, <:AbstractGBVector}, A::GBMatrixOrTranspose)
+    size(A, 2) == size(v, 2) && (return size(A))
+    throw(DimensionMismatch("Got mismatched dimensions $(size(v, 2)) and $(size(A, 2))"))
+end
+
+_combinesizes(A::GBMatrixOrTranspose, B::GBMatrixOrTranspose) = size(A) == size(B) ? size(A) : 
+    throw(DimensionMismatch("Got mismatched dimensions: $(size(A)) and $(size(B))"))
