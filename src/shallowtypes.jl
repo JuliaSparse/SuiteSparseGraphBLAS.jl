@@ -44,7 +44,10 @@ function Base.copy(A::GBShallowMatrix{T}) where {T}
     r = _copyGrBMat(A.p)
     return GBMatrix{T}(r; fill = A.fill)
 end
-
+function Base.copy(A::GBShallowVector{T}) where {T}
+    r = _copyGrBMat(A.p)
+    return GBVector{T}(r; fill = A.fill)
+end
 
 # similar functions:
 # Note well, these should *never* return a GBShallowArray.
@@ -94,3 +97,4 @@ Base.resize!(::GBShallowMatrix, nrows, ncols) = throw(ShallowException())
 Base.resize!(::GBShallowVector, nrows) = throw(ShallowException())
 build!(::GBShallowMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where T = throw(ShallowException())
 
+LinearAlgebra.Diagonal(v::GBShallowVector) = Diagonal(copy(v))

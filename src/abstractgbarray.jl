@@ -205,7 +205,8 @@ reshape!(A::AbstractGBMatrix, dims...; bycol = true) =
     reshape!(A, dims...; bycol)
 reshape!(A::AbstractGBMatrix, n; bycol = true) =
     reshape!(A, n, 1; bycol)
-function Base.reshape(
+
+function _reshape(
     A::AbstractGBMatrix, nrows::Int, ncols::Int; 
     bycol = true, desc = nothing)
     desc = _handledescriptor(desc)
@@ -214,10 +215,15 @@ function Base.reshape(
         C, A, 
         bycol, nrows, ncols, desc
     )
-    out = similar(A)
-    out.p = finalizer(C) do ref
+    return finalizer(C) do ref
         @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
     end
+end
+function Base.reshape(
+    A::AbstractGBMatrix, nrows::Int, ncols::Int; 
+    bycol = true, desc = nothing)
+    out = similar(A)
+    out.p = _reshape(A, nrows, ncols; bycol, desc)
     return out
 end
 
@@ -238,7 +244,16 @@ Base.reshape(
     bycol = true
 ) = reshape(A, dims...; bycol)
 
-Base.reshape(A::AbstractGBMatrix, n::Union{Int, Colon}; bycol = true) = reshape(A, n, 1; bycol)
+function Base.reshape(A::AbstractGBMatrix, ::Colon; bycol = true)
+    out = similar(A, length(A))
+    out.p = _reshape(A, length(A), 1; bycol)
+    return out
+end
+Base.reshape(A::AbstractGBMatrix, n::Int; bycol = true) = n == length(A) ? reshape(A, :; bycol) :
+    throw(DimensionMismatch("new dimensions ($n,) must be consistent with array size $(length(A))"))
+Base.reshape(A::AbstractGBMatrix, n::Integer; bycol = true) = n == length(A) ? reshape(A, :; bycol) :
+    throw(DimensionMismatch("new dimensions ($n,) must be consistent with array size $(length(A))"))
+
 
 function build!(A::AbstractGBMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where {T}
     nnz(A) == 0 || throw(OutputNotEmptyError())

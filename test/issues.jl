@@ -53,4 +53,18 @@
         A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
         @test reduce(any, A, dims=2) == GBVector([1,3,5,6,8,9,10])
     end
+
+    @testset "#109ish" begin
+        # test that masking works correctly:
+
+    end
+    @testset "#106" begin
+        a = rand(2, 4) |> GBMatrix
+        @test reshape(a, :) isa AbstractVector
+        @test reshape(a, :) == reshape(a, 8)
+    end
+    @testset "#98" begin
+        x = GBMatrix([1,2], [2, 3], [1,2], fill=0)
+        @test Array(x) .* [1,2] ≈ x .* [1,2]
+    end
 end

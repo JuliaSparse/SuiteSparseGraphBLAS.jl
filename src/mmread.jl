@@ -123,6 +123,6 @@ function mmread(filename, infoonly::Bool=false, retcoord::Bool=false)
         end
         (retcoord
          ? (rr, cc, xx, rows, cols, entries, rep, field, symm)
-         : symlabel(GBMatrix(rr, cc, xx, nrows=rows, ncols=cols)))
+         : symlabel(GBMatrix(rr, cc, xx, rows, cols)))
     end
 end
