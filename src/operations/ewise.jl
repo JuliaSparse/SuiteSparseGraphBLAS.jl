@@ -157,7 +157,7 @@ function _bcastemul!(
 )
     op2 = _swapop(op)
     if op2 === nothing # manually bcast:
-        full = similar(B)
+        full = similar(B, size(A, 2))
         full[:] = 0
         T = *(B, full', (any, first); mask)
         return emul!(C, A, T, op; mask, accum, desc)
@@ -186,9 +186,9 @@ function _bcastemul!(
 )
     op2 = _swapop(op)
     if op2 === nothing
-        full = similar(A)
+        full = similar(A, size(B, 1))
         full[:] = 0
-        T = *(A, full', (any, first); mask)
+        T = *(full, A, (any, second); mask)
         return emul!(C, T, B, op; mask, accum, desc)
     end
     return mul!(C, B, Diagonal(parent(A)), (any, op2); mask, accum, desc)

@@ -95,8 +95,6 @@ function Base.:*(
     fill = _promotefill(parent(A), parent(B), op)
     if A isa GBMatrixOrTranspose && B isa AbstractGBVector
         C = similar(A, T, size(A, 1); fill)
-    elseif A isa AbstractGBVector && B isa GBMatrixOrTranspose
-        C = similar(A, T, size(B, 2); fill)
     elseif A isa Transpose{<:Any, <:AbstractGBVector} && B isa AbstractGBVector
         C = similar(A, T, 1; fill)
     else

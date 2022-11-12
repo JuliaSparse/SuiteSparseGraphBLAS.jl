@@ -356,7 +356,7 @@ Base.Broadcast.broadcasted(::Type{T}, A::AbstractGBArray) where T = LinearAlgebr
 # This is overly verbose, perhaps a macro?
 # return an operator that swaps the order of the operands.
 # * -> *, first -> second, second -> first, - -> rminus, etc.
-_swapop(op) = throw(ArgumentError("Cannot swap order of operands automatically. Swap the order of the broadcast statement or overload `_swapop`"))
+_swapop(op) = nothing
 _swapop(::typeof(first)) = second
 _swapop(::typeof(second)) = first
 

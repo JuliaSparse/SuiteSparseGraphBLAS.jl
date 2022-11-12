@@ -6,7 +6,7 @@ function _unpackdensematrix!(
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(C_NULL)
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
         A,
         values,
@@ -32,7 +32,7 @@ function _unpackdensematrix!(
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(C_NULL)
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
         A,
         values,
@@ -60,7 +60,7 @@ function _unpackdensematrixR!(
     desc = _handledescriptor(desc)
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(C_NULL)
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullR(
         A,
         values,
@@ -91,7 +91,7 @@ function _unpackcscmatrix!(
     colptrsize = Ref{LibGraphBLAS.GrB_Index}()
     rowidxsize = Ref{LibGraphBLAS.GrB_Index}()
     valsize = Ref{LibGraphBLAS.GrB_Index}()
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
@@ -106,6 +106,7 @@ function _unpackcscmatrix!(
         isjumbled,
         desc
     )
+    isiso == C_NULL && (isiso = false)
     colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), size(A, 2) + 1)
     rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
     nstored = isiso[] ? 1 : nnonzeros
@@ -141,7 +142,7 @@ function _unpackcsrmatrix!(
     rowptrsize = Ref{LibGraphBLAS.GrB_Index}()
     colidxsize = Ref{LibGraphBLAS.GrB_Index}()
     valsize = Ref{LibGraphBLAS.GrB_Index}()
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
@@ -156,6 +157,7 @@ function _unpackcsrmatrix!(
         isjumbled,
         desc
     )
+    isiso == C_NULL && (isiso = false)
     rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), size(A, 1) + 1)
     colidx = unsafe_wrap(Array, Ptr{Int64}(colidx[]), nnonzeros)
     nstored = isiso[] ? 1 : nnonzeros
@@ -190,7 +192,7 @@ function _unpackbitmapmatrix!(
     Bsize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(Bool))
     values = Ref{Ptr{Cvoid}}(C_NULL)
     bytemap = Ref{Ptr{Int8}}(C_NULL)
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     nnonzeros = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_BitmapC(
         A,
@@ -202,6 +204,7 @@ function _unpackbitmapmatrix!(
         nnonzeros,
         desc
     )
+    isiso == C_NULL && (isiso = false)
     nstored = isiso[] ? 1 : szA
     v = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
     b = unsafe_wrap(Array, Ptr{Bool}(bytemap[]), szA)
@@ -226,7 +229,7 @@ function _unpackbitmapmatrixR!(
     Bsize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(Int8))
     values = Ref{Ptr{Cvoid}}(C_NULL)
     bytemap = Ref{Ptr{Int8}}(C_NULL)
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     nonzeros = Ref{LibGraphBLAS.GrB_Index}(0)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_BitmapR(
         A,
@@ -238,6 +241,7 @@ function _unpackbitmapmatrixR!(
         nonzeros,
         desc
     )
+    isiso == C_NULL && (isiso = false)
     nstored = isiso[] ? 1 : szA
     v = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
     b = unsafe_wrap(Array, bytemap[], szA)
@@ -266,7 +270,7 @@ function _unpackhypermatrix!(
     rowidxsize = Ref{LibGraphBLAS.GrB_Index}()
     valsize = Ref{LibGraphBLAS.GrB_Index}()
     nvec = Ref{LibGraphBLAS.GrB_Index}()
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
 
@@ -285,6 +289,7 @@ function _unpackhypermatrix!(
         isjumbled,
         desc
     )
+    isiso == C_NULL && (isiso = false)
     nvec = nvec[]
     colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), nvec + 1)
     colidx = unsafe_wrap(Array, Ptr{Int64}(colidx), nvec)
@@ -329,7 +334,7 @@ desc = _handledescriptor(desc)
     colidxsize = Ref{LibGraphBLAS.GrB_Index}()
     valsize = Ref{LibGraphBLAS.GrB_Index}()
     nvec = Ref{LibGraphBLAS.GrB_Index}()
-    isiso = Ref{Bool}(allowiso ? true : C_NULL)
+    isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
 
@@ -348,6 +353,7 @@ desc = _handledescriptor(desc)
         isjumbled,
         desc
     )
+    isiso == C_NULL && (isiso = false)
     nvec = nvec[]
     rowptr = unsafe_wrap(Array, Ptr{Int64}(rowptr[]), nvec + 1)
     rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nvec)

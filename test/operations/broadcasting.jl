@@ -18,5 +18,43 @@
     u = rand(1000)
     v = GBVector(u)
     @test sin.(u) ≈ Vector(sin.(v))
+    @testset "Dimensional Broadcasting" begin
+        A = rand(3,5)
+        u = rand(3)
+        v = rand(5)
+
+        G = GBMatrix(A)
+        uG = GBVector(u)
+        vG = GBVector(v)
+
+        @test A .* u ≈ G .* uG ≈ u .* A ≈ uG .* G
+        @test_throws DimensionMismatch G .* vG
+
+        @test A .* v' ≈ G .* vG' ≈ v' .* A ≈ vG' .* G
+        @test_throws DimensionMismatch uG' .* G
+        @test_throws DimensionMismatch G .* uG'
+
+        @test u .* u ≈ uG .* uG
+        @test_throws DimensionMismatch uG .* vG
+        @test u' .* u' ≈ uG' .* uG'
+        @test_throws DimensionMismatch uG' .* vG'
+
+        @test u .* v' ≈ uG .* vG'
+        @test v' .* u ≈ vG' .* uG
+        @test v .* u' ≈ vG .* uG'
+        @test u' .* v ≈ uG' .* vG
+
+        # tests without a _swapop
+        @test A .^ u ≈ G .^ uG
+        @test u .^ A ≈ uG .^ G
+        @test A .^ v' ≈ G .^ vG'
+        @test v' .^ A ≈ vG' .^ G
+        @test u' .^ u' ≈ uG' .^ uG'
+
+        @test u .^ v' ≈ uG .^ vG'
+        @test v' .^ u ≈ vG' .^ uG
+        @test v .^ u' ≈ vG .^ uG'
+        @test u' .^ v ≈ uG' .^ vG
+    end
 end
 

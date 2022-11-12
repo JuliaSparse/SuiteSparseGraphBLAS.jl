@@ -681,6 +681,16 @@ function Base.setindex!(
 )
     subassign!(C, A, I, J; mask, accum, desc)
 end
+function Base.setindex!(
+    C::AbstractGBMatrix,
+    A,
+    ::Colon;
+    mask = nothing,
+    accum = nothing,
+    desc = nothing
+)
+    subassign!(C, A, :, :; mask, accum, desc)
+end
 
 # AbstractGBVector functions:
 #############################
