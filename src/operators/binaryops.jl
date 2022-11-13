@@ -144,6 +144,7 @@ second(x, y) = y
 @binop any GxB_ANY T=>T # this doesn't match the semantics of Julia's any, but that may be ok...
 
 pair(x::T, y::T) where T = one(T)
+pair(x::T, y::U) where {T, U} = promote_type(T, U)(true)
 @binop pair GrB_ONEB T=>T # I prefer pair, but to keep up with the spec I'll match...
 @binop (+) GrB_PLUS T=>T
 @binop (-) GrB_MINUS T=>T

@@ -90,3 +90,34 @@ Base.minimum(A::GBArrayOrTranspose) = reduce(min, A)
 Base.minimum(f::Function, A::GBArrayOrTranspose) = reduce(min, map(f, A))
 
 Base.sum(A::GBArrayOrTranspose; dims=:) = reduce(+, A; dims)
+
+function countstored!(
+    C::GBVector, A::GBArrayOrTranspose; 
+    dims=1, mask = nothing, accum = nothing, desc = nothing
+)
+    v=GBVector(size(A, dims), true)
+    A = dims == 1 ? A' : dims == 2 ? A : throw(ArgumentError("dims ∉ {1, 2}"))
+    return mul!(C, A, v, (+, pair); mask, accum, desc)
+end
+function countstored(
+    A::GBArrayOrTranspose; 
+    dims=1, mask = nothing, accum = nothing, desc = nothing
+)
+    v=GBVector(size(A, dims), true)
+    countstored!(
+        similar(A, Int64, size(A, dims == 1 ? 2 : 1)), A; 
+        dims, mask, accum, desc
+    )
+end
+
+function countstoredcol(A::GBArrayOrTranspose, i::Integer)
+    mask = GBVector{Bool}(size(A, 2))
+    mask[i] = true
+    countstored(A; mask)[i]
+end
+
+function countstoredrow(A::GBArrayOrTranspose, i::Integer)
+    mask = GBVector{Bool}(size(A, 2))
+    mask[i] = true
+    countstored(A'; mask)[i]
+end

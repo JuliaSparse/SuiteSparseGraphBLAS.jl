@@ -472,6 +472,8 @@ macro gbmatrixtype(typename)
         $typename(dims::Dims{2}, x::T; fill = defaultfill(T)) where T = 
             $typename{T}(dims, x, fill)
         
+        $typename{T}(nrows, ncols, x; fill::F = defaultfill(T)) where {T, F} = 
+            $typename{T, F}((nrows, ncols), x; fill)
         $typename(nrows, ncols, x::T; fill = defaultfill(T)) where T = 
             $typename{T}((nrows, ncols), x; fill)
         $typename(dims::Tuple{<:Integer}, x::T; fill = defaultfill(T)) where T = 
@@ -726,12 +728,14 @@ macro gbvectortype(typename)
         $typename(dims::Dims{1}, x::T; fill = defaultfill(T)) where T = 
             $typename{T}(dims, x, fill)
         
-        $typename(nrows, ncols, x::T; fill = defaultfill(T)) where T = 
-            $typename{T}((nrows, ncols), x; fill)
+        $typename{T}(nrows, x; fill = defaultfill(T)) where T =
+            $typename{T}((nrows,), x; fill)
+        $typename(nrows, x::T; fill = defaultfill(T)) where T = 
+            $typename{T}(nrows, x; fill)
         $typename(dims::Tuple{<:Integer}, x::T; fill = defaultfill(T)) where T = 
             $typename{T}(dims..., x; fill)
-        $typename(size::Tuple{Base.OneTo, Base.OneTo}, x::T; fill = defaultfill(T)) where T = 
-            $typename{T}(size[1].stop, size[2].stop, x; fill)
+        $typename(size::Tuple{Base.OneTo}, x::T; fill = defaultfill(T)) where T = 
+            $typename{T}(size[1].stop, x; fill)
         
         function $typename{T, F}(v::AbstractGBVector; fill = getfill(v)) where {T, F}
             return convert($typename{T, F}, v; fill)
