@@ -1,4 +1,4 @@
-module GBCHOLMOD
+module GB_CHOLMOD
 import Base: (\), getproperty, show, size
 using LinearAlgebra
 import LinearAlgebra: (\),

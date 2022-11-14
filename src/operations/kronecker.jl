@@ -1,7 +1,7 @@
 """
     kron!(A::GBMatrix, B::GBMatrix, op = BinaryOps.TIMES; kwargs...)::GBMatrix
 
-In-place version of [kron](@ref).
+In-place version of [`kron`](@ref).
 """
 function LinearAlgebra.kron!(
     C::GBVecOrMat,

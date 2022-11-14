@@ -3,8 +3,8 @@
 module UMFPACKTests
 using SuiteSparseGraphBLAS
 using SuiteSparseGraphBLAS: gbrand, gbrandn, GBDiagonal, dropzeros!
-using SuiteSparseGraphBLAS.GBUMFPACK: GBUmfpackLU
-using SuiteSparseGraphBLAS.GBUMFPACK
+using SuiteSparseGraphBLAS.GB_UMFPACK: GBUmfpackLU
+using SuiteSparseGraphBLAS.GB_UMFPACK
 using Test
 using Random
 using SparseArrays
@@ -371,7 +371,7 @@ end
         @test length(A.workspace.Wi) == 100
         @test length(A.workspace.W) == 100
         x = A \ b
-        A.control[GBUMFPACK.JL_UMFPACK_IRSTEP] = 2
+        A.control[GB_UMFPACK.JL_UMFPACK_IRSTEP] = 2
         y = A \ b
         @test x ≈ y
         @test length(A.workspace.Wi) == 100

@@ -37,8 +37,8 @@ The following functions are built into SuiteSparse:GraphBLAS. They are, much fas
 | `!`                        | `LNOT`         |       |
 | `abs`                      | `ABS`          |       |
 | `~`                        | `BNOT`         |       |
-| `positioni`                | `POSITIONI`    |       |
-| `positionj`                | `POSITIONJ`    |       |
+| `rowindex`                 | `POSITIONI`    |       |
+| `colindex`                 | `POSITIONJ`    |       |
 | `sqrt`                     | `SQRT`         |       |
 | `log`                      | `LOG`          |       |
 | `exp`                      | `EXP`          |       |
@@ -77,3 +77,9 @@ The following functions are built into SuiteSparse:GraphBLAS. They are, much fas
 | `real`                     | `CREAL`        |       |
 | `imag`                     | `CIMAG`        |       |
 | `angle`                    | `CARG`         |       |
+
+Unary functions unique to SuiteSparseGraphBLAS are:
+```@docs
+SuiteSparseGraphBLAS.rowindex
+SuiteSparseGraphBLAS.colindex
+```

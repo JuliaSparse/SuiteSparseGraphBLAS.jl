@@ -1,5 +1,6 @@
 using Documenter
 using SuiteSparseGraphBLAS
+using SuiteSparseGraphBLAS: UnaryOps, BinaryOps, Monoids, Semirings, GB_KLU, GB_CHOLMOD, GB_UMFPACK
 using LinearAlgebra
 using SparseArrays
 makedocs(

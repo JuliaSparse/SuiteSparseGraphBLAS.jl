@@ -1,23 +1,9 @@
-# TODO: update to modern op system.
-
-function defaultselectthunk(op, T)
-    if op ∈ (rowindex, colindex, diagindex)
-        return one(Int64)
-    elseif op ∈ (tril, triu, diag, offdiag)
-        return zero(Int64)
-    elseif op === ==
-        return zero(T)
-    else
-        throw(ArgumentError("You must pass `thunk` to select for this function."))
-    end
-end
-
 "In place version of `select`."
 function select!(
     op,
     C::GBVecOrMat,
     A::GBArrayOrTranspose{T},
-    thunk::TH = defaultselectthunk(op, T);
+    thunk::TH = defaultthunk(op, T);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -34,7 +20,7 @@ function select!(
 end
 
 function select!(
-    op, A::GBArrayOrTranspose{T}, thunk = defaultselectthunk(op, T); 
+    op, A::GBArrayOrTranspose{T}, thunk = defaultthunk(op, T); 
     mask = nothing, accum = nothing, desc = nothing
 ) where T
     return select!(op, A, A, thunk; mask, accum, desc)
@@ -67,7 +53,7 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 function select(
     op,
     A::GBArrayOrTranspose{T},
-    thunk::TH = defaultselectthunk(op, T);
+    thunk::TH = defaultthunk(op, T);
     mask = nothing,
     accum = nothing,
     desc = nothing

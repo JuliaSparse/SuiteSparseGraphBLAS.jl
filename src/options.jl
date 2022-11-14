@@ -10,7 +10,7 @@ Set an option either for a specific GBArray, or globally. The commonly used opti
     - `:sparsity_control = [:full | :bitmap | :sparse | :hypersparse]`: Set the sparsity of a
     single GBArray.
 """
-gbset
+function gbset end
 using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Field, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
 GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT, GxB_DESCRIPTOR_CHUNK, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH,
 GxB_GLOBAL_CHUNK, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL, GxB_GLOBAL_NTHREADS

@@ -3,10 +3,48 @@ module IndexUnaryOps
 import ..SuiteSparseGraphBLAS
 using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedIndexUnaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
-    Ntypes, Ttypes, suffix, valid_union, GBArrayOrTranspose, GBScalar
+    Ntypes, Ttypes, suffix, valid_union, GBArrayOrTranspose, GBScalar, inferbinarytype
+using ..UnaryOps: colindex, rowindex
 using ..LibGraphBLAS
-export indexunaryop, rowindex, colindex, diagindex, offdiag, colleq, colgt, rowleq, rowgt
+export indexunaryop, diagindex, offdiag, colleq, colgt, rowleq, rowgt,
+IndexOp, isindexop, defaultthunk
 import LinearAlgebra
+
+"""
+    IndexOp{F}
+
+Wrapper which indicates to [`apply`](@ref) that an operator has the signature:
+`f(x, i::Int64, j::Int64, y)` where `x` is the value at a particular index, `i` and `j` are the
+indices, and `y` is an auxiliary input.
+
+See also: [`isindexop`](@ref)
+"""
+struct IndexOp{F}
+    op::F
+end
+Base.parent(I::IndexOp) = I.op
+
+"""
+    isindexop(op)::Bool
+
+If `isindexop(op)` is true then [`apply`](@ref) will wrap `op` in `IndexOp`.
+`op` must have the signature `f(x, i::Int64, j::Int64, y)`. 
+This function is only called from [`apply`](@ref).
+"""
+isindexop(op::F) where {F} = false
+isindexop(::IndexOp) = true
+function defaultthunk(op, T)
+    if op ∈ (rowindex, colindex, diagindex)
+        return one(Int64)
+    elseif op ∈ (LinearAlgebra.tril, LinearAlgebra.triu, LinearAlgebra.diag, offdiag)
+        return zero(Int64)
+    elseif op === ==
+        return zero(T)
+    else
+        throw(ArgumentError("You must pass `thunk` to select for this function."))
+    end
+end
+defaultthunk(op::IndexOp, T) = defaultthunk(op.op, T)
 
 const IDXUNARYOPS = IdDict{Tuple{<:Any, DataType, DataType}, TypedIndexUnaryOperator}()
 
@@ -39,28 +77,37 @@ indexunaryop(f, ::Type{T}, ::GBScalar{U}) where {T, U} = indexunaryop(f, T, U)
 indexunaryop(f, type) = indexunaryop(f, type, type)
 indexunaryop(op::TypedIndexUnaryOperator, ::Type{X}, ::Type{Y}) where {X, Y} = op
 
-function rowindex end
-function colindex end
-function diagindex end
 const ROWINDEX = TypedIndexUnaryOperator{typeof(rowindex), Any, Any, Int64}(
     true, false, "GrB_ROWINDEX_INT64", LibGraphBLAS.GrB_IndexUnaryOp(),rowindex)
 indexunaryop(::typeof(rowindex), ::Type{X}, ::Type{Y}) where {X, Y} = ROWINDEX
 const COLINDEX = TypedIndexUnaryOperator{typeof(colindex), Any, Any, Int64}(
     true, false, "GrB_COLINDEX_INT64", LibGraphBLAS.GrB_IndexUnaryOp(),colindex)
 indexunaryop(::typeof(colindex), ::Type{X}, ::Type{Y}) where {X, Y} = COLINDEX
+
+"""
+    diagindex(xᵢⱼ) -> (j - (i + y))
+
+Dummy function for use in [`apply`](@ref). 
+Returns the column diagonal index of each element.
+"""
+diagindex(x...) = 1::Int64
 const DIAGINDEX = TypedIndexUnaryOperator{typeof(diagindex), Any, Any, Int64}(
     true, false, "GrB_DIAGINDEX_INT64", LibGraphBLAS.GrB_IndexUnaryOp(),diagindex)
 indexunaryop(::typeof(diagindex), ::Type{X}, ::Type{Y}) where {X, Y} = DIAGINDEX
 
+
 const TRIL = TypedIndexUnaryOperator{typeof(LinearAlgebra.tril), Any, Any, Bool}(
     true, false, "GrB_TRIL", LibGraphBLAS.GrB_IndexUnaryOp(),LinearAlgebra.tril)
 indexunaryop(::typeof(LinearAlgebra.tril), ::Type{X}, ::Type{Y}) where {X, Y} = TRIL
+
 const TRIU = TypedIndexUnaryOperator{typeof(LinearAlgebra.triu), Any, Any, Bool}(
     true, false, "GrB_TRIU", LibGraphBLAS.GrB_IndexUnaryOp(),LinearAlgebra.triu)
 indexunaryop(::typeof(LinearAlgebra.triu), ::Type{X}, ::Type{Y}) where {X, Y} = TRIU
 const DIAG = TypedIndexUnaryOperator{typeof(LinearAlgebra.diag), Any, Any, Bool}(
     true, false, "GrB_DIAG", LibGraphBLAS.GrB_IndexUnaryOp(),LinearAlgebra.diag)
 indexunaryop(::typeof(LinearAlgebra.diag), ::Type{X}, ::Type{Y}) where {X, Y} = DIAG
+
+
 function offdiag end
 const OFFDIAG = TypedIndexUnaryOperator{typeof(offdiag), Any, Any, Bool}(
     true, false, "GrB_OFFDIAG", LibGraphBLAS.GrB_IndexUnaryOp(),offdiag)
@@ -155,204 +202,27 @@ for T ∈ cardinal_vec
         indexunaryop(::typeof(>=), ::Type{$T}, ::Type{$T}) = $constname
     end
 end
+
+
+for F ∈ [rowindex, colindex, diagindex]
+    @eval isindexop(::typeof($F)) = true
+end
+
+for F ∈ [
+    LinearAlgebra.tril, 
+    LinearAlgebra.triu, 
+    LinearAlgebra.diag, 
+    offdiag, 
+    colleq, 
+    colgt, 
+    rowleq, 
+    rowgt
+]
+    @eval isindexop(::typeof($F)) = true
+    @eval SuiteSparseGraphBLAS.inferbinarytype(::Any, ::Any, ::typeof($F)) = Bool
+end
+
 end
 ztype(::TypedIndexUnaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = Z
 xtype(::TypedIndexUnaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = X
 ytype(::TypedIndexUnaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = Y
-# mutable struct SelectOp <: AbstractSelectOp
-#     name::String
-#     p::LibGraphBLAS.GxB_SelectOp
-#     juliaop::Union{Function, Nothing}
-#     function SelectOp(name, p::LibGraphBLAS.GxB_SelectOp, juliaop)
-#         d = new(name, p, juliaop)
-#         function f(selectop)
-#             @wraperror LibGraphBLAS.GxB_SelectOp_free(Ref(selectop.p))
-#         end
-#         return finalizer(f, d)
-#     end
-# end
-# 
-# SelectOp(op::SelectOp) = op
-# 
-# const SelectUnion = Union{AbstractSelectOp, LibGraphBLAS.GxB_SelectOp}
-# 
-# Base.unsafe_convert(::Type{LibGraphBLAS.GxB_SelectOp}, selectop::SelectOp) = selectop.p
-# 
-# const TRIL = SelectOp("GxB_TRIL", LibGraphBLAS.GxB_SelectOp(), LinearAlgebra.tril)
-# const TRIU = SelectOp("GxB_TRIU", LibGraphBLAS.GxB_SelectOp(), LinearAlgebra.triu)
-# const DIAG = SelectOp("GxB_DIAG", LibGraphBLAS.GxB_SelectOp(), LinearAlgebra.diag)
-# 
-# """
-#     offdiag(A::GBArray, k=0)
-# 
-# Select the entries **not** on the `k`th diagonal of A.
-# """
-# function offdiag end #I don't know of a function which does this already.
-# const OFFDIAG = SelectOp("GxB_OFFDIAG", LibGraphBLAS.GxB_SelectOp(), offdiag)
-# offdiag(A::GBArrayOrTranspose, k=0) = select(offdiag, A, k)
-# 
-# const NONZERO = SelectOp("GxB_NONZERO", LibGraphBLAS.GxB_SelectOp(), nonzeros)
-# const EQ_ZERO = SelectOp("GxB_EQ_ZERO", LibGraphBLAS.GxB_SelectOp(), nothing)
-# const GT_ZERO = SelectOp("GxB_GT_ZERO", LibGraphBLAS.GxB_SelectOp(), nothing)
-# const GE_ZERO = SelectOp("GxB_GE_ZERO", LibGraphBLAS.GxB_SelectOp(), nothing)
-# const LT_ZERO = SelectOp("GxB_LT_ZERO", LibGraphBLAS.GxB_SelectOp(), nothing)
-# const LE_ZERO = SelectOp("GxB_LE_ZERO", LibGraphBLAS.GxB_SelectOp(), nothing)
-# const NE = SelectOp("GxB_NE_THUNK", LibGraphBLAS.GxB_SelectOp(), !=)
-# const EQ = SelectOp("GxB_EQ_THUNK", LibGraphBLAS.GxB_SelectOp(), ==)
-# const GT = SelectOp("GxB_GT_THUNK", LibGraphBLAS.GxB_SelectOp(), >)
-# const GE = SelectOp("GxB_GE_THUNK", LibGraphBLAS.GxB_SelectOp(), >=)
-# const LT = SelectOp("GxB_LT_THUNK", LibGraphBLAS.GxB_SelectOp(), <)
-# const LE = SelectOp("GxB_LE_THUNK", LibGraphBLAS.GxB_SelectOp(), <=)
-# 
-# function SelectOp(name)
-#     simple = Symbol(replace(string(name[5:end]), "_THUNK" => ""))
-#     constquote = quote
-#         const $simple = SelectOp($name, LibGraphBLAS.GxB_SelectOp())
-#     end
-#     @eval($constquote)
-# end
-# 
-# function _loadselectops()
-#     TRIL.p = load_global("GxB_TRIL", LibGraphBLAS.GxB_SelectOp)
-#     TRIU.p = load_global("GxB_TRIU", LibGraphBLAS.GxB_SelectOp)
-#     DIAG.p = load_global("GxB_DIAG", LibGraphBLAS.GxB_SelectOp)
-#     OFFDIAG.p = load_global("GxB_OFFDIAG", LibGraphBLAS.GxB_SelectOp)
-#     NONZERO.p = load_global("GxB_NONZERO", LibGraphBLAS.GxB_SelectOp)
-#     EQ_ZERO.p = load_global("GxB_EQ_ZERO", LibGraphBLAS.GxB_SelectOp)
-#     GT_ZERO.p = load_global("GxB_GT_ZERO", LibGraphBLAS.GxB_SelectOp)
-#     GE_ZERO.p = load_global("GxB_GE_ZERO", LibGraphBLAS.GxB_SelectOp)
-#     LT_ZERO.p = load_global("GxB_LT_ZERO", LibGraphBLAS.GxB_SelectOp)
-#     LE_ZERO.p = load_global("GxB_LE_ZERO", LibGraphBLAS.GxB_SelectOp)
-#     NE.p = load_global("GxB_NE_THUNK", LibGraphBLAS.GxB_SelectOp)
-#     EQ.p = load_global("GxB_EQ_THUNK", LibGraphBLAS.GxB_SelectOp)
-#     GT.p = load_global("GxB_GT_THUNK", LibGraphBLAS.GxB_SelectOp)
-#     GE.p = load_global("GxB_GE_THUNK", LibGraphBLAS.GxB_SelectOp)
-#     LT.p = load_global("GxB_LT_THUNK", LibGraphBLAS.GxB_SelectOp)
-#     LE.p = load_global("GxB_LE_THUNK", LibGraphBLAS.GxB_SelectOp)
-# end
-# 
-# 
-# Base.getindex(::AbstractSelectOp, ::DataType) = nothing
-
-# 
-# Base.show(io::IO, ::MIME"text/plain", s::SelectUnion) = gxbprint(io, s)
-# juliaop(op::AbstractSelectOp) = op.juliaop
-# 
-# """
-#     select(SuiteSparseGraphBLAS.TRIL, A, k=0)
-#     select(tril, A, k=0)
-# 
-# Select the entries on or below the `k`th diagonal of A.
-# 
-# See also: `LinearAlgebra.tril`
-# """
-# TRIL
-# SelectOp(::typeof(LinearAlgebra.tril)) = TRIL
-# """
-#     select(SuiteSparseGraphBLAS.TRIU, A, k=0)
-#     select(triu, A, k=0)
-# 
-# Select the entries on or above the `k`th diagonal of A.
-# 
-# See also: `LinearAlgebra.triu`
-# """
-# TRIU
-# SelectOp(::typeof(LinearAlgebra.triu)) = TRIU
-# """
-#     select(DIAG, A, k=0)
-# 
-# Select the entries on the `k`th diagonal of A.
-# 
-# See also: `LinearAlgebra.diag`
-# """
-# DIAG
-# SelectOp(::typeof(LinearAlgebra.diag)) = DIAG
-# """
-#     select(OFFDIAG, A, k=0)
-# 
-# Select the entries **not** on the `k`th diagonal of A.
-# """
-# OFFDIAG
-# SelectOp(::typeof(offdiag)) = OFFDIAG
-# """
-#     select(NONZERO, A)
-#     select(nonzeros, A)
-# Select all entries in A with nonzero value.
-# """
-# NONZERO
-# SelectOp(::typeof(nonzeros)) = NONZERO
-# 
-# # I don't believe these should have Julia equivalents.
-# # Instead select(==, A, 0) will find EQ_ZERO internally.
-# """
-#     select(EQ_ZERO, A)
-# 
-# Select all entries in A equal to zero.
-# """
-# EQ_ZERO
-# """
-#     select(GT_ZERO, A)
-# 
-# Select all entries in A greater than zero.
-# """
-# GT_ZERO
-# """
-#     select(GE_ZERO, A)
-# 
-# Select all entries in A greater than or equal to zero.
-# """
-# GE_ZERO
-# """
-#     select(LT_ZERO, A)
-# 
-# Select all entries in A less than zero.
-# """
-# LT_ZERO
-# """
-#     select(LE_ZERO, A)
-# 
-# Select all entries in A less than or equal to zero.
-# """
-# LE_ZERO
-# """
-#     select(NE, A, k)
-#     select(!=, A, k)
-# Select all entries not equal to `k`.
-# """
-# NE
-# SelectOp(::typeof(!=)) = NE
-# """
-#     select(EQ, A, k)
-#     select(==, A, k)
-# Select all entries equal to `k`.
-# """
-# EQ
-# SelectOp(::typeof(==)) = EQ
-# """
-#     select(GT, A, k)
-#     select(>, A, k)
-# Select all entries greater than `k`.
-# """
-# GT
-# SelectOp(::typeof(>)) = GT
-# """
-#     select(GE, A, k)
-#     select(>=, A, k)
-# Select all entries greater than or equal to `k`.
-# """
-# GE
-# SelectOp(::typeof(>=)) = GE
-# """
-#     select(LT, A, k)
-#     select(<, A, k)
-# Select all entries less than `k`.
-# """
-# LT
-# SelectOp(::typeof(<)) = LT
-# """
-#     select(LE, A, k)
-#     select(<=, A, k)
-# Select all entries less than or equal to `k`.
-# """
-# LE
-# SelectOp(::typeof(<=)) = LE

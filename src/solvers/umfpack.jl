@@ -3,7 +3,7 @@
 # Unfortunately it's not currently possible to make this work generically.
 # In the future I hope to make this work in a more generic fashion.
 
-module GBUMFPACK
+module GB_UMFPACK
 
 export GBUmfpackLU
 

@@ -44,11 +44,12 @@ Typically you should use Julia's built-in transpose functionality.
 
 - `desc.complement_mask == [true | false]`: 
 
-If `complement_mask` is set the presence/truth value of the mask is complemented.
+If `complement_mask` is set the presence/truth value of the mask is complemented. See [`SuiteSparseGraphBLAS.Complement`](@ref) for a wrapper that sets this flag.
 
 - `desc.structural_mask == [true | false]`:
     
 If `structural_mask` is set the presence of a value in the mask determines the presence of values in the output, rather than the actual value of the mask.
+See [`SuiteSparseGraphBLAS.Structural`](@ref) for a wrapper that sets this flag.
 
 - `desc.replace_output == [true | false]`:
 
@@ -79,15 +80,23 @@ emul
 emul!
 eadd
 eadd!
+eunion
+eunion!
 extract
+extract!
 subassign!
 assign!
 apply
+apply!
 select
+select!
 Base.reduce
 gbtranspose
+gbtranspose!
 LinearAlgebra.kron
+LinearAlgebra.kron!
 mask
+mask!
 ```
 
 ## Order of Operations

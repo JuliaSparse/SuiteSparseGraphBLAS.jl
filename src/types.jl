@@ -836,11 +836,23 @@ end
     GBVector{T, F} <: AbstractSparseArray{T, UInt64, 1}
 
 One-dimensional GraphBLAS array with elements of type T. `F` is the type of the fill-value, 
-which is typically `Nothing` or `T`. 
+which is typically `Missing` or `T`. 
 Internal representation is specified as opaque, but may be either a dense vector, bitmap vector, or 
 compressed sparse vector.
 
 See also: [`GBMatrix`](@ref).
+
+# Construction Signatures
+
+    GBVector{T, F}(n::Integer; fill = defaultfill(F))
+    GBVector{T}(n::Integer; fill = defaultfill(T))
+    GBVector(I::AbstractVector, X::AbstractVector{T}, n; fill=defaultfill(T), combine=+)
+    GBVector(I::AbstractVector, x::T, n; fill=defaultfill(T), combine=+)
+    GBVector(v::Union{<:AbstractGBVector, <:AbstractVector}; fill = defaultfill(eltype(v)))
+
+All constructors, no matter their input, may specify parameters for 
+element type `T` as well as a fill type `F`, conversions are handled internally.
+These parameters will be inferred in most cases.
 """
 mutable struct GBVector{T, F} <: AbstractGBVector{T, F, ColMajor()}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix} # a GBVector is a GBMatrix internally.
@@ -864,7 +876,7 @@ GBVector{T}(
     GBMatrix{T, F} <: AbstractSparseArray{T, UInt64, 2}
 
 Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value, 
-which is typically `Nothing` or `T`. 
+which is typically `Missing` or `T`. 
 Internal representation is specified as opaque, but in this implementation is stored as one of 
 the following in either row or column orientation:
 
@@ -874,6 +886,21 @@ the following in either row or column orientation:
     4. Hypersparse
 
 The storage type is automatically determined by the library.
+
+#Signatures
+
+    GBMatrix{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F))
+    GBMatrix{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
+    GBMatrix(I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
+    GBMatrix(I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
+    GBMatrix(A::Union{<:AbstractGBArray, <:AbstractMatrix}; fill = defaultfill(eltype(A)))
+
+All constructors, no matter their input, may specify an element type `T`
+as well as a fill type `F`, conversions are handled internally.
+These parameters will be inferred in most cases.
+
+`GBMatrix` construction from an existing AbstractArray will maintain the storage order of the original,
+typically `ColMajor()`. 
 """
 mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F, RuntimeOrder()}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
@@ -894,6 +921,28 @@ GBMatrix{T}(
 @gbmatrixtype GBMatrix
 @gbvectortype GBVector
 
+"""
+    OrientedGBMatrix{T, F, O} <: AbstractSparseArray{T, UInt64, 2}
+
+Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value, 
+which is typically `Missing` or `T`. 
+Exactly the same as [`GBMatrix`](@ref), except the memory orientation is static: either
+`StorageOrders.RowMajor()` (default) or `StorageOrders.ColMajor()`.
+
+The aliases `GBMatrixC` and `GBMatrixR` are the preferred construction methods.
+
+#Signatures
+
+    GBMatrix[R | C]{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F))
+    GBMatrix[R | C]{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
+    GBMatrix[R | C](I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
+    GBMatrix[R | C](I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
+    GBMatrix[R | C](A::Union{<:AbstractGBArray, <:AbstractMatrix}; fill = defaultfill(eltype(A)))
+
+All constructors, no matter their input, may specify an element type `T`
+as well as a fill type `F`, conversions are handled internally.
+These parameters will be inferred in most cases.
+"""
 mutable struct OrientedGBMatrix{T, F, O} <: AbstractGBMatrix{T, F, O}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
@@ -925,8 +974,11 @@ function OrientedGBMatrix{T, O}(
     return OrientedGBMatrix{T, F, O}(p; fill)
 end
 
+
 const GBMatrixC{T, F} = OrientedGBMatrix{T, F, StorageOrders.ColMajor()}
 const GBMatrixR{T, F} = OrientedGBMatrix{T, F, StorageOrders.RowMajor()}
+@doc (@doc OrientedGBMatrix) GBMatrixC
+@doc (@doc OrientedGBMatrix) GBMatrixR
 
 @gbmatrixtype GBMatrixC
 @gbmatrixtype GBMatrixR
@@ -937,6 +989,14 @@ const GBMatrixR{T, F} = OrientedGBMatrix{T, F, StorageOrders.RowMajor()}
 These types do not have the general constructors created by `@gbmatrixtype` since they
 should *never* be constructed by a user directly. Only through the `pack` interface.
 =#
+"""
+    GBShallowVector{T, F, P, B, A} <: AbstractSparseArray{T, UInt64, 1}
+
+Shallow GraphBLAS vector type wrapping a Julia-resident vector. Currently supported
+only for `Vector`
+
+The primary constructor for this type is the [`pack`](@ref) function, although it may also be constructed directly via `GBShallowVector(A::Vector)`.
+"""
 mutable struct GBShallowVector{T, F, P, B, A} <: AbstractGBShallowArray{T, F, ColMajor(), P, B, A, 1}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F
@@ -951,6 +1011,14 @@ function GBShallowVector{T}(p, fill::F, ptr::P, idx::P, h::P, bitmap::B, nzval::
     GBShallowVector{T, F, P, B, A}(p, fill, ptr, idx, h, bitmap, nzval)
 end
 
+"""
+    GBShallowMatrix{T, F, O, P, B, A} <: AbstractSparseArray{T, UInt64, 2}
+
+Shallow GraphBLAS matrix type wrapping a Julia-resident array. Currently supported
+only for `Matrix`
+
+The primary constructor for this type is the [`pack`](@ref) function, although it may also be constructed directly via `GBShallowMatrix(A::Matrix)`.
+"""
 mutable struct GBShallowMatrix{T, F, O, P, B, A} <: AbstractGBShallowArray{T, F, O, P, B, A, 2}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
     fill::F

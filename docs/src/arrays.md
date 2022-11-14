@@ -3,15 +3,17 @@
 There are two primary array types in SuiteSparseGraphBLAS.jl: [`GBVector`](@ref) and [`GBMatrix`](@ref), as well as a few specialized versions of those array types. The full type hierarchy is:
 
 ```
-AbstractGBArray{T, F, N} <: AbstractSparseArray{Union{T, F}, N}
+AbstractGBArray{T, F, O, N} <: AbstractSparseArray{Union{T, F}, N}
  ├ N = 2 ─ AbstractGBMatrix{T, F} 
- │   ├─ GBMatrix{T, F}
- │   └─ OrientedGBMatrix{T, F, O}
- └ N = 1 ─ AbstractGBVector{T, F}
-     └─ GBVector{T, F}
+ │   ├─ GBMatrix{T, F, RuntimeOrder()}
+ │   ├─ OrientedGBMatrix{T, F, O}
+ │   └─ GBShallowMatrix{T, F, ColMajor()}
+ └ N = 1, O = ColMajor() ─ AbstractGBVector{T, F}
+     ├─ GBVector{T, F}
+     └─ GBShallowVector{T, F}
 ```
 
-The `T` parameter is the element type of the array, `N` is the dimensionality, `F` is the type of the fill value (often `Nothing` or `T`). The `OrientedGBMatrix` restricts the orientation to the parameter `O` which is either `ByRow()` or `ByCol()`. 
+The `T` parameter is the element type of the array, `N` is the dimensionality, `F` is the type of the fill value (often `Nothing` or `T`), and `O` is the storage order. The `OrientedGBMatrix` restricts the orientation to the parameter `O` to either `ByRow()` or `ByCol()`. 
 
 All of these types attempt to implement most of the `AbstractArray` interface, and the relevant parts of the `SparseArrays` interface.
 
@@ -19,12 +21,12 @@ All of these types attempt to implement most of the `AbstractArray` interface, a
 
 The `GBMatrix` is an opaque sparse matrix structure, which adapts to the sparsity of a matrix by changing the implementation internally. There are 4 different internal representations, all stored in either row or column orientation:
 
-1. **Dense** - Equivalent to a Julia `Matrix`
-2. **Bitmap** - 2 dense arrays, one storing booleans in the pattern of the matrix, the other storing the values.
-3. **Sparse Compressed** - [Compressed Sparse Column (CSC)](http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000) or [Compressed Sparse Row(CSR)](http://netlib.org/linalg/html_templates/node91.html)
-4. **Doubly Compressed** or **Hypersparse** - Doubly Compressed Sparse Column (DCSC or Hypersparse CSC) and Doubly Compressed Sparse Row (DCSR or Hypersparse CSR). See this paper for more information: [pdf](https://people.eecs.berkeley.edu/~aydin/hypersparse-ipdps08.pdf).
+1. _**Dense**_ - Equivalent to a Julia `Matrix`, except it may be stored in `RowMajor()` order.
+2. _**Bitmap**_ - 2 dense arrays, one storing booleans in the pattern of the matrix, the other storing the values.
+3. _**Sparse Compressed**_ - [Compressed Sparse Column (CSC)](http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000) or [Compressed Sparse Row(CSR)](http://netlib.org/linalg/html_templates/node91.html)
+4. _**Doubly Compressed**_ or **Hypersparse** - Doubly Compressed Sparse Column (DCSC or Hypersparse CSC) and Doubly Compressed Sparse Row (DCSR or Hypersparse CSR). See this paper for more information: [pdf](https://people.eecs.berkeley.edu/~aydin/hypersparse-ipdps08.pdf).
 
-Additionally, when the stored values in a `GBMatrix` are uniform the value array may be stored in the **iso** version of one of the formats above. Rather than storing the full value array, an iso `GBMatrix` will only store the single scalar to improve performance. This is useful for matrices like the unweighted adjacency matrix, where all stored values may be `true`. 
+Additionally, when the stored values in a `GBMatrix` are uniform the value array may be stored in the _**iso**_ version of one of the formats above. Rather than storing the full value array, an iso `GBMatrix` will only store the single scalar to improve performance. This is useful for matrices like the unweighted adjacency matrix, where all stored values may be `true`. 
 
 Users should rarely need to directly interact with the underlying storage format, SuiteSparse:GraphBLAS will automatically convert between them as necessary.
 
@@ -40,14 +42,12 @@ x = GBMatrix{Bool}(20_000_000, 50_000)
 x = GBMatrix([[1,2] [3,4]])
 x = GBMatrix(sprand(100, 100, 0.5); fill = 0.0)
 x = GBMatrix(
-    rand(1:50_000, 5000), rand(1:500_000, 5000), 1,
-    500_000, 500_000
+    rand(1:50_000, 5000), rand(1:500_000, 5000), 1, 500_000, 500_000
 )
 ```
 
 ```@docs
 GBMatrix
-SuiteSparseGraphBLAS.GBMatrix(::Matrix)
 ```
 
 ## GBVector
@@ -64,7 +64,6 @@ v = GBVector(sprand(Bool, 100_000_000, 0.001))
 
 ```@docs
 GBVector
-SuiteSparseGraphBLAS.GBVector(::Vector)
 ```
 
 # Indexing
@@ -97,9 +96,14 @@ The functionality illustrated above extends to `GBVector` as well.
 
 # Transpose
 The lazy Julia `transpose` is available, and the adjoint operator `'` is also
-overloaded to be equivalent.
+overloaded to be equivalent for non-`Complex` types.
 
-!!! danger "Adjoint vs Transpose"
-    The adjoint operator `'` currently transposes matrices rather than performing the
-    conjugate transposition. In the future this will change to the eager adjoint
-    for complex types, but currently you must do `map(conj, A')` to achieve this.
+# Special `GBArray` Types
+
+```@docs
+GBMatrixR
+GBMatrixC
+SuiteSparseGraphBLAS.GBShallowMatrix
+SuiteSparseGraphBLAS.GBShallowVector
+SuiteSparseGraphBLAS.GBScalar
+```

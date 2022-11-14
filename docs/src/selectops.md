@@ -1,24 +1,14 @@
-# Select Operators
+# Index Operators
 
-A `SelectOp` is effectively a binary or unary operation which is able to access the location of an element as well as its value.
-They define predicates for use with the [`select`](@ref) function.
-
-Applying `select` with a `SelectOp` will always return a result with the same type and shape as its argument.
+An `IndexUnaryOp` is a unary operation which is able to access the location of an element as well as its value.
+They define predicates for use with the [`select!`](@ref) function as well as index access for [`apply!`](@ref).
 
 ## Built-Ins
 
-Built-in `SelectOp`s can be found in the `SelectOps` submodule. However users should pass the equivalent Julia function when possible.
+Built-in `IndexUnaryOps`s can be found in the `SelectOps` submodule. However users should pass the equivalent Julia function when possible.
 
 ```@docs
-SuiteSparseGraphBLAS.TRIL
-SuiteSparseGraphBLAS.TRIU
-SuiteSparseGraphBLAS.DIAG
-SuiteSparseGraphBLAS.OFFDIAG
-SuiteSparseGraphBLAS.NONZERO
-SuiteSparseGraphBLAS.NE
-SuiteSparseGraphBLAS.EQ
-SuiteSparseGraphBLAS.GT
-SuiteSparseGraphBLAS.GE
-SuiteSparseGraphBLAS.LT
-SuiteSparseGraphBLAS.LE
+SuiteSparseGraphBLAS.diagindex
+SuiteSparseGraphBLAS.isindexop
+SuiteSparseGraphBLAS.IndexOp
 ```

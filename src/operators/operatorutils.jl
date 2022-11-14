@@ -1,3 +1,6 @@
+function inferbinarytype end
+function inferunarytype end
+
 function optype(atype, btype)
     #If atype is signed, optype must be signed and at least big enough.
     if atype <: Integer || btype <: Integer

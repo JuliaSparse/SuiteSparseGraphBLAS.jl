@@ -53,7 +53,9 @@ v = GBVector{Float64}(13)
 # create a 1000 x 1000 empty sparse matrix with ComplexF64 elements.
 A = GBMatrix{ComplexF64}(1000, 1000)
 
-A[1,5] === nothing
+# Non-stored values are equal to the fill value of A, 
+# which is by default zero(eltype(A))
+A[1,5] == getfill(A)
 ```
 
 Here we can already see several differences compared to `SparseArrays.SparseMatrixCSC`.
@@ -61,7 +63,7 @@ Here we can already see several differences compared to `SparseArrays.SparseMatr
 The first is that `A` is stored in `hypersparse` format, and by row.
 
 `GBArrays` are (technically) opaque to the user in order to allow the library author to choose the best storage format.\
-GraphBLAS takes advantage of this by storing matrices in one of four formats: `dense`, `bitmap`, `sparse-compressed`, or `hypersparse-compressed`; and in either `row` or `column` major orientation.\
+SuiteSparse:GraphBLAS takes advantage of this by storing matrices in one of four formats: `dense`, `bitmap`, `sparse-compressed`, or `hypersparse-compressed`; and in either `row` or `column` major orientation.\
 Different matrices may be better suited to storage in one of those formats, and certain operations may perform differently on `row` or `column` major matrices.
 
 !!! warning "Default Orientation"
@@ -70,18 +72,16 @@ Different matrices may be better suited to storage in one of those formats, and 
     The orientation of a `GBMatrix` can be modified using
     `setstorageorder!(A, RowMajor())` or `setstorageorder!(A, ColMajor())`, and queried by `StorageOrders.storageorder(A)`
 
-Information about storage formats, orientation, conversion, construction and more can be found in [Arrays](@ref).
+Information about storage formats, orientation, conversion, construction and more can be found in [Array-Types](@ref).
 
-The second difference is that a `GBArray` doesn't assume the fill-in value of a sparse array.\
-Since `A[1,5]` isn't stored in the matrix (it's been "compressed" out), we return `nothing`.\
-
-This better matches the GraphBLAS spec, where `NO_VALUE` is returned, rather than `zero(eltype(A))`. This is better suited to graph algorithms where returning `zero(eltype(A))` might imply the presence of an edge with weight `zero`.\
-However this behavior can be changed with the [`setfill!`](@ref) and [`setfill`](@ref) functions.
+As noted in the example above, `A` has a fill-value, which defaults to `zero(eltype(A))`.
+For normal linear algebra this is a good choice for fill-value, however GraphBLAS is intended for graphs.
+To handle this `SuiteSparseGraphBLAS.jl` support `missing` for the fill value (this is an active area of development, and a new fill value that acts like the identity for most operations is better suited to this task).
 
 ```@repl intro
-A[1, 1] === nothing
+A[1, 1] == zero(eltype(A))
 
-B = setfill(A, 0) # no-copy alias
+B = setfill(A, missing) # no-copy alias
 B[1, 1]
 ```
 
@@ -90,7 +90,7 @@ An empty matrix and vector won't do us much good, so let's see how to construct 
 ```@repl intro
 A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
 
-v = GBVector([4], [10])
+v = GBVector([4], [10], 7)
 ```
 
 ## GraphBLAS Operations
@@ -98,22 +98,24 @@ v = GBVector([4], [10])
 The complete documentation of supported operations can be found in [Operations](@ref).
 GraphBLAS operations are, where possible, methods of existing Julia functions listed in the third column.
 
-| GraphBLAS           | Operation                                                        | Julia                                      |
-|:--------------------|:----------------------------------------:                        |----------:                                 |
-|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                          |`mul!` or `*`                             |
-|`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``               |`emul[!]` or `.` broadcasting               |
-|`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``               |`eadd[!]`                                   |
-|`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                      |`extract[!]`, `getindex`       |
-|`subassign`          |``\bf C (I,J) \langle M \rangle = C(I,J) \odot A``                |`subassign[!]` or `setindex!`|
-|`assign`             |``\bf C \langle M \rangle (I,J) = C(I,J) \odot A``                |`assign[!]`                                 |
-|`apply`              |``{\bf C \langle M \rangle = C \odot} f{\bf (A)}``                |`apply[!]`, `map[!]` or `.` broadcasting                |
-|                     |``{\bf C \langle M \rangle = C \odot} f({\bf A},y)``              |                                            |
-|                     |``{\bf C \langle M \rangle = C \odot} f(x,{\bf A})``              |                                            |
-|`select`             |``{\bf C \langle M \rangle = C \odot} f({\bf A},k)``              |`select[!]`                                 |
-|`reduce`             |``{\bf w \langle m \rangle = w \odot} [{\oplus}_j {\bf A}(:,j)]`` |`reduce[!]`                                 |
-|                     |``s = s \odot [{\oplus}_{ij}  {\bf A}(i,j)]``                     |                                            |
-|`transpose`          |``\bf C \langle M \rangle = C \odot A^{\sf T}``                   |`gbtranspose[!]`, lazy: `transpose`, `'`    |
-|`kronecker`          |``\bf C \langle M \rangle = C \odot \text{kron}(A, B)``           |`kron[!]`                                   |
+| GraphBLAS           | Operation                                                                         | Julia                                      |
+|:--------------------|:----------------------------------------:                                         |----------:                                 |
+|`mxm`, `mxv`, `vxm`  |``\bf C \langle M \rangle = C \odot AB``                                           |`mul!` or `*`                               |
+|`eWiseMult`          |``\bf C \langle M \rangle = C \odot (A \otimes B)``                                |`emul[!]` or `.` broadcasting               |
+|`eWiseAdd`           |``\bf C \langle M \rangle = C \odot (A \oplus  B)``                                |`eadd[!]`                                   |
+|`eWiseUnion`         |``\bf C \langle M \rangle = C \odot ([ A \vert \alpha ] \oplus [ B \vert \beta ])``|`eunion[!]`                                 |
+|`extract`            |``\bf C \langle M \rangle = C \odot A(I,J)``                                       |`extract[!]`, `getindex`                    |
+|`subassign`          |``\bf C (I,J) \langle M \rangle = C(I,J) \odot A``                                 |`subassign[!]` or `setindex!`               |
+|`assign`             |``\bf C \langle M \rangle (I,J) = C(I,J) \odot A``                                 |`assign[!]`                                 |
+|`apply`              |``{\bf C \langle M \rangle = C \odot} f{\bf (A)}``                                 |`apply[!]`, `map[!]` or `.` broadcasting    |
+|                     |``{\bf C \langle M \rangle = C \odot} f({\bf A},y)``                               |                                            |
+|                     |``{\bf C \langle M \rangle = C \odot} f(x,{\bf A})``                               |                                            |
+|                     |``{\bf C \langle M \rangle = C \odot} f({\bf A}_{ij}, i, j, x)``                   |                                            |
+|`select`             |``{\bf C \langle M \rangle = C \odot} f({\bf A}_{ij},i, j, x)``                    |`select[!]`                                 |
+|`reduce`             |``{\bf w \langle m \rangle = w \odot} [{\oplus}_j {\bf A}(:,j)]``                  |`reduce[!]`                                 |
+|                     |``s = s \odot [{\oplus}_{ij}  {\bf A}(i,j)]``                                      |                                            |
+|`transpose`          |``\bf C \langle M \rangle = C \odot A^{\sf T}``                                    |`gbtranspose[!]`, lazy: `transpose`, `'`    |
+|`kronecker`          |``\bf C \langle M \rangle = C \odot \text{kron}(A, B)``                            |`kron[!]`                                   |
 
 where ``\bf M`` is a `GBArray` mask, ``\odot`` is a binary operator for accumulating into ``\bf C``, and ``\otimes`` and ``\oplus`` are a binary operation and commutative monoid respectively. ``f`` is either a unary or binary operator. 
 
@@ -127,7 +129,7 @@ SuiteSparse:GraphBLAS ships with many of the common unary and binary operators a
 along with monoids and semirings built commonly used in graph algorithms. 
 These built-in operators are *fast*, and should be used where possible. However, users are also free to provide their own functions as operators when necessary.
 
-SuiteSparseGraphBLAS.jl will *mostly* take care of operators behind the scenes, and in most cases users should pass in normal functions like `+` and `sin`. For example:
+SuiteSparseGraphBLAS.jl will take care of operators behind the scenes, and in most cases users should pass in normal functions like `+` and `sin`. For example:
 
 ```@repl intro
 emul(A, A, ^) # elementwise exponent
@@ -135,10 +137,10 @@ emul(A, A, ^) # elementwise exponent
 map(sin, A)
 ```
 
-Broadcasting functionality is also supported, `A .^ A` will lower to `emul(A, A, ^)`, and `sin.(A)` will lower to `map(sin, A)`.
+Broadcasting functionality is also supported, `A .^ A` will lower to `emul(A, A, ^)`, and `sin.(A)` will lower to `apply(sin, A)`.
 
-Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)` or
-`*(A, B, (max, +))`.
+Matrix multiplication, which accepts a semiring, can be called with either `*(max, +)(A, B)`,
+`*(A, B, (max, +))`, or `LinearAlgebra.mul!(C, A, B, (max, +))`.
 
 We can also use functions that are not already built into SuiteSparseGraphBLAS.jl:
 
@@ -153,8 +155,8 @@ Compared to `A .+ 1` which lowers to `apply(+, A, 1)` the `map` call above is ~2
 
 !!! warning "Performance of User Defined Functions"
     Operators which are not already built-in are automatically constructed using function pointers when called. 
-    Note, however, that their performance is significantly degraded compared to built-in operators,
-    and where possible user code should avoid this capability. See [Operators](@ref).
+    Their performance is significantly degraded compared to built-in operators,
+    and where possible user code should avoid this capability and instead compose built-in operators. See [Operators](@ref).
 
 ## Example
 

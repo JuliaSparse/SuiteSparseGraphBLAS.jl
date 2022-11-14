@@ -7,7 +7,7 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, GBType,
 using ..LibGraphBLAS
 export unaryop, @unop
 
-export positioni, positionj, frexpx, frexpe
+export rowindex, colindex, frexpx, frexpe
 
 using SpecialFunctions
 
@@ -115,10 +115,21 @@ end
 # positionals
 # dummy functions mostly for Base._return_type purposes.
 # 1 is the most natural value regardless.
-positioni(_) = 1::Int64
-positionj(_) = 1::Int64
-@unop positioni GxB_POSITIONI1 Any=>N
-@unop positionj GxB_POSITIONJ1 Any=>N
+"""
+    rowindex(xᵢⱼ) -> i
+
+Dummy function for use with [`apply`](@ref). Returns the row index of an element.
+"""
+rowindex(_) = 1::Int64
+
+"""
+    colindex(xᵢⱼ) -> j
+
+Dummy function for use with [`apply`](@ref). Returns the row index of an element.
+"""
+colindex(_) = 1::Int64
+@unop rowindex GxB_POSITIONI1 Any=>N
+@unop colindex GxB_POSITIONJ1 Any=>N
 
 
 #floats and complexes
