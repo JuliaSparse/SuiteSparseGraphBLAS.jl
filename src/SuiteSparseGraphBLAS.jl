@@ -103,7 +103,6 @@ include("serialization.jl")
 
 #EXPERIMENTAL
 include("linalg.jl")
-include("misc.jl")
 include("mmread.jl")
 include("iterator.jl")
 include("solvers/klu.jl")
