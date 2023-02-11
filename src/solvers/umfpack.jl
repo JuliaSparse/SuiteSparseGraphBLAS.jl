@@ -234,8 +234,8 @@ Base.copy(F::T, ws=UmfpackWS(F)) where {T <: ATLU} =
 
 if VERSION < v"1.10-"
     Base.adjoint(F::GBUmfpackLU) = Adjoint(F)
-    Base.transpose(F::GBUmfpackLU) = Transpose(F)
 end
+Base.transpose(F::GBUmfpackLU) = TransposeFact(F)
 
 function Base.lock(f::Function, F::GBUmfpackLU)
     lock(F)
