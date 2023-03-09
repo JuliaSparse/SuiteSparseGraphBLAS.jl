@@ -134,7 +134,7 @@ function extract!(
     w::AbstractGBVector, u::AbstractGBVector, I;
     mask = nothing, accum = nothing, desc = nothing
 )
-    _canbeoutput(C) || throw(ShallowException())
+    _canbeoutput(w) || throw(ShallowException())
     I, ni = idx(I)
     I = decrement!(I)
     desc = _handledescriptor(desc; out=w)
