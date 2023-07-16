@@ -11,4 +11,10 @@
     o2 = kron(m1, n1; mask, desc=Descriptor(structural_mask=true, complement_mask=true))
     @test o2[20, 5] === getfill(o2) #We don't want values in masked out area
     @test o2[1:2:15, :] == o1[1:2:15, :] #The rest should match, test indexing too.
+
+    # Ensure we don't break usual `kron`
+    # https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/issues/118
+    A = zeros(2,3)
+    B = rand(3,4)
+    @test kron(A,B) isa Matrix{Float64}
 end
