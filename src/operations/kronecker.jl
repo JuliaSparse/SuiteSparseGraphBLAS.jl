@@ -55,16 +55,16 @@ function LinearAlgebra.kron(
     return C
 end
 
-LinearAlgebra.kron!(C::GBVecOrMat, A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) = 
+LinearAlgebra.kron!(C::GBVecOrMat, A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) =
     @_densepack A kron!(C, A, B, op; kwargs...)
-LinearAlgebra.kron!(C::GBVecOrMat, A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) = 
+LinearAlgebra.kron!(C::GBVecOrMat, A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) =
     @_densepack B kron!(C, A, B, op; kwargs...)
-LinearAlgebra.kron!(C::GBVecOrMat, A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) = 
+LinearAlgebra.kron!(C::GBVecOrMat, A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) =
     @_densepack A B kron!(C, A, B, op; kwargs...)
 
-LinearAlgebra.kron(A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) = 
+LinearAlgebra.kron(A::VecMatOrTrans, B::GBArrayOrTranspose, op = *; kwargs...) =
     @_densepack A kron(A, B, op; kwargs...)
-LinearAlgebra.kron(A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) = 
+LinearAlgebra.kron(A::GBArrayOrTranspose, B::VecMatOrTrans, op = *; kwargs...) =
     @_densepack B kron(A, B, op; kwargs...)
-LinearAlgebra.kron(A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) = 
-    @_densepack A B kron(A, B, op; kwargs...)
+# LinearAlgebra.kron(A::VecMatOrTrans, B::VecMatOrTrans, op = *; kwargs...) =
+    # @_densepack A B kron(A, B, op; kwargs...)
