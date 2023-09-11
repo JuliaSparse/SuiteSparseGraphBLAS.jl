@@ -102,6 +102,9 @@ const JL_UMFPACK_FRONT_ALLOC_INIT = UMFPACK_FRONT_ALLOC_INIT + 1
 const JL_UMFPACK_DROPTOL = UMFPACK_DROPTOL + 1
 const JL_UMFPACK_IRSTEP = UMFPACK_IRSTEP + 1
 
+const AdjointFact = isdefined(LinearAlgebra, :AdjointFactorization) ? LinearAlgebra.AdjointFactorization : Adjoint
+const TransposeFact = isdefined(LinearAlgebra, :TransposeFactorization) ? LinearAlgebra.TransposeFactorization : Transpose
+
 ## UMFPACK
 
 # there might be quite a bit of duplication here.
@@ -188,7 +191,7 @@ workspace_W_size(F::GBUmfpackLU) = workspace_W_size(F, has_refinement(F))
 workspace_W_size(S::Union{GBUmfpackLU{<:AbstractFloat}, AbstractGBMatrix{<:AbstractFloat}}, refinement::Bool) = refinement ? 5 * size(S, 2) : size(S, 2)
 workspace_W_size(S::Union{GBUmfpackLU{<:Complex}, AbstractGBMatrix{<:Complex}}, refinement::Bool) = refinement ? 10 * size(S, 2) : 4 * size(S, 2)
 
-const ATLU = Union{Transpose{<:Any, <:GBUmfpackLU}, Adjoint{<:Any, <:GBUmfpackLU}}
+const ATLU = Union{TransposeFact{<:Any, <:GBUmfpackLU}, AdjointFact{<:Any, <:GBUmfpackLU}}
 has_refinement(F::ATLU) = has_refinement(F.parent)
 has_refinement(F::GBUmfpackLU) = has_refinement(F.control)
 has_refinement(control::AbstractVector) = control[JL_UMFPACK_IRSTEP] > 0
@@ -229,8 +232,10 @@ Base.copy(F::GBUmfpackLU{Tv}, ws=UmfpackWS(F); safecopy = false) where {Tv} =
 Base.copy(F::T, ws=UmfpackWS(F)) where {T <: ATLU} =
     T(copy(parent(F), ws))
 
-Base.adjoint(F::GBUmfpackLU) = Adjoint(F)
-Base.transpose(F::GBUmfpackLU) = Transpose(F)
+if VERSION < v"1.10-"
+    Base.adjoint(F::GBUmfpackLU) = Adjoint(F)
+end
+Base.transpose(F::GBUmfpackLU) = TransposeFact(F)
 
 function Base.lock(f::Function, F::GBUmfpackLU)
     lock(F)
@@ -799,8 +804,8 @@ end
 function UMFPACK.solve!(
     lu::Union{
         GBUmfpackLU, 
-        <:Adjoint{Any, <:GBUmfpackLU}, 
-        <:Transpose{<:Any, <:GBUmfpackLU}
+        <:AdjointFact{Any, <:GBUmfpackLU}, 
+        <:TransposeFact{<:Any, <:GBUmfpackLU}
     }, 
     B::AbstractGBArray
 )
@@ -833,8 +838,8 @@ import LinearAlgebra.ldiv!
 function ldiv!(
     lu::Union{
         GBUmfpackLU, 
-        <:Adjoint{Any, <:GBUmfpackLU}, 
-        <:Transpose{<:Any, <:GBUmfpackLU}
+        <:AdjointFact{Any, <:GBUmfpackLU}, 
+        <:TransposeFact{<:Any, <:GBUmfpackLU}
     }, 
     B::AbstractGBArray)
 
@@ -853,28 +858,28 @@ end
 
 ldiv!(lu::GBUmfpackLU{T}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     ldiv!(B, lu, copy(B))
-ldiv!(translu::Transpose{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
+ldiv!(translu::TransposeFact{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     (lu = translu.parent; ldiv!(B, transpose(lu), copy(B)))
-ldiv!(adjlu::Adjoint{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
+ldiv!(adjlu::AdjointFact{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     (lu = adjlu.parent; ldiv!(B, adjoint(lu), copy(B)))
 ldiv!(lu::GBUmfpackLU{Float64}, B::StridedVecOrMat{<:Complex}) =
     ldiv!(B, lu, copy(B))
-ldiv!(translu::Transpose{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{<:Complex}) =
+ldiv!(translu::TransposeFact{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{<:Complex}) =
     (lu = translu.parent; ldiv!(B, transpose(lu), copy(B)))
-ldiv!(adjlu::Adjoint{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{<:Complex}) =
+ldiv!(adjlu::AdjointFact{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{<:Complex}) =
     (lu = adjlu.parent; ldiv!(B, adjoint(lu), copy(B)))
 
 ldiv!(X::StridedVecOrMat{T}, lu::GBUmfpackLU{T}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     _Aq_ldiv_B!(X, lu, B, UMFPACK_A)
-ldiv!(X::StridedVecOrMat{T}, translu::Transpose{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
+ldiv!(X::StridedVecOrMat{T}, translu::TransposeFact{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     (lu = translu.parent; _Aq_ldiv_B!(X, lu, B, UMFPACK_Aat))
-ldiv!(X::StridedVecOrMat{T}, adjlu::Adjoint{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
+ldiv!(X::StridedVecOrMat{T}, adjlu::AdjointFact{T,<:GBUmfpackLU{T}}, B::StridedVecOrMat{T}) where {T<:UMFVTypes} =
     (lu = adjlu.parent; _Aq_ldiv_B!(X, lu, B, UMFPACK_At))
 ldiv!(X::StridedVecOrMat{Tb}, lu::GBUmfpackLU{Float64}, B::StridedVecOrMat{Tb}) where {Tb<:Complex} =
     _Aq_ldiv_B!(X, lu, B, UMFPACK_A)
-ldiv!(X::StridedVecOrMat{Tb}, translu::Transpose{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{Tb}) where {Tb<:Complex} =
+ldiv!(X::StridedVecOrMat{Tb}, translu::TransposeFact{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{Tb}) where {Tb<:Complex} =
     (lu = translu.parent; _Aq_ldiv_B!(X, lu, B, UMFPACK_Aat))
-ldiv!(X::StridedVecOrMat{Tb}, adjlu::Adjoint{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{Tb}) where {Tb<:Complex} =
+ldiv!(X::StridedVecOrMat{Tb}, adjlu::AdjointFact{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{Tb}) where {Tb<:Complex} =
     (lu = adjlu.parent; _Aq_ldiv_B!(X, lu, B, UMFPACK_At))
 
 function _Aq_ldiv_B!(X::StridedVecOrMat, lu::GBUmfpackLU, B::StridedVecOrMat, transposeoptype)
