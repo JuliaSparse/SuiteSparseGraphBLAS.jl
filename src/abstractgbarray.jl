@@ -968,7 +968,7 @@ function Base.setindex!(
     u::AbstractGBVector, x, I::Union{Vector, UnitRange, StepRange, Colon}, ::Colon;
     mask = nothing, accum = nothing, desc = nothing
 )
-    Base.subassign!(u, x, I; mask, accum, desc)
+    subassign!(u, x, I; mask, accum, desc)
 end
 function Base.setindex!(
     u::AbstractGBVector, x, I;
