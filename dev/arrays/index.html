@@ -14,72 +14,72 @@
     (2,1)   2
     (1,2)   3
     (2,2)   4</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; x = GBMatrix(sprand(100, 100, 0.5); fill = 0.0)</code><code class="nohighlight hljs ansi" style="display:block;">100x100 GraphBLAS double matrix, bitmap by col
-  4964 entries, memory: 144.2 KB
+  5031 entries, memory: 144.2 KB
 
-    (8,1)    0.825261
-    (12,1)    0.695754
-    (13,1)    0.728034
-    (17,1)    0.339255
-    (21,1)    0.662871
-    (22,1)    0.853304
-    (24,1)    0.811289
-    (25,1)    0.961253
-    (26,1)    0.800051
-    (27,1)    0.299421
-    (28,1)    0.784781
-    (29,1)    0.960523
-    (30,1)    0.672148
-    (31,1)    0.658453
-    (32,1)    0.545309
-    (33,1)    0.0353612
-    (34,1)    0.101833
-    (35,1)    0.134866
-    (38,1)    0.905525
-    (40,1)    0.60798
-    (42,1)    0.698096
-    (43,1)    0.0859389
-    (46,1)    0.438101
-    (48,1)    0.212413
-    (49,1)    0.918086
-    (50,1)    0.564168
-    (53,1)    0.798158
-    (55,1)    0.355026
-    (56,1)    0.594145
+    (1,1)    0.111103
+    (2,1)    0.281241
+    (3,1)    0.00317027
+    (4,1)    0.998538
+    (5,1)    0.852052
+    (8,1)    0.684981
+    (11,1)    0.165872
+    (12,1)    0.393391
+    (13,1)    0.494927
+    (14,1)    0.916814
+    (16,1)    0.685934
+    (22,1)    0.458828
+    (25,1)    0.489387
+    (26,1)    0.399003
+    (27,1)    0.523689
+    (29,1)    0.890842
+    (30,1)    0.738222
+    (32,1)    0.833449
+    (34,1)    0.0890411
+    (35,1)    0.654542
+    (36,1)    0.764517
+    (37,1)    0.644242
+    (42,1)    0.760965
+    (43,1)    0.343704
+    (44,1)    0.948057
+    (45,1)    0.483092
+    (47,1)    0.716159
+    (50,1)    0.633684
+    (51,1)    0.0976559
     ...</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; x = GBMatrix(
            rand(1:50_000, 5000), rand(1:500_000, 5000), 1, 500_000, 500_000
        )</code><code class="nohighlight hljs ansi" style="display:block;">500000x500000 GraphBLAS int64_t matrix, hypersparse by row
   5000 entries, memory: 192.3 KB
   iso value:   1
 
-    (21,234529)   1
-    (58,366126)   1
-    (59,193686)   1
-    (64,330822)   1
-    (66,77061)   1
-    (72,151025)   1
-    (97,42455)   1
-    (103,460401)   1
-    (107,320050)   1
-    (126,177220)   1
-    (141,119023)   1
-    (173,159674)   1
-    (182,372766)   1
-    (191,59068)   1
-    (196,95976)   1
-    (196,285112)   1
-    (207,170417)   1
-    (223,344624)   1
-    (225,162757)   1
-    (250,82768)   1
-    (269,402402)   1
-    (274,472980)   1
-    (277,404698)   1
-    (283,176650)   1
-    (285,283802)   1
-    (288,53815)   1
-    (299,170109)   1
-    (327,364756)   1
-    (341,103424)   1
+    (3,107776)   1
+    (4,358767)   1
+    (19,59799)   1
+    (20,476668)   1
+    (23,470329)   1
+    (55,483210)   1
+    (57,313567)   1
+    (63,427163)   1
+    (70,492590)   1
+    (77,222719)   1
+    (88,158409)   1
+    (93,440013)   1
+    (96,295088)   1
+    (109,268415)   1
+    (115,241973)   1
+    (135,166245)   1
+    (146,213483)   1
+    (151,3586)   1
+    (157,59120)   1
+    (161,190268)   1
+    (162,17962)   1
+    (169,487340)   1
+    (182,321093)   1
+    (188,147830)   1
+    (195,424709)   1
+    (203,11340)   1
+    (203,86508)   1
+    (226,414119)   1
+    (236,180642)   1
     ...</code></pre><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrix" href="#SuiteSparseGraphBLAS.GBMatrix"><code>SuiteSparseGraphBLAS.GBMatrix</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GBMatrix{T, F} &lt;: AbstractSparseArray{T, UInt64, 2}</code></pre><p>Two-dimensional GraphBLAS array with elements of type <code>T</code>. <code>F</code> is the type of the fill-value,  which is typically <code>Missing</code> or <code>T</code>.  Internal representation is specified as opaque, but in this implementation is stored as one of  the following in either row or column orientation:</p><pre><code class="nohighlight hljs">1. Dense
 2. Bitmap
 3. Sparse Compressed
@@ -87,49 +87,49 @@
 GBMatrix{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
 GBMatrix(I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
 GBMatrix(I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
-GBMatrix(A::Union{&lt;:AbstractGBArray, &lt;:AbstractMatrix}; fill = defaultfill(eltype(A)))</code></pre><p>All constructors, no matter their input, may specify an element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p><p><code>GBMatrix</code> construction from an existing AbstractArray will maintain the storage order of the original, typically <code>ColMajor()</code>. </p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L875-L904">source</a></section></article><h2 id="GBVector"><a class="docs-heading-anchor" href="#GBVector">GBVector</a><a id="GBVector-1"></a><a class="docs-heading-anchor-permalink" href="#GBVector" title="Permalink"></a></h2><p>A <code>GBVector</code> is the one-dimensional equivalent of the <code>GBMatrix</code>, and internally a <code>GBVector</code> is represented in exactly the same fashion. However, they are always column-oriented. </p><h3 id="Construction-2"><a class="docs-heading-anchor" href="#Construction-2">Construction</a><a class="docs-heading-anchor-permalink" href="#Construction-2" title="Permalink"></a></h3><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; v = GBVector{ComplexF32}(100)</code><code class="nohighlight hljs ansi" style="display:block;">100x1 GraphBLAS float complex matrix, sparse by col
+GBMatrix(A::Union{&lt;:AbstractGBArray, &lt;:AbstractMatrix}; fill = defaultfill(eltype(A)))</code></pre><p>All constructors, no matter their input, may specify an element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p><p><code>GBMatrix</code> construction from an existing AbstractArray will maintain the storage order of the original, typically <code>ColMajor()</code>. </p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L811-L840">source</a></section></article><h2 id="GBVector"><a class="docs-heading-anchor" href="#GBVector">GBVector</a><a id="GBVector-1"></a><a class="docs-heading-anchor-permalink" href="#GBVector" title="Permalink"></a></h2><p>A <code>GBVector</code> is the one-dimensional equivalent of the <code>GBMatrix</code>, and internally a <code>GBVector</code> is represented in exactly the same fashion. However, they are always column-oriented. </p><h3 id="Construction-2"><a class="docs-heading-anchor" href="#Construction-2">Construction</a><a class="docs-heading-anchor-permalink" href="#Construction-2" title="Permalink"></a></h3><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; v = GBVector{ComplexF32}(100)</code><code class="nohighlight hljs ansi" style="display:block;">100x1 GraphBLAS float complex matrix, sparse by col
   no entries, memory: 272 bytes</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; v = GBMatrix(rand(ComplexF64, 3); fill = nothing)</code><code class="nohighlight hljs ansi" style="display:block;">3x1 GraphBLAS double complex matrix, full by col
   3 entries, memory: 304 bytes
 
-    (1,1)    0.0211654 + 0.153339i
-    (2,1)    0.52277 + 0.477492i
-    (3,1)    0.708635 + 0.767229i</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; v = GBVector(sprand(Bool, 100_000_000, 0.001))</code><code class="nohighlight hljs ansi" style="display:block;">100000000x1 GraphBLAS bool matrix, sparse by col
-  99829 entries, memory: 877.7 KB
+    (1,1)    0.600434 + 0.490631i
+    (2,1)    0.290834 + 0.801605i
+    (3,1)    0.481895 + 0.256438i</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; v = GBVector(sprand(Bool, 100_000_000, 0.001))</code><code class="nohighlight hljs ansi" style="display:block;">100000000x1 GraphBLAS bool matrix, sparse by col
+  99831 entries, memory: 877.7 KB
 
-    (664,1)   1
-    (2846,1)   1
-    (3554,1)   1
-    (3637,1)   1
-    (3888,1)   1
-    (6434,1)   1
-    (7356,1)   1
-    (7592,1)   1
-    (8527,1)   1
-    (8793,1)   1
-    (8991,1)   1
-    (9862,1)   1
-    (11272,1)   1
-    (13075,1)   1
-    (13124,1)   1
-    (13325,1)   1
-    (13773,1)   1
-    (13935,1)   1
-    (20417,1)   1
-    (20639,1)   1
-    (21199,1)   1
-    (22252,1)   1
-    (25314,1)   1
-    (25385,1)   1
-    (25974,1)   1
-    (26482,1)   1
-    (28636,1)   1
-    (30959,1)   1
-    (30969,1)   1
+    (1091,1)   1
+    (1581,1)   1
+    (5514,1)   1
+    (7290,1)   1
+    (8821,1)   1
+    (10611,1)   1
+    (11611,1)   1
+    (12462,1)   1
+    (12974,1)   1
+    (15183,1)   1
+    (17216,1)   1
+    (18123,1)   1
+    (19185,1)   1
+    (19643,1)   1
+    (20385,1)   1
+    (21823,1)   1
+    (23668,1)   1
+    (25116,1)   1
+    (26440,1)   1
+    (26491,1)   1
+    (27281,1)   1
+    (27377,1)   1
+    (27755,1)   1
+    (28058,1)   1
+    (28536,1)   1
+    (30110,1)   1
+    (30249,1)   1
+    (30573,1)   1
+    (32710,1)   1
     ...</code></pre><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBVector" href="#SuiteSparseGraphBLAS.GBVector"><code>SuiteSparseGraphBLAS.GBVector</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GBVector{T, F} &lt;: AbstractSparseArray{T, UInt64, 1}</code></pre><p>One-dimensional GraphBLAS array with elements of type T. <code>F</code> is the type of the fill-value,  which is typically <code>Missing</code> or <code>T</code>.  Internal representation is specified as opaque, but may be either a dense vector, bitmap vector, or  compressed sparse vector.</p><p>See also: <a href="#SuiteSparseGraphBLAS.GBMatrix"><code>GBMatrix</code></a>.</p><p><strong>Construction Signatures</strong></p><pre><code class="nohighlight hljs">GBVector{T, F}(n::Integer; fill = defaultfill(F))
 GBVector{T}(n::Integer; fill = defaultfill(T))
 GBVector(I::AbstractVector, X::AbstractVector{T}, n; fill=defaultfill(T), combine=+)
 GBVector(I::AbstractVector, x::T, n; fill=defaultfill(T), combine=+)
-GBVector(v::Union{&lt;:AbstractGBVector, &lt;:AbstractVector}; fill = defaultfill(eltype(v)))</code></pre><p>All constructors, no matter their input, may specify parameters for  element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L835-L856">source</a></section></article><h1 id="Indexing"><a class="docs-heading-anchor" href="#Indexing">Indexing</a><a id="Indexing-1"></a><a class="docs-heading-anchor-permalink" href="#Indexing" title="Permalink"></a></h1><p>The usual AbstractArray and SparseArray indexing capabilities are available. Including indexing by scalars, vectors, and ranges.</p><div class="admonition is-danger"><header class="admonition-header">Indexing Structural Zeros</header><div class="admonition-body"><p>When indexing a <code>SparseMatrixCSC</code> from <code>SparseArrays</code> a structural, or implicit, zero will be returned as <code>zero(T)</code> where <code>T</code> is the element type of the matrix.</p><p>When indexing a GBArray structural zeros default to <code>nothing</code>. While this is a significant departure from the <code>SparseMatrixCSC</code> it more closely matches the GraphBLAS spec, and enables the consuming method to determine the value of implicit zeros in the presence of explicit zeros. </p><p>For instance with an element type of <code>Float64</code> you may want the implicit zero to be <code>0.0</code>, <code>-∞</code> or <code>+∞</code> depending on your algorithm. In addition, for graph algorithms there may be a distinction between an implicit zero, indicating the lack of an edge between two vertices in an adjacency matrix, and an explicit zero where the edge exists but has a <code>0</code> weight.</p><p>However, many functions outside of GraphBLAS will throw an error if they receive <code>nothing</code> from an indexing operation. To accomodate these functions the user may set the fill value for an <code>AbstractGBArray</code> on construction and with <a href="../utilities/#SuiteSparseGraphBLAS.setfill"><code>setfill</code></a> and <a href="../utilities/#SuiteSparseGraphBLAS.setfill!"><code>setfill!</code></a>.</p></div></div><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])</code><code class="nohighlight hljs ansi" style="display:block;">7x7 GraphBLAS int64_t matrix, bitmap by row
+GBVector(v::Union{&lt;:AbstractGBVector, &lt;:AbstractVector}; fill = defaultfill(eltype(v)))</code></pre><p>All constructors, no matter their input, may specify parameters for  element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L771-L792">source</a></section></article><h1 id="Indexing"><a class="docs-heading-anchor" href="#Indexing">Indexing</a><a id="Indexing-1"></a><a class="docs-heading-anchor-permalink" href="#Indexing" title="Permalink"></a></h1><p>The usual AbstractArray and SparseArray indexing capabilities are available. Including indexing by scalars, vectors, and ranges.</p><div class="admonition is-danger"><header class="admonition-header">Indexing Structural Zeros</header><div class="admonition-body"><p>When indexing a <code>SparseMatrixCSC</code> from <code>SparseArrays</code> a structural, or implicit, zero will be returned as <code>zero(T)</code> where <code>T</code> is the element type of the matrix.</p><p>When indexing a GBArray structural zeros default to <code>nothing</code>. While this is a significant departure from the <code>SparseMatrixCSC</code> it more closely matches the GraphBLAS spec, and enables the consuming method to determine the value of implicit zeros in the presence of explicit zeros. </p><p>For instance with an element type of <code>Float64</code> you may want the implicit zero to be <code>0.0</code>, <code>-∞</code> or <code>+∞</code> depending on your algorithm. In addition, for graph algorithms there may be a distinction between an implicit zero, indicating the lack of an edge between two vertices in an adjacency matrix, and an explicit zero where the edge exists but has a <code>0</code> weight.</p><p>However, many functions outside of GraphBLAS will throw an error if they receive <code>nothing</code> from an indexing operation. To accomodate these functions the user may set the fill value for an <code>AbstractGBArray</code> on construction and with <a href="../utilities/#SuiteSparseGraphBLAS.setfill"><code>setfill</code></a> and <a href="../utilities/#SuiteSparseGraphBLAS.setfill!"><code>setfill!</code></a>.</p></div></div><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])</code><code class="nohighlight hljs ansi" style="display:block;">7x7 GraphBLAS int64_t matrix, bitmap by row
   12 entries, memory: 832 bytes
 
     (1,2)   1
@@ -190,8 +190,8 @@ GBVector(v::Union{&lt;:AbstractGBVector, &lt;:AbstractVector}; fill = defaultfil
 GBMatrix[R | C]{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
 GBMatrix[R | C](I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
 GBMatrix[R | C](I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
-GBMatrix[R | C](A::Union{&lt;:AbstractGBArray, &lt;:AbstractMatrix}; fill = defaultfill(eltype(A)))</code></pre><p>All constructors, no matter their input, may specify an element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L981">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrixC" href="#SuiteSparseGraphBLAS.GBMatrixC"><code>SuiteSparseGraphBLAS.GBMatrixC</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">OrientedGBMatrix{T, F, O} &lt;: AbstractSparseArray{T, UInt64, 2}</code></pre><p>Two-dimensional GraphBLAS array with elements of type <code>T</code>. <code>F</code> is the type of the fill-value,  which is typically <code>Missing</code> or <code>T</code>.  Exactly the same as <a href="#SuiteSparseGraphBLAS.GBMatrix"><code>GBMatrix</code></a>, except the memory orientation is static: either <code>StorageOrders.RowMajor()</code> (default) or <code>StorageOrders.ColMajor()</code>.</p><p>The aliases <code>GBMatrixC</code> and <code>GBMatrixR</code> are the preferred construction methods.</p><p>#Signatures</p><pre><code class="nohighlight hljs">GBMatrix[R | C]{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F))
+GBMatrix[R | C](A::Union{&lt;:AbstractGBArray, &lt;:AbstractMatrix}; fill = defaultfill(eltype(A)))</code></pre><p>All constructors, no matter their input, may specify an element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L917">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBMatrixC" href="#SuiteSparseGraphBLAS.GBMatrixC"><code>SuiteSparseGraphBLAS.GBMatrixC</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">OrientedGBMatrix{T, F, O} &lt;: AbstractSparseArray{T, UInt64, 2}</code></pre><p>Two-dimensional GraphBLAS array with elements of type <code>T</code>. <code>F</code> is the type of the fill-value,  which is typically <code>Missing</code> or <code>T</code>.  Exactly the same as <a href="#SuiteSparseGraphBLAS.GBMatrix"><code>GBMatrix</code></a>, except the memory orientation is static: either <code>StorageOrders.RowMajor()</code> (default) or <code>StorageOrders.ColMajor()</code>.</p><p>The aliases <code>GBMatrixC</code> and <code>GBMatrixR</code> are the preferred construction methods.</p><p>#Signatures</p><pre><code class="nohighlight hljs">GBMatrix[R | C]{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F))
 GBMatrix[R | C]{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
 GBMatrix[R | C](I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
 GBMatrix[R | C](I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
-GBMatrix[R | C](A::Union{&lt;:AbstractGBArray, &lt;:AbstractMatrix}; fill = defaultfill(eltype(A)))</code></pre><p>All constructors, no matter their input, may specify an element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L980">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBShallowMatrix" href="#SuiteSparseGraphBLAS.GBShallowMatrix"><code>SuiteSparseGraphBLAS.GBShallowMatrix</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GBShallowMatrix{T, F, O, P, B, A} &lt;: AbstractSparseArray{T, UInt64, 2}</code></pre><p>Shallow GraphBLAS matrix type wrapping a Julia-resident array. Currently supported only for <code>Matrix</code></p><p>The primary constructor for this type is the <a href="@ref"><code>pack</code></a> function, although it may also be constructed directly via <code>GBShallowMatrix(A::Matrix)</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L1014-L1021">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBShallowVector" href="#SuiteSparseGraphBLAS.GBShallowVector"><code>SuiteSparseGraphBLAS.GBShallowVector</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GBShallowVector{T, F, P, B, A} &lt;: AbstractSparseArray{T, UInt64, 1}</code></pre><p>Shallow GraphBLAS vector type wrapping a Julia-resident vector. Currently supported only for <code>Vector</code></p><p>The primary constructor for this type is the <a href="@ref"><code>pack</code></a> function, although it may also be constructed directly via <code>GBShallowVector(A::Vector)</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L992-L999">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBScalar" href="#SuiteSparseGraphBLAS.GBScalar"><code>SuiteSparseGraphBLAS.GBScalar</code></a> — <span class="docstring-category">Type</span></header><section><div></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/050c796e89e81b9cf8a718df8396f1830688c55c/src/types.jl#L331">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Introduction</a><a class="docs-footer-nextpage" href="../operations/">Operations »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Monday 11 September 2023 14:57">Monday 11 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+GBMatrix[R | C](A::Union{&lt;:AbstractGBArray, &lt;:AbstractMatrix}; fill = defaultfill(eltype(A)))</code></pre><p>All constructors, no matter their input, may specify an element type <code>T</code> as well as a fill type <code>F</code>, conversions are handled internally. These parameters will be inferred in most cases.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L916">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBShallowMatrix" href="#SuiteSparseGraphBLAS.GBShallowMatrix"><code>SuiteSparseGraphBLAS.GBShallowMatrix</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GBShallowMatrix{T, F, O, P, B, A} &lt;: AbstractSparseArray{T, UInt64, 2}</code></pre><p>Shallow GraphBLAS matrix type wrapping a Julia-resident array. Currently supported only for <code>Matrix</code></p><p>The primary constructor for this type is the <a href="@ref"><code>pack</code></a> function, although it may also be constructed directly via <code>GBShallowMatrix(A::Matrix)</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L950-L957">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBShallowVector" href="#SuiteSparseGraphBLAS.GBShallowVector"><code>SuiteSparseGraphBLAS.GBShallowVector</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">GBShallowVector{T, F, P, B, A} &lt;: AbstractSparseArray{T, UInt64, 1}</code></pre><p>Shallow GraphBLAS vector type wrapping a Julia-resident vector. Currently supported only for <code>Vector</code></p><p>The primary constructor for this type is the <a href="@ref"><code>pack</code></a> function, although it may also be constructed directly via <code>GBShallowVector(A::Vector)</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L928-L935">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="SuiteSparseGraphBLAS.GBScalar" href="#SuiteSparseGraphBLAS.GBScalar"><code>SuiteSparseGraphBLAS.GBScalar</code></a> — <span class="docstring-category">Type</span></header><section><div></div><a class="docs-sourcelink" target="_blank" href="https://github.com/JuliaSparse/SuiteSparseGraphBLAS.jl/blob/e171b3582ca499f87a6f884ccc7b35a428916f98/src/types.jl#L331">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Introduction</a><a class="docs-footer-nextpage" href="../operations/">Operations »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Monday 11 September 2023 17:39">Monday 11 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
