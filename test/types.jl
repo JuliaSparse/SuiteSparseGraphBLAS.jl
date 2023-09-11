@@ -13,7 +13,7 @@ for type ∈ [GBMatrix, GBMatrixC, GBMatrixR]
     @test getfill(A) === 3
     type === GBMatrixC && (@test storageorder(A) === ColMajor())
     type === GBMatrixR && (@test storageorder(A) === RowMajor())
-    @test_throws MethodError type{Int64, Nothing}(3, 3; fill = 3)
+    @test_throws Exception type{Int64, Nothing}(3, 3; fill = 3) # TODO: better error message?
     @test type{Int64, Nothing}(3, 3; fill = nothing) isa type
 
     # <type>{T}(nrows, ncols; fill)

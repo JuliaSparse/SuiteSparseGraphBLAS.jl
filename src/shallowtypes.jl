@@ -57,7 +57,14 @@ function Base.similar(
     ::Type{TNew}, dims::Tuple{Int64, Vararg{Int64, N}} = size(A);
     fill = A.fill
 ) where {T, TNew, N}
-    return GBMatrix{TNew}(dims...; fill)
+    if dims isa Dims{1}
+        # TODO: When new Vector types are added this will be incorrect.
+        x = GBVector{TNew}(dims...; fill)
+    else
+        x = GBMatrix{TNew}(dims...; fill)
+    end
+    _hasconstantorder(x) || setstorageorder!(x, storageorder(A))
+    return x
 end
 
 function Base.similar(

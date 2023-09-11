@@ -35,19 +35,6 @@ function ChainRulesTestUtils.rand_tangent(
 end
 
 # Inefficient, but doesn't matter, only doing small matrices
-function FiniteDifferences.to_vec(M::SparseMatrixCSC)
-    x, back = FiniteDifferences.to_vec(Matrix(M))
-    function backtomat(xvec)
-        M2 = back(xvec)
-        M_out = copy(M)
-        nz = findnz(M_out)
-        for j ∈ nz[1], i ∈ nz[2]
-            M_out[i,j] = M2[i, j]
-        end
-        return M_out
-    end
-    return x, backtomat
-end
 function FiniteDifferences.to_vec(M::SparseVector)
     x, back = FiniteDifferences.to_vec(Vector(M))
     function backtovec(xvec)

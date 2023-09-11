@@ -588,43 +588,13 @@ macro gbmatrixtype(typename)
             if dims isa Dims{1}
                 # TODO: When new Vector types are added this will be incorrect.
                 x = GBVector{TNew}(dims...; fill)
+            elseif $typename <: AbstractGBVector
+                x = GBMatrix{TNew}(dims...; fill)
             else
                 x = $typename{TNew}(dims...; fill)
-                _hasconstantorder(x) || setstorageorder!(x, storageorder(A))
             end
+            _hasconstantorder(x) || setstorageorder!(x, storageorder(A))
             return x
-        end
-        
-        function Base.similar(A::$typename{T}, dims::Tuple; fill = getfill(A)) where T
-            return similar(A, T, dims; fill)
-        end
-        
-        function Base.similar(
-            A::$typename, ::Type{TNew},
-            dims::Integer; fill = getfill(A)
-        ) where TNew
-            return similar(A, TNew, (dims,); fill)
-        end
-        
-        function Base.similar(
-            A::$typename, ::Type{TNew},
-            dim1::Integer, dim2::Integer; fill = getfill(A)
-        ) where TNew
-            return similar(A, TNew, (dim1, dim2); fill)
-        end
-        
-        function Base.similar(
-            A::$typename,
-            dims::Integer; fill = getfill(A)
-        )
-            return similar(A, (dims,); fill)
-        end
-        
-        function Base.similar(
-            A::$typename,
-            dim1::Integer, dim2::Integer; fill = getfill(A)
-        )
-            return similar(A, (dim1, dim2); fill)
         end
         strip_parameters(::Type{<:$typename}) = $typename
     end)
@@ -779,53 +749,19 @@ macro gbvectortype(typename)
             A::SparseVector{T}; 
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
-        
-        # similar
         function Base.similar(
             v::$typename{T}, ::Type{TNew} = T,
             dims::Tuple{Int64, Vararg{Int64, N}} = size(v); fill::F = getfill(v)
         ) where {T, TNew, N, F}
             !(F <: Union{Nothing, Missing}) && (fill = convert(TNew, fill))
             if dims isa Dims{1}
-                # TODO: Check this for correctness!!!
+                # TODO: When new Vector types are added this will be incorrect.
                 x = $typename{TNew}(dims...; fill)
             else
-                x = $GBMatrix{TNew}(dims...; fill)
-                _hasconstantorder(x) || setstorageorder!(x, storageorder(v))
+                x = GBMatrix{TNew}(dims...; fill)
             end
+            _hasconstantorder(x) || setstorageorder!(x, storageorder(v))
             return x
-        end
-        
-        function Base.similar(v::$typename{T}, dims::Tuple; fill = getfill(v)) where T
-            return similar(v, T, dims; fill)
-        end
-        
-        function Base.similar(
-            v::$typename, ::Type{TNew},
-            dims::Integer; fill = getfill(v)
-        ) where TNew
-            return similar(v, TNew, (dims,); fill)
-        end
-        
-        function Base.similar(
-            v::$typename, ::Type{TNew},
-            dim1::Integer, dim2::Integer; fill = getfill(v)
-        ) where TNew
-            return similar(v, TNew, (dim1, dim2); fill)
-        end
-        
-        function Base.similar(
-            v::$typename,
-            dims::Integer; fill = getfill(v)
-        )
-            return similar(v, (dims,); fill)
-        end
-        
-        function Base.similar(
-            v::$typename,
-            dim1::Integer, dim2::Integer; fill = getfill(v)
-        )
-            return similar(v, (dim1, dim2); fill)
         end
         # misc utilities: 
         strip_parameters(::Type{<:$typename}) = $typename

@@ -129,23 +129,10 @@ end
 
 # clear up some ambiguities:
 function Base.:*(
-    A::AbstractGBVector{T},
-    B::Transpose{T, <:AbstractGBVector{T}};
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
+    A::Transpose{<:T, <:GBVector},
+    B::GBVector{T}
 ) where {T <: Real}
-    return *(A, B, (+, *); mask, accum, desc)
-end
-
-function Base.:*(
-    A::Transpose{T, <:AbstractGBVector{T}},
-    B::AbstractGBVector{T};
-    mask = nothing,
-    accum = nothing,
-    desc = nothing
-) where {T <: Real}
-    return *(A, B, (+, *); mask, accum, desc)
+    return *(A, B, (+, *))
 end
 
 function Base.:*(
