@@ -16,6 +16,15 @@ function apply!(
 end
 
 function apply!(
+    op::DataType, C::GBVecOrMat, A::GBArrayOrTranspose;
+    mask = nothing, accum = nothing, desc = nothing
+)
+    (mask !== nothing || accum !== nothing || desc !== nothing) &&
+        throw(ArgumentError("Cannot apply! a DataType with a mask, accum, and desc."))
+    return applyjl!(op, C, A)
+end
+
+function apply!(
     op, A::GBArrayOrTranspose{T};
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}

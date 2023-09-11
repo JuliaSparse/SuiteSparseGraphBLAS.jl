@@ -292,8 +292,8 @@ function _unpackhypermatrix!(
     isiso == C_NULL && (isiso = false)
     nvec = nvec[]
     colptr = unsafe_wrap(Array, Ptr{Int64}(colptr[]), nvec + 1)
-    colidx = unsafe_wrap(Array, Ptr{Int64}(colidx), nvec)
-    rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx), nnonzeros)
+    colidx = unsafe_wrap(Array, Ptr{Int64}(colidx[]), nvec)
+    rowidx = unsafe_wrap(Array, Ptr{Int64}(rowidx[]), nnonzeros)
     nstored = isiso[] ? 1 : nnonzeros
     vals = unsafe_wrap(Array, Ptr{T}(values[]), nstored)
 

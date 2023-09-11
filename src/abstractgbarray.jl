@@ -67,6 +67,7 @@ Base.eltype(::AbstractGBArray{T, F}) where {T, F} = Union{T, F}
 Base.eltype(::Type{<:AbstractGBArray{T, F}}) where{T, F} = Union{T, F}
 
 storedeltype(x) = eltype(x)
+storedeltype(::Type{<:AbstractGBArray{T}}) where T = T
 storedeltype(::AbstractGBArray{T}) where T = T
 
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::AbstractGBArray) = A.p[]

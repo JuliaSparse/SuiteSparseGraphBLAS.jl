@@ -67,4 +67,12 @@
         x = GBMatrix([1,2], [2, 3], [1,2], fill=0)
         @test Array(x) .* [1,2] ≈ x .* [1,2]
     end
+    @testset "#97" begin
+        x = GBMatrix([1,2], [2, 3], [1,2], fill=0)
+        @test SuiteSparseGraphBLAS.storedeltype(Float32.(x)) === Float32
+        @test SuiteSparseGraphBLAS.storedeltype(map(Float32, x)) === Float32
+        @test SuiteSparseGraphBLAS.storedeltype(convert(GBMatrix{Float32}, x)) === Float32
+        @test SuiteSparseGraphBLAS.storedeltype(convert(GBMatrix{Float32, Float32}, x)) === Float32
+        @test SuiteSparseGraphBLAS.storedeltype(Float32.(x .> 0)) === Float32
+    end
 end
