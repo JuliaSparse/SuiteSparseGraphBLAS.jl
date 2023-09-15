@@ -29,7 +29,6 @@ import SuiteSparse.UMFPACK: umfpack_numeric!, _AqldivB_kernel!,
 umfpack_extract, umfpack_symbolic!, _Aq_ldiv_B!, solve!, umf_lunz
 using SuiteSparse.LibSuiteSparse
 import SuiteSparse.LibSuiteSparse:
-    SuiteSparse_long,
     umfpack_dl_defaults,
     umfpack_dl_report_control,
     umfpack_dl_report_info,

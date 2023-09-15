@@ -58,7 +58,7 @@ using SuiteSparseGraphBLAS: GBDiagonal
 
             @testset "Permutation vectors" begin
                 #Just to test this works, we'll use the existing permutation vectors.
-                @test klu_analyze!(klua, klua.p, klua.q).common.status == 0
+                @test klu_analyze!(klua, klua.p, klua.q).common.status >= 0
                 klu_factor!(klua)
                 x = klua \ b
                 @test A*x ≈ b

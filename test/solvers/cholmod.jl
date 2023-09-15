@@ -13,7 +13,6 @@ using LinearAlgebra:
     PosDefException, ZeroPivotException
 using SparseArrays
 using SparseArrays: getcolptr
-using SuiteSparse.LibSuiteSparse: SuiteSparse_long
 using SuiteSparseGraphBLAS
 using SuiteSparse.LibSuiteSparse
 if Base.USE_GPL_LIBS
