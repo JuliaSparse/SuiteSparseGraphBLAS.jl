@@ -4,74 +4,25 @@ struct Bytemap <: AbstractSparsity end
 struct Sparse <: AbstractSparsity end
 struct Hypersparse <: AbstractSparsity end
 
-mutable struct TypedUnaryOperator{F, X, Z} <: AbstractTypedOp{Z}
-    builtin::Bool
+mutable struct TypedBinaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
+    const builtin::Bool
     loaded::Bool
-    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
-    p::LibGraphBLAS.GrB_UnaryOp
+    const typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
+    p::LibGraphBLAS.GrB_BinaryOp
     fn::F
     keepalive::Any
-    function TypedUnaryOperator{F, X, Z}(builtin, loaded, typestr, p, fn) where {F, X, Z}
-        unop = new(builtin, loaded, typestr, p, fn, nothing)
-        return finalizer(unop) do op
-            @wraperror LibGraphBLAS.GrB_UnaryOp_free(Ref(op.p))
+    function TypedBinaryOperator{F, X, Y, Z}(builtin, loaded, typestr, p, fn::F) where {F, X, Y, Z}
+        binop = new(builtin, loaded, typestr, p, fn, nothing)
+        return finalizer(binop) do op
+            @wraperror LibGraphBLAS.GrB_BinaryOp_free(Ref(op.p))
         end
-    end
-end
-
-function (op::TypedUnaryOperator{F, X, Z})(::Type{T}) where {F, X, Z, T}
-    return op
-end
-
-function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
-    return TypedUnaryOperator{F, X, Z}(false, false, string(fn), LibGraphBLAS.GrB_UnaryOp(), fn)
-end
-
-function TypedUnaryOperator(fn::F, ::Type{X}) where {F, X}
-    return TypedUnaryOperator(fn, X, Base._return_type(fn, Tuple{X}))
-end
-
-@generated function cunary(f::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
-    if Base.issingletontype(F)
-        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X})))
-    else
-        throw("Unsupported function $f. Closure functions are not supported.")
-    end
-end
-
-function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
-    # We can lazily load the built-ins since they are already constants. 
-    # Could potentially do this with UDFs, but probably not worth the effort.
-    if !op.loaded
-        if op.builtin
-            op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
-        else
-            fn = op.fn
-            function unaryopfn(z, x)
-                unsafe_store!(z, fn(x))
-                return nothing
-            end
-            
-            opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
-            unaryopfn_C = cunary(unaryopfn, X, Z)
-            op.keepalive = (unaryopfn, unaryopfn_C)
-            # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
-            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), string(fn), "")
-            op.p = opref[]
-        end
-        op.loaded = true
-    end
-    if !op.loaded
-        error("This operator $(op.fn) could not be loaded, and is invalid.")
-    else
-        return op.p
     end
 end
 
 mutable struct TypedIndexUnaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
-    builtin::Bool
+    const builtin::Bool
     loaded::Bool
-    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
+    const typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
     p::LibGraphBLAS.GrB_IndexUnaryOp
     fn::F
     keepalive::Any
@@ -87,7 +38,7 @@ function TypedIndexUnaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {
 end
 
 function TypedIndexUnaryOperator(fn::F, ::Type{X}, ::Type{Y}) where {F, X, Y}
-    return TypedIndexUnaryOperator(fn, X, Y, Base._return_type(fn, Tuple{LibGraphBLAS.GrB_Index, LibGraphBLAS.GrB_Index, X, Y}))
+    return TypedIndexUnaryOperator(fn, X, Y, Broadcast.combine_eltypes(fn, (LibGraphBLAS.GrB_Index, LibGraphBLAS.GrB_Index, X, Y)))
 end
 
 function (op::TypedIndexUnaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
@@ -97,7 +48,7 @@ end
 
 @generated function cidxunary(f::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
     if Base.issingletontype(F)
-        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X}, LibGraphBLAS.GrB_Index, LibGraphBLAS.GrB_Index, Ref{Y})))
+        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ptr{X}, LibGraphBLAS.GrB_Index, LibGraphBLAS.GrB_Index, Ptr{Y})))
     else
         throw("Unsupported function $f")
     end
@@ -110,76 +61,17 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_IndexUnaryOp}, op::TypedInd
         else
             fn = op.fn
             function idxunaryopfn(z, x, i, j, y)
-                unsafe_store!(z, fn(x, i + 1, j + 1, y))
+                unsafe_store!(z, fn(unsafe_load(x), i + 1, j + 1, unsafe_load(y)))
                 return nothing
             end
             opref = Ref{LibGraphBLAS.GrB_IndexUnaryOp}()
             idxunaryopfn_C = cidxunary(idxunaryopfn, X, Y, Z)
             op.keepalive = (idxunaryopfn, idxunaryopfn_C)
-            @wraperror LibGraphBLAS.GxB_IndexUnaryOp_new(opref, idxunaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn), "")
+            @wraperror LibGraphBLAS.GxB_IndexUnaryOp_new(opref, idxunaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn), C_NULL)
             op.p = opref[]
         end
         op.loaded = true
-    end
-    if !op.loaded
-        error("This operator $(op.fn) could not be loaded, and is invalid.")
-    else
-        return op.p
-    end
-end
-
-mutable struct TypedBinaryOperator{F, X, Y, Z} <: AbstractTypedOp{Z}
-    builtin::Bool
-    loaded::Bool
-    typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
-    p::LibGraphBLAS.GrB_BinaryOp
-    fn::F
-    keepalive::Any
-    function TypedBinaryOperator{F, X, Y, Z}(builtin, loaded, typestr, p, fn::F) where {F, X, Y, Z}
-        binop = new(builtin, loaded, typestr, p, fn, nothing)
-        return finalizer(binop) do op
-            @wraperror LibGraphBLAS.GrB_BinaryOp_free(Ref(op.p))
-        end
-    end
-end
-function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
-    return TypedBinaryOperator{F, X, Y, Z}(false, false, string(fn), LibGraphBLAS.GrB_BinaryOp(), fn)
-end
-
-function TypedBinaryOperator(fn::F, ::Type{X}, ::Type{Y}) where {F, X, Y}
-    return TypedBinaryOperator(fn, X, Y, Base._return_type(fn, Tuple{X, Y}))
-end
-
-function (op::TypedBinaryOperator{F, X, Y, Z})(::Type{T1}, ::Type{T2}) where {F, X, Y, Z, T1, T2}
-    return op
-end
-(op::TypedBinaryOperator)(T) = op(T, T)
-
-@generated function cbinary(f::F, ::Type{X}, ::Type{Y}, ::Type{Z}) where {F, X, Y, Z}
-    if Base.issingletontype(F)
-        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ref{X}, Ref{Y})))
-    else
-        throw("Unsupported function $f")
-    end
-end
-
-function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z}
-    if !op.loaded
-        if op.builtin
-            op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
-        else
-            fn = op.fn
-            function binaryopfn(z, x, y)
-                unsafe_store!(z, fn(x, y))
-                return nothing
-            end
-            opref = Ref{LibGraphBLAS.GrB_BinaryOp}()
-            binaryopfn_C = cbinary(binaryopfn, X, Y, Z)
-            op.keepalive = (binaryopfn, binaryopfn_C)
-            @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
-            op.p = opref[]
-        end
-        op.loaded = true
+        !op.builtin && gbset!(op, :name, string(op.fn))
     end
     if !op.loaded
         error("This operator $(op.fn) could not be loaded, and is invalid.")
@@ -189,9 +81,9 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryO
 end
 
 mutable struct TypedMonoid{F, Z, T} <: AbstractTypedOp{Z}
-    builtin::Bool
+    const builtin::Bool
     loaded::Bool
-    typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
+    const typestr::String # If a built-in this is something like GrB_PLUS_FP64, if not it's just some user defined string.
     p::LibGraphBLAS.GrB_Monoid
     binaryop::TypedBinaryOperator{F, Z, Z, Z}
     identity::Z
@@ -285,9 +177,9 @@ TypedMonoid(binop::TypedBinaryOperator{F, Z, Z, Z}, identity::Function, terminal
 TypedMonoid(binop::TypedBinaryOperator, identity) = TypedMonoid(binop, identity, nothing)
 
 mutable struct TypedSemiring{FA, FM, X, Y, Z, T} <: AbstractTypedOp{Z}
-    builtin::Bool
+    const builtin::Bool
     loaded::Bool
-    typestr::String
+    const typestr::String
     p::LibGraphBLAS.GrB_Semiring
     addop::TypedMonoid{FA, Z, T}
     mulop::TypedBinaryOperator{FM, X, Y, Z}
@@ -888,8 +780,7 @@ mutable struct OrientedGBMatrix{T, F, O} <: AbstractGBMatrix{T, F, O}
     ) where {T, F, O}
         O isa StorageOrders.StorageOrder || throw(ArgumentError("$O is not a valid StorageOrder"))
         A = new{T, F, O}(p, fill)
-        order = option_toconst(O)
-        LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, order)
+        gbset!(A, :orientation, O)
         return A
     end
 end
@@ -974,7 +865,8 @@ strip_parameters(::Type{<:GBShallowMatrix}) = GBShallowMatrix
 strip_parameters(::Type{<:GBShallowVector}) = GBShallowVector
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
 # This should ideally work out fine. a GBMatrix or GBVector won't have 
-StorageOrders.runtime_storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
+StorageOrders.runtime_storageorder(A::AbstractGBMatrix) = gbget(A, :orientation) == 
+    Integer(LibGraphBLAS.GrB_COLMAJOR) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
 StorageOrders.comptime_storageorder(::AbstractGBArray{<:Any, <:Any, O}) where O = O
 
 defaultfill(::Type{T}) where T = zero(T)

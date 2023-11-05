@@ -31,7 +31,7 @@ function emul!(
     desc = nothing
 )
     _canbeoutput(C) || throw(ShallowException())
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || (return _bcastemul!(C, A, B, op; mask, accum, desc))
     desc = _handledescriptor(desc; out=C, in1=A, in2=B)
@@ -230,7 +230,7 @@ function eadd!(
 )
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || (return _bcasteadd!(C, A, B, op; mask, accum, desc))
     op = binaryop(op, A, B)
@@ -360,7 +360,7 @@ function eunion!(
 ) where {T, U}
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A, in2 = B)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
     op = binaryop(op, A, B)

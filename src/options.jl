@@ -1,99 +1,96 @@
-"""
-    gbset(A::GBArray, option, value)
-    gbset(option, value)
+using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
+GxB_AxB_METHOD, GxB_SORT, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH, GxB_BURBLE, GxB_PRINT_1BASED, GrB_STORAGE_ORIENTATION_HINT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL,
+GrB_Field, GxB_Option_Field
 
-Set an option either for a specific GBArray, or globally. The commonly used options are:
-    - `:format = [RowMajor() | ColMajor()]`: The global default or array specific
-    column major or row major ordering.
-    - `:nthreads = [Integer]`: The global number of OpenMP threads to use.
-    - `:burble = [Bool]`: Print diagnostic output.
-    - `:sparsity_control = [:full | :bitmap | :sparse | :hypersparse]`: Set the sparsity of a
-    single GBArray.
-"""
-function gbset end
-using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Field, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
-GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT, GxB_DESCRIPTOR_CHUNK, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH,
-GxB_GLOBAL_CHUNK, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL, GxB_GLOBAL_NTHREADS
-# manually wrapping these. They use `...` so aren't picked up by Clang.
-
-function GxB_Global_Option_get(field)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        T = Cdouble
-    elseif field ∈ [GxB_FORMAT]
-        T = UInt32
-    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
-        T = Cint
-    elseif field ∈ [GxB_BURBLE]
-        T = Bool
+for (typesym, jltype) ∈ (
+    (:Scalar, :GBScalar), (:Vector, :AbstractGBVector), (:Matrix, :AbstractGBArray), 
+    (:UnaryOp, :(UnaryOps.TypedUnaryOperator)), (:IndexUnaryOp, :TypedIndexUnaryOperator), 
+    (:BinaryOp, :TypedBinaryOperator), (:Monoid, :TypedMonoid), (:Semiring, :TypedSemiring),
+    (:Descriptor, :Descriptor),
+    (:Type, :GBType), (:Global, :(LibGraphBLAS.GrB_Global))
+)
+for (intypesym, intype, outtype) ∈ (
+    (:Scalar, :GBScalar, :GBScalar), (:String, :String, :(Vector{UInt8})), 
+    (:INT32, :Int32, :(Base.RefValue{Int32}))
+)
+    @eval begin
+        function _GrB_get(object::$(jltype), field::Union{GrB_Field, GxB_Option_Field}, value::$outtype)
+            @wraperror LibGraphBLAS.$(Symbol(:GrB_, typesym, :_get_, intypesym))(object, value, field)
+            return value
+        end
+        function _GrB_set(object::$(jltype), field::Union{GrB_Field, GxB_Option_Field}, value::$intype)
+            @wraperror LibGraphBLAS.$(Symbol(:GrB_, typesym, :_set_, intypesym))(object, value, field)
+            return value
+        end
     end
-    v = Ref{T}()
-    LibGraphBLAS.GxB_Global_Option_get(field, v)
-    return v[]
+end
+    @eval begin
+        function _GrB_get(object::$(jltype), field::Union{GrB_Field, GxB_Option_Field}, value::Ptr{Cvoid})
+            @wraperror LibGraphBLAS.$(Symbol(:GrB_, typesym, :_get_VOID))(object, value, field)
+            return value
+        end
+        function _GrB_set(object::$(jltype), field::Union{GrB_Field, GxB_Option_Field}, value::Ptr{Cvoid}, size::Integer)
+            @wraperror LibGraphBLAS.$(Symbol(:GrB_, typesym, :_set_VOID))(object, value, field, size)
+            return value
+        end
+        function _GrB_get(object::$(jltype), field::Union{GrB_Field, GxB_Option_Field}, value::Base.RefValue{Csize_t})
+            @wraperror LibGraphBLAS.$(Symbol(:GrB_, typesym, :_get_SIZE))(object, value, field)
+            return value
+        end
+    end
 end
 
-function GxB_Global_Option_set(field, value)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH, GxB_GLOBAL_CHUNK]
-        value isa Cdouble || throw(ArgumentError("$field specifies a value of type Float64"))
-    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT]
-        value = Cint(value)
-    else
-        throw(ArgumentError("$field is not a valid Matrix option."))
+# (constant, type, readable, writeable)
+function gbset!(option, value)
+    gbset!(GLOBAL[], option, value)
+end
+function gbset!(obj, option, value)
+    optionconst, type, isreadable, iswriteable = option_toconst(option)
+    if optionconst == LibGraphBLAS.GrB_STORAGE_ORIENTATION_HINT && _hasconstantorder(obj) &&
+        value !== storageorder(obj)
+        throw(ArgumentError("$(typeof(A)) may not have its storage orientation changed."))
     end
-    LibGraphBLAS.GxB_Global_Option_set(field, value)
+    !iswriteable && throw(ArgumentError("Option $option is not readable."))
+    value2 = type !== Ptr{Cvoid} ? convert(type, value_toconst(value)) : value # TODO: this is really not good.
+    _GrB_set(obj, optionconst, value2)
+    return value
 end
 
-function GxB_Matrix_Option_get(A::AbstractGBArray, field)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        T = Cdouble
-    elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
-        T = Cint
-    end
-    v = Ref{T}()
-    LibGraphBLAS.GxB_Matrix_Option_get(A, field, v)
-    return v[]
+function _gbgetsize(option)
+    _gbgetsize(GLOBAL[], option)
 end
-
-function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
-        value isa Cdouble || throw(ArgumentError("$field specifies a value of type Float64"))
-    elseif field == GxB_FORMAT
-        value isa LibGraphBLAS.GxB_Format_Value || 
-            throw(ArgumentError("$field specifies a value of type GxB_Format_Value"))
-    elseif field == GxB_SPARSITY_CONTROL
-        value isa Integer || value isa GBSparsity || 
-            throw(ArgumentError("$field specifies a value of type Int"))
-    else
-        throw(ArgumentError("$field is not a valid Matrix option."))
-    end
-    LibGraphBLAS.GxB_Matrix_Option_set(A, field, value)
-end
-
-function gbset(option, value)
-    option = option_toconst(option)
-    value = option_toconst(value)
-    GxB_Global_Option_set(option, value)
-    return nothing
+function _gbgetsize(obj, option)
+    optionconst, type, isreadable, isrwriteable = option_toconst(option)
+    return _GrB_get(obj, optionconst, Base.RefValue{Csize_t}())[]
 end
 
 function gbget(option)
-    option = option_toconst(option)
-    return GxB_Global_Option_get(option)
+    gbget(GLOBAL[], option)
 end
 
-function gbset(A::AbstractGBArray, option, value)
-    option = option_toconst(option)
-    if option == GxB_FORMAT && _hasconstantorder(A) && 
-            (option_toconst(storageorder(A)) != option_toconst(storageorder(A)))
-        throw(ArgumentError("$(typeof(A)) may not have its storage order changed."))
+function gbget(obj, option)
+    optionconst, type, isreadable, iswriteable = option_toconst(option)
+    !isreadable && throw(ArgumentError("Option $option is not writeable."))
+    if type === String
+        sz = _gbgetsize(obj, option)
+        value = Vector{UInt8}(undef, sz)
+        _GrB_get(obj, optionconst, value)
+        if value !== C_NULL
+            return unsafe_string(pointer(value))
+        else
+            throw(ErrorException("$option returned null pointer."))
+        end
+    else
+        if !(type <: GBScalar)
+            value = Ref{type}()
+            _GrB_get(obj, optionconst, value)
+            return value[]
+        else
+            value = type()
+            _GrB_get(obj, optionconst, value)
+            return value[]
+        end
     end
-    value = option_toconst(value)
-    GxB_Matrix_Option_set(A, option, value)
-    return nothing
-end
-
-function gbget(A::AbstractGBArray, option)
-    option = option_toconst(option)
-    return GxB_Matrix_Option_get(A, option)
 end
 
 """
@@ -104,7 +101,7 @@ Return the current sparsity of `A`, which is one of `Dense`,
 """
 function sparsitystatus(A)
     wait(A) # We need to do this to ensure we're actually unpacking correctly.
-    t = GBSparsity(gbget(A, SPARSITY_STATUS))
+    t = GBSparsity(gbget(A, :sparsitystatus))
     return consttoshape(t)
 end
 
@@ -126,12 +123,14 @@ Users must call `wait(A)` before this will be reflected in `A`,
 however operations will perform this `wait` automatically on input.
 """
 function setstorageorder!(A::AbstractGBArray, o::StorageOrders.StorageOrder)
-    gbset(A, :format, o)
+    _hasconstantorder(A) && throw(ArgumentError("$(typeof(A)) may not have its storage orientation changed."))
+    gbset!(A, :orientation, o)
 end
 
 function setstorageorder(A::AbstractGBArray, o::StorageOrders.StorageOrder)
     B = copy(A)
-    gbset(A, :format, o)
+    gbset!(B, :orientation, o)
+    return B
 end
 
 shapetoconst(::Dense) = GBDENSE
@@ -146,41 +145,96 @@ function consttoshape(c)
     c == GBHYPER && (return Hypersparse())
 end
 
-const HYPER_SWITCH = LibGraphBLAS.GxB_HYPER_SWITCH
-const BITMAP_SWITCH = LibGraphBLAS.GxB_BITMAP_SWITCH
-const FORMAT = LibGraphBLAS.GxB_FORMAT
-const SPARSITY_STATUS = LibGraphBLAS.GxB_SPARSITY_STATUS
-const SPARSITY_CONTROL = LibGraphBLAS.GxB_SPARSITY_CONTROL
-const BASE1 = LibGraphBLAS.GxB_PRINT_1BASED
-const NTHREADS = LibGraphBLAS.GxB_GLOBAL_NTHREADS
-const BURBLE = LibGraphBLAS.GxB_BURBLE
-
-const BYROW = LibGraphBLAS.GxB_BY_ROW
-const BYCOL = LibGraphBLAS.GxB_BY_COL
-
 #only translate if it's a symbol
-option_toconst(option) = option
-function option_toconst(option::StorageOrders.StorageOrder)
-    option === StorageOrders.ColMajor() && (return BYCOL)
-    option === StorageOrders.RowMajor() && (return BYROW)
-    throw(ArgumentError("Invalid Orientation setting $option"))
+value_toconst(option) = option
+function value_toconst(option::StorageOrders.StorageOrder)
+    option === StorageOrders.ColMajor() && (return Int32(LibGraphBLAS.GrB_COLMAJOR))
+    option === StorageOrders.RowMajor() && (return Int32(LibGraphBLAS.GrB_ROWMAJOR))
+    throw(ArgumentError("Invalid Orientation $option"))
 end
-function option_toconst(sym::Symbol)
-    sym === :format && return FORMAT
-    sym === :nthreads && return NTHREADS
-    sym === :burble && return BURBLE
-    sym === :byrow && return BYROW
-    sym === :bycol && return BYCOL
-    sym === :sparsity_status && return SPARSITY_STATUS
-    sym === :sparsity_control && return SPARSITY_CONTROL
-    sym === :full && return GBDENSE
-    sym === :bitmap && return GBBITMAP
-    sym === :sparse && return GBSPARSE
-    sym === :hypersparse && return GBHYPER
+value_toconst(option::Enum{T}) where T = T(option)
+
+function value_toconst(sym::Symbol)
+    # descriptor values:
+    sym === :default && return Int32(LibGraphBLAS.GrB_DEFAULT)
+    sym === :replace && return Int32(LibGraphBLAS.GrB_REPLACE)
+    sym === :complement && return Int32(LibGraphBLAS.GrB_COMP)
+    sym === :structural && return Int32(LibGraphBLAS.GrB_STRUCTURE)
+    sym === :complementstructural && return Int32(LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
+
+    throw(ArgumentError("Invalid value $(string(sym))"))
 end
 
-function option_toconst(sparsity::AbstractSparsity)
+function value_toconst(sparsity::AbstractSparsity)
     return shapetoconst(sparsity)
+end
+
+# returns (constant, type, readable, writeable)
+function option_toconst(sym::Symbol)
+    # GLOBALLY AVAILABLE OPTIONS
+    sym === :libmajorversion && (return LibGraphBLAS.GrB_LIBRARY_VER_MAJOR, Int32, true, false)
+    sym === :libminorversion && (return LibGraphBLAS.GrB_LIBRARY_VER_MINOR, Int32, true, false)
+    sym === :libpatchversion && (return LibGraphBLAS.GrB_LIBRARY_VER_PATCH, Int32, true, false)
+    sym === :apimajorversion && (return LibGraphBLAS.GrB_API_VER_MAJOR, Int32, true, false)
+    sym === :apiminorversion && (return LibGraphBLAS.GrB_API_VER_MINOR, Int32, true, false)
+    sym === :apipatchversion && (return LibGraphBLAS.GrB_API_VER_PATCH, Int32, true, false)
+    sym === :blockingmode && (return LibGraphBLAS.GrB_BLOCKING_MODE, Int32, true, false)
+    sym === :usingomp && (return LibGraphBLAS.GxB_LIBRARY_OPENMP, Int32, true, false)
+    # also available for matrices and vectors:
+    sym === :orientation && (return LibGraphBLAS.GrB_STORAGE_ORIENTATION_HINT, Int32, true, true)
+
+    sym === :burble && (return LibGraphBLAS.GxB_BURBLE, Int32, true, true)
+    sym === :print1based && (return LibGraphBLAS.GxB_PRINT_1BASED, Int32, true, true)
+    sym === :jit_c_control && (return LibGraphBLAS.GxB_JIT_C_CONTROL, Int32, true, true)
+    sym === :jit_use_cmake && (return LibGraphBLAS.GxB_JIT_C_CONTROL, Int32, true, true)
+    sym === :hyperswitch && (return LibGraphBLAS.GxB_HYPER_SWITCH, GBScalar{Float64}, true, true)
+    sym === :bitmapswitch && (return LibGraphBLAS.GxB_BITMAP_SWITCH, GBScalar{Float64}, true, true)
+    sym === :hashswitch && (return LibGraphBLAS.GxB_HYPER_HASH, Int32, true, true)
+    
+    sym === :name && (return LibGraphBLAS.GrB_NAME, String, true, true) # write once
+    sym === :jit_cname && (return LibGraphBLAS.GxB_JIT_C_NAME, String, true, true) # write once
+    sym === :jit_cdef && (return LibGraphBLAS.GxB_JIT_C_DEFINITION, true, true) # write once
+
+    sym === :compilername && (return LibGraphBLAS.GxB_COMPILER_NAME, String, true, false)
+    sym === :jit_compilername && (return LibGraphBLAS.GxB_JIT_C_COMPILER_NAME, String, true, true)
+    sym === :jit_compilerflags && (return LibGraphBLAS.GxB_JIT_C_COMPILER_FLAGS, String, true, true)
+    sym === :jit_linkerflags && (return LibGraphBLAS.GxB_JIT_C_LINKER_FLAGS, String, true, true)
+    sym === :jit_libraries && (return LibGraphBLAS.GxB_JIT_C_LIBRARIES, String, true, true)
+    sym === :jit_cmakelibraries && (return LibGraphBLAS.GxB_JIT_C_CMAKE_LIBS, String, true, true)
+    sym === :jit_errorlog && (return LibGraphBLAS.GxB_JIT_ERROR_LOG, String, true, true)
+    sym === :jit_cache && (return LibGraphBLAS.GxB_JIT_CACHE_PATH, String, true, true)
+    sym === :jit_cmake && (return LibGraphBLAS.GxB_JIT_CMAKE, String, true, true)
+
+    sym === :malloc && (return LibGraphBLAS.GxB_MALLOC_FUNCTION, Ptr{Cvoid}, true, false)
+    sym === :calloc && (return LibGraphBLAS.GxB_CALLOC_FUNCTION, Ptr{Cvoid}, true, false)
+    sym === :free && (return LibGraphBLAS.GxB_FREE_FUNCTION, Ptr{Cvoid}, true, false)
+    sym === :realloc && (return LibGraphBLAS.GxB_REALLOC_FUNCTION, Ptr{Cvoid}, true, false)
+
+    # TYPE OPTIONS
+    sym === :eltypecode && (return LibGraphBLAS.GrB_ELTYPE_CODE, Int32, true, false)
+    sym === :eltypestring && (return LibGraphBLAS.GrB_ELTYPE_STRING, String, true, false)
+    sym === :size && (return LibGraphBLAS.GrB_SIZE, int32_t, true, false)
+    
+    # OP  OPTIONS
+    sym === :input1typecode && (return LibGraphBLAS.GrB_INPUT1TYPE_CODE, Int32, true, false)
+    sym === :input2typecode && (return LibGraphBLAS.GrB_INPUT2TYPE_CODE, Int32, true, false)
+    sym === :input1typestring && (return LibGraphBLAS.GrB_INPUT1TYPE_STRING, String, true, false)
+    sym === :input2typestring && (return LibGraphBLAS.GrB_INPUT2TYPE_STRING, String, true, false)
+    sym === :outputtypecode && (return LibGraphBLAS.GrB_OUTPUTTYPE_CODE, Int32, true, false)
+    sym === :outputtypestring && (return LibGraphBLAS.GrB_OUTPUTTYPE_STRING, String, true, false)
+
+    sym === :sparsitycontrol && (return LibGraphBLAS.GxB_SPARSITY_CONTROL, Int32, true, true)
+    sym === :sparsitystatus && (return LibGraphBLAS.GxB_SPARSITY_STATUS, Int32, true, false)
+
+    sym === :outp && (return LibGraphBLAS.GrB_OUTP, Int32, true, true)
+    sym === :mask && (return LibGraphBLAS.GrB_MASK, Int32, true, true)
+    sym === :inp0 && (return LibGraphBLAS.GrB_INP0, Int32, true, true)
+    sym === :inp1 && (return LibGraphBLAS.GrB_INP1, Int32, true, true)
+    
+    sym === :nthreads && (return LibGraphBLAS.GxB_NTHREADS, Int32, true, true)
+    sym === :chunk && (return LibGraphBLAS.GxB_CHUNK, Int32, true, true)
+
+    throw(ArgumentError("Invalid option $(string(sym))"))
 end
 
 """

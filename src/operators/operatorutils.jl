@@ -20,37 +20,61 @@ function optype(atype, btype)
 end
 optype(::GBArrayOrTranspose{T}, ::GBArrayOrTranspose{U}) where {T, U} = optype(T, U)
 
-const Utypes = (:UInt8, :UInt16, :UInt32, :UInt64)
-const Itypes = (:Int8, :Int16, :Int32, :Int64, :UInt8, :UInt16, :UInt32, :UInt64)
-const Ftypes = (:Float32, :Float64)
+const Utypes = (UInt8, UInt16, UInt32, UInt64)
+const Itypes = (Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64)
+const Ftypes = (Float32, Float64)
 const IFtypes = (Itypes..., Ftypes...)
-const Ztypes = (:ComplexF32, :ComplexF64)
+const Ztypes = (ComplexF32, ComplexF64)
 const FZtypes = (Ftypes..., Ztypes...)
-const Rtypes = (Itypes..., Ftypes..., :Bool)
+const Rtypes = (Itypes..., Ftypes..., Bool)
 const nBtypes = (Itypes..., FZtypes...)
-const Ntypes = (:Int64, ) # :Int32 as well, but can't disambiguate, and hopefully unecessary
+const Ntypes = (Int64, ) # :Int32 as well, but can't disambiguate, and hopefully unecessary
 const Ttypes = (Rtypes..., Ztypes...)
+
+
+const Usyms = Symbol.(Utypes)
+const Isyms = Symbol.(Itypes)
+const Fsyms = Symbol.(Ftypes)
+const IFsyms = Symbol.(IFtypes)
+const Zsyms = Symbol.(Ztypes)
+const FZsyms = Symbol.(FZtypes)
+const Rsyms = Symbol.(Rtypes)
+const nBsyms = Symbol.(nBtypes)
+const Nsyms = Symbol.(Ntypes)
+const Tsyms = Symbol.(Ttypes)
+
+const Uunion = Union{Utypes...}
+const Iunion = Union{Itypes...}
+const Funion = Union{Ftypes...}
+const IFunion = Union{IFtypes...}
+const Zunion = Union{Ztypes...}
+const FZunion = Union{FZtypes...}
+const Runion = Union{Rtypes...}
+const nBunion = Union{nBtypes...}
+const Nunion = Union{Ntypes...}
+const Tunion = Union{Ttypes...}
+
 function symtotype(sym)
     if sym === :I
-        return Itypes
+        return Isyms
     elseif sym === :F
-        return Ftypes
+        return Fsyms
     elseif sym === :Z
-        return Ztypes
+        return Zsyms
     elseif sym === :R
-        return Rtypes
+        return Rsyms
     elseif sym === :N
-        return Ntypes
+        return Nsyms
     elseif sym === :FZ
-        return FZtypes
+        return FZsyms
     elseif sym === :T
-        return Ttypes
+        return Tsyms
     elseif sym === :nB
-        return nBtypes
+        return nBsyms
     elseif sym === :IF
-        return IFtypes
+        return IFsyms
     elseif sym === :U
-        return Utypes
+        return Usyms
     else
         return sym
     end

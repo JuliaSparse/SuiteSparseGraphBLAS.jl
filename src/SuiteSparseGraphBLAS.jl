@@ -7,6 +7,9 @@ using Libdl: dlsym, dlopen, dlclose
 using Preferences
 include("find_binary.jl")
 const libgraphblas_handle = Ref{Ptr{Nothing}}()
+gbscratch = ""
+irscratch = ""
+
 @static if artifact_or_path == "default"
     using SSGraphBLAS_jll
     const libgraphblas = SSGraphBLAS_jll.libgraphblas
@@ -17,6 +20,7 @@ end
 using SparseArrays
 using SparseArrays: nonzeroinds, getcolptr, getrowval, getnzval
 using MacroTools
+using Scratch
 using LinearAlgebra
 using LinearAlgebra: copy_oftype
 using Random: randsubseq, default_rng, AbstractRNG, GLOBAL_RNG
@@ -26,6 +30,11 @@ using Serialization
 using StorageOrders
 using KLU
 using Blobs
+using Clang_jll
+using CMake_jll
+using CompilerSupportLibraries_jll
+using LLVM_jll
+using LLD_jll
 
 export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 include("abstracts.jl")
@@ -45,6 +54,22 @@ include("mem.jl")
 include("constants.jl")
 include("wait.jl")
 
+"""
+    gbset!((A::GBArray, option, value)
+    gbset!((option, value)
+
+Set an option either for a specific GBArray, or globally. The commonly used options are:
+    - `:format = [RowMajor() | ColMajor()]`: The global default or array specific
+    column major or row major ordering.
+    - `:nthreads = [Integer]`: The global number of OpenMP threads to use.
+    - `:burble = [Bool]`: Print diagnostic output.
+    - `:sparsity_control = [:full | :bitmap | :sparse | :hypersparse]`: Set the sparsity of a
+    single GBArray.
+"""
+function gbset! end
+function gbget end
+
+include("operators/compiler.jl")
 include("operators/operatorutils.jl")
 include("operators/unaryops.jl")
 include("operators/binaryops.jl")
@@ -114,7 +139,7 @@ export LibGraphBLAS
 # export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export unaryop, binaryop, Monoid, semiring #UDFs
 export Descriptor #Types
-export gbset, gbget, getfill, setfill, # global and object specific options.
+export gbset!, gbget, getfill, setfill, # global and object specific options.
 setstorageorder!, sparsitystatus, format, mask, mask!
 # export xtype, ytype, ztype #Determine input/output types of operators
 export GBScalar, GBVector, GBMatrix, GBMatrixC, GBMatrixR #arrays
@@ -153,16 +178,30 @@ function __init__()
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     @wraperror LibGraphBLAS.GxB_init(LibGraphBLAS.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
-    gbset(:nthreads, BLAS.get_num_threads())
-
+    
+    
     # Eagerly load the GrB_Types for builtin numeric types.
     # Avoids some missing definition issues.
     for type ∈ valid_vec
         Base.unsafe_convert(LibGraphBLAS.GrB_Type, gbtype(type))
     end
     ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)
+    GLOBAL[] = load_global("GrB_GLOBAL", LibGraphBLAS.GrB_Global)
+
+    global gbscratch = @get_scratch!("gbscratch")
+    delete_scratch!(SuiteSparseGraphBLAS, "irscratch")
+    global irscratch = @get_scratch!("irscratch")
+    gbset!(:jit_cache, gbscratch)
+    llvmdir = joinpath(LLVM_jll.artifact_dir, "lib")
+    gbset!(:jit_compilername, "DYLD_FALLBACK_LIBRARY_PATH=$(llvmdir):$(Clang_jll.LIBPATH[]) $(Clang_jll.get_clang_path()) -v")
+    gbset!(:jit_cmake, CMake_jll.get_cmake_path())
+    gbset!(:jit_compilerflags, "-O3 -DNDEBUG -fopenmp -fPIC -flto -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk")
+    gbset!(:jit_linkerflags, "-lto_library $(llvmdir)/libLTO.dylib -lm -ldl -dynamiclib -fuse-ld=lld")
+    gbset!(:jit_cmakelibraries, "m;dl;$(CompilerSupportLibraries_jll.get_libgomp_path())")
+    # gbset!(:nthreads, BLAS.get_num_threads())
+
     # Set printing done by SuiteSparse:GraphBLAS to base-1 rather than base-0.
-    gbset(BASE1, 1)
+    gbset!(:print1based, 1)
     atexit() do
         # Finalize the lib, for now only frees a small internal memory pool.
         @wraperror LibGraphBLAS.GrB_finalize()

@@ -13,7 +13,7 @@ function select!(
     _canbeoutput(C) || throw(ShallowException())
     op = indexunaryop(op, T, TH)
     desc = _handledescriptor(desc; out=C, in1=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GrB_Matrix_select_Scalar(C, mask, accum, op, parent(A), GBScalar(thunk), desc)
     return C

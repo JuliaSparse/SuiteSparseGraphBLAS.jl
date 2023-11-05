@@ -33,10 +33,10 @@ const gxb_union = Union{ComplexF32, ComplexF64}
 const gxb_vec = [ComplexF32, ComplexF64]
 
 mutable struct GBType{T} <: AbstractGBType
-    builtin::Bool
+    const builtin::Bool
     loaded::Bool
     p::LibGraphBLAS.GrB_Type
-    typestr::String
+    const typestr::String
     function GBType{T}(builtin, loaded, p, typestr) where {T}
         type = new{T}(builtin, loaded, p, typestr)
         return finalizer(type) do t
@@ -85,10 +85,11 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Type}, s::GBType{T}) where 
             s.p = load_global(s.typestr, LibGraphBLAS.GrB_Type)
         else
             typeref = Ref{LibGraphBLAS.GrB_Type}()
-            @wraperror LibGraphBLAS.GxB_Type_new(typeref, sizeof(T), string(T), "")
+            @wraperror LibGraphBLAS.GxB_Type_new(typeref, sizeof(T), C_NULL, C_NULL)
             s.p = typeref[]
         end
         s.loaded = true
+        !s.builtin && gbset!(s, :name, string(T))
         ptrtogbtype[s.p] = s
     end
     if !s.loaded

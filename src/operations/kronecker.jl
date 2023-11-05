@@ -14,7 +14,7 @@ function LinearAlgebra.kron!(
 )
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     op = binaryop(op, A, B)
     accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)

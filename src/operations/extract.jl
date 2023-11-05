@@ -66,7 +66,7 @@ function extract!(
     I isa Number && (I = UInt64[I])
     J isa Number && (J = UInt64[J])
     desc = _handledescriptor(desc; out=C, in1 = A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     I = decrement!(I)
     I !== J && (J = decrement!(J))
     @wraperror LibGraphBLAS.GrB_Matrix_extract(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
@@ -138,7 +138,7 @@ function extract!(
     I, ni = idx(I)
     I = decrement!(I)
     desc = _handledescriptor(desc; out=w)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     @wraperror LibGraphBLAS.GrB_Matrix_extract(w, mask, _handleaccum(accum, storedeltype(w)), u, I, ni, UInt64[0], 1, desc)
     increment!(I)
     return w

@@ -20,7 +20,7 @@ function gbtranspose!(
 )
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GrB_transpose(C, mask, accum, parent(A), desc)
     return C
@@ -78,10 +78,12 @@ Apply a mask to matrix `A`, storing the results in C.
 """
 function mask!(C::GBVecOrMat, A::GBArrayOrTranspose, mask; desc = nothing, replace_output = true)
     _canbeoutput(C) || throw(ShallowException())
+    desc === nothing && (desc = Descriptor()) # we need a descriptor here.
     desc = _handledescriptor(desc; out=C, in1 = A)
+    # TODO: what is going on here exactly?!
     desc.transpose_input1 = true # double transpose to cancel out transpose.
     desc.replace_output = replace_output # we must replace 
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     gbtranspose!(C, A; mask, desc)
     return C
 end

@@ -2,7 +2,7 @@ function gxbprint(io::IO, x, name = "", level::LibGraphBLAS.GxB_Print_Level = Li
     print(io, gxbstring(x, name, level))
 end
 
-function gxbstring(x, name = "", level::LibGraphBLAS.GxB_Print_Level = LibGraphBLAS.GxB_SUMMARY)
+function gxbstring(x, name = C_NULL, level::LibGraphBLAS.GxB_Print_Level = LibGraphBLAS.GxB_SUMMARY)
     str = mktemp() do _, f
         cf = Libc.FILE(f)
         if x isa AbstractGBType

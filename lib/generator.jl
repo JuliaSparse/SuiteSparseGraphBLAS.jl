@@ -3,7 +3,7 @@ using SSGraphBLAS_jll
 
 cd(@__DIR__)
 
-const HEADER_BASE = joinpath(SSGraphBLAS_jll.artifact_dir, "include")
+const HEADER_BASE = "/Users/raykimm/GraphBLAS/include"
 const GRAPHBLAS = joinpath(HEADER_BASE, "GraphBLAS.h")
 
 headers = [GRAPHBLAS]

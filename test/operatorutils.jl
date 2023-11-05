@@ -5,6 +5,6 @@
     B = GBMatrix{Int32}(3, 3)
     @test SuiteSparseGraphBLAS.optype(A, B) == Float64
 
-    @test SuiteSparseGraphBLAS.symtotype(:nB) == SuiteSparseGraphBLAS.nBtypes
+    @test SuiteSparseGraphBLAS.symtotype(:nB) == SuiteSparseGraphBLAS.nBsyms
     @test SuiteSparseGraphBLAS.symtotype(:BigFloat) == :BigFloat
 end

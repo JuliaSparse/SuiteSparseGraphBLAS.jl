@@ -1,9 +1,9 @@
-inferunarytype(::Type{T}, f::F) where {T, F} = Base._return_type(f, Tuple{T})
-inferunarytype(::Type{X}, op::TypedUnaryOperator{F, X}) where {F, X} = ztype(op)
+inferunarytype(::Type{T}, f::F) where {T, F} = Broadcast.combine_eltypes(f, (T,))
+inferunarytype(::Type{X}, op::UnaryOps.TypedUnaryOperator{F, X}) where {F, X} = ztype(op)
 
 inferunarytype(::GBArrayOrTranspose{T}, op) where T = inferunarytype(T, op)
 
-inferbinarytype(::Type{T}, ::Type{U}, f) where {T, U} = Base._return_type(f, Tuple{T, U})
+inferbinarytype(::Type{T}, ::Type{U}, f) where {T, U} = Broadcast.combine_eltypes(f, (T, U))
 # manual overload for `any` which will give Union{} normally:
 inferbinarytype(::Type{T}, ::Type{U}, ::typeof(any)) where {T, U} = promote_type(T, U)
 # Overload for `first`, which will give Vector{T} normally:
@@ -15,7 +15,7 @@ inferbinarytype(::Type{T}, B::AbstractGBArray{U}, f) where {T, U} = inferbinaryt
 
 inferbinarytype(::Type{T}, ::Type{U}, op::AbstractMonoid) where {T, U} = inferbinarytype(T, U, op.fn)
 #semirings are technically binary so we'll just overload that
-inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, semiring(op, T, U))
+inferbinarytype(::Type{T}, ::Type{U}, op::Tuple) where {T, U} = inferbinarytype(T, U, op[1])
 inferbinarytype(::Type{T}, ::Type{U}, op::TypedSemiring) where {T, U} = inferbinarytype(T, U, op.mulop)
 
 inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X, Y, Z}) where {F, X, Y, Z} = ztype(op)
@@ -62,25 +62,27 @@ Base.parent(C::Complement) = C.parent
 Structural(A::T) where {T<:GBArrayOrTranspose}= Structural{T}(A)
 Base.parent(C::Structural) = C.parent
 
-_handlemask!(desc, ::Nothing) = C_NULL
-_handlemask!(desc, mask::AbstractGBArray) = mask
+_handlemask!(desc, ::Nothing) = desc, C_NULL
+_handlemask!(desc, mask::AbstractGBArray) = desc, mask
 function _handlemask!(desc, mask)
     while !(mask isa AbstractGBArray)
         if mask isa Transpose
             mask = copy(mask)
         elseif mask isa Complement
             mask = parent(mask)
+            !(desc isa Descriptor) && (desc = Descriptor())                
             desc.complement_mask = ~desc.complement_mask
         elseif mask isa Structural
             mask = parent(mask)
+            !(desc isa Descriptor) && (desc = Descriptor())           
             desc.structural_mask = true
         elseif mask isa Ptr
-            return C_NULL
+            return desc, C_NULL
         else
             throw(ArgumentError("Mask type not recognized."))
         end
     end
-    return mask
+    return desc, mask
 end
 
 _handleaccum(::Nothing, t) = C_NULL

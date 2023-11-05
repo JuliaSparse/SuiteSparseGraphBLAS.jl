@@ -13,23 +13,10 @@ const GrBOp = Union{
     LibGraphBLAS.GxB_SelectOp
 }
 
-const TypedOp = Union{
-    TypedUnaryOperator,
-    TypedBinaryOperator,
-    TypedMonoid,
-    TypedSemiring
-}
-
-const MonoidBinaryOrRig = Union{
-    TypedMonoid,
-    TypedSemiring,
-    TypedBinaryOperator,
-    AbstractMonoid
-}
-
 const OperatorUnion = Union{
     AbstractOp,
     GrBOp
 }
 
 const ALL = GBAllType(C_NULL)
+const GLOBAL = Ref{LibGraphBLAS.GrB_Global}()

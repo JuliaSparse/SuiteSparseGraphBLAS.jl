@@ -16,11 +16,12 @@ end
 end
 @testset "Masking" begin
     v = GBVector([1,3,5], [true, false, true])
-    d = Descriptor()
-    @test (mask = _handlemask!(d, ~~~v); d.complement_mask && mask isa GBVector)
-    d = Descriptor()
-    @test (mask = _handlemask!(d, ~~Structural(v)); 
-        !d.complement_mask && d.structural_mask && mask isa GBVector)
+    desc = Descriptor()
+    desc, mask = _handlemask!(desc, ~~~v)
+    @test desc.complement_mask && mask isa GBVector
+    desc = Descriptor()
+    desc, mask = _handlemask!(desc, ~~Structural(v)) 
+    @test !desc.complement_mask && desc.structural_mask && mask isa GBVector
 end
 end
     

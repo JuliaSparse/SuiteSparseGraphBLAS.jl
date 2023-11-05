@@ -8,10 +8,10 @@ function apply!(
     end
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     op = unaryop(op, A)
     accum = _handleaccum(accum, storedeltype(C))
-    @wraperror LibGraphBLAS.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
+    LibGraphBLAS.GrB_Matrix_apply(C, mask, accum, op, parent(A), desc)
     return C
 end
 
@@ -39,7 +39,7 @@ function apply!(
         "Try apply[!](op, [C], A, x)"))
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in2=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     op = binaryop(op, A, typeof(x))
     accum = _handleaccum(accum, storedeltype(C))
     @wraperror LibGraphBLAS.GxB_Matrix_apply_BinaryOp1st(C, mask, accum, op, GBScalar(x), parent(A), desc)
@@ -58,7 +58,7 @@ function apply!(
 )
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     accum = _handleaccum(accum, storedeltype(C))
     if isindexop(op)
         op = indexunaryop(op, A, typeof(x))

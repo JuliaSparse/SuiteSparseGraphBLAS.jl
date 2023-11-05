@@ -1,21 +1,129 @@
 module UnaryOps
 
 import ..SuiteSparseGraphBLAS
-using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedUnaryOperator, GBType,
-    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, Ntypes, Ttypes, suffix,
-    GBArrayOrTranspose
+using ..SuiteSparseGraphBLAS: isGxB, isGrB, GBType,
+    valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, nBtypes, Ntypes, Ttypes, suffix,
+    GBArrayOrTranspose, AbstractTypedOp, @wraperror, load_global, OperatorCompiler, gbset!, irscratch
 using ..LibGraphBLAS
+using GPUCompiler
 export unaryop, @unop
 
 export rowindex, colindex, frexpx, frexpe
 
 using SpecialFunctions
 
-const UNARYOPS = IdDict{Tuple{<:Any, DataType}, TypedUnaryOperator}()
+mutable struct TypedUnaryOperator{F, F2, X, Z} <: AbstractTypedOp{Z}
+    const builtin::Bool
+    loaded::Bool
+    const typestr::String # If a built-in this is something like GxB_AINV_FP64, if not it's just some user defined string.
+    p::LibGraphBLAS.GrB_UnaryOp
+    fn::F
+    c_fn::F2
+    docompilation::Bool
+    codeinstance::Any
+    function TypedUnaryOperator{F, X, Z}(builtin, loaded, typestr, p, fn, c_fn = nothing; docompilation = false, ir = nothing) where {F, X, Z}
+        unop = new{F, typeof(c_fn), X, Z}(builtin, loaded, typestr, p, fn, c_fn, docompilation, ir)
+        return finalizer(unop) do op
+            @wraperror LibGraphBLAS.GrB_UnaryOp_free(Ref(op.p))
+        end
+    end
+end
+
+function (op::TypedUnaryOperator{F, X, Z})(::Type{T}) where {F, X, Z, T}
+    return op
+end
+
+function TypedUnaryOperator(fn::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
+    return TypedUnaryOperator{F, X, Z}(false, false, string(fn), LibGraphBLAS.GrB_UnaryOp(), fn)
+end
+
+function TypedUnaryOperator(fn::F, ::Type{X}) where {F, X}
+    return TypedUnaryOperator(fn, X, Broadcast.combine_eltypes(fn, (X,)))
+end
+
+@generated function cunary(f::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
+    if Base.issingletontype(F)
+        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ptr{X})))
+    else
+       throw("Unsupported function $f. Closure functions are not supported.")
+    end
+end
+
+function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, F2, X, Z}) where {F, F2, X, Z}
+    # We can lazily load the built-ins since they are already constants. 
+    # Could potentially do this with UDFs, but probably not worth the effort.
+    if !op.loaded
+        if op.builtin
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
+        else
+            opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
+            unaryopfn_C = cunary(op.c_fn, X, Z)
+            # the "" below is a placeholder for C code in the future for JIT'ing. (And maybe compiled code as a ptr :pray:?)
+            name = op.docompilation ? op.typestr : C_NULL
+            defn = op.docompilation ? "GB_ISOBJ $(op.codeinstance)" : C_NULL
+            LibGraphBLAS.GxB_UnaryOp_new(opref, unaryopfn_C, gbtype(Z), gbtype(X), name, defn)
+            op.p = opref[]
+        end
+        op.loaded = true
+        !op.builtin && gbset!(op, :name, string(op.fn))
+    end
+    if !op.loaded
+        error("This operator $(op.fn) could not be loaded, and is invalid.")
+    else
+        return op.p
+    end
+end
+
+const UNARYOPS = Dict()
+const COMPILEDUNARYOPS = Dict()
+const BUILTINUNARYOPS = Dict{<:Any, <:Any}() # (f) -> name, inputtypes
+
+function linker(job, compiled)
+    ir = compiled
+    (; fn, c_fn, intypes) = job.config.params
+    write(joinpath(irscratch, "$(hash(ir)).o"), ir)
+    return TypedUnaryOperator{typeof(fn), eltype(intypes[2]), eltype(intypes[1])}(
+        false, false, job.config.name, LibGraphBLAS.GrB_UnaryOp(), fn, c_fn; docompilation = true, ir = joinpath(irscratch, "$(hash(ir)).o")
+    )
+end
+
+function unarycachecompile(f, ::Type{T}) where T
+    function unaryopfn(z, x)
+        Base.unsafe_store!(z, f(Base.unsafe_load(x)))
+        return nothing
+    end
+    O = Base.Broadcast.combine_eltypes(f, (T,))
+    job = OperatorCompiler.operatorjob(f, unaryopfn, (Ptr{O}, Ptr{T},))
+    return GPUCompiler.cached_compilation(
+        COMPILEDUNARYOPS, job.source, job.config,
+        OperatorCompiler.compiler, linker
+    )
+end
+
+function _unarybuiltin(f, t, builtin_name)
+    U = Broadcast.combine_eltypes(f, (t,))
+    namestr = Any ∈ builtin_name[2] ? string(builtin_name[1]) * 
+        "_$(suffix(U))" : string(builtin_name[1]) * "_$(suffix(t))"
+    namestr = t <: Complex ? "GxB" * namestr[4:end] : namestr
+    return TypedUnaryOperator{typeof(f), t, U}(
+        true, false, namestr, LibGraphBLAS.GrB_UnaryOp(), f
+    )
+end
 
 function unaryop(f, ::Type{T}) where T
-    return get!(UNARYOPS, (f, T)) do
-        TypedUnaryOperator(f, T)
+    t = (f === rowindex || f === colindex) ? Any : T
+    maybeop = get!(UNARYOPS, (f, t)) do
+        builtin_name = get(BUILTINUNARYOPS, f, nothing)
+        if builtin_name !== nothing && (t ∈ builtin_name[2] || Any ∈ builtin_name[2])
+            return _unarybuiltin(f, t, builtin_name)
+        else
+            return nothing
+        end
+    end
+    if maybeop !== nothing
+        return maybeop
+    else
+        return unarycachecompile(f, T)
     end
 end
 
@@ -25,92 +133,16 @@ unaryop(op::TypedUnaryOperator, ::Type{X}) where X = op
 
 SuiteSparseGraphBLAS.juliaop(op::TypedUnaryOperator) = op.fn
 
-function typedunopconstexpr(jlfunc, builtin, namestr, intype, outtype)
-    # Complex ops must always be GxB prefixed
-    if (intype ∈ Ztypes || outtype ∈ Ztypes) && isGrB(namestr)
-        namestr = "GxB" * namestr[4:end]
-    end
-    if intype === :Any && outtype ∈ Ntypes # POSITIONAL ops use the output type for suffix
-        namestr = namestr * "_$(suffix(outtype))"
-    else
-        namestr = namestr * "_$(suffix(intype))"
-    end
-    if builtin
-        namesym = Symbol(namestr[5:end])
-    else
-        namesym = Symbol(namestr)
-    end
-    insym = Symbol(intype)
-    outsym = Symbol(outtype)
-    if builtin
-        constquote = :(const $(esc(namesym)) = TypedUnaryOperator{$(esc(:typeof))($(esc(jlfunc))), $(esc(insym)), $(esc(outsym))}(true, false, $namestr, LibGraphBLAS.GrB_UnaryOp(), $(esc(jlfunc))))
-    else
-        constquote = :(const $(esc(namesym)) = TypedUnaryOperator($(esc(jlfunc)), $(esc(insym)), $(esc(outsym))))
-    end
-    return quote
-        $(constquote)
-        $(esc(:(SuiteSparseGraphBLAS.UnaryOps.unaryop)))(::$(esc(:typeof))($(esc(jlfunc))), ::Type{$(esc(insym))}) = $(esc(namesym))
-    end
-end
-
-function typedunopexprs(jlfunc, builtin, namestr, intypes, outtypes)
-    if intypes isa Symbol
-        intypes = [intypes]
-    end
-    if outtypes isa Symbol
-        outtypes = [outtypes]
-    end
-    exprs = typedunopconstexpr.(Ref(jlfunc), Ref(builtin), Ref(namestr), intypes, outtypes)
-    if exprs isa Expr
-        return exprs
-    else
-        return quote 
-            $(exprs...)
-        end
-    end
-end
-
-macro unop(expr...)
-    # If the first token is :new then we want to create a new dummy function. I don't love this feature, but it's necessary for things like 
-    # second, secondi, firsti, etc which don't have equivalent functions in Julia.
-    if first(expr) === :new
-        newfunc = :(function $(esc(expr[2])) end)
-        expr = expr[2:end]
-    else
-        newfunc = :()
-    end
-    jlfunc = first(expr)
-    if expr[2] isa Symbol
-        name = string(expr[2])
-        types = expr[3]
-    else # if we aren't given a name then we'll assume it's just uppercased of the function.
-        name = uppercase(string(jlfunc))
-        types = expr[2]
-    end
-    builtin = isGxB(name) || isGrB(name)
-    if types.head !== :call || types.args[1] !== :(=>)
-        error("Type constraints should be in the form <Symbol>=><Symbol>")
-    end
-    intypes = symtotype(types.args[2])
-    outtypes = symtotype(types.args[3])
-    constquote = typedunopexprs(jlfunc, builtin, name, intypes, outtypes)
-    dispatchquote = quote
-        $newfunc
-        $constquote
-    end
-    return dispatchquote
-end
-
 # all types
-@unop identity GrB_IDENTITY T=>T
-@unop (-) GrB_AINV T=>T
-@unop inv GrB_MINV T=>T
-@unop one GxB_ONE T=>T
+BUILTINUNARYOPS[identity] = :GrB_IDENTITY, Ttypes
+BUILTINUNARYOPS[(-)] = :GrB_AINV, Ttypes
+BUILTINUNARYOPS[inv] = :GrB_MINV, Ttypes
+BUILTINUNARYOPS[one] = :GxB_ONE, Ttypes
 
 # real and int
-@unop (!) GxB_LNOT Bool=>Bool
-@unop abs GrB_ABS R=>R Z=>F
-@unop (~) GrB_BNOT I=>I
+BUILTINUNARYOPS[(!)] = :GxB_LNOT, Bool
+BUILTINUNARYOPS[abs] = :GrB_ABS, nBtypes
+BUILTINUNARYOPS[(~)] = :GrB_BNOT, Itypes
 
 # positionals
 # dummy functions mostly for Base._return_type purposes.
@@ -128,52 +160,52 @@ rowindex(_) = 1::Int64
 Dummy function for use with [`apply`](@ref). Returns the row index of an element.
 """
 colindex(_) = 1::Int64
-@unop rowindex GxB_POSITIONI1 Any=>N
-@unop colindex GxB_POSITIONJ1 Any=>N
+BUILTINUNARYOPS[rowindex] = :GxB_POSITIONI1, (Any,)
+BUILTINUNARYOPS[colindex] = :GxB_POSITIONJ1, (Any,)
 
 
 #floats and complexes
-@unop sqrt GxB_SQRT FZ=>FZ
-@unop log GxB_LOG FZ=>FZ
-@unop exp GxB_EXP FZ=>FZ
+BUILTINUNARYOPS[sqrt] = :GxB_SQRT, FZtypes
+BUILTINUNARYOPS[log] = :GxB_LOG, FZtypes
+BUILTINUNARYOPS[exp] = :GxB_EXP, FZtypes
 
-@unop log10 GxB_LOG10 FZ=>FZ
-@unop log2 GxB_LOG2 FZ=>FZ
-@unop exp2 GxB_EXP2 FZ=>FZ
-@unop expm1 GxB_EXPM1 FZ=>FZ
-@unop log1p GxB_LOG1P FZ=>FZ
+BUILTINUNARYOPS[log10] = :GxB_LOG10, FZtypes
+BUILTINUNARYOPS[log2] = :GxB_LOG2, FZtypes
+BUILTINUNARYOPS[exp2] = :GxB_EXP2, FZtypes
+BUILTINUNARYOPS[expm1] = :GxB_EXPM1, FZtypes
+BUILTINUNARYOPS[log1p] = :GxB_LOG1P, FZtypes
 
-@unop sin GxB_SIN FZ=>FZ
-@unop cos GxB_COS FZ=>FZ
-@unop tan GxB_TAN FZ=>FZ
-@unop asin GxB_ASIN FZ=>FZ
-@unop acos GxB_ACOS FZ=>FZ
-@unop atan GxB_ATAN FZ=>FZ
-@unop sinh GxB_SINH FZ=>FZ
-@unop cosh GxB_COSH FZ=>FZ
-@unop tanh GxB_TANH FZ=>FZ
-@unop asinh GxB_ASINH FZ=>FZ
-@unop acosh GxB_ACOSH FZ=>FZ
-@unop atanh GxB_ATANH FZ=>FZ
+BUILTINUNARYOPS[sin] = :GxB_SIN, FZtypes
+BUILTINUNARYOPS[cos] = :GxB_COS, FZtypes
+BUILTINUNARYOPS[tan] = :GxB_TAN, FZtypes
+BUILTINUNARYOPS[asin] = :GxB_ASIN, FZtypes
+BUILTINUNARYOPS[acos] = :GxB_ACOS, FZtypes
+BUILTINUNARYOPS[atan] = :GxB_ATAN, FZtypes
+BUILTINUNARYOPS[sinh] = :GxB_SINH, FZtypes
+BUILTINUNARYOPS[cosh] = :GxB_COSH, FZtypes
+BUILTINUNARYOPS[tanh] = :GxB_TANH, FZtypes
+BUILTINUNARYOPS[asinh] = :GxB_ASINH, FZtypes
+BUILTINUNARYOPS[acosh] = :GxB_ACOSH, FZtypes
+BUILTINUNARYOPS[atanh] = :GxB_ATANH, FZtypes
 
-@unop sign GxB_SIGNUM FZ=>FZ
-@unop ceil GxB_CEIL FZ=>FZ
-@unop floor GxB_FLOOR FZ=>FZ
-@unop round GxB_ROUND FZ=>FZ
-@unop trunc GxB_TRUNC FZ=>FZ
+BUILTINUNARYOPS[sign] = :GxB_SIGNUM, FZtypes
+BUILTINUNARYOPS[ceil] = :GxB_CEIL, FZtypes
+BUILTINUNARYOPS[floor] = :GxB_FLOOR, FZtypes
+BUILTINUNARYOPS[round] = :GxB_ROUND, FZtypes
+BUILTINUNARYOPS[trunc] = :GxB_TRUNC, FZtypes
 
-@unop SpecialFunctions.lgamma GxB_LGAMMA FZ=>FZ
-@unop SpecialFunctions.gamma GxB_TGAMMA FZ=>FZ
-@unop erf GxB_ERF FZ=>FZ
-@unop erfc GxB_ERFC FZ=>FZ
-# julia has frexp which returns (x, exp). This is split in SS:GrB to frexpx = frexp[1]; frexpe = frexp[2];
+BUILTINUNARYOPS[SpecialFunctions.lgamma] = :GxB_LGAMMA, FZtypes
+BUILTINUNARYOPS[SpecialFunctions,gamma] = :GxB_TGAMMA, FZtypes
+BUILTINUNARYOPS[erf] = :GxB_ERF, FZtypes
+BUILTINUNARYOPS[erfc] = :GxB_ERFC, FZtypes
+# julia has frexp which eturns (x, exp). This is split in SS:GrB to frexpx = frexp[1]; frexpe = frexp[2];
 frexpx(x) = frexp[1]
 frexpe(x) = frexp[2]
-@unop frexpx GxB_FREXPX FZ=>FZ 
-@unop frexpe GxB_FREXPE FZ=>FZ
-@unop isinf GxB_ISINF FZ=>Bool
-@unop isnan GxB_ISNAN FZ=>Bool
-@unop isfinite GxB_ISFINITE FZ=>Bool
+BUILTINUNARYOPS[frexpx] = :GxB_FREXPX, FZtypes
+BUILTINUNARYOPS[frexpe] = :GxB_FREXPE, FZtypes
+BUILTINUNARYOPS[isinf] = :GxB_ISINF, FZtypes
+BUILTINUNARYOPS[isnan] = :GxB_ISNAN, FZtypes
+BUILTINUNARYOPS[isfinite] = :GxB_ISFINITE, FZtypes
 
 # manually create promotion overloads.
 # Otherwise we will fallback to Julia functions which can be harmful.
@@ -205,11 +237,11 @@ for f ∈ [
 end
 
 # Complex functions
-@unop conj GxB_CONJ Z=>Z
-@unop real GxB_CREAL Z=>F
-@unop imag GxB_CIMAG Z=>F
-@unop angle GxB_CARG Z=>F
+BUILTINUNARYOPS[conj] = :GxB_CONJ, Ztypes
+BUILTINUNARYOPS[real] = :GxB_CREAL, Ztypes
+BUILTINUNARYOPS[imag] = :GxB_CIMAG, Ztypes
+BUILTINUNARYOPS[angle] = :GxB_CARG, Ztypes
 end
 
-ztype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = O
-xtype(::TypedUnaryOperator{F, I, O}) where {F, I, O} = I
+ztype(::UnaryOps.TypedUnaryOperator{F, I, O}) where {F, I, O} = O
+xtype(::UnaryOps.TypedUnaryOperator{F, I, O}) where {F, I, O} = I

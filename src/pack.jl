@@ -215,7 +215,7 @@ function unsafepack!(
     )
     _packdensematrix!(A, M; order)
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    gbset!(A, :orientation, storageorder(A))
     return A
 end
 
@@ -225,7 +225,7 @@ function unsafepack!(
 ) where {T <: Union{Int8, Bool}}
     _packbitmap!(A, M, V; order)
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    gbset!(A, :orientation, storageorder(A))
     return A
 end
 
@@ -239,7 +239,7 @@ function unsafepack!(
         _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    gbset!(A, :orientation, storageorder(A))
     return A
 end
 
@@ -249,7 +249,7 @@ function unsafepack!(
 )
     _packhypermatrix!(A, ptr, idx1, idx2, values; order, decrementindices)
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    gbset!(A, :orientation, storageorder(A))
     return A
 end
 

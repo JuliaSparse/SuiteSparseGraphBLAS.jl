@@ -4,7 +4,7 @@ setfill!
 sparsitystatus
 format
 setstorageorder!
-gbset
+gbset!
 Descriptor
 SuiteSparseGraphBLAS.set_lib!
 empty!

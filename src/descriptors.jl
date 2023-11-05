@@ -45,8 +45,8 @@ function symtodescfield(sym::Symbol)
         return LibGraphBLAS.GrB_MASK
     sym === :transpose_input1 && return LibGraphBLAS.GrB_INP0
     sym === :transpose_input2 && return LibGraphBLAS.GrB_INP1
-    sym === :nthreads && return LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS
-    sym === :chunk && return LibGraphBLAS.GxB_DESCRIPTOR_CHUNK
+    # sym === :nthreads && return LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS
+    # sym === :chunk && return LibGraphBLAS.GxB_DESCRIPTOR_CHUNK
     sym === :sort && return LibGraphBLAS.GxB_SORT
     throw(ArgumentError("$sym is not a valid Descriptor field"))
 end
@@ -97,7 +97,7 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
             if d.structural_mask
                 LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE)
             else
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GxB_DEFAULT)
+                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_DEFAULT)
             end
         else
             if d.structural_mask
@@ -111,19 +111,15 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
             if d.complement_mask
                 LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
             else
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GxB_DEFAULT)
+                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_DEFAULT)
             end
         else
             LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE)
         end
     elseif s === :transpose_input1
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_INP0, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GxB_DEFAULT)
+        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_INP0, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GrB_DEFAULT)
     elseif s === :transpose_input2
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_INP1, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GxB_DEFAULT)
-    elseif s === :nthreads
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS, x)
-    elseif s === :chunk
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GxB_DESCRIPTOR_CHUNK, x)
+        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_INP1, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GrB_DEFAULT)
     elseif s === :sort
         LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GxB_SORT, x ? 3 : 0)
     end
@@ -145,17 +141,16 @@ Base.show(io::IO, ::MIME"text/plain", d::Descriptor) = gxbprint(io, d)
 Base.print(io::IO, d::Descriptor) = gxbprint(io, d)
 
 function _handledescriptor(desc; out=nothing, in1 = nothing, in2 = nothing)
-    if out === nothing && in1 === nothing && in2 === nothing
-        if !(desc isa Descriptor)
-            return C_NULL
-        else
-            return desc
-        end
-    end
-    if desc == C_NULL || desc === nothing
-        desc = Descriptor()
-    end
     in1 isa Transpose && (desc.transpose_input1 = true)
     in2 isa Transpose && (desc.transpose_input2 = true)
     return desc
+end
+
+function _handledescriptor(::Nothing; out=nothing, in1=nothing, in2=nothing)
+    if in1 isa Transpose || in2 isa Transpose
+        desc = Descriptor()
+        return _handledescriptor(desc; out, in1, in2)
+    else
+        return C_NULL
+    end
 end

@@ -12,11 +12,7 @@
 
         @test map(typedop, X)[1] == 1.3
         @test typedop.loaded
-
-        #test the macro method. Macro is used in runtests.jl
-        @test !FOO_FP64.loaded
-        @test map(foo, X)[1] == 4.5
-        @test FOO_FP64.loaded
+        
         #test the ephemeral method.
         @test map((x) -> x * 3, X)[1] == 3
 

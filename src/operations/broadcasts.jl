@@ -127,14 +127,10 @@ mutatingop(::typeof(apply)) = apply!
     l = length(bc.args)
     if l == 1
         x = first(bc.args)
-        if bc.f === Base.identity
-            C[:,:, accum=second] = x
-            return C
-        end
         if x isa Broadcast.Broadcasted
             x = copy(x)
         end
-        return apply!(bc.f, C, x; accum=second)
+        return apply!(bc.f, C, x)
     else
         left = first(bc.args)
         right = last(bc.args)
@@ -202,9 +198,9 @@ mutatingop(::typeof(apply)) = apply!
             end
             if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(f))
-                return add(C, left, right, f)
+                return add(C, left, right, bc.f)
             else
-                return apply!(C, f, left, right; accum=second)
+                return apply!(C, bc.f, left, right)
             end
         end
     end
@@ -253,13 +249,13 @@ end
     if l == 1
         x = first(bc.args)
         if bc.f === Base.identity
-            C[:, accum=second] = x
+            C[:] = x
             return C
         end
         if x isa Broadcast.Broadcasted
             x = copy(x)
         end
-        return apply!(bc.f, C, x; accum=second)
+        return apply!(bc.f, C, x)
     else
         left = first(bc.args)
         right = last(bc.args)
@@ -326,10 +322,10 @@ end
                 right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
             end
             if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
-                add = mutatingop(defaultadd(f))
-                return add(C, left, right, f)
+                add = mutatingop(defaultadd(bc.f))
+                return add(C, left, right, bc.f)
             else
-                return apply!(C, f, left, right; accum=second)
+                return apply!(C, bc.f, left, right)
             end
         end
     end

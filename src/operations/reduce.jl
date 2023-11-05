@@ -4,7 +4,7 @@ function reduce!(
 )
     _canbeoutput(w) || throw(ShallowException())
     desc = _handledescriptor(desc; out=w, in1=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     
     op = typedmonoid(op, storedeltype(w))
     accum = _handleaccum(accum, storedeltype(w))
@@ -24,8 +24,10 @@ function Base.reduce(
     accum = nothing,
     desc = nothing
 )
+    # we need the descriptor in this function.
+    desc === nothing && (desc = Descriptor())
     desc = _handledescriptor(desc; in1=A)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     if typeout === nothing
         typeout = inferbinarytype(parent(A), parent(A), op)
     end

@@ -9,7 +9,7 @@ function LinearAlgebra.mul!(
 )
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A, in2=B)
-    mask = _handlemask!(desc, mask)
+    desc, mask = _handlemask!(desc, mask)
     size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
     size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
     size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
