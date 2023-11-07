@@ -1,17 +1,20 @@
 module OperatorCompiler
 using GPUCompiler, LLVM, StaticTools
 using StaticTools: @c_str
+import Clang_jll
 
 fixname(f::Function) = fixname(string(nameof(f)))
 fixname(s) = String(GPUCompiler.safe_name(s))
 
 function llvmmodule(@nospecialize(f), @nospecialize(tt), name = "jl" * fixname(f))
-    job = operatorjob(f, tt; name)
-    return compiler(job)
+    job = operatorjob(f, f, tt; name)
+    GPUCompiler.JuliaContext() do ctx
+        GPUCompiler.codegen(:llvm, job; strip=true, validate=false)
+    end
 end
 
 function compiler(job)
-    mod, _ = GPUCompiler.JuliaContext() do ctx
+    return GPUCompiler.JuliaContext() do ctx
         GPUCompiler.codegen(:llvm, job; strip=true, validate=false)
     end
     return mod
@@ -67,7 +70,7 @@ Base.Experimental.@overlay operatortable (@noinline Base.Math.cos_domain_error(x
 #####################
 
 Base.@kwdef struct BitcodeCompilerTarget <: GPUCompiler.AbstractCompilerTarget
-    triple::String = Sys.MACHINE
+    triple::String = readchomp(`$(Clang_jll.clang) --print-effective-triple`)
     cpu::String=(LLVM.version() < v"8") ? "" : unsafe_string(LLVM.API.LLVMGetHostCPUName())
     features::String=(LLVM.version() < v"8") ? "" : unsafe_string(LLVM.API.LLVMGetHostCPUFeatures())
 end
@@ -95,7 +98,7 @@ struct OperatorCompilerParams{F, F2} <: AbstractCompilerParams
 end
 
 
-function operatorjob(@nospecialize(f), @nospecialize(f2), @nospecialize(tt); target=BitcodeCompilerTarget(), name = "jl" * fixname(f))
+function operatorjob(@nospecialize(f), @nospecialize(f2), @nospecialize(tt); target=BitcodeCompilerTarget(), name = nothing)
     T = Base.to_tuple_type(tt)
     source = GPUCompiler.methodinstance(typeof(f2), T)
     config = CompilerConfig(

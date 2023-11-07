@@ -6,6 +6,7 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, GBType,
     GBArrayOrTranspose, AbstractTypedOp, @wraperror, load_global, OperatorCompiler, gbset!, irscratch
 using ..LibGraphBLAS
 using GPUCompiler
+import LLVM
 export unaryop, @unop
 
 export rowindex, colindex, frexpx, frexpe
@@ -79,21 +80,17 @@ const COMPILEDUNARYOPS = Dict()
 const BUILTINUNARYOPS = Dict{<:Any, <:Any}() # (f) -> name, inputtypes
 
 function linker(job, compiled)
-    ir = compiled
+    ir, meta = compiled
     (; fn, c_fn, intypes) = job.config.params
     write(joinpath(irscratch, "$(hash(ir)).o"), ir)
     return TypedUnaryOperator{typeof(fn), eltype(intypes[2]), eltype(intypes[1])}(
-        false, false, job.config.name, LibGraphBLAS.GrB_UnaryOp(), fn, c_fn; docompilation = true, ir = joinpath(irscratch, "$(hash(ir)).o")
+        false, false, LLVM.name(meta[:entry]), LibGraphBLAS.GrB_UnaryOp(), fn, c_fn; docompilation = true, ir = joinpath(irscratch, "$(hash(ir)).o")
     )
 end
 
-function unarycachecompile(f, ::Type{T}) where T
-    function unaryopfn(z, x)
-        Base.unsafe_store!(z, f(Base.unsafe_load(x)))
-        return nothing
-    end
+function unarycachecompile(f, ptrfunction, ::Type{T}) where T
     O = Base.Broadcast.combine_eltypes(f, (T,))
-    job = OperatorCompiler.operatorjob(f, unaryopfn, (Ptr{O}, Ptr{T},))
+    job = OperatorCompiler.operatorjob(f, ptrfunction, (Ptr{O}, Ptr{T},))
     return GPUCompiler.cached_compilation(
         COMPILEDUNARYOPS, job.source, job.config,
         OperatorCompiler.compiler, linker
@@ -120,10 +117,17 @@ function unaryop(f, ::Type{T}) where T
             return nothing
         end
     end
-    if maybeop !== nothing
+    if maybeop isa TypedUnaryOperator
         return maybeop
+    elseif maybeop === nothing
+        function unaryopfn(z, x)
+            Base.unsafe_store!(z, f(Base.unsafe_load(x)))
+            return nothing
+        end
+        UNARYOPS[(f, t)] = unaryopfn
+        return unarycachecompile(f, unaryopfn, T)
     else
-        return unarycachecompile(f, T)
+        return unarycachecompile(f, maybeop, T)
     end
 end
 
