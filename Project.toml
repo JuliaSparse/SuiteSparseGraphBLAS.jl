@@ -22,7 +22,7 @@ SuiteSparse = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 [compat]
 Blobs = "0.5"
 ChainRulesCore = "1"
-KLU = "0.4"
+KLU = "0.4, 0.6"
 MacroTools = "0.5"
 Preferences = "1"
 SSGraphBLAS_jll = "7.2"
