@@ -7,5 +7,5 @@
     @test eadd(m, n, >) == eadd(m, n, >)
     #emul correctness
     @test emul(m, n, ^)[3, 2] == m[3,2] ^ n[3,2]
-    @test eltype(m .== n) == Bool
+    @test storedeltype(m .== n) == Bool
 end

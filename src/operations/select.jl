@@ -8,14 +8,26 @@ function select!(
     accum = nothing,
     desc = nothing
 ) where {T, TH}
-    op ∈ (rowindex, colindex, diagindex, tril, triu, diag, offdiag) && 
-        (thunk = convert(Int64, thunk))
+    if op ∈ (
+            rowindex, colindex, diagindex,
+            rowindex32, colindex32, diagindex32,
+            tril, triu, diag, offdiag,
+            colle, colgt, rowle, rowgt
+        )
+        scalar = GBScalar{Int64}(thunk)
+    elseif op ∈ (==, !=, <, >, <=, >=) && TH <: builtin_union
+        scalar = GBScalar{TH}(thunk)
+    else
+        scalar = GBScalar(thunk)
+    end
+    intermediatetype = storedeltype(C)
     _canbeoutput(C) || throw(ShallowException())
-    op = indexunaryop(op, T, TH)
+    op = indexunaryop(op, T, scalar, intermediatetype)
     desc = _handledescriptor(desc; out=C, in1=A)
     desc, mask = _handlemask!(desc, mask)
-    accum = _handleaccum(accum, storedeltype(C))
-    @wraperror LibGraphBLAS.GrB_Matrix_select_Scalar(C, mask, accum, op, parent(A), GBScalar(thunk), desc)
+    accum = _handleaccum(accum, C, intermediatetype)
+    
+    @wraperror LibGraphBLAS.GrB_Matrix_select_Scalar(C, mask, accum, op, parent(A), scalar, desc)
     return C
 end
 
@@ -38,7 +50,7 @@ Some SelectOps or functions may require an additional argument `thunk`, for use 
 # Arguments
 - `op::Function`: A select operator from the SelectOps submodule.
 - `A::GBArrayOrTranspose`
-- `thunk::Union{GBScalar, nothing, valid_union}`: Optional value used to evaluate `op`.
+- `thunk::Union{GBScalar, nothing, builtin_union}`: Optional value used to evaluate `op`.
 
 # Keywords
 - `mask::Union{Nothing, GBMatrix} = nothing`: optional mask which determines the output
@@ -55,12 +67,10 @@ function select(
     A::GBArrayOrTranspose{T},
     thunk::TH = defaultthunk(op, T);
     mask = nothing,
-    accum = nothing,
     desc = nothing
 ) where {T, TH}
-    op = indexunaryop(op, T, TH)
     C = similar(A) # we keep the same type!! not the ztype of op.
-    select!(op, C, A, thunk; accum, mask, desc)
+    select!(op, C, A, thunk; mask, desc)
     return C
 end
 

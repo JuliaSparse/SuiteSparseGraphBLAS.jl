@@ -72,9 +72,7 @@
         mask = GBMatrix([[true, true, false] [false, true, true] [true, false,true]])
         m[8:10, 8:10, mask = mask, accum = *, desc = Descriptor(replace_output=true)] =
             fill(10, 3, 3)
-        @test m[9, 10] == zero(eltype(m))
-        n = setfill(m, nothing)
-        @test n[9, 10] === nothing
+        @test m[9, 10] === novalue
         @test m[10, 10] == 90
 
         #vectors
@@ -109,9 +107,7 @@
         mask = GBMatrix([[true, true, false] [false, true, true] [true, false,true]])
         m[8:10, 8:10, mask = mask, accum = *, desc = Descriptor(replace_output=true)] =
             fill(10, 3, 3)
-        @test m[9, 10] == zero(eltype(m))
-        n = setfill(m, nothing)
-        @test n[9, 10] === nothing
+        @test m[9, 10] == novalue
         @test m[10, 10] == 90
 
         #vectors

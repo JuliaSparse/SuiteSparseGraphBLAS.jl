@@ -10,5 +10,3 @@
 function Base.getindex(A::GBMatrixOrTranspose, v::AbstractVector)
     throw("Not implemented")
 end
-
-# Pack based constructors:

@@ -5,10 +5,10 @@
 ###########################################################
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, v::GBVector) = v.p[]
 
-function Base.copy(A::GBVector{T, F}) where {T, F}
-    C = Ref{LibGraphBLAS.GrB_Matrix}()
-    LibGraphBLAS.GrB_Matrix_dup(C, A)
-    return GBVector{T, F}(C, A.fill)
+function Base.copy(A::GBVector{T}) where {T}
+    C = _newGrBRef()
+    @wraperror LibGraphBLAS.GrB_Matrix_dup(C, A)
+    return GBVector{T}(C)
 end
 
 # Indexing functions:

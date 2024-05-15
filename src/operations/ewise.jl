@@ -35,8 +35,9 @@ function emul!(
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || (return _bcastemul!(C, A, B, op; mask, accum, desc))
     desc = _handledescriptor(desc; out=C, in1=A, in2=B)
-    op = binaryop(op, A, B)
-    accum = _handleaccum(accum, storedeltype(C))
+    intermediatetype = storedeltype(C)
+    op = binaryop(op, A, B, intermediatetype)
+    accum = _handleaccum(accum, C, intermediatetype)
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseMult_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
@@ -74,14 +75,12 @@ function emul(
     B::GBArrayOrTranspose,
     op = *;
     mask = nothing,
-    accum = nothing,
     desc = nothing
 )
     T = inferbinarytype(parent(A), parent(B), op)
-    fill=_promotefill(parent(A), parent(B), op)
     M = gbpromote_strip(A, B)
-    C = M{T}(_combinesizes(A, B); fill)
-    return emul!(C, A, B, op; mask, accum, desc)
+    C = M{T}(_combinesizes(A, B))
+    return emul!(C, A, B, op; mask, desc)
 end
 
 # we assume mismatched sizes here.
@@ -139,7 +138,7 @@ function _bcastemul!(
     mask = nothing, accum = nothing, desc = nothing
 )
     op2 = _swapop(op)
-    if op2 === nothing # worst possible fallback
+    if isnothing(op2) # worst possible fallback
         full = similar(B)
         full[:] = 0
         T1 = *(full, A, (any, second); mask)
@@ -156,7 +155,7 @@ function _bcastemul!(
     mask = nothing, accum = nothing, desc = nothing
 )
     op2 = _swapop(op)
-    if op2 === nothing # manually bcast:
+    if op2 # manually bcast:
         full = similar(B, size(A, 2))
         full[:] = 0
         T = *(B, full', (any, first); mask)
@@ -185,7 +184,7 @@ function _bcastemul!(
     mask = nothing, accum = nothing, desc = nothing
 )
     op2 = _swapop(op)
-    if op2 === nothing
+    if isnothing(op2)
         full = similar(A, size(B, 1))
         full[:] = 0
         T = *(full, A, (any, second); mask)
@@ -233,8 +232,10 @@ function eadd!(
     desc, mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || (return _bcasteadd!(C, A, B, op; mask, accum, desc))
-    op = binaryop(op, A, B)
-    accum = _handleaccum(accum, storedeltype(C))
+        
+    intermediatetype = storedeltype(C) # accum should support heterogeneity but it's iffy.
+    op = binaryop(op, A, B, intermediatetype)
+    accum = _handleaccum(accum, C, intermediatetype)
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GrB_Matrix_eWiseAdd_BinaryOp(C, mask, accum, op, parent(A), parent(B), desc)
         return C
@@ -262,8 +263,6 @@ For a set intersection equivalent see [`emul`](@ref).
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
-    such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
 function eadd(
@@ -271,14 +270,12 @@ function eadd(
     B::GBArrayOrTranspose,
     op = +;
     mask = nothing,
-    accum = nothing,
     desc = nothing
 )
     T = inferbinarytype(parent(A), parent(B), op)
-    fill=_promotefill(parent(A), parent(B), op)
     M = gbpromote_strip(A, B)
-    C = M{T}(_combinesizes(A, B); fill)
-    return eadd!(C, A, B, op; mask, accum, desc)
+    C = M{T}(_combinesizes(A, B))
+    return eadd!(C, A, B, op; mask, desc)
 end
 
 function _bcasteadd!(
@@ -363,8 +360,10 @@ function eunion!(
     desc, mask = _handlemask!(desc, mask)
     size(C, 1) == size(A, 1) == size(B, 1) &&
     size(C, 2) == size(A, 2) == size(B, 2) || throw(DimensionMismatch())
-    op = binaryop(op, A, B)
-    accum = _handleaccum(accum, storedeltype(C))
+    # accum should support heterogeneity but it's iffy.
+    intermediatetype = storedeltype(C)
+    op = binaryop(op, A, B, intermediatetype)
+    accum = _handleaccum(accum, C, intermediatetype)
     if op isa TypedBinaryOperator
         @wraperror LibGraphBLAS.GxB_Matrix_eWiseUnion(C, mask, accum, op, parent(A), GBScalar(α), parent(B), GBScalar(β), desc)
         return C
@@ -390,8 +389,6 @@ Unlike `eadd!` where an argument missing in `A` causes the `B` element to "pass-
 
 # Keywords
 - `mask::Union{Nothing, GBVecOrMat} = nothing`: optional mask.
-- `accum::Union{Nothing, Function} = nothing`: binary accumulator operation
-    such that `C[i,j] = accum(C[i,j], T[i,j])` where T is the result of this function before accum is applied.
 - `desc::Union{Nothing, Descriptor} = nothing`
 """
 function eunion(
@@ -401,55 +398,23 @@ function eunion(
     β::U,
     op = +;
     mask = nothing,
-    accum = nothing,
     desc = nothing
 ) where {T, U}
     t = inferbinarytype(parent(A), parent(B), op)
-    fill=_promotefill(parent(A), parent(B), op)
     M = gbpromote_strip(A, B)
-    C = M{t}(_combinesizes(A, B); fill)
-    return eunion!(C, A, α, B, β, op; mask, accum, desc)
+    C = M{t}(_combinesizes(A, B))
+    return eunion!(C, A, α, B, β, op; mask, desc)
 end
 
 eunion(
     A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, β, op = +;
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion(A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; mask, accum, desc)
-
-eunion(
-    A::GBArrayOrTranspose, B::GBArrayOrTranspose, op::Function = +; 
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion(A, getfill(A), B, getfill(B), op; mask, accum, desc)
-
-eunion(
-    A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, op::Function = +; 
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion(A, α, B, getfill(B), op; mask, accum, desc)
-
-eunion(
-    A::GBArrayOrTranspose, B::GBArrayOrTranspose, β, op::Function = +; 
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion(A, getfill(A), B, β, op; mask, accum, desc)
+    kwargs...
+) = eunion(A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; kwargs...)
 
 eunion!(
     C::GBVecOrMat, A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, β, op = +;
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion!(C, A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; mask, accum, desc)
-
-eunion!(
-    C::GBVecOrMat, A::GBArrayOrTranspose, B::GBArrayOrTranspose, op::Function = +; 
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion!(C, A, getfill(A), B, getfill(B), op; mask, accum, desc)
-
-eunion!(
-    C::GBVecOrMat, A::GBArrayOrTranspose, α, B::GBArrayOrTranspose, op::Function = +; 
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion!(C, A, α, B, getfill(B), op; mask, accum, desc)
-
-eunion!(
-    C::GBVecOrMat, A::GBArrayOrTranspose, B::GBArrayOrTranspose, β, op::Function = +; 
-    mask = nothing, accum = nothing, desc = nothing
-) = eunion!(C, A, getfill(A), B, β, op; mask, accum, desc)
+    kwargs...
+) = eunion!(C, A, convert(storedeltype(A), α), B, convert(storedeltype(B), β), op; kwargs...)
 
 function Base.:+(A::GBArrayOrTranspose, B::GBArrayOrTranspose)
     eadd(A, B, +)
@@ -459,16 +424,14 @@ function Base.:-(A::GBArrayOrTranspose, B::GBArrayOrTranspose)
     eadd(A, B, -)
 end
 
-⊕(A, B, op; mask = nothing, accum = nothing, desc = nothing) =
-    eadd(A, B, op; mask, accum, desc)
-⊗(A, B, op; mask = nothing, accum = nothing, desc = nothing) =
-    emul(A, B, op; mask, accum, desc)
+⊕(A, B, op; kwargs...) = eadd(A, B, op; kwargs...)
+⊗(A, B, op; kwargs...) = emul(A, B, op; kwargs...)
 
-⊕(f::Union{Function, TypedBinaryOperator}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
-    eadd(A, B, f; mask, accum, desc)
+⊕(f::Union{Function, TypedBinaryOperator}) = 
+    (A, B; kwargs...) -> eadd(A, B, f; kwargs...)
 
-⊗(f::Union{Function, TypedBinaryOperator}) = (A, B; mask = nothing, accum = nothing, desc = nothing) ->
-    emul(A, B, f; mask, accum, desc)
+⊗(f::Union{Function, TypedBinaryOperator}) = 
+    (A, B; kwargs...) -> emul(A, B, f; kwargs...)
 
 # pack friendly overloads. Potentially this could be done more succinctly by using Unions above.
 # but it's ~ 10loc per function so it's nbd.

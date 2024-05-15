@@ -15,7 +15,7 @@
 
         @testset "similar of Transpose" begin
             @test similar(A, Float64, 5) isa GBVector{Float64}
-            @test similar(A, 5) isa GBVector{eltype(A)}
+            @test similar(A, 5) isa GBVector{storedeltype(A)}
         end
 
         C = GBMatrix{Int64}(2, 2)
@@ -68,13 +68,13 @@
     @testset "findnz" begin
         # UDTs
         X = GBMatrix{Int128}([[1,2] [3,4]])
-        @test eltype(X) === Int128
+        @test storedeltype(X) === Int128
         @test findnz(X) == ([1,2,1,2], [1,1,2,2], [1,2,3,4])
         @test nonzeros(X) == [1,2,3,4]
         @test nonzeroinds(X) == ([1,2,1,2], [1,1,2,2])
 
-        X = GBMatrix{Float64, Nothing}([[1,2] [3,4]])
-        @test eltype(X) == Union{Float64, Nothing}
+        X = GBMatrix{Float64}([[1,2] [3,4]])
+        @test eltype(X) == Union{Float64, NoValue}
         @test findnz(X) == ([1,2,1,2], [1,1,2,2], [1,2,3,4])
         @test nonzeros(X) == [1,2,3,4]
         @test nonzeroinds(X) == ([1,2,1,2], [1,1,2,2])

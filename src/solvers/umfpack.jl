@@ -881,43 +881,43 @@ ldiv!(X::StridedVecOrMat{Tb}, translu::TransposeFact{Float64,<:GBUmfpackLU{Float
 ldiv!(X::StridedVecOrMat{Tb}, adjlu::AdjointFact{Float64,<:GBUmfpackLU{Float64}}, B::StridedVecOrMat{Tb}) where {Tb<:Complex} =
     (lu = adjlu.parent; _Aq_ldiv_B!(X, lu, B, UMFPACK_At))
 
-function _Aq_ldiv_B!(X::StridedVecOrMat, lu::GBUmfpackLU, B::StridedVecOrMat, transposeoptype)
+function _Aq_ldiv_B!(X::StridedVecOrMat, lu::GBUmfpackLU, B::StridedVecOrMat, transposeGB_promote)
     if size(X, 2) != size(B, 2)
         throw(DimensionMismatch("input and output arrays must have same number of columns"))
     end
-    _AqldivB_kernel!(X, lu, B, transposeoptype)
+    _AqldivB_kernel!(X, lu, B, transposeGB_promote)
     return X
 end
 function _AqldivB_kernel!(x::StridedVector{T}, lu::GBUmfpackLU{T},
-                          b::StridedVector{T}, transposeoptype) where {T<:UMFVTypes}
-    solve!(x, lu, b, transposeoptype)
+                          b::StridedVector{T}, transposeGB_promote) where {T<:UMFVTypes}
+    solve!(x, lu, b, transposeGB_promote)
 end
 function _AqldivB_kernel!(X::StridedMatrix{T}, lu::GBUmfpackLU{T},
-                          B::StridedMatrix{T}, transposeoptype) where {T<:UMFVTypes}
+                          B::StridedMatrix{T}, transposeGB_promote) where {T<:UMFVTypes}
     for col in 1:size(X, 2)
-        solve!(view(X, :, col), lu, view(B, :, col), transposeoptype)
+        solve!(view(X, :, col), lu, view(B, :, col), transposeGB_promote)
     end
 end
 function _AqldivB_kernel!(x::StridedVector{Tb}, lu::GBUmfpackLU{Float64},
-                          b::StridedVector{Tb}, transposeoptype) where Tb<:Complex
+                          b::StridedVector{Tb}, transposeGB_promote) where Tb<:Complex
     r = similar(b, Float64)
     i = similar(b, Float64)
     c = real.(b)
-    solve!(r, lu, c, transposeoptype)
+    solve!(r, lu, c, transposeGB_promote)
     c .= imag.(b)
-    solve!(i, lu, c, transposeoptype)
+    solve!(i, lu, c, transposeGB_promote)
     map!(complex, x, r, i)
 end
 function _AqldivB_kernel!(X::StridedMatrix{Tb}, lu::GBUmfpackLU{Float64},
-                          B::StridedMatrix{Tb}, transposeoptype) where Tb<:Complex
+                          B::StridedMatrix{Tb}, transposeGB_promote) where Tb<:Complex
     r = similar(B, Float64, size(B, 1))
     i = similar(B, Float64, size(B, 1))
     c = similar(B, Float64, size(B, 1))
     for j in 1:size(B, 2)
         c .= real.(view(B, :, j))
-        solve!(r, lu, c, transposeoptype)
+        solve!(r, lu, c, transposeGB_promote)
         c .= imag.(view(B, :, j))
-        solve!(i, lu, c, transposeoptype)
+        solve!(i, lu, c, transposeGB_promote)
         map!(complex, view(X, :, j), r, i)
     end
 end

@@ -272,18 +272,17 @@ unsafepack!(
 ) = transpose(unsafepack!(A, parent(s), shallow; decrementindices))
 
 # These functions do not have the `!` since they will not modify A during packing (to decrement indices)
-function pack(A::StridedVecOrMat; fill = defaultfill(eltype(A)))
-    if A isa AbstractVector
-        return GBShallowVector(A; fill)
-    else
-        GBShallowMatrix(A; fill)
-    end
+pack(A::StridedVecOrMat) =
+    A isa AbstractVector ? GBShallowVector(A) : GBShallowMatrix(A)
+function pack(A::Transpose{<:Any, <:StridedVecOrMat})
+    return transpose(pack(parent(A)))
 end
-function pack(A::Transpose{<:Any, <:StridedVecOrMat}; fill = defaultfill(eltype(A)))
-    return transpose(parent(A); fill)
-end
-pack(A::Transpose{<:Any, <:DenseVecOrMat}; fill = defaultfill(eltype(A))) = 
-    transpose(pack(parent(A); fill))
+pack(A::Transpose) = 
+    transpose(pack(parent(A)))
+
+pack(A::GBArrayOrTranspose) = A
+pack(A::AbstractArray) = pack(convert(Matrix, A))
+pack(v::AbstractVector) = pack(convert(Vector, v))
 
 macro _densepack(xs...)
     syms = xs[1:(end - 1)]

@@ -39,7 +39,7 @@ function Base.empty!(s::GBScalar)
 end
 
 # Type dependent functions setindex and getindex:
-for T ∈ valid_vec
+for T ∈ builtin_vec
     func = Symbol(:GxB_Scalar_setElement_, suffix(T))
     @eval begin
         function Base.setindex!(value::GBScalar{$T}, s::$T)
@@ -58,7 +58,6 @@ for T ∈ valid_vec
         end
     end
 end
-
 
 function Base.setindex!(value::GBScalar{T}, s::T) where {T}
     @wraperror LibGraphBLAS.GxB_Scalar_setElement_UDT(value, Ref{T}(s))

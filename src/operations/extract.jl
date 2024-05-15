@@ -69,7 +69,7 @@ function extract!(
     desc, mask = _handlemask!(desc, mask)
     I = decrement!(I)
     I !== J && (J = decrement!(J))
-    @wraperror LibGraphBLAS.GrB_Matrix_extract(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_extract(C, mask, _handleaccum(accum, C, A), parent(A), I, ni, J, nj, desc)
     increment!(I)
     I !== J && increment!(J)
     return C
@@ -101,31 +101,31 @@ extract
 
 function extract(
     A::GBMatrixOrTranspose, I, J;
-    mask = nothing, accum = nothing, desc = nothing
+    kwargs...
 )
     Ilen, Jlen = _outlength(A, I, J)
     C = similar(A, Ilen, Jlen)
-    return extract!(C, A, I, J; mask, accum, desc)
+    return extract!(C, A, I, J; kwargs...)
 end
 
 function extract(
     A::GBMatrixOrTranspose, ::Colon, J::Number;
-    mask = nothing, accum = nothing, desc = nothing
+    kwargs...
 )
     Ilen, _ = _outlength(A, :, J)
     C = similar(A, Ilen)
-    return extract!(C, A, :, J; mask, accum, desc)
+    return extract!(C, A, :, J; kwargs...)
 end
 
 function extract(
     A::GBMatrixOrTranspose{T}, I::Number, ::Colon;
-    mask = nothing, accum = nothing, desc = nothing
+    kwargs...
 ) where {T}
     _, Jlen = _outlength(A, I, :)
     C = similar(A, Jlen)
     # TODO, better abstractions here.
     @wraperror LibGraphBLAS.GxB_Matrix_reshape(C, true, 1, Jlen, C_NULL)
-    extract!(C, A, I, :; mask, accum, desc)
+    extract!(C, A, I, :; kwargs...)
     @wraperror LibGraphBLAS.GxB_Matrix_reshape(C, true, Jlen, 1, C_NULL)
     return C
 end
@@ -139,16 +139,16 @@ function extract!(
     I = decrement!(I)
     desc = _handledescriptor(desc; out=w)
     desc, mask = _handlemask!(desc, mask)
-    @wraperror LibGraphBLAS.GrB_Matrix_extract(w, mask, _handleaccum(accum, storedeltype(w)), u, I, ni, UInt64[0], 1, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_extract(w, mask, _handleaccum(accum, w, u), u, I, ni, UInt64[0], 1, desc)
     increment!(I)
     return w
 end
 
 function extract(
     u::GBVector, I;
-    mask = nothing, accum = nothing, desc = nothing
+    kwargs...
 )
     wlen = _outlength(u, I)
     w = similar(u, wlen)
-    return extract!(w, u, I; mask, accum, desc)
+    return extract!(w, u, I; kwargs...)
 end

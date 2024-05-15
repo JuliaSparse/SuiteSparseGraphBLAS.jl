@@ -1,0 +1,285 @@
+module UnaryOps
+
+import ..GrB
+import ..GrB: 
+    Itypes, Ftypes, Ztypes, FZtypes, Rtypes, 
+    nBtypes, Ntypes, Ttypes, suffix, frexpx, frexpe,
+    load_global, OperatorCompiler, set!, Iunion, Uunion, 
+    rowindex, colindex, 
+    rowindex0, colindex0, OperatorCompiler, LibGraphBLAS, GxB_fprint,
+    gxbprint, domains, UnaryOp
+
+import SparseBase: storedeltype
+import SpecialFunctions
+
+domains(::UnaryOp{F, F2, X, Z}) where {F, F2, X, Z} = X => Z
+
+
+"""
+    cunary(f::Function, ::Type{X}, ::Type{Z}) -> Cvoid
+
+Create a C function pointer for a unary function `f` with signature `f(z::Ptr{Z}, x::Ptr{X})::Nothing`.
+
+This is used to supply a function pointer to a `GrB_UnaryOp` from Julia function `f`. 
+On certain platforms closure functions are not supported (e.g. Aarch64), 
+this function will throw an `ArgumentError` in those cases.
+"""
+@generated function cunary(f::F, ::Type{X}, ::Type{Z}) where {F, X, Z}
+    if Base.issingletontype(F)
+        :(@cfunction($(F.instance), Cvoid, (Ptr{Z}, Ptr{X})))
+    else
+       throw(ArgumentError("Unsupported function $f. Closure functions are not supported."))
+    end
+end
+
+function Base.unsafe_convert(
+    ::Type{LibGraphBLAS.GrB_UnaryOp}, op::UnaryOp{F, F2, X, Z}
+) where {F, F2, X, Z}
+    if !op.loaded
+        if op.builtin
+            op.p = load_global(op.typestr, LibGraphBLAS.GrB_UnaryOp)
+        else
+            opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
+            z, x = GrB.Type(Z), GrB.Type(X)
+            info = LibGraphBLAS.GxB_UnaryOp_new(
+                opref, 
+                cunary(op.c_fn, X, Z), 
+                z, x, 
+                op.maycompile ? op.typestr : C_NULL, 
+                op.maycompile ? "GB_ISOBJ $(op.bitcodepath)" : C_NULL
+            )
+            if info != LibGraphBLAS.GrB_SUCCESS
+                GrB.@uninitializedobject info z x
+                GrB.@fallbackerror info
+            end
+            op.p = opref[]
+            op.compileset = op.maycompile
+        end
+        op.loaded = true
+        !op.builtin && set!(op, :name, string(op.fn))
+    end
+    if !op.loaded
+        error("This operator $(op.fn) could not be loaded, and is invalid.")
+    else
+        if op.maycompile && !op.compileset
+            set!(op, :jit_cname, op.typestr)
+            set!(op, :jit_cdef, "GB_ISOBJ $(op.bitcodepath)")
+            op.compileset = true
+        end
+        return op.p
+    end
+end
+
+function GrB.nothrow_wait!(op::UnaryOp, mode) 
+    return LibGraphBLAS.GrB_UnaryOp_wait(op, mode)
+end
+function GrB.wait!(op::UnaryOp, mode) 
+    info = GrB.nothrow_wait!(op, mode)
+    if info != LibGraphBLAS.GrB_SUCCESS
+        # Technically pending OOB can throw here, but I don't see how on a UnaryOp.
+        GrB.@invalidvalue info mode
+        GrB.@uninitializedobject info op
+        GrB.@fallbackerror info
+    end
+end
+
+"""
+    UNARYOPS::Dict{Any, Any}
+
+Cache keyed on tuples of the form (f, x, z) where `f` is a function, and `x, z` are the input
+    and output types respectively. Returns a [`UnaryOp`](@ref)
+"""
+const UNARYOPS = Dict()
+"""
+    COMPILEDUNARYOPS::Dict{Any, Any}
+
+Internal compiler cache for GPUCompiler.cached_compile.
+"""
+const COMPILEDUNARYOPS = Dict()
+"""
+    BUILTINUNARYOPS::Dict{Any, Any}
+
+List of unaryops built into SuiteSparseGraphBLAS.jl.
+Keyed on functions `f` and returns (name_symbol, inputtypes)
+"""
+const BUILTINUNARYOPS = Dict() # (f) -> name, inputtypes
+
+function linker(job, compiled)
+    irpath, name = OperatorCompiler.writeir(compiled)
+    (; fn, c_fn, intypes) = job.config.params
+    return UnaryOp{typeof(fn), storedeltype(intypes[2]), storedeltype(intypes[1])}(
+        false, false, name, fn, c_fn;
+        maycompile = true, irpath
+    )
+end
+
+function unarycachecompile(f, ptrfunction, ::Type{X}, ::Type{Z}; maycompile = true) where {X, Z}
+    job = OperatorCompiler.operatorjob(f, ptrfunction, (Ptr{Z}, Ptr{X}))
+    op = OperatorCompiler.cached_compile(COMPILEDUNARYOPS, job, linker)
+    op.maycompile = op.maycompile || maycompile # we may turn on compilation, but not off.
+    return op
+end
+
+function unarybuiltin(f, x, z, builtin_name)
+    namestr = string(builtin_name[1]) * 
+        (Any ∈ builtin_name[2] ? "_$(suffix(z))" : "_$(suffix(x))")
+    namestr = x <: Complex || z <: Complex ? "GxB" * namestr[4:end] : namestr
+    return UnaryOp{typeof(f), x, z}(
+        true, false, namestr, f
+    )
+end
+
+
+"""
+    UnaryOp(f::Function, ::Type{X}, ::Type{Z}) -> UnaryOp{F, F2, X, Z}
+
+Create a `GrB_UnaryOp` from a Julia function `f` with signature `f(x::X) -> z::Z`.
+
+Most users should not call this function directly, 
+    instead pass a function directly to a GraphBLAS operation.
+
+# Arguments
+- `f`: Julia function to wrap.
+- `X::DataType`: Input type.
+- `Z::DataType`: Output type.
+- `maycompile::Bool`: If `maycompile` is `true`, JIT compilation may be performed. 
+If false, function pointers will be used. Note: this is currently a one way switch, 
+it may be turned from `false` to `true`, but not back to `false`.
+
+Function `f` must not allocate, yield or throw.
+"""
+function UnaryOp(f, ::Type{X}, ::Type{Z}; maycompile = true) where {X, Z}
+    # x may be Any and z Int64 for index operators.
+    x, z = (f === rowindex || f === colindex) ? (Any, Int64) : (X, Z)
+    maybeop = Base.get!(UNARYOPS, (f, x, z)) do
+        builtin_name = Base.get(BUILTINUNARYOPS, f, nothing)
+        if builtin_name !== nothing && (x ∈ builtin_name[2])
+            return unarybuiltin(f, x, z, builtin_name)
+        else
+            return nothing
+        end
+    end
+    if maybeop isa UnaryOp
+        return maybeop
+    elseif maybeop === nothing
+        function unaryopfn(z, x)
+            Base.unsafe_store!(z, f(Base.unsafe_load(x)))
+            return nothing
+        end
+        UNARYOPS[(f, x, z)] = unaryopfn
+        return unarycachecompile(f, unaryopfn, X, Z; maycompile)
+    else
+        return unarycachecompile(f, maybeop, X, Z; maycompile)
+    end
+end
+UnaryOp(f, X, Z; maycompile = true) = 
+    UnaryOp(f, storedeltype(X), storedeltype(Z); maycompile)
+UnaryOp(op::UnaryOp, ::Type{X}, ::Type{Z}; kwargs...) where {X, Z} = op
+
+function GrB.GxB_fprint(x::UnaryOp, name, level, file)
+    info = LibGraphBLAS.GxB_UnaryOp_fprint(x, name, level, file)
+    if info != LibGraphBLAS.GrB_SUCCESS
+        GrB.@uninitializedobject info x
+        GrB.@fallbackerror info
+    end
+end
+function Base.show(io::IO, ::MIME"text/plain", t::UnaryOp{F, F2, X, Z}) where {F, F2, X, Z} 
+    print(io, "GrB_UnaryOp{$(string(F))($X) -> $Z}: ")
+    gxbprint(io, t)
+end
+
+
+# all types
+BUILTINUNARYOPS[identity] = :GrB_IDENTITY, Ttypes
+BUILTINUNARYOPS[(-)] = :GrB_AINV, Ttypes
+BUILTINUNARYOPS[inv] = :GrB_MINV, Ttypes
+BUILTINUNARYOPS[one] = :GxB_ONE, Ttypes
+
+# real and int
+BUILTINUNARYOPS[(!)] = :GxB_LNOT, Bool
+BUILTINUNARYOPS[abs] = :GrB_ABS, nBtypes
+BUILTINUNARYOPS[(~)] = :GrB_BNOT, Itypes
+
+# positionals
+# dummy functions mostly for Base._return_type purposes.
+# 1 is the most natural value regardless.
+
+BUILTINUNARYOPS[rowindex] = :GxB_POSITIONI1, (Any,)
+BUILTINUNARYOPS[colindex] = :GxB_POSITIONJ1, (Any,)
+
+
+#floats and complexes
+BUILTINUNARYOPS[sqrt] = :GxB_SQRT, FZtypes
+BUILTINUNARYOPS[log] = :GxB_LOG, FZtypes
+BUILTINUNARYOPS[exp] = :GxB_EXP, FZtypes
+
+BUILTINUNARYOPS[log10] = :GxB_LOG10, FZtypes
+BUILTINUNARYOPS[log2] = :GxB_LOG2, FZtypes
+BUILTINUNARYOPS[exp2] = :GxB_EXP2, FZtypes
+BUILTINUNARYOPS[expm1] = :GxB_EXPM1, FZtypes
+BUILTINUNARYOPS[log1p] = :GxB_LOG1P, FZtypes
+
+BUILTINUNARYOPS[sin] = :GxB_SIN, FZtypes
+BUILTINUNARYOPS[cos] = :GxB_COS, FZtypes
+BUILTINUNARYOPS[tan] = :GxB_TAN, FZtypes
+BUILTINUNARYOPS[asin] = :GxB_ASIN, FZtypes
+BUILTINUNARYOPS[acos] = :GxB_ACOS, FZtypes
+BUILTINUNARYOPS[atan] = :GxB_ATAN, FZtypes
+BUILTINUNARYOPS[sinh] = :GxB_SINH, FZtypes
+BUILTINUNARYOPS[cosh] = :GxB_COSH, FZtypes
+BUILTINUNARYOPS[tanh] = :GxB_TANH, FZtypes
+BUILTINUNARYOPS[asinh] = :GxB_ASINH, FZtypes
+BUILTINUNARYOPS[acosh] = :GxB_ACOSH, FZtypes
+BUILTINUNARYOPS[atanh] = :GxB_ATANH, FZtypes
+
+BUILTINUNARYOPS[sign] = :GxB_SIGNUM, FZtypes
+BUILTINUNARYOPS[ceil] = :GxB_CEIL, FZtypes
+BUILTINUNARYOPS[floor] = :GxB_FLOOR, FZtypes
+BUILTINUNARYOPS[round] = :GxB_ROUND, FZtypes
+BUILTINUNARYOPS[trunc] = :GxB_TRUNC, FZtypes
+
+BUILTINUNARYOPS[SpecialFunctions.lgamma] = :GxB_LGAMMA, FZtypes
+BUILTINUNARYOPS[SpecialFunctions.gamma] = :GxB_TGAMMA, FZtypes
+BUILTINUNARYOPS[SpecialFunctions.erf] = :GxB_ERF, FZtypes
+BUILTINUNARYOPS[SpecialFunctions.erfc] = :GxB_ERFC, FZtypes
+BUILTINUNARYOPS[frexpx] = :GxB_FREXPX, FZtypes
+BUILTINUNARYOPS[frexpe] = :GxB_FREXPE, FZtypes
+BUILTINUNARYOPS[isinf] = :GxB_ISINF, FZtypes
+BUILTINUNARYOPS[isnan] = :GxB_ISNAN, FZtypes
+BUILTINUNARYOPS[isfinite] = :GxB_ISFINITE, FZtypes
+
+# manually create promotion overloads.
+# Otherwise we will fallback to Julia functions which can lead to unexpected behavior (with promotion).
+for f ∈ [
+    sqrt, log, exp, log10, log2, exp2, expm1, log1p, sin, cos, tan, 
+    asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh]
+    @eval begin
+        UnaryOp(::typeof($f), ::Type{Float64}, ::Type{<:Uunion}) = 
+            UnaryOp($f, Float64, Float64)
+        UnaryOp(::typeof($f), ::Type{Float32}, ::Type{<:Union{UInt32, UInt16, UInt8}}) =
+            UnaryOp($f, Float32, Float32)
+    end
+end
+
+# I think this list is correct.
+# It should be those functions which can be safely promoted to float
+# from Ints (including negatives).
+# This might be overzealous, and should be just combined with the list above.
+# I'd rather error on domain than create a bunch of NaNs.
+for f ∈ [
+    exp, exp2, expm1, sin, cos, tan, 
+    atan, sinh, cosh, tanh, asinh] 
+    @eval begin
+        UnaryOp(::typeof($f), ::Type{Float64}, ::Type{<:Iunion}) = 
+            UnaryOp($f, Float64, Float64)
+        UnaryOp(::typeof($f), ::Type{Float32}, ::Type{<:Union{Int32, Int16, Int8}}) =
+            UnaryOp($f, Float32, Float32)
+    end
+end
+
+# Complex functions
+BUILTINUNARYOPS[conj] = :GxB_CONJ, Ztypes
+BUILTINUNARYOPS[real] = :GxB_CREAL, Ztypes
+BUILTINUNARYOPS[imag] = :GxB_CIMAG, Ztypes
+BUILTINUNARYOPS[angle] = :GxB_CARG, Ztypes
+end

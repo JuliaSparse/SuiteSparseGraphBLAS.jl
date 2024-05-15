@@ -15,24 +15,25 @@ function applyjl!(F, C::AbstractGBArray, A::AbstractGBArray)
     return C
 end
 
-function Base.convert(::Type{M}, A::N; fill::F = getfill(A)) where {F, M<:AbstractGBArray, N<:AbstractGBArray}
-    !(F <: Union{Nothing, Missing}) && (fill = convert(storedeltype(M), fill))
-    B = M(size(A, 1), size(A, 2); fill)
+function Base.convert(::Type{M}, A::N) where {M<:AbstractGBArray, N<:AbstractGBArray}
+    B = M(size(A, 1), size(A, 2))
     applyjl!(storedeltype(B), B, A)
 end
-function Base.convert(::Type{M}, A::N; fill::F = getfill(A)) where {F, M<:AbstractGBVector, N<:AbstractGBVector}
-    !(F <: Union{Nothing, Missing}) && (fill = convert(eltype(M), fill))
-    B = M(size(A, 1); fill)
+function Base.convert(::Type{M}, A::N) where {M<:AbstractGBVector, N<:AbstractGBVector}
+    B = M(size(A, 1))
     applyjl!(storedeltype(B), B, A)
 end
 
-Base.convert(::Type{M}, A::M; fill = nothing) where {M<:AbstractGBArray} = A
+Base.convert(::Type{M}, A::M) where {M<:AbstractGBArray} = A
 
 function LinearAlgebra.copy_oftype(A::GBArrayOrTranspose, ::Type{T}) where T
-    order = storageorder(A)
-    C = similar(A, T, size(A))
-    applyjl!(T, C, A)
+    if storedeltype(A) == T
+        return copy(A)
+    end
+    C = similar(A, T, size(parent(A)))
+    applyjl!(T, C, parent(A))
+    return A isa Transpose ? copy(transpose(C)) : C # gross double copy. TODO: FIX
 end
 # TODO: Implement this? 
-Base.convert(::Type{M}, ::AbstractGBArray; fill = nothing) where {M<:AbstractGBShallowArray} = 
+Base.convert(::Type{M}, ::AbstractGBArray) where {M<:AbstractGBShallowArray} = 
     throw(ArgumentError("Cannot convert into a shallow array."))

@@ -1,8 +1,5 @@
-function inferbinarytype end
-function inferunarytype end
-
-function optype(atype, btype)
-    #If atype is signed, optype must be signed and at least big enough.
+function GB_promote(atype, btype)
+    #If atype is signed, GB_promote must be signed and at least big enough.
     if atype <: Integer || btype <: Integer
         if atype <: Signed || btype <: Signed
             p = promote_type(atype, btype)
@@ -18,7 +15,14 @@ function optype(atype, btype)
         return promote_type(atype, btype)
     end
 end
-optype(::GBArrayOrTranspose{T}, ::GBArrayOrTranspose{U}) where {T, U} = optype(T, U)
+# GB_promote(::GBArrayOrTranspose{T}, ::GBArrayOrTranspose{U}) where {T, U} = GB_promote(T, U)
+
+"""
+    inputisany(f) -> Bool
+
+Returns `true` if `f` can operate over any data type, `false` otherwise.
+"""
+inputisany(x) = false
 
 const Utypes = (UInt8, UInt16, UInt32, UInt64)
 const Itypes = (Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64)
@@ -79,11 +83,3 @@ function symtotype(sym)
         return sym
     end
 end
-
-juliaop(op) = op
-juliaop(op::Tuple) = throw(ArgumentError("You must request either the mulop or addop of a semiring before conversion to a julia operator."))
-
-function binaryop end
-function monoid end
-# const mulop = binaryop
-# const addop = monoid

@@ -386,12 +386,12 @@ end
 
 function unsafeunpack!(
     A::AbstractGBVector{T}, ::Dense; 
-    order = ColMajor(), attachfinalizer = false, incrementindices = false
+    order = ColMajor(), attachfinalizer = false, incrementindices = false, fill = zero(T)
 ) where {T}
     incrementindices && throw(ArgumentError("Cannot increment indices for Dense unpack."))
     wait(A)
     sparsity = sparsitystatus(A)
-    sparsity === Dense() || (A .+= (similar(A) .= zero(T)))
+    sparsity === Dense() || (A .+= (similar(A) .= fill))
     if order === ColMajor()
         return _unpackdensematrix!(A; attachfinalizer)::Vector{T}
     else
@@ -401,12 +401,12 @@ end
 
 function unsafeunpack!(
     A::AbstractGBMatrix{T}, ::Dense; 
-    order = ColMajor(), attachfinalizer = false, incrementindices = false
+    order = ColMajor(), attachfinalizer = false, incrementindices = false, fill = zero(T)
 ) where {T}
     incrementindices && throw(ArgumentError("Cannot increment indices for Dense unpack."))
     wait(A)
     sparsity = sparsitystatus(A)
-    sparsity === Dense() || (A .+= (similar(A) .= zero(T)))
+    sparsity === Dense() || (A .+= (similar(A) .= fill))
     if order === ColMajor()
         return _unpackdensematrix!(A; attachfinalizer)::Matrix{T}
     else

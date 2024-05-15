@@ -24,7 +24,7 @@ function rrule(
     ::typeof(*),
     A::AbstractGBArray,
     B::AbstractGBArray,
-    ::typeof((+, *))
+    ::typeof((max, +))
 )
     function mulpullback(ΔΩ)
         ∂A = *(unthunk(ΔΩ), B', (+, *); mask=Structural(A))

@@ -16,7 +16,7 @@ function frule(
     ::typeof(select),
     op::Function,
     A::AbstractGBArray,
-    thunk::Union{GBScalar, Nothing, valid_union}
+    thunk::Union{GBScalar, Nothing, builtin_union}
 )
     Ω = select(op, A, thunk)
     ∂Ω = mask(unthunk(ΔA), Structural(Ω))
@@ -40,7 +40,7 @@ function rrule(
     ::typeof(select),
     op::Function,
     A::AbstractGBArray,
-    thunk::Union{GBScalar, Nothing, valid_union}
+    thunk::Union{GBScalar, Nothing, builtin_union}
 )
     out = select(op, A, thunk)
     function selectback(ΔΩ)

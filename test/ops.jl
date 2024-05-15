@@ -1,14 +1,14 @@
 @testset "Ops" begin
     @testset "UnaryOps" begin
-        @test SuiteSparseGraphBLAS.SuiteSparseGraphBLAS.juliaop(unaryop(sin, Float64)) === sin
-        @test unaryop(sin, Float64).builtin
+        @test SuiteSparseGraphBLAS.juliaop(unaryop(sin, Float64, Float64)) === sin
+        @test unaryop(sin, Float64, Float64).builtin
         #test the manual construction of TypedUnaryOperators
         X = GBVector(Float64[1,3,5])
         f = (x) -> 1.3 # a random unary function.
-        typedop = unaryop(f, Float64)
+        typedop = unaryop(f, Float64, Float64)
         @test !typedop.builtin
         @test !typedop.loaded
-        @test unaryop(typedop, Float64) == typedop
+        @test unaryop(typedop, Float64, Float64) == typedop
 
         @test map(typedop, X)[1] == 1.3
         @test typedop.loaded

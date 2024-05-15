@@ -1,10 +1,10 @@
 using SuiteSparseGraphBLAS: inferunarytype, inferbinarytype,
-    Complement, Structural, _handlemask!, _handleaccum, _promotefill
+    Complement, Structural, _handlemask!, _handleaccum
 @testset "operationutils.jl" begin
 @testset "Unary inference" begin
     @test inferunarytype(ComplexF64, imag) === Float64
-    @test inferunarytype(ComplexF64, SuiteSparseGraphBLAS.unaryop(real, ComplexF64)) ===
-        Float64
+    @test inferunarytype(ComplexF64, SuiteSparseGraphBLAS.unaryop(real, ComplexF64, Float64)) ===
+        Float64 # trivial case since now unaryop must take input and output types.
 end
 @testset "Binary inference" begin
     @test inferbinarytype(ComplexF64, Float32, first) === ComplexF64

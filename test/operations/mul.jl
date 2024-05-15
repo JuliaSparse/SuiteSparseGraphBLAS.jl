@@ -7,7 +7,7 @@
     n[1:2:7, 1] = [1, 10, 20, 30]
     o = *(m, n)
     @test size(o, 1) == 7
-    @test eltype(o) == Int64
+    @test storedeltype(o) == Int64
     @test o[7, 1] == 4 && o[5, 1] == 30
     o = GBMatrix(ones(Int64, 7, 1))
     mask = GBMatrix(ones(Bool, 7, 1))

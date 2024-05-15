@@ -58,17 +58,17 @@ function _attach(I::GxBIterator{O}; desc = nothing) where {O}
     return I
 end
 
-@inline function _seek(I::GxBIterator{StorageOrders.RowMajor()}, row)
+@inline function _seek(I::GxBIterator{SparseBase.RowMajor()}, row)
     return LibGraphBLAS.GB_Iterator_rc_seek(I, decrement(row), false)
 end
-@inline function _seek(I::GxBIterator{StorageOrders.ColMajor()}, col)
+@inline function _seek(I::GxBIterator{SparseBase.ColMajor()}, col)
     return LibGraphBLAS.GB_Iterator_rc_seek(I, decrement(col), false)
 end
 
-@inline function _kseek(I::GxBIterator{StorageOrders.RowMajor()}, row)
+@inline function _kseek(I::GxBIterator{SparseBase.RowMajor()}, row)
     return LibGraphBLAS.GB_Iterator_rc_seek(I, decrement(row), true)
 end
-@inline function _kseek(I::GxBIterator{StorageOrders.ColMajor()}, col)
+@inline function _kseek(I::GxBIterator{SparseBase.ColMajor()}, col)
     return LibGraphBLAS.GB_Iterator_rc_seek(I, decrement(col), true)
 end
 
@@ -180,9 +180,9 @@ struct VectorIterator{B, O, T, IterateValues, IterationType, I<:GxBIterator}
         new{B, O, T, IterateValues, IterationType, I}(iterator, v)
     end
 end
-function VectorIterator{IterateValues, IterationType}(A::AbstractGBArray{T, F}, v) where 
-        {T, F, IterateValues, IterationType}
-    @boundscheck StorageOrders.storageorder(A) === RowMajor() ? checkbounds(A, v, :) : checkbounds(A, :, v)
+function VectorIterator{IterateValues, IterationType}(A::AbstractGBArray{T}, v) where 
+        {T, IterateValues, IterationType}
+    @boundscheck SparseBase.storageorder(A) === RowMajor() ? checkbounds(A, v, :) : checkbounds(A, :, v)
     I = GxBIterator{IterateValues, IterationType}(A)
     return VectorIterator(I, v)
 end

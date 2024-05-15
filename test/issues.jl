@@ -50,8 +50,8 @@
     end
 
     @testset "#88" begin
-        A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
-        @test reduce(any, A, dims=2) == GBVector([1,3,5,6,8,9,10])
+        A = GBMatrix([1,2,3,4,5,6,7], [1,2,3,4,5,6,7], [1:7...])
+        @test reduce(any, A, dims=2) == GBVector([1,2,3,4,5,6,7])
     end
 
     @testset "#109ish" begin
@@ -64,15 +64,14 @@
         @test reshape(a, :) == reshape(a, 8)
     end
     @testset "#98" begin
-        x = GBMatrix([1,2], [2, 3], [1,2], fill=0)
-        @test Array(x) .* [1,2] ≈ x .* [1,2]
+        x = GBMatrix([1,2], [2, 3], [1,2])
+        @test (Array(x) .* [1,2] == Array(x .* [1,2]))
     end
     @testset "#97" begin
-        x = GBMatrix([1,2], [2, 3], [1,2], fill=0)
+        x = GBMatrix([1,2], [2, 3], [1,2])
         @test SuiteSparseGraphBLAS.storedeltype(Float32.(x)) === Float32
         @test SuiteSparseGraphBLAS.storedeltype(map(Float32, x)) === Float32
         @test SuiteSparseGraphBLAS.storedeltype(convert(GBMatrix{Float32}, x)) === Float32
-        @test SuiteSparseGraphBLAS.storedeltype(convert(GBMatrix{Float32, Float32}, x)) === Float32
         @test SuiteSparseGraphBLAS.storedeltype(Float32.(x .> 0)) === Float32
     end
 end

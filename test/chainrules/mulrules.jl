@@ -50,16 +50,16 @@
 
     @testset "Sparse" begin
         M = GBMatrix(sprand(20, 10, 0.25))
-        Y = GBMatrix(sprand(10, 0.1))
+        Y = GBMatrix(sprand(10, 0.5))
         # there's some sort of hangup when we hit completely zero matrices.
         # But I can't replicate outside of Test.jl...
         # TODO: *really* fix this.
         if nnz(Y) == 0
-            Y[rand(1:10), 1] = rand(eltype(Y))
+            Y[rand(1:10), 1] = rand(storedeltype(Y))
         end
         N = GBMatrix(sprand(10, 30, 0.05))
         if nnz(N) == 0
-            N[rand(1:10), rand(1:30)] = rand(eltype(N))
+            N[rand(1:10), rand(1:30)] = rand(storedeltype(N))
         end
         @testset "+.*" begin
             test_frule(*, M, Y)

@@ -21,7 +21,7 @@ function gbtranspose!(
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; out=C, in1=A)
     desc, mask = _handlemask!(desc, mask)
-    accum = _handleaccum(accum, storedeltype(C))
+    accum = _handleaccum(accum, C, parent(A))
     @wraperror LibGraphBLAS.GrB_transpose(C, mask, accum, parent(A), desc)
     return C
 end

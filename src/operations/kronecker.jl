@@ -15,8 +15,9 @@ function LinearAlgebra.kron!(
     _canbeoutput(C) || throw(ShallowException())
     desc = _handledescriptor(desc; in1=A, in2=B)
     desc, mask = _handlemask!(desc, mask)
-    op = binaryop(op, A, B)
-    accum = _handleaccum(accum, storedeltype(C))
+    intermediatetype = storedeltype(C)
+    op = binaryop(op, A, B, intermediatetype)
+    accum = _handleaccum(accum, C, intermediatetype)
     @wraperror LibGraphBLAS.GxB_kron(C, mask, accum, op, parent(A), parent(B), desc)
     return C
 end
@@ -44,14 +45,12 @@ function LinearAlgebra.kron(
     B::GBArrayOrTranspose,
     op = *;
     mask = nothing,
-    accum = nothing,
     desc = nothing
 )
     T = inferbinarytype(parent(A), parent(B), op)
-    fill=_promotefill(parent(A), parent(B), op)
     M = gbpromote_strip(A, B)
-    C = M{T}(size(A, 1) * size(B, 1), size(A, 2) * size(B, 2); fill)
-    kron!(C, A, B, op; mask, accum, desc)
+    C = M{T}(size(A, 1) * size(B, 1), size(A, 2) * size(B, 2))
+    kron!(C, A, B, op; mask, desc)
     return C
 end
 

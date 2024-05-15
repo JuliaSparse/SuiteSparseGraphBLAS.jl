@@ -36,7 +36,7 @@ end
 function symmetric!(M::AbstractMatrix)
     m,n = size(M)
     m == n || throw(DimensionMismatch())
-    if eltype(M) == Bool
+    if storedeltype(M) == Bool
         return M .| transpose(tril(M, -1))
     else
         return M .+ transpose(tril(M, -1))
@@ -46,7 +46,7 @@ end
 function hermitian!(M::AbstractMatrix)
     m,n = size(M)
     m == n || throw(DimensionMismatch())
-    if eltype(M) == Bool
+    if storedeltype(M) == Bool
         return M .| conj(transpose(tril(M, -1)))
     else
         return M .+ conj(transpose(tril(M, -1)))

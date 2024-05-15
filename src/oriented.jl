@@ -1,1 +1,1 @@
-StorageOrders.comptime_storageorder(::OrientedGBMatrix{T, F, O}) where {T, F, O} = O
+SparseBase.comptime_storageorder(::OrientedGBMatrix{T, O}) where {T, O} = O

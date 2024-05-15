@@ -1,7 +1,20 @@
 module OperatorCompiler
 using GPUCompiler, LLVM, StaticTools
 using StaticTools: @c_str
-import Clang_jll
+import Clang_jll, LLVM_jll, CompilerSupportLibraries_jll, LLD_jll
+using Scratch
+import ..GrB: set!
+
+gbscratch = ""
+irscratch = ""
+clangtriple = LLVM.triple()
+
+function cached_compile(cache, job, linker)
+    return GPUCompiler.cached_compilation(
+        cache, job.source, job.config,
+        compiler, linker
+    )
+end
 
 fixname(f::Function) = fixname(string(nameof(f)))
 fixname(s) = String(GPUCompiler.safe_name(s))
@@ -18,6 +31,15 @@ function compiler(job)
         GPUCompiler.codegen(:llvm, job; strip=true, validate=false)
     end
     return mod
+end
+
+# helper function for operator specific linker functions.
+function writeir(compiled)
+    ir, meta = compiled
+    LLVM.triple!(ir, clangtriple)
+    path = joinpath(irscratch, "$(hash(ir)).o")
+    write(path, ir)
+    return path, LLVM.name(meta[:entry])
 end
 
 # Overrides, Runtime and Targets
@@ -53,6 +75,8 @@ Base.Experimental.@overlay operatortable (@noinline Base.Checked.throw_overflowe
     @print_and_throw c"Negation overflowed")
 Base.Experimental.@overlay operatortable @noinline Core.throw_inexacterror(f::Symbol, ::Type{T}, val) where {T} =
     @print_and_throw c"Inexact conversion"
+Base.Experimental.@overlay operatortable @noinline Base.throw(::InexactError) =
+    @print_and_throw c"Inexact conversion"
 Base.Experimental.@overlay operatortable (@noinline Base.throw_boundserror(A, I) =
     @print_and_throw c"Out-of-bounds array access")
 Base.Experimental.@overlay operatortable (@noinline Base.Math.sincos_domain_error(x) =
@@ -70,22 +94,23 @@ Base.Experimental.@overlay operatortable (@noinline Base.Math.cos_domain_error(x
 #####################
 
 Base.@kwdef struct BitcodeCompilerTarget <: GPUCompiler.AbstractCompilerTarget
-    triple::String = readchomp(`$(Clang_jll.clang) --print-effective-triple`)
+    triple::String = LLVM.triple()
     cpu::String=(LLVM.version() < v"8") ? "" : unsafe_string(LLVM.API.LLVMGetHostCPUName())
     features::String=(LLVM.version() < v"8") ? "" : unsafe_string(LLVM.API.LLVMGetHostCPUFeatures())
 end
 module OperatorRuntime
+    using ..OperatorCompiler: libcexit, @print_and_throw
     # the runtime library
     signal_exception() = return
     malloc(sz) = ccall("extern malloc", llvmcall, Csize_t, (Csize_t,), sz)
-    report_oom(sz) = return
-    report_exception(ex) = return
+    report_oom(sz) = @print_and_throw c"Out of memory"
+    report_exception(ex) = @print_and_throw c"Exception thrown"
     report_exception_name(ex) = return
     report_exception_frame(idx, func, file, line) = return
 end
 GPUCompiler.llvm_triple(target::BitcodeCompilerTarget) = target.triple
 GPUCompiler.runtime_module(::GPUCompiler.CompilerJob{BitcodeCompilerTarget}) = OperatorRuntime
-GPUCompiler.can_throw(job::GPUCompiler.CompilerJob{BitcodeCompilerTarget}) = true
+GPUCompiler.can_throw(job::GPUCompiler.CompilerJob{BitcodeCompilerTarget}) = false
 
 GPUCompiler.method_table(::CompilerJob{BitcodeCompilerTarget}) = operatortable
 GPUCompiler.runtime_slug(job::CompilerJob{BitcodeCompilerTarget}) = "bitcode_$(job.config.target.cpu)-$(hash(job.config.target.features))"
@@ -96,7 +121,6 @@ struct OperatorCompilerParams{F, F2} <: AbstractCompilerParams
     c_fn::F2
     intypes::Any
 end
-
 
 function operatorjob(@nospecialize(f), @nospecialize(f2), @nospecialize(tt); target=BitcodeCompilerTarget(), name = nothing)
     T = Base.to_tuple_type(tt)
@@ -109,7 +133,60 @@ function operatorjob(@nospecialize(f), @nospecialize(f2), @nospecialize(tt); tar
     return CompilerJob(source, config)
 end
 
-function optimize!(mod::LLVM.Module)
+function initcompiler()
+    global gbscratch = @get_scratch!("gbscratch")
+    delete_scratch!("irscratch")
+    global irscratch = @get_scratch!("irscratch")
+    set!(:jit_cache, gbscratch)
 
+    @static if Sys.iswindows() # Windows compilation requires CMake, TODO
+        return disablecompilation()
+    end
+
+    llvmdir = joinpath(LLVM_jll.artifact_dir, "lib")
+    @static if Sys.isapple()
+        # Clang does funky things with the macOS
+        originalstderr = stderr
+        (rd, wr) = redirect_stderr()
+        run(`$(Clang_jll.clang()) -xc - -\#\#\#`)
+        close(wr)
+        redirect_stderr(originalstderr)
+        m = match(r"[a-z0-9_]+-apple-macosx[0-9]+\.[0-9]+\.[0-9]+", read(rd, String))
+        if m !== nothing
+            global clangtriple = m.match
+        end
+        sysroot = joinpath(readchomp(`xcode-select -p`), "SDKs/MacOSX.sdk")
+        if isdir(sysroot)
+            compilerflags = "-isysroot $(sysroot)"
+            linkerflags = "-dynamiclib"
+        else
+            return disablecompilation()
+        end
+    end
+    set!(:jit_compilername, "DYLD_FALLBACK_LIBRARY_PATH=$(llvmdir):$(Clang_jll.LIBPATH[]) $(Clang_jll.get_clang_path())")
+    set!(:jit_compilerflags, "-O3 -DNDEBUG -fopenmp=libomp -fPIC -flto  -Wno-incompatible-pointer-types-discards-qualifiers $compilerflags")
+    set!(:jit_linkerflags, "--ld-path=\"$(createlldsymlinks())\" -lm -ldl -L$(joinpath(CompilerSupportLibraries_jll.find_artifact_dir(), "lib")) $linkerflags")
 end
+
+function createlldsymlinks()
+    @static if Sys.isapple() || Sys.islinux()
+        path = joinpath(irscratch, "ld64.lld")
+        run(`ln -s $(LLD_jll.lld_path) $path`)
+    else
+        path = nothing
+    end
+    return path
+end
+
+function disablecompilation()
+    @warn "JIT Kernel Compilation is disabled for SuiteSparse:GraphBLAS"
+    set!(:jit_c_control, 0)
+    return nothing
+end
+function enablecompilation()
+    @warn "JIT Kernel Compilation is enabled for SuiteSparse:GraphBLAS"
+    set!(:jit_c_control, 4)
+    return nothing
+end
+
 end

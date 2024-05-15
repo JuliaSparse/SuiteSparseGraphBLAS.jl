@@ -29,14 +29,14 @@ function SparseArrays.nnz(A::GBArrayOrTranspose)
 end
 
 function strip_parameters end
-promote_storage(::S, ::S) where {S <: StorageOrders.StorageOrder} = S()
-promote_storage(::S1, ::S2) where {S1 <: StorageOrders.StorageOrder, S2 <:StorageOrders.StorageOrder} = 
-    StorageOrders.RuntimeOrder()
+promote_storage(::S, ::S) where {S <: SparseBase.StorageOrder} = S()
+promote_storage(::S1, ::S2) where {S1 <: SparseBase.StorageOrder, S2 <:SparseBase.StorageOrder} = 
+    SparseBase.RuntimeOrder()
 
 # Base functions:
 # default to GBMatrix: 
-Base.promote_rule(::Type{<:AbstractGBMatrix{T, F}}, ::Type{<:AbstractGBMatrix{T2, F2}}) where {T, F, T2, F2} = 
-    GBMatrix{promote_type(T, T2), promote_type(F, F2)}
+Base.promote_rule(::Type{<:AbstractGBMatrix{T}}, ::Type{<:AbstractGBMatrix{T2}}) where {T, T2} = 
+    GBMatrix{promote_type(T, T2)}
 Base.promote_rule(::Type{GBMatrix}, ::Type{GBMatrixC}) = GBMatrix
 Base.promote_rule(::Type{GBMatrix}, ::Type{GBMatrixR}) = GBMatrix
 Base.promote_rule(::Type{GBMatrix}, ::Type{GBShallowMatrix}) = GBMatrix
@@ -50,8 +50,8 @@ Base.promote_rule(::Type{G}, ::Type{<:AbstractGBVector}) where {G<:AbstractGBMat
 Base.promote_rule(::Type{GBShallowMatrix}, ::Type{<:AbstractGBVector}) = GBMatrix
 
 Base.promote_rule(::Type{<:AbstractGBVector}, ::Type{<:AbstractGBVector}) = GBVector
-Base.promote_rule(::Type{<:AbstractGBVector{T, F}}, ::Type{<:AbstractGBVector{T2, F2}}) where {T, F, T2, F2} =
-    GBVector{promote_type(T, T2), promote_type(F, F2)}
+Base.promote_rule(::Type{<:AbstractGBVector{T}}, ::Type{<:AbstractGBVector{T2}}) where {T, T2} =
+    GBVector{promote_type(T, T2)}
 
 function gbpromote_strip(A, B)
     return promote_type(strip_parameters(typeof(parent(A))), strip_parameters(typeof(parent(B))))
@@ -60,14 +60,10 @@ gbpromote_strip(::Transpose{<:Any, <:AbstractGBVector}, ::Transpose{<:Any, <:Abs
 gbpromote_strip(::AbstractGBVector, ::Transpose{<:Any, <:AbstractGBVector}) = GBMatrix
 gbpromote_strip(::Transpose{<:Any, <:AbstractGBVector}, ::AbstractGBVector) = GBMatrix
 
+Base.eltype(::AbstractGBArray{T}) where {T} = Union{T, NoValue}
+Base.eltype(::Type{<:AbstractGBArray{T}}) where{T} = Union{T, NoValue}
 
-
-Base.IndexStyle(::AbstractGBArray) = IndexCartesian()
-Base.eltype(::AbstractGBArray{T, F}) where {T, F} = Union{T, F}
-Base.eltype(::Type{<:AbstractGBArray{T, F}}) where{T, F} = Union{T, F}
-
-storedeltype(x) = eltype(x)
-storedeltype(::Type{<:AbstractGBArray{T}}) where T = T
+SparseBase.storedeltype(::Type{<:AbstractGBArray{T}}) where T = T
 storedeltype(::AbstractGBArray{T}) where T = T
 
 Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Matrix}, A::AbstractGBArray) = A.p[]
@@ -77,80 +73,77 @@ Base.unsafe_convert(::Type{LibGraphBLAS.GrB_Vector}, A::AbstractGBVector) =
 # similar for transpose of GBArrays:
 function Base.similar(
     A::Transpose{<:Any,<:AbstractGBArray{T}}, ::Type{TNew} = T,
-    dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill = getfill(A)
+    dims::Tuple{Int64, Vararg{Int64, N}} = size(A)
 ) where {T, TNew, N}
-    similar(parent(A), TNew, dims; fill)
+    similar(parent(A), TNew, dims)
 end
 
-function Base.similar(A::Transpose{<:Any,<:AbstractGBArray{T}}, dims::Tuple; fill = getfill(A)) where T
-    return similar(A, T, dims; fill)
-end
-
-function Base.similar(
-    A::Transpose{<:Any,<:AbstractGBArray}, ::Type{TNew},
-    dims::Integer; fill = getfill(A)
-) where TNew
-    return similar(A, TNew, (dims,); fill)
+function Base.similar(A::Transpose{<:Any,<:AbstractGBArray{T}}, dims::Tuple) where T
+    return similar(A, T, dims)
 end
 
 function Base.similar(
     A::Transpose{<:Any,<:AbstractGBArray}, ::Type{TNew},
-    dim1::Integer, dim2::Integer; fill = getfill(A)
+    dims::Integer
 ) where TNew
-    return similar(A, TNew, (dim1, dim2); fill)
+    return similar(A, TNew, (dims,))
+end
+
+function Base.similar(
+    A::Transpose{<:Any,<:AbstractGBArray}, ::Type{TNew},
+    dim1::Integer, dim2::Integer
+) where TNew
+    return similar(A, TNew, (dim1, dim2))
 end
 
 function Base.similar(
     A::Transpose{<:Any,<:AbstractGBArray},
-    dims::Integer; fill = getfill(A)
+    dims::Integer
 )
-    return similar(A, (dims,); fill)
+    return similar(A, (dims,))
 end
 
 function Base.similar(
     A::Transpose{<:Any,<:AbstractGBArray},
-    dim1::Integer, dim2::Integer; fill = getfill(A)
+    dim1::Integer, dim2::Integer
 )
-    return similar(A, (dim1, dim2); fill)
+    return similar(A, (dim1, dim2))
 end
 
 function Base.similar(
     A::AbstractGBArray,
-    dims::Tuple{Int64, Vararg{Int64, N}} = size(A); fill::F = getfill(A)
-) where {N, F}
-    return similar(A, eltype(A), dims; fill)
+    dims::Tuple{Int64, Vararg{Int64, N}} = size(A);
+) where {N}
+    return similar(A, storedeltype(A), dims)
 end
 
-function Base.similar(A::AbstractGBArray{T}, dims::Tuple; fill = getfill(A)) where T
-    return similar(A, T, dims; fill)
+function Base.similar(A::AbstractGBArray{T}, dims::Tuple) where T
+    return similar(A, T, dims)
 end
 
 function Base.similar(
     A::AbstractGBArray, ::Type{TNew},
-    dims::Integer; fill = getfill(A)
+    dims::Integer
 ) where TNew
-    return similar(A, TNew, (dims,); fill)
+    return similar(A, TNew, (dims,))
 end
 
 function Base.similar(
     A::AbstractGBArray, ::Type{TNew},
-    dim1::Integer, dim2::Integer; fill = getfill(A)
+    dim1::Integer, dim2::Integer
 ) where TNew
-    return similar(A, TNew, (dim1, dim2); fill)
+    return similar(A, TNew, (dim1, dim2))
+end
+
+function Base.similar(A::AbstractGBArray, dims::Integer)
+    return similar(A, (dims,))
 end
 
 function Base.similar(
     A::AbstractGBArray,
-    dims::Integer; fill = getfill(A)
+    dim1::Integer, dim2::Integer
 )
-    return similar(A, (dims,); fill)
-end
-
-function Base.similar(
-    A::AbstractGBArray,
-    dim1::Integer, dim2::Integer; fill = getfill(A)
-)
-    return similar(A, (dim1, dim2); fill)
+    return similar(A, (dim1, dim2))
 end
 
 """
@@ -174,10 +167,11 @@ function Base.copyto!(C::AbstractGBArray, A::GBArrayOrTranspose)
 end
 
 function Base.copy(A::M) where {M<:AbstractGBArray}
-    M(_copyGrBMat(A.p), A.fill)
+    M(_copyGrBMat(A.p))
 end
 
-function Base.Matrix(A::GBArrayOrTranspose)
+function Base.Matrix(A::GBArrayOrTranspose, fill = zero(storedeltype(A)))
+    A isa LinearAlgebra.AdjOrTrans && (A = copy(A))
     format = sparsitystatus(A)
     if format === Dense()
         T = unsafeunpack!(A, Dense())
@@ -186,7 +180,8 @@ function Base.Matrix(A::GBArrayOrTranspose)
     else
         # if A is not dense we end up doing 2x copies. Once to avoid densifying A.
         T = copy(A)
-        U = unsafeunpack!(T, Dense())
+        U = unsafeunpack!(T, Dense(); fill) 
+        # TODO: matrices can't be resized anyway!!!
         # And again to make this a native Julia Array.
         # if we didn't copy here a user could not resize
         M = copy(U)
@@ -195,7 +190,8 @@ function Base.Matrix(A::GBArrayOrTranspose)
     return M
 end
 
-function Base.Vector(A::GBVectorOrTranspose)
+function Base.Vector(A::GBVectorOrTranspose, fill = zero(storedeltype(A)))
+    A isa LinearAlgebra.AdjOrTrans && (A = copy(A))
     format = sparsitystatus(A)
     if format === Dense()
         T = unsafeunpack!(A, Dense())
@@ -204,7 +200,7 @@ function Base.Vector(A::GBVectorOrTranspose)
     else
         # if A is not dense we end up doing 2x copies. Once to avoid densifying A.
         T = copy(A)
-        U = unsafeunpack!(T, Dense())
+        U = unsafeunpack!(T, Dense(); fill)
         # And again to make this a native Julia Array.
         # if we didn't copy here a user could not resize
         M = copy(U)
@@ -212,6 +208,8 @@ function Base.Vector(A::GBVectorOrTranspose)
     end
     return M
 end
+Base.Array(A::GBArrayOrTranspose, fill = zero(storedeltype(A))) = 
+    A isa AbstractVector ? Vector(A, fill) : Matrix(A, fill)
 
 function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
     T = copy(A) # avoid changing sparsity of A and destroying it.
@@ -250,14 +248,12 @@ function _reshape(
     A::AbstractGBMatrix, nrows::Int, ncols::Int; 
     bycol = true, desc = nothing)
     desc = _handledescriptor(desc)
-    C = Ref{LibGraphBLAS.GrB_Matrix}()
+    C = _newGrBRef()
     @wraperror LibGraphBLAS.GxB_Matrix_reshapeDup(
         C, A, 
         bycol, nrows, ncols, desc
     )
-    return finalizer(C) do ref
-        @wraperror LibGraphBLAS.GrB_Matrix_free(ref)
-    end
+    return C
 end
 function Base.reshape(
     A::AbstractGBMatrix, nrows::Int, ncols::Int; 
@@ -331,7 +327,7 @@ function Base.resize!(A::AbstractGBMatrix, nrows_new, ncols_new)
 end
 
 # Type dependent functions build, setindex, getindex, and findnz:
-for T ∈ valid_vec
+for T ∈ builtin_vec
     if T ∈ gxb_vec
         prefix = :GxB
     else
@@ -384,7 +380,7 @@ for T ∈ valid_vec
             if result == LibGraphBLAS.GrB_SUCCESS
                 return x[]
             elseif result == LibGraphBLAS.GrB_NO_VALUE
-                return A.fill
+                return getfill(A)
             else
                 @wraperror result
             end
@@ -468,7 +464,7 @@ function Base.getindex(A::AbstractGBMatrix{T}, i::Integer, j::Integer) where {T}
     if result == LibGraphBLAS.GrB_SUCCESS
         return x[]
     elseif result == LibGraphBLAS.GrB_NO_VALUE
-        return A.fill
+        return getfill(A)
     else
         @wraperror result
     end
@@ -507,7 +503,7 @@ function SparseArrays.nonzeroinds(A::AbstractGBMatrix{T}) where {T}
     return increment!(I), increment!(J)
 end
 
-for T ∈ valid_vec
+for T ∈ builtin_vec
     func = Symbol(:GxB_Matrix_subassign_, suffix(T))
     @eval begin
         function _subassign(C::AbstractGBMatrix{$T}, x::$T, I, ni, J, nj, mask, accum, desc)
@@ -595,16 +591,20 @@ function subassign!(
     I !== J && (J = decrement!(J))
     rereshape = false
     sz1 = size(A, 1)
-    if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
-        A = LinearAlgebra.copy_oftype(A, eltype(C))
+
+    if (!(storedeltype(A) <: builtin_union) || !(storedeltype(C) <: builtin_union)) && 
+        isnothing(accum)
+        A = LinearAlgebra.copy_oftype(A, storedeltype(C))
     end
     # reshape A: nx1 -> 1xn
     if A isa GBVector && (ni_sizecheck == size(A, 2) && nj_sizecheck == sz1)
         @wraperror LibGraphBLAS.GxB_Matrix_reshape(parent(A), true, 1, sz1, C_NULL)
         rereshape = true
     end
+    accum = _handleaccum(accum, C, A)
+    @show accum
     @wraperror LibGraphBLAS.GxB_Matrix_subassign(C, mask, 
-        _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
+        accum, parent(A), I, ni, J, nj, desc)
     if rereshape # undo the reshape. Need size(A, 2) here
         @wraperror LibGraphBLAS.GxB_Matrix_reshape(
         parent(A), true, sz1, 1, C_NULL)
@@ -618,7 +618,7 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
 ) where {T}
     _canbeoutput(C) || throw(ShallowException())
-    x = typeof(x) === T ? x : convert(T, x)
+    x = isnothing(accum) ?  convert(T, x) : x
     I, ni = idx(I)
     J, nj = idx(J)
     I = decrement!(I)
@@ -626,7 +626,7 @@ function subassign!(C::AbstractGBArray{T}, x, I, J;
     desc = _handledescriptor(desc; out=C)
     desc, mask = _handlemask!(desc, mask)
     mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
-    _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
+    _subassign(C, x, I, ni, J, nj, mask, _handleaccum(accum, C, x), desc)
     increment!(I)
     I !== J && (decrement!(J))
     return x
@@ -635,8 +635,9 @@ end
 function subassign!(C::AbstractGBArray{T}, x::AbstractMatrix, I, J;
     mask = nothing, accum = nothing, desc = nothing) where T
     _canbeoutput(C) || throw(ShallowException())
-    array = x isa Matrix{T} ? x : copyto!(Matrix{T}(undef, size(x)...), x)
-    array = pack(array)
+    x2 = isnothing(accum) ? convert(Matrix{T}, x) : x
+    @show accum typeof(C) typeof(x2)
+    array = pack(x2)
     subassign!(C, array, I, J; mask, accum, desc)
     unsafeunpack!(array)
     return x
@@ -645,8 +646,8 @@ end
 function subassign!(C::AbstractGBArray{T}, x::AbstractVector, I, J;
     mask = nothing, accum = nothing, desc = nothing) where T
     _canbeoutput(C) || throw(ShallowException())
-    array = x isa Vector{T} ? x : copyto!(Vector{T}(undef, size(x)...), x)
-    array = pack(array)
+    x2 = isnothing(accum) ? convert(Vector{T}, x) : x
+    array = pack(x2)
     subassign!(C, array, I, J; mask, accum, desc)
     unsafeunpack!(array)
     return x
@@ -655,7 +656,7 @@ end
 function subassign!(C::AbstractGBArray, x::Union{SparseMatrixCSC, SparseVector}, I, J;
     mask = nothing, accum = nothing, desc = nothing)
     _canbeoutput(C) || throw(ShallowException())
-    array = similar(C, eltype(x), size(x))
+    array = similar(C, storedeltype(x), size(x))
     array = unsafepack!(array, x)
     subassign!(C, array, I, J; mask, accum, desc)
     unsafeunpack!(array, Sparse())
@@ -698,10 +699,14 @@ function assign!(
     mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
     I = decrement!(I)
     I !== J && (J = decrement!(J))
-    if !(eltype(A) <: valid_union) || !(eltype(C) <: valid_union)
-        A = LinearAlgebra.copy_oftype(A, eltype(C))
+    if (!(storedeltype(A) <: builtin_union) || !(storedeltype(C) <: builtin_union) &&
+        isnothing(accum))
+        A = LinearAlgebra.copy_oftype(A, storedeltype(C))
     end
-    @wraperror LibGraphBLAS.GrB_Matrix_assign(C, mask, _handleaccum(accum, storedeltype(C)), parent(A), I, ni, J, nj, desc)
+    @wraperror LibGraphBLAS.GrB_Matrix_assign(
+        C, mask, _handleaccum(accum, C, A), 
+        parent(A), I, ni, J, nj, desc
+    )
     increment!(I)
     I !== J && (decrement!(J))
     return A
@@ -711,7 +716,7 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     mask = nothing, accum = nothing, desc = nothing
 ) where T
     _canbeoutput(C) || throw(ShallowException())
-    x = typeof(x) === T ? x : convert(T, x)
+    x = isnothing(accum) ?  convert(T, x) : x
     I, ni = idx(I)
     J, nj = idx(J)
     I = decrement!(I)
@@ -719,7 +724,7 @@ function assign!(C::AbstractGBArray{T}, x, I, J;
     desc = _handledescriptor(desc; out=C)
     desc, mask = _handlemask!(desc, mask)
     mask isa AbstractVector && length(I) == 1 && (mask = copy(mask'))
-    _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, storedeltype(C)), desc)
+    _assign(C, x, I, ni, J, nj, mask, _handleaccum(accum, C, x), desc)
     increment!(I)
     I !== J && (decrement!(J))
     return x
@@ -774,7 +779,7 @@ function LinearAlgebra.diag(A::AbstractGBMatrix{T}, k::Integer = 0; desc = nothi
     else
         s = min(m + k, n)
     end
-    v = GBVector{T}(s; A.fill)
+    v = GBVector{T}(s)
     desc = _handledescriptor(desc; in1=A)
     if A isa Transpose
         k = -k
@@ -797,17 +802,17 @@ function GBDiagonal!(C::AbstractGBMatrix, D::Diagonal; desc = nothing)
 end
 function GBDiagonal(v, k::Integer=0; desc = nothing)
     s = size(v, 1)
-    C = GBMatrix{storedeltype(v)}(s, s; fill = defaultfill(storedeltype(v)))
+    C = GBMatrix{storedeltype(v)}(s, s)
     GBDiagonal!(C, v, k; desc)
 end
 function GBDiagonal(v::AbstractGBVector, k::Integer=0; desc = nothing)
     s = size(v, 1)
-    C = GBMatrix{storedeltype(v)}(s, s; fill = getfill(v))
+    C = GBMatrix{storedeltype(v)}(s, s)
     GBDiagonal!(C, v, k; desc)
 end
 
 # Type dependent functions build, setindex, getindex, and findnz:
-for T ∈ valid_vec
+for T ∈ builtin_vec
     if T ∈ gxb_vec
         prefix = :GxB
     else
@@ -854,7 +859,7 @@ for T ∈ valid_vec
             if result == LibGraphBLAS.GrB_SUCCESS
                 return x[]
             elseif result == LibGraphBLAS.GrB_NO_VALUE
-                return v.fill
+                return getfill(v)
             else
                 @wraperror result
             end
@@ -936,7 +941,7 @@ function Base.getindex(v::GBVector{T}, i::Integer) where {T}
     if result == LibGraphBLAS.GrB_SUCCESS
         return x[]
     elseif result == LibGraphBLAS.GrB_NO_VALUE
-        return v.fill
+        return getfill(v)
     else
         @wraperror result
     end
@@ -990,8 +995,8 @@ end
 
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
-function subassign!(w::AbstractGBVector{T, F}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T, F}
-    return subassign!(GBMatrix{T, F}(w.p, w.fill), u, I, UInt64[1]; mask, accum, desc)
+function subassign!(w::AbstractGBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
+    return subassign!(GBMatrix{T}(w.p), u, I, UInt64[1]; mask, accum, desc)
 end
 
 """
@@ -999,8 +1004,8 @@ end
 
 Assign a subvector of `w` to `u`. Return `u`. Equivalent to the matrix definition.
 """
-function assign!(w::AbstractGBVector{T, F}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T, F}
-    return assign!(GBMatrix{T, F}(w.p, w.fill), u, I, UInt64[1]; mask, accum, desc)
+function assign!(w::AbstractGBVector{T}, u, I; mask = nothing, accum = nothing, desc = nothing) where {T}
+    return assign!(GBMatrix{T}(w.p), u, I, UInt64[1]; mask, accum, desc)
 end
 
 # silly overload to help a bit with broadcasting.
@@ -1071,30 +1076,7 @@ function Base.getindex(
     return extract(u, i; mask, accum, desc)
 end
 
-
-"""
-    setfill!(A::AbstractGBArray{T, F, N}, x::F)
-
-Modify the fill value of `A`. 
-The fill type of `A` and the type of `x` must be the same.
-"""
-function setfill!(A::AbstractGBArray, x)
-    A.fill = x
-end
-
-"""
-    setfill(A::AbstractGBArray{T, F, N}, x::F2)
-
-Create a new AbstractGBArray with the same underlying data but a new fill `x`.
-The fill type of `A` and the type of `x` may be different.
-"""
-function setfill(A::AbstractGBArray, x) # aliasing form.
-    B = similar(A; fill=x)
-    B.p = A.p
-    return B
-end
-
-getfill(A::AbstractGBArray) = A.fill
+getfill(A::AbstractGBArray) = novalue
 getfill(A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) = getfill(parent(A))
 
 function Base.:(==)(A::GBArrayOrTranspose, B::GBArrayOrTranspose)

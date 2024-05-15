@@ -29,6 +29,8 @@ Base.BroadcastStyle(::Type{<:Adjoint{T, <:AbstractGBMatrix} where T}) = GBMatrix
 Base.BroadcastStyle(::Type{<:Transpose{T, <:AbstractGBVector} where T}) = GBVectorStyle()
 Base.BroadcastStyle(::Type{<:Adjoint{T, <:AbstractGBVector} where T}) = GBVectorStyle()
 
+Base.BroadcastStyle(::Type{<:Base.SubArray{T, N, <:AbstractGBMatrix} where {T, N}}) = GBMatrixStyle()
+Base.BroadcastStyle(::Type{<:Base.SubArray{T, 1, <:AbstractGBVector} where T}) = GBVectorStyle()
 #
 GBVectorStyle(::Val{0}) = GBVectorStyle()
 GBVectorStyle(::Val{1}) = GBVectorStyle()
@@ -66,16 +68,12 @@ modifying(::typeof(eadd)) = eadd!
 modifying(::typeof(emul)) = emul!
 
 # TODO: Fix this horrifically ugly function.
-# TODO: Remove the requirement that vector -> matrix
-# broadcast be done on certain side.
-# We can add an `iscommutative` to solve this.
-# as well as some function to get the reversed version of the operator.
 @inline function Base.copy(bc::Broadcast.Broadcasted{GBMatrixStyle})
     f = bc.f
     l = length(bc.args)
     if l == 1
         x = first(bc.args)
-        if x isa Broadcast.Broadcasted
+        if typeof(x) <: Union{Brodcast.Broadcasted, Base.SubArray}
             x = copy(x)
         end
         return apply(f, x)
@@ -87,35 +85,28 @@ modifying(::typeof(emul)) = emul!
             left = bc.args[2]
             right = valunwrap(right[])
         end
-        if left isa Broadcast.Broadcasted
+        if left isa Union{Broadcast.Broadcasted, Base.SubArray{Any, Any, <:AbstractGBArray}}
             left = copy(left)
         end
-        if right isa Broadcast.Broadcasted
+        if left isa AbstractArray && !isconcretetype(promote_type(left, stored_eltype(right)))
+            left = pack(left)
+        end
+        if right isa Union{Broadcast.Broadcasted, Base.SubArray{Any, Any, <:AbstractGBArray}}
             right = copy(right)
         end
-        if left isa StridedArray
-            left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
+        if right isa AbstractArray && !isconcretetype(promote_type(right, stored_eltype(left)))
+            right = pack(right)
         end
-        if right isa StridedArray
-            right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
-        end
-        # TODO: We want to expose the broadcasting of Vectors into Matrices.
-        # The only problem is we need a notion of commutativity.
-        # This works fine for builtins, we can define commutativity pretty easily
-        # for many operations. But for non-builtins we'd need an API of sorts.
-        # To get around this for now we will require that Vectors be on the left
-        # and transposed vectors be on the right.
         
         if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
             return add(left, right, f)
         else
-            leftscalar = !(left isa AbstractArray)
-            rightscalar = !(right isa AbstractArray)
+            leftscalar = !(left isa AbstractArray) || left isa storedeltype(right)
+            rightscalar = !(right isa AbstractArray) || right isa storedeltype(left)
             if leftscalar || rightscalar
                 return apply(f, left, right)
             end
-            # TODO: WE NEED TO SUPPORT SARRAY ELTYPES HERE!!!
             return map(f, left, right)
         end
     end
@@ -168,10 +159,10 @@ mutatingop(::typeof(apply)) = apply!
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
                     if subargleft isa StridedArray
-                        subargleft = pack(subargleft; fill = subargright isa GBArrayOrTranspose ? getfill(right) : 0)
+                        subargleft = pack(subargleft)
                     end
                     if subargright isa StridedArray
-                        subargright = pack(subargright; fill = subargleft isa GBArrayOrTranspose ? getfill(subargleft) : 0)
+                        subargright = pack(subargright)
                     end
                     if subargleft isa GBArrayOrTranspose && subargright isa GBArrayOrTranspose
                         add = mutatingop(defaultadd(f))
@@ -191,10 +182,10 @@ mutatingop(::typeof(apply)) = apply!
                 right = copy(right)
             end
             if left isa StridedArray
-                left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : 0)
+                left = pack(left)
             end
             if right isa StridedArray
-                right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : 0)
+                right = pack(right)
             end
             if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(f))
@@ -223,17 +214,17 @@ end
             left = bc.args[2]
             right = valunwrap(right[])
         end
-        if left isa Broadcast.Broadcasted
+        if left isa Union{Broadcast.Broadcasted, Base.SubArray{Any, Any, <:AbstractGBArray}}
             left = copy(left)
         end
-        if right isa Broadcast.Broadcasted
+        if left isa AbstractArray && !isconcretetype(promote_type(left, stored_eltype(right)))
+            left = pack(left)
+        end
+        if right isa Union{Broadcast.Broadcasted, Base.SubArray{Any, Any, <:AbstractGBArray}}
             right = copy(right)
         end
-        if left isa StridedArray
-            left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
-        end
-        if right isa StridedArray
-            right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
+        if right isa AbstractArray && !isconcretetype(promote_type(right, stored_eltype(left)))
+            right = pack(right)
         end
         if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
             add = defaultadd(f)
@@ -293,10 +284,10 @@ end
                     subargleft isa Broadcast.Broadcasted && (subargleft = copy(subargleft))
                     subargright isa Broadcast.Broadcasted && (subargright = copy(subargright))
                     if subargleft isa StridedArray
-                        subargleft = pack(subargleft; fill = subargright isa GBArrayOrTranspose ? getfill(right) : nothing)
+                        subargleft = pack(subargleft)
                     end
                     if subargright isa StridedArray
-                        subargright = pack(subargright; fill = subargleft isa GBArrayOrTranspose ? getfill(subargleft) : nothing)
+                        subargright = pack(subargright)
                     end
                     if subargleft isa GBArrayOrTranspose && subargright isa GBArrayOrTranspose
                         add = mutatingop(defaultadd(f))
@@ -316,10 +307,10 @@ end
                 right = copy(right)
             end
             if left isa StridedArray
-                left = pack(left; fill = right isa GBArrayOrTranspose ? getfill(right) : nothing)
+                left = pack(left)
             end
             if right isa StridedArray
-                right = pack(right; fill = left isa GBArrayOrTranspose ? getfill(left) : nothing)
+                right = pack(right)
             end
             if left isa GBArrayOrTranspose && right isa GBArrayOrTranspose
                 add = mutatingop(defaultadd(bc.f))
