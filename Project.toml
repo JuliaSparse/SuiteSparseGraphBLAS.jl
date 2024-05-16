@@ -36,6 +36,7 @@ libLLVM_jll = "8f36deef-c2a5-5394-99ed-8e07531fb29a"
 
 [compat]
 Blobs = "0.5"
+CIndices = "0.3"
 ChainRulesCore = "1"
 KLU = "0.5"
 MacroTools = "0.5"
