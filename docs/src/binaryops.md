@@ -40,8 +40,8 @@ All built-in binary operators can be found below:
 |:----------------|----------------:|------------------------------------------------------   |
 | `first`           | `FIRST`          | `first(x, y) = x`                                    |
 | `second`          | `SECOND`         | `second(x, y) = y`                                   |
-| `any`             | `ANY`            | `any(x, y) = 1` if `x` **or** `y` are stored values  |
-| `pair`            | `PAIR`           | `any(x, y) = 1` if `x` **and** `y` are stored values |
+| `any`             | `ANY`            | `any(x, y)` can return either `x` or `y`. The result is non-deterministic.|
+| `pair`            | `PAIR`           | `pair(x, y) = 1` if `x` **and** `y` are stored values|
 | `+`               | `PLUS`           |                                                      |
 | `-`               | `MINUS`          |                                                      |
 | `rminus`          | `RMINUS`         |                                                      |
