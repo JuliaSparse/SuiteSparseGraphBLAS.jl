@@ -40,7 +40,7 @@ end
 end
 
 function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOperator{F, X, Z}) where {F, X, Z}
-    # We can lazily load the built-ins since they are already constants. 
+    # We can lazily load the built-ins since they are already constants.
     # Could potentially do this with UDFs, but probably not worth the effort.
     if !op.loaded
         if op.builtin
@@ -51,7 +51,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_UnaryOp}, op::TypedUnaryOpe
                 unsafe_store!(z, fn(x))
                 return nothing
             end
-            
+
             opref = Ref{LibGraphBLAS.GrB_UnaryOp}()
             unaryopfn_C = cunary(unaryopfn, X, Z)
             op.keepalive = (unaryopfn, unaryopfn_C)
@@ -374,7 +374,7 @@ macro gbmatrixtype(typename)
     esc(quote
         # Empty Constructors:
         function $typename{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F)) where {T, F}
-            ((F === Nothing) || (F === Missing) || (T === F)) || 
+            ((F === Nothing) || (F === Missing) || (T === F)) ||
                 throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
             m = _newGrBRef()
             @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), nrows, ncols)
@@ -383,7 +383,7 @@ macro gbmatrixtype(typename)
         $typename{T}(nrows::Integer, ncols::Integer; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(nrows, ncols; fill)
 
-        $typename{T, F}(dims::D; fill = defaultfill(F)) where {T, F, D<:Union{Dims{2}, Tuple{<:Integer, <:Integer}}} = 
+        $typename{T, F}(dims::D; fill = defaultfill(F)) where {T, F, D<:Union{Dims{2}, Tuple{<:Integer, <:Integer}}} =
             $typename{T, F}(dims...; fill)
         $typename{T}(dims::Dims{2}; fill::F = defaultfill(T)) where {T, F} = $typename{T, F}(dims...; fill)
         $typename{T}(dims::Tuple{<:Integer, <:Integer}; fill::F = defaultfill(T)) where {T, F} = $typename{T, F}(dims...; fill)
@@ -392,7 +392,7 @@ macro gbmatrixtype(typename)
             $typename{T, F}(size[1].stop, size[2].stop; fill)
         $typename{T}(size::Tuple{Base.OneTo, Base.OneTo}; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(size; fill)
-        
+
         # Coordinate Form Constructors:
         function $typename{T, F}(
             I::AbstractVector, J::AbstractVector, X::AbstractVector{T2}, nrows, ncols;
@@ -409,7 +409,7 @@ macro gbmatrixtype(typename)
             I::AbstractVector, J::AbstractVector, X::AbstractVector{T2};
             combine = +, fill = defaultfill(F)
         ) where {T, F, T2} = $typename{T, F}(I, J, X, maximum(I), maximum(J); combine, fill)
-        
+
         function $typename{T}(
             I::AbstractVector, J::AbstractVector, X::AbstractVector,
             nrows, ncols; combine = +, fill::F = defaultfill(T)
@@ -420,7 +420,7 @@ macro gbmatrixtype(typename)
             I::AbstractVector, J::AbstractVector, X::AbstractVector;
             combine = +, fill = defaultfill(T)
         ) where {T} = $typename{T}(I, J, X, maximum(I), maximum(J); combine, fill)
-        
+
         $typename(
             I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, nrows, ncols;
             combine = +, fill = defaultfill(T)
@@ -432,7 +432,7 @@ macro gbmatrixtype(typename)
 
         # ISO constructors:
         function $typename{T, F}(
-            I::AbstractVector, J::AbstractVector, x, 
+            I::AbstractVector, J::AbstractVector, x,
             nrows, ncols; fill = defaultfill(F)
         ) where {T, F}
             A = $typename{T, F}(nrows, ncols; fill)
@@ -443,7 +443,7 @@ macro gbmatrixtype(typename)
             I::AbstractVector, J::AbstractVector, x;
             fill = defaultfill(F)
         ) where {T, F} = $typename{T, F}(I, J, x, maximum(I), maximum(J); fill)
-        
+
         function $typename{T}(
             I::AbstractVector, J::AbstractVector, x, nrows, ncols;
             fill::F = defaultfill(T)
@@ -453,34 +453,34 @@ macro gbmatrixtype(typename)
         $typename{T}(
             I::AbstractVector, J::AbstractVector, x; fill = defaultfill(T)
         ) where {T} = $typename{T}(I, J, x, maximum(I), maximum(J); fill)
-        
+
         function $typename(
             I::AbstractVector, J::AbstractVector, x::T, nrows, ncols;
             fill = defaultfill(T)) where {T}
             $typename{T}(I, J, x, nrows, ncols; fill)
         end
-        $typename(I::AbstractVector, J::AbstractVector, x::T; fill = defaultfill(T)) where T = 
+        $typename(I::AbstractVector, J::AbstractVector, x::T; fill = defaultfill(T)) where T =
             $typename{T}(I, J, x, maximum(I), maximum(J); fill)
-        
+
         function $typename{T, F}(dims::Dims{2}, x; fill = defaultfill(F)) where {T, F}
             A = $typename{T, F}(dims; fill)
             A .= x
             return A
         end
-        $typename{T}(dims::Dims{2}, x; fill::F = defaultfill(T)) where {T, F} = 
+        $typename{T}(dims::Dims{2}, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(dims, x; fill)
-        $typename(dims::Dims{2}, x::T; fill = defaultfill(T)) where T = 
+        $typename(dims::Dims{2}, x::T; fill = defaultfill(T)) where T =
             $typename{T}(dims, x, fill)
-        
-        $typename{T}(nrows, ncols, x; fill::F = defaultfill(T)) where {T, F} = 
+
+        $typename{T}(nrows, ncols, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}((nrows, ncols), x; fill)
-        $typename(nrows, ncols, x::T; fill = defaultfill(T)) where T = 
+        $typename(nrows, ncols, x::T; fill = defaultfill(T)) where T =
             $typename{T}((nrows, ncols), x; fill)
-        $typename(dims::Tuple{<:Integer}, x::T; fill = defaultfill(T)) where T = 
+        $typename(dims::Tuple{<:Integer}, x::T; fill = defaultfill(T)) where T =
             $typename{T}(dims..., x; fill)
-        $typename(size::Tuple{Base.OneTo, Base.OneTo}, x::T; fill = defaultfill(T)) where T = 
+        $typename(size::Tuple{Base.OneTo, Base.OneTo}, x::T; fill = defaultfill(T)) where T =
             $typename{T}(size[1].stop, size[2].stop, x; fill)
-        
+
         # Convert based ctors:
         function $typename{T, F}(v::AbstractGBVector; fill = getfill(v)) where {T, F}
             return convert($typename{T, F}, v; fill)
@@ -503,7 +503,7 @@ macro gbmatrixtype(typename)
         # Pack based constructors:
         # General matrices!
         function $typename{T, F}(
-            A::Union{<:AbstractVector, <:AbstractMatrix}; 
+            A::Union{<:AbstractVector, <:AbstractMatrix};
             fill = defaultfill(F)
         ) where {T, F}
             vpack = _sizedjlmalloc(length(A), T)
@@ -513,44 +513,44 @@ macro gbmatrixtype(typename)
             return unsafepack!(C, vpack, false; order = storageorder(A))
         end
         $typename{T}(
-            A::Union{<:AbstractVector, <:AbstractMatrix}; 
+            A::Union{<:AbstractVector, <:AbstractMatrix};
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
         $typename(
-            A::Union{<:AbstractVector{T}, <:AbstractMatrix{T}}; 
+            A::Union{<:AbstractVector{T}, <:AbstractMatrix{T}};
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
 
         # Sparse Matrices:
         function $typename{T, F}(
-            A::SparseVector; 
+            A::SparseVector;
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A, 1), 1; fill)
             return unsafepack!(C, _copytoraw(A)..., false)
         end
         $typename{T}(
-            A::SparseVector; 
+            A::SparseVector;
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
         $typename(
-            A::SparseVector{T}; 
+            A::SparseVector{T};
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
-        
+
         function $typename{T, F}(
-            A::SparseMatrixCSC; 
+            A::SparseMatrixCSC;
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A)...; fill)
             return unsafepack!(C, _copytoraw(A)..., false)
         end
         $typename{T}(
-            A::SparseMatrixCSC; 
+            A::SparseMatrixCSC;
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
         $typename(
-            A::SparseMatrixCSC{T}; 
+            A::SparseMatrixCSC{T};
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
 
@@ -561,7 +561,7 @@ macro gbmatrixtype(typename)
             C = $typename{T, F}(size(A); fill)
             GBDiagonal!(C, A)
         end
-        $typename{T}(A::Diagonal; fill::F = defaultfill(T)) where {T, F} = 
+        $typename{T}(A::Diagonal; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(A; fill)
         $typename(A::Diagonal{T}; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(A; fill)
@@ -573,7 +573,7 @@ macro gbmatrixtype(typename)
             C = $typename{T, F}(args...; fill)
             GBDiagonal!(C, A(size(C, 1)))
         end
-        $typename{T}(A::UniformScaling, args...; fill::F = defaultfill(T)) where {T, F} = 
+        $typename{T}(A::UniformScaling, args...; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(A, args...; fill)
         $typename(A::UniformScaling{T}, args...; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(A, args...; fill)
@@ -603,16 +603,16 @@ end
 macro gbvectortype(typename)
     esc(quote
         function $typename{T, F}(n::Integer; fill = defaultfill(F)) where {T, F}
-            ((F === Nothing) || (F === Missing) || (T === F)) || 
+            ((F === Nothing) || (F === Missing) || (T === F)) ||
                 throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
             m = _newGrBRef()
             @wraperror LibGraphBLAS.GrB_Matrix_new(m, gbtype(T), n, 1)
             return $typename{T, F}(m; fill)
         end
-        $typename{T}(n::Integer; fill::F = defaultfill(T)) where {T, F} = 
+        $typename{T}(n::Integer; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(n; fill)
-        
-        $typename{T, F}(dims::D; fill = defaultfill(F)) where {T, F, D<:Union{Dims{1}, Tuple{<:Integer}}} = 
+
+        $typename{T, F}(dims::D; fill = defaultfill(F)) where {T, F, D<:Union{Dims{1}, Tuple{<:Integer}}} =
             $typename{T, F}(dims...; fill)
         $typename{T}(dims::Dims{1}; fill::F = defaultfill(T)) where {T, F} = $typename{T, F}(dims...; fill)
         $typename{T}(dims::Tuple{<:Integer}; fill::F = defaultfill(T)) where {T, F} = $typename{T, F}(dims...; fill)
@@ -621,7 +621,7 @@ macro gbvectortype(typename)
             $typename{T, F}(size[1].stop; fill)
         $typename{T}(size::Tuple{Base.OneTo}; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(size; fill)
-        
+
         function $typename{T, F}(
             I::AbstractVector, X::AbstractVector{T2}, n;
             combine = +, fill = defaultfill(F)
@@ -636,7 +636,7 @@ macro gbvectortype(typename)
             I::AbstractVector, X::AbstractVector{T2};
             combine = +, fill = defaultfill(F)
         ) where {T, F, T2} = $typename{T, F}(I, X, maximum(I); combine, fill)
-        
+
         function $typename{T}(
             I::AbstractVector, X::AbstractVector,
             n; combine = +, fill::F = defaultfill(T)
@@ -647,7 +647,7 @@ macro gbvectortype(typename)
             I::AbstractVector, X::AbstractVector;
             combine = +, fill = defaultfill(T)
         ) where {T} = $typename{T}(I, X, maximum(I); combine, fill)
-        
+
         $typename(
             I::AbstractVector, X::AbstractVector{T}, n;
             combine = +, fill = defaultfill(T)
@@ -658,7 +658,7 @@ macro gbvectortype(typename)
         ) where {T} = $typename{T}(I, X; combine, fill)
 
         function $typename{T, F}(
-            I::AbstractVector, x, 
+            I::AbstractVector, x,
             n; fill = defaultfill(F)
         ) where {T, F}
             A = $typename{T, F}(n; fill)
@@ -669,7 +669,7 @@ macro gbvectortype(typename)
             I::AbstractVector, x;
             fill = defaultfill(F)
         ) where {T, F} = $typename{T, F}(I, x, maximum(I); fill)
-        
+
         function $typename{T}(
             I::AbstractVector, x, n;
             fill::F = defaultfill(T)
@@ -679,34 +679,34 @@ macro gbvectortype(typename)
         $typename{T}(
             I::AbstractVector, x; fill = defaultfill(T)
         ) where {T} = $typename{T}(I, x, maximum(I); fill)
-        
+
         function $typename(
             I::AbstractVector, x::T, n;
             fill = defaultfill(T)) where {T}
             $typename{T}(I, J, x, n; fill)
         end
-        $typename(I::AbstractVector, x::T; fill = defaultfill(T)) where T = 
+        $typename(I::AbstractVector, x::T; fill = defaultfill(T)) where T =
             $typename{T}(I, x, maximum(I); fill)
-        
+
         function $typename{T, F}(dims::Dims{1}, x; fill = defaultfill(F)) where {T, F}
             A = $typename{T, F}(dims; fill)
             A .= x
             return A
         end
-        $typename{T}(dims::Dims{1}, x; fill::F = defaultfill(T)) where {T, F} = 
+        $typename{T}(dims::Dims{1}, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(dims, x; fill)
-        $typename(dims::Dims{1}, x::T; fill = defaultfill(T)) where T = 
+        $typename(dims::Dims{1}, x::T; fill = defaultfill(T)) where T =
             $typename{T}(dims, x, fill)
-        
+
         $typename{T}(nrows, x; fill = defaultfill(T)) where T =
             $typename{T}((nrows,), x; fill)
-        $typename(nrows, x::T; fill = defaultfill(T)) where T = 
+        $typename(nrows, x::T; fill = defaultfill(T)) where T =
             $typename{T}(nrows, x; fill)
-        $typename(dims::Tuple{<:Integer}, x::T; fill = defaultfill(T)) where T = 
+        $typename(dims::Tuple{<:Integer}, x::T; fill = defaultfill(T)) where T =
             $typename{T}(dims..., x; fill)
-        $typename(size::Tuple{Base.OneTo}, x::T; fill = defaultfill(T)) where T = 
+        $typename(size::Tuple{Base.OneTo}, x::T; fill = defaultfill(T)) where T =
             $typename{T}(size[1].stop, x; fill)
-        
+
         function $typename{T, F}(v::AbstractGBVector; fill = getfill(v)) where {T, F}
             return convert($typename{T, F}, v; fill)
         end
@@ -716,7 +716,7 @@ macro gbvectortype(typename)
 
         # Pack based constructors:
         function $typename{T, F}(
-            A::AbstractVector; 
+            A::AbstractVector;
             fill = defaultfill(F)
         ) where {T, F}
             vpack = _sizedjlmalloc(length(A), T)
@@ -726,27 +726,27 @@ macro gbvectortype(typename)
             return unsafepack!(C, vpack, false; order = storageorder(A))
         end
         $typename{T}(
-            A::AbstractVector; 
+            A::AbstractVector;
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
         $typename(
-            A::AbstractVector{T}; 
+            A::AbstractVector{T};
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
 
         function $typename{T, F}(
-            A::SparseVector; 
+            A::SparseVector;
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A, 1); fill)
             return unsafepack!(C, _copytoraw(A)..., false)
         end
         $typename{T}(
-            A::SparseVector; 
+            A::SparseVector;
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
         $typename(
-            A::SparseVector{T}; 
+            A::SparseVector{T};
             fill::F = defaultfill(T)
         ) where {T, F} = $typename{T, F}(A; fill)
         function Base.similar(
@@ -763,7 +763,7 @@ macro gbvectortype(typename)
             _hasconstantorder(x) || setstorageorder!(x, storageorder(v))
             return x
         end
-        # misc utilities: 
+        # misc utilities:
         strip_parameters(::Type{<:$typename}) = $typename
     end)
 end
@@ -771,9 +771,9 @@ end
 """
     GBVector{T, F} <: AbstractSparseArray{T, UInt64, 1}
 
-One-dimensional GraphBLAS array with elements of type T. `F` is the type of the fill-value, 
-which is typically `Missing` or `T`. 
-Internal representation is specified as opaque, but may be either a dense vector, bitmap vector, or 
+One-dimensional GraphBLAS array with elements of type T. `F` is the type of the fill-value,
+which is typically `Missing` or `T`.
+Internal representation is specified as opaque, but may be either a dense vector, bitmap vector, or
 compressed sparse vector.
 
 See also: [`GBMatrix`](@ref).
@@ -786,7 +786,7 @@ See also: [`GBMatrix`](@ref).
     GBVector(I::AbstractVector, x::T, n; fill=defaultfill(T), combine=+)
     GBVector(v::Union{<:AbstractGBVector, <:AbstractVector}; fill = defaultfill(eltype(v)))
 
-All constructors, no matter their input, may specify parameters for 
+All constructors, no matter their input, may specify parameters for
 element type `T` as well as a fill type `F`, conversions are handled internally.
 These parameters will be inferred in most cases.
 """
@@ -796,13 +796,13 @@ mutable struct GBVector{T, F} <: AbstractGBVector{T, F, ColMajor()}
 end
 
 function GBVector{T, F}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill = defaultfill(F)) where {T, F}
-    ((F === Nothing) || (F === Missing) || (T === F)) || 
+    ((F === Nothing) || (F === Missing) || (T === F)) ||
         throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
     fill = convert(F, fill) # conversion to F happens at the last possible moment.
     return GBVector{T, F}(p, fill)
 end
 GBVector{T}(
-    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; 
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix};
     fill::F = defaultfill(T)
 ) where {T, F} = return GBVector{T, F}(p; fill)
 
@@ -811,9 +811,9 @@ GBVector{T}(
 """
     GBMatrix{T, F} <: AbstractSparseArray{T, UInt64, 2}
 
-Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value, 
-which is typically `Missing` or `T`. 
-Internal representation is specified as opaque, but in this implementation is stored as one of 
+Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value,
+which is typically `Missing` or `T`.
+Internal representation is specified as opaque, but in this implementation is stored as one of
 the following in either row or column orientation:
 
     1. Dense
@@ -836,7 +836,7 @@ as well as a fill type `F`, conversions are handled internally.
 These parameters will be inferred in most cases.
 
 `GBMatrix` construction from an existing AbstractArray will maintain the storage order of the original,
-typically `ColMajor()`. 
+typically `ColMajor()`.
 """
 mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F, RuntimeOrder()}
     p::Base.RefValue{LibGraphBLAS.GrB_Matrix}
@@ -844,13 +844,13 @@ mutable struct GBMatrix{T, F} <: AbstractGBMatrix{T, F, RuntimeOrder()}
 end
 
 function GBMatrix{T, F}(p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; fill = defaultfill(F)) where {T, F}
-    ((F === Nothing) || (F === Missing) || (T === F)) || 
+    ((F === Nothing) || (F === Missing) || (T === F)) ||
         throw(ArgumentError("Fill type $F must be <: Union{Nothing, Missing, $T}"))
     fill = convert(F, fill) # conversion to F happens at the last possible moment.
     return GBMatrix{T, F}(p, fill)
 end
 GBMatrix{T}(
-    p::Base.RefValue{LibGraphBLAS.GrB_Matrix}; 
+    p::Base.RefValue{LibGraphBLAS.GrB_Matrix};
     fill::F = defaultfill(T)
 ) where {T, F} = return GBMatrix{T, F}(p; fill)
 
@@ -860,8 +860,8 @@ GBMatrix{T}(
 """
     OrientedGBMatrix{T, F, O} <: AbstractSparseArray{T, UInt64, 2}
 
-Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value, 
-which is typically `Missing` or `T`. 
+Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value,
+which is typically `Missing` or `T`.
 Exactly the same as [`GBMatrix`](@ref), except the memory orientation is static: either
 `StorageOrders.RowMajor()` (default) or `StorageOrders.ColMajor()`.
 
@@ -973,9 +973,12 @@ end
 strip_parameters(::Type{<:GBShallowMatrix}) = GBShallowMatrix
 strip_parameters(::Type{<:GBShallowVector}) = GBShallowVector
 # We need to do this at runtime. This should perhaps be `RuntimeOrder`, but that trait should likely be removed.
-# This should ideally work out fine. a GBMatrix or GBVector won't have 
+# This should ideally work out fine. a GBMatrix or GBVector won't have
 StorageOrders.runtime_storageorder(A::AbstractGBMatrix) = gbget(A, :format) == Integer(BYCOL) ? StorageOrders.ColMajor() : StorageOrders.RowMajor()
 StorageOrders.comptime_storageorder(::AbstractGBArray{<:Any, <:Any, O}) where O = O
+
+defaultfill(::Type{T}) where {Te, T <: GBVecOrMat{Te}} = defaultfill(Te)
+defaultfill(::Type{T}) where {Te, Tf, T <: GBVecOrMat{Te, Tf}} = defaultfill(Tf)
 
 defaultfill(::Type{T}) where T = zero(T)
 defaultfill(::Type{Nothing}) = nothing

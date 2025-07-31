@@ -4,7 +4,7 @@ using LinearAlgebra
 import LinearAlgebra: (\),
                  cholesky, cholesky!, det, diag, ishermitian, isposdef,
                  issuccess, issymmetric, ldlt, ldlt!, logdet, Symmetric, Hermitian, lu
-using ..SuiteSparseGraphBLAS: AbstractGBMatrix, AbstractGBVector, unsafepack!, unsafeunpack!, GBMatrix, 
+using ..SuiteSparseGraphBLAS: AbstractGBMatrix, AbstractGBVector, unsafepack!, unsafeunpack!, GBMatrix,
 GBVector, AbstractGBArray, LibGraphBLAS, ColMajor, sparsitystatus,
 _sizedjlmalloc, increment!, isshallow, nnz, tempunpack!, storedeltype
 using SuiteSparseGraphBLAS
@@ -66,11 +66,11 @@ function CHOLMOD.Dense(A::AbstractGBMatrix)
     end
 end
 
-function _extract_args(s, ::Type{T}) where {T<:CHOLMOD.VTypes}
-    ptr = SuiteSparseGraphBLAS._copytoraw(unsafe_wrap(Array, s.p, (s.ncol + 1,), own = false))
+function _extract_args(s, ::Type{T}, ::Type{I}) where {T<:CHOLMOD.VTypes, I<:CHOLMOD.ITypes}
+    ptr = SuiteSparseGraphBLAS._copytoraw(unsafe_wrap(Array, Ptr{I}(s.p), (s.ncol + 1,), own = false))
     l = ptr[end] - 1
     return s.nrow, s.ncol, ptr,
-        SuiteSparseGraphBLAS._copytoraw(unsafe_wrap(Array, s.i, (l + 1,), own = false)), 
+        SuiteSparseGraphBLAS._copytoraw(unsafe_wrap(Array, Ptr{I}(s.i), (l + 1,), own = false)),
         SuiteSparseGraphBLAS._copytoraw(unsafe_wrap(Array, Ptr{T}(s.x), (l + 1,), own = false))
 end
 
@@ -82,24 +82,24 @@ function GBVector{T, F}(D::CHOLMOD.Dense{T}; fill = defaultfill(F)) where {T, F}
     SuiteSparseGraphBLAS.unsafepack!(A, D, false; order = ColMajor())
     return A
 end
-function GBVector{T, F}(S::CHOLMOD.Sparse{T}; fill = defaultfill(F)) where {T, F}
+function GBVector{T, F}(S::CHOLMOD.Sparse{T, I}; fill = defaultfill(F)) where {T, F, I}
     @assert size(S, 2) == 1
     s = unsafe_load(pointer(S))
     if s.stype != 0
         throw(ArgumentError("matrix has stype != 0. Convert to matrix " *
             "with stype == 0 before converting to GBMatrix"))
     end
-    nrow, ncol, ptr, idx, vals = _extract_args(s, T)
+    nrow, ncol, ptr, idx, vals = _extract_args(s, T, I)
     A = GBVector{T}(nrow; fill)
     SuiteSparseGraphBLAS.unsafepack!(
-        A, ptr, idx, vals, false; 
+        A, ptr, idx, vals, false;
         order = ColMajor(), jumbled = s.sorted == 0)
     return A
 end
 
-GBVector{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} = 
+GBVector{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} =
     GBVector{T, F}(D; fill)
-GBVector(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} = 
+GBVector(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} =
     GBVector{T, F}(D; fill)
 
 for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
@@ -111,23 +111,23 @@ for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
             SuiteSparseGraphBLAS.unsafepack!(A, D, false; order = ColMajor())
             return A
         end
-        function $Mat{T, F}(S::CHOLMOD.Sparse{T}; fill = defaultfill(F)) where {T, F}
+        function $Mat{T, F}(S::CHOLMOD.Sparse{T, I}; fill = defaultfill(F)) where {T, F, I}
             s = unsafe_load(pointer(S))
             if s.stype != 0
                 throw(ArgumentError("matrix has stype != 0. Convert to matrix " *
                     "with stype == 0 before converting to GBMatrix"))
             end
-            nrow, ncol, ptr, idx, vals = _extract_args(s, T)
+            nrow, ncol, ptr, idx, vals = _extract_args(s, T, I)
             A = $Mat{T}(nrow, ncol; fill)
             SuiteSparseGraphBLAS.unsafepack!(
-                A, ptr, idx, vals, false; 
+                A, ptr, idx, vals, false;
                 order = ColMajor(), jumbled = s.sorted == 0)
             return A
         end
 
-        $Mat{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} = 
+        $Mat{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} =
             $Mat{T, F}(D; fill)
-        $Mat(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} = 
+        $Mat(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}; fill::F = defaultfill(T)) where {T, F} =
             $Mat{T, F}(D; fill)
 
         function LinearAlgebra.Symmetric{Float64,<:$Mat{Float64}}(S::Sparse{Float64})
@@ -137,7 +137,7 @@ for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
             Symmetric(A, s.stype > 0 ? :U : :L)
         end
         convert(T::Type{Symmetric{Float64,<:$Mat{Float64}}}, A::Sparse{Float64}) = T(A)
-        
+
         function LinearAlgebra.Hermitian{Tv,<:$Mat{Tv}}(A::Sparse{Tv}) where Tv<:VTypes
             s = unsafe_load(pointer(A))
             ishermitian(A) || throw(ArgumentError("matrix is not Hermitian"))
@@ -183,7 +183,7 @@ end
 function CHOLMOD.getLd!(S::AbstractGBMatrix)
     nz = nnz(S)
     colptr, rowvals, nonzeros, repack! = tempunpack!(
-        S, SuiteSparseGraphBLAS.Sparse(); 
+        S, SuiteSparseGraphBLAS.Sparse();
         order = ColMajor()
     )
     d = Vector{eltype(S)}(undef, size(S, 1))
@@ -264,7 +264,7 @@ function LinearAlgebra.lu(A::GBRealHermSymComplexHermF64SSL)
     return lu(copy(A))
 end
 
-# TODO: Improve these, to use better promotion: 
+# TODO: Improve these, to use better promotion:
 Base.:*(A::Symmetric{Float64,G},
     B::AbstractGBArray) where {G<:AbstractGBMatrix} = GBMatrix(Sparse(A)*Sparse(B))
 Base.:*(A::Hermitian{ComplexF64,<:GBMatrix},

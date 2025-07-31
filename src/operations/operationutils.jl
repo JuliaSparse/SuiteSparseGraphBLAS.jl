@@ -26,7 +26,7 @@ inferbinarytype(::Type{X}, ::Type{Y}, op::TypedBinaryOperator{F, X2, Y2, Z}) whe
 """
     Complement{T}
 
-The complement of a GraphBLAS mask. 
+The complement of a GraphBLAS mask.
 This wrapper will set the mask argument of a GraphBLAS operation to be the negation of the
 original mask.
 
@@ -47,14 +47,14 @@ struct Structural{T}
 end
 
 Complement(A::T) where {
-    T<:Union{GBArrayOrTranspose, 
-    Structural{<:GBArrayOrTranspose}, 
+    T<:Union{GBArrayOrTranspose,
+    Structural{<:GBArrayOrTranspose},
     Complement{<:GBArrayOrTranspose}}
 } = Complement{T}(A)
 
 Base.:~(A::T) where {
-    T<:Union{GBArrayOrTranspose, 
-    Structural{<:GBArrayOrTranspose}, 
+    T<:Union{GBArrayOrTranspose,
+    Structural{<:GBArrayOrTranspose},
     Complement}
 } = Complement(A)
 Base.parent(C::Complement) = C.parent
@@ -116,9 +116,20 @@ _promotefill(x, ::AbstractGBArray{<:Any, Missing}, op) = missing
 _promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, <:Any}, op) = missing
 _promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Missing}, op) = missing
 
+_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Nothing}, y, op) = nothing
+_promotefill(x, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, <:Any}, op) = nothing
+_promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
+
 _promotefill(x, op) = x
 
 function _promotefill(x::AbstractGBArray{<:Any, T}, y::AbstractGBArray{<:Any, U}, op) where {T, U}
-    getfill(x) ≈ getfill(y) && (return inferbinarytype(T, U, op)(getfill(x)))
-    return defaultfill(inferbinarytype(T, U, op)) # fallback to defaultfill.
+    V = inferbinarytype(T, U, op)
+    xfill, yfill = getfill(x), getfill(y)
+    if (V === T === U) && xfill == yfill
+        return xfill
+    else # TODO: in 1.0 handle fills correctly no matter what.
+        return defaultfill(inferbinarytype(T, U, op)) # fallback to defaultfill.
+    end
 end

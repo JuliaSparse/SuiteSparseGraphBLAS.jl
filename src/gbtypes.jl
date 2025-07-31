@@ -46,8 +46,7 @@ mutable struct GBType{T} <: AbstractGBType
 end
 
 
-
-const GBTYPES = IdDict{DataType, GBType}()
+const JLTOGBTYPES = IdDict{DataType, GBType}()
 
 """
     gbtype(x)
@@ -57,7 +56,7 @@ Determine the GBType equivalent of a Julia primitive type.
 See also: [`juliatype`](@ref)
 """
 function gbtype(::Type{T}; builtin = false, loaded = false, typestr = string(T)) where T
-    (get!(GBTYPES, T) do 
+    (get!(JLTOGBTYPES, T) do
         return GBType{T}(builtin, loaded, LibGraphBLAS.GrB_Type(), typestr)
     end)::GBType{T}
 end
@@ -111,7 +110,7 @@ Base.unsafe_convert(::Type{Ptr{LibGraphBLAS.GrB_Index}}, s::GBAllType) = s.p
 Base.length(::GBAllType) = 0 #Allow indexing with ALL
 
 """
-    tojuliatype(x::GBType)
+    juliatype(x::GBType)
 
 Determine the Julia equivalent of a GBType.
 
@@ -132,4 +131,3 @@ juliatype(::GBType{T}) where {T} = T
 @_gbtype Float64 GrB_FP64
 @_gbtype ComplexF32 GxB_FC32
 @_gbtype ComplexF64 GxB_FC64
-
