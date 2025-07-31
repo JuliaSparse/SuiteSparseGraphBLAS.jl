@@ -1,7 +1,7 @@
 name = "SuiteSparseGraphBLAS"
 uuid = "c2e53296-7b14-11e9-1210-bddfa8111e1d"
-authors = ["Will Kimmerer <kimmerer@mit.edu>", "Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
-version = "0.10.0"
+authors = ["Raye Skye Kimmerer <kimmerer@mit.edu>", "Abhinav Mehndiratta <abhinavmehndiratta@gmail.com>"]
+version = "0.11.0"
 
 [deps]
 Blobs = "163b9779-6631-5f90-a265-3de947924de8"
@@ -28,4 +28,4 @@ Preferences = "1"
 SSGraphBLAS_jll = "7.2"
 SpecialFunctions = "2"
 StorageOrders = "0.3.1"
-julia = "1.7"
+julia = "1.10"
