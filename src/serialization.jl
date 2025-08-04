@@ -38,6 +38,15 @@ function serialize_sizehint(A::GBVecOrMat)
     return sz[]
 end
 
+"""
+    gbwrite(filename::AbstractString, A::GBVecOrMat)
+    gbwrite(io::IO, A::GBVecOrMat)
+
+Write `A` as a `GrB_Matrix` to a file or IO object. This function uses the
+`GrB_Matrix_serialize` routine from the C GraphBLAS library, and *does not* serialize
+the full Julia object. To read this serialized matrix you must use [`gbread`](@ref) with
+a type or [`gbread_matrix`](@ref) / [`gbread_vector`](@ref) to use serialized element type.
+"""
 gbwrite(filename::AbstractString, A::GBVecOrMat) = open(io->gbwrite(io, A), filename, "w")
 
 function gbwrite(io::IO, A::GBVecOrMat)
@@ -49,6 +58,14 @@ function gbwrite(io::IO, A::GBVecOrMat)
     write(io, v)
 end
 
+"""
+    gbread(filename::AbstractString, ::Type{GBMatrix{T, Tf}}; fill)
+    gbread(io::IO, ::Type{GBMatrix{T, Tf}}; fill)
+
+Read a `GrB_Matrix` from a file or IO object. This function uses the
+`GrB_Matrix_deserialize` routine from the C GraphBLAS library directly, and constructs the
+passed in type. It does not use Julia's Serialization standard library.
+"""
 gbread(filename::AbstractString, ::Type{T}; fill = defaultfill(Tf)) where {Te, Tf, T<:GBVecOrMat{Te, Tf}} =
     open(io->gbread(io, T; fill), filename, "r")
 
@@ -64,6 +81,15 @@ function gbread(io::IO, ::Type{GBVector{T, Tf}}; fill = defaultfill(Tf)) where {
     GBVector{T, Tf}(gb, fill)
 end
 
+"""
+    gbread_matrix(filename::AbstractString; fill)
+    gbread_matrix(io::IO; fill)
+
+Read a `GrB_Matrix` from a file or IO object. This function uses the
+`GrB_Matrix_deserialize` routine from the C GraphBLAS library directly, and constructs
+a [`GBMatrix`](@ref) using the deserialized element type. The default fill for the deserialized
+element type is used unless one is passed in as the keyword argument `fill`.
+"""
 gbread_matrix(filename::AbstractString; fill = Nothing) =
     open(io->gbread_matrix(io; fill), filename, "r")
 
@@ -76,6 +102,17 @@ function gbread_matrix(io::IO; fill = Nothing)
     fill = fill === Nothing ? defaultfill(T) : fill
     return GBMatrix{T}(gb; fill)
 end
+"""
+    gbread_matrix(filename::AbstractString; fill)
+    gbread_matrix(io::IO; fill)
+
+Read a `GrB_Matrix` from a file or IO object. This function uses the
+`GrB_Matrix_deserialize` routine from the C GraphBLAS library directly, and constructs
+a [`GBMatrix`](@ref) using the deserialized element type. The default fill for the deserialized
+element type is used unless one is passed in as the keyword argument `fill`.
+"""
+gbread_vector(filename::AbstractString; fill = Nothing) =
+    open(io->gbread_vector(io; fill), filename, "r")
 function gbread_vector(io::IO; fill = Nothing)
     v = read(io)
     gb = _gbdeserialize_matrix(v, Nothing) # we don't know the eltype pass nothing
