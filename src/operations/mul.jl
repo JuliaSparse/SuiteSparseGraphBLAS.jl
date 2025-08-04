@@ -128,11 +128,19 @@ function Base.:*(
 end
 
 # clear up some ambiguities:
-function Base.:*(
-    A::Transpose{<:T, <:GBVector},
-    B::GBVector{T}
-) where {T <: Real}
-    return *(A, B, (+, *))
+# Replaced this function with the one directly below it.
+# This one StackOverflows on 1.10...
+# I don't exactly see why :/
+# function Base.:*(
+#     A::Transpose{T, <:GBVector{T}},
+#     B::GBVector{T}
+# ) where {T <: Real}
+#     return *(A, B, (+, *))
+# end
+
+function Base.:*(v::Transpose{<:Real, <:AbstractGBVector{T, F, O} where O} where {T, F},
+    u::AbstractGBVector{T, F, O} where {T, F, O})
+    *(v, u, (+, *))
 end
 
 function Base.:*(
@@ -157,12 +165,6 @@ function Base.:*(
     return @_densepack B (*(A, B, op; mask, accum, desc))
 end
 
-function Base.:*((⊕)::Union{<:Function, Monoid}, (⊗)::Function)
-    return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
-        *(A, B, (⊕, ⊗); mask, accum, desc)
-    end
-end
-
 function Base.:*((⊕)::Monoid, (⊗)::Function)
     return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
         *(A, B, (⊕, ⊗); mask, accum, desc)
@@ -176,23 +178,23 @@ function Base.:*(rig::TypedSemiring)
 end
 
 # Diagonal
-function LinearAlgebra.mul!(C::GBVecOrMat, D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
-    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
+function LinearAlgebra.mul!(C::GBVecOrMat, D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where
+    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O},
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return mul!(C, G(D), A, op; mask, accum, desc)
 end
-function LinearAlgebra.mul!(C::GBVecOrMat, A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
-    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
+function LinearAlgebra.mul!(C::GBVecOrMat, A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where
+    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O},
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return mul!(C, A, G(D), op; mask, accum, desc)
 end
-function Base.:*(D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
-    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
+function Base.:*(D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where
+    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O},
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return *(G(D), A, op; mask, accum, desc)
 end
-function Base.:*(A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where 
-    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O}, 
+function Base.:*(A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where
+    {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O},
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return *(A, G(D), op; mask, accum, desc)
 end
