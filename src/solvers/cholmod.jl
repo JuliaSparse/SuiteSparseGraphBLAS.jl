@@ -74,7 +74,7 @@ function _extract_args(s, ::Type{T}) where {T<:CHOLMOD.VTypes}
         SuiteSparseGraphBLAS._copytoraw(unsafe_wrap(Array, Ptr{T}(s.x), (l + 1,), own = false))
 end
 
-function GBVector{T}(D::CHOLMOD.Dense{T}) where {T}
+function SuiteSparseGraphBLAS.GBVector{T}(D::CHOLMOD.Dense{T}) where {T}
     @assert size(D, 2) == 1
     M = SuiteSparseGraphBLAS._sizedjlmalloc(length(D), T)
     copyto!(M, D)
@@ -82,7 +82,7 @@ function GBVector{T}(D::CHOLMOD.Dense{T}) where {T}
     SuiteSparseGraphBLAS.unsafepack!(A, D, false; order = ColMajor())
     return A
 end
-function GBVector{T}(S::CHOLMOD.Sparse{T}) where {T}
+function SuiteSparseGraphBLAS.GBVector{T}(S::CHOLMOD.Sparse{T}) where {T}
     @assert size(S, 2) == 1
     s = unsafe_load(pointer(S))
     if s.stype != 0
@@ -97,21 +97,21 @@ function GBVector{T}(S::CHOLMOD.Sparse{T}) where {T}
     return A
 end
 
-GBVector{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} = 
+SuiteSparseGraphBLAS.GBVector{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} =
     GBVector{T}(D)
-GBVector(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} = 
+SuiteSparseGraphBLAS.GBVector(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} =
     GBVector{T}(D)
 
 for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
     @eval begin
-        function $Mat{T}(D::CHOLMOD.Dense{T}) where {T}
+        function SuiteSparseGraphBLAS.$Mat{T}(D::CHOLMOD.Dense{T}) where {T}
             M = SuiteSparseGraphBLAS._sizedjlmalloc(length(D), T)
             copyto!(M, D)
             A = $Mat{T}(size(D))
             SuiteSparseGraphBLAS.unsafepack!(A, D, false; order = ColMajor())
             return A
         end
-        function $Mat{T}(S::CHOLMOD.Sparse{T}) where {T}
+        function SuiteSparseGraphBLAS.$Mat{T}(S::CHOLMOD.Sparse{T}) where {T}
             s = unsafe_load(pointer(S))
             if s.stype != 0
                 throw(ArgumentError("matrix has stype != 0. Convert to matrix " *
@@ -125,9 +125,9 @@ for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
             return A
         end
 
-        $Mat{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} = 
+        SuiteSparseGraphBLAS.$Mat{T}(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} =
             $Mat{T}(D)
-        $Mat(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} = 
+        SuiteSparseGraphBLAS.$Mat(D::Union{CHOLMOD.Sparse{T}, CHOLMOD.Dense{T}}) where {T} =
             $Mat{T}(D)
 
         function LinearAlgebra.Symmetric{Float64,<:$Mat{Float64}}(S::Sparse{Float64})
@@ -146,7 +146,7 @@ for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
         end
         convert(T::Type{Hermitian{Tv,<:$Mat{Tv}}}, A::Sparse{Tv}) where {Tv<:VTypes} = T(A)
 
-        function $Mat(FC::CHOLMOD.FactorComponent{Tv, :L}) where Tv
+        function SuiteSparseGraphBLAS.$Mat(FC::CHOLMOD.FactorComponent{Tv, :L}) where Tv
             F = Factor(FC)
             s = unsafe_load(pointer(F))
             if s.is_ll == 0
@@ -154,8 +154,8 @@ for Mat ∈ [:GBMatrix, :GBMatrixC, :GBMatrixR]
             end
             return $Mat(Sparse(F))
         end
-        $Mat(FC::FactorComponent{Tv,:LD}) where {Tv} = $Mat(Sparse(Factor(FC)))
-        function $Mat(F::Factor)
+        SuiteSparseGraphBLAS.$Mat(FC::FactorComponent{Tv,:LD}) where {Tv} = $Mat(Sparse(Factor(FC)))
+        function SuiteSparseGraphBLAS.$Mat(F::Factor)
             s = unsafe_load(pointer(F))
             if s.is_ll != 0
                 L = Sparse(F)
