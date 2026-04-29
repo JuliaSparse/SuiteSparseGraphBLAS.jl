@@ -11,8 +11,8 @@ using Blobs
 using SparseBase
 using CIndices
 import SparseBase: storedeltype
-const NoValue = SparseBase.NoValue
-const novalue = SparseBase.novalue
+const NoValue = SparseBase.NoValues.NoValue
+const novalue = SparseBase.NoValues.novalue
 
 export ColMajor, RowMajor, storageorder #reexports from StorageOrders
 
