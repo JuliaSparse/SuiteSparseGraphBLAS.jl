@@ -247,7 +247,9 @@ const GBRealHermSymComplexHermF64SSL = Union{
     Symmetric{Float64,<:AbstractGBArray{Float64}},
     Hermitian{Float64,<:AbstractGBArray{Float64}},
     Hermitian{ComplexF64,<:AbstractGBArray{ComplexF64}}}
-function \(A::GBRealHermSymComplexHermF64SSL, B::CHOLMOD.StridedVecOrMatInclAdjAndTrans)
+const StridedVecOrMatInclAdjAndTrans =
+    Union{StridedVecOrMat, Adjoint{<:Any,<:StridedVecOrMat}, Transpose{<:Any,<:StridedVecOrMat}}
+function \(A::GBRealHermSymComplexHermF64SSL, B::StridedVecOrMatInclAdjAndTrans)
     F = cholesky(A; check = false)
     if issuccess(F)
         return \(F, B)
