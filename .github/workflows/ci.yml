@@ -40,6 +40,24 @@ jobs:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
+  aqua:
+    name: Aqua
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - run: |
+          julia --color=yes -e '
+            using Pkg
+            Pkg.activate(temp = true)
+            Pkg.develop(PackageSpec(path = pwd()))
+            Pkg.add(name = "Aqua", version = "0.8")
+            using Aqua, SuiteSparseGraphBLAS
+            # ambiguities: ~190 pre-existing.
+            Aqua.test_all(SuiteSparseGraphBLAS; ambiguities = false)'
   docs:
     name: Documentation
     runs-on: ubuntu-latest

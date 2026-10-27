@@ -4,9 +4,9 @@ using ..SuiteSparseGraphBLAS: isGxB, isGrB, TypedBinaryOperator, GBType,
     valid_vec, juliaop, gbtype, symtotype, Itypes, Ftypes, Ztypes, FZtypes, Rtypes, optype,
     Ntypes, Ttypes, suffix, valid_union, GBArrayOrTranspose, binaryop
 using ..LibGraphBLAS
-export BinaryOp, binaryop
+export binaryop
 
-export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor, fmod, 
+export second, rminus, iseq, isne, isgt, islt, isge, isle, ∨, ∧, lxor, xnor,
 bxnor, bget, bset, bclr, firsti0, firsti, firstj0, firstj, secondi0, secondi, secondj0, 
 secondj, pair
 

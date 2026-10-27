@@ -991,13 +991,15 @@ StorageOrders.comptime_storageorder(::AbstractGBArray{<:Any, <:Any, O}) where O 
 defaultfill(::Type{T}) where {Te, T <: GBVecOrMat{Te}} = defaultfill(Te)
 defaultfill(::Type{T}) where {Te, Tf, T <: GBVecOrMat{Te, Tf}} = defaultfill(Tf)
 
-defaultfill(::Type{T}) where T = zero(T)
-defaultfill(::Type{Nothing}) = nothing
-defaultfill(::Type{Missing}) = missing
+# Union{T, Nothing} and Union{T, Missing} default to zero(T) rather than nothing/missing.
 # This is bold, I'm not sure if I like it...
 # It boils down to whether we want numeric sparse arrays to be default
 # or for graph sparse arrays to be default.
 # I don't think it is onerous for graph algorithm writers to say `GBMatrix{Int64, Nothing}`,
 # and provides better defaults for other users.
-defaultfill(::Type{Union{T, Nothing}}) where T = T
-defaultfill(::Type{Union{T, Missing}}) where T = T
+function defaultfill(::Type{T}) where T
+    S = nonmissingtype(Base.nonnothingtype(T))
+    return S === T ? zero(T) : defaultfill(S)
+end
+defaultfill(::Type{Nothing}) = nothing
+defaultfill(::Type{Missing}) = missing
