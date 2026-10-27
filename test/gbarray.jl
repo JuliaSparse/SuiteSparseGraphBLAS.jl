@@ -129,4 +129,12 @@
         collect(1:10)
         @test v[10] == 1 && v[60] == 6 && v[100] == 1
     end
+    @testset "iterators" begin
+        gather(it) = (v = []; for x in it; push!(v, x); end; v)
+        H = GBMatrix(sparse([1, 7, 3], [2, 2, 900], [1.0, 2.0, 3.0], 1000, 1000)) # hypersparse
+        @test gather(SuiteSparseGraphBLAS.iteratecols(H, 2)) == [(1, 1.0), (7, 2.0)]
+        @test isempty(gather(SuiteSparseGraphBLAS.iteratecols(H, 5)))
+        @test gather(SuiteSparseGraphBLAS.iteratecols(H, 2:900, SuiteSparseGraphBLAS.IndicesIterator())) ==
+            [((1, 2), 1.0), ((7, 2), 2.0), ((3, 900), 3.0)]
+    end
 end

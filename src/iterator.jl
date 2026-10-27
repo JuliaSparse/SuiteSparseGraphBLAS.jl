@@ -77,8 +77,12 @@ end
 end
 
 # column by column or row by row iterators:
+# Read p[i] with C's 0-based i. GraphBLAS 10 stores indices as 32 or 64 bits; one pointer is set.
+@inline _loadindex(p64, p32, i) = Int64(p64 != C_NULL ? unsafe_load(p64, i + 1) : unsafe_load(p32, i + 1))
+
 @inline function _rc_knext(I::GxBIterator)
     k = I.p.k[] + 1
+    I.p.k[] = k
     anvec = I.p.anvec[]
     if k >= anvec
         I.p.pstart[] = 0
@@ -88,8 +92,8 @@ end
         return LibGraphBLAS.GxB_EXHAUSTED
     else
         if I.p.A_sparsity[] <= Int(LibGraphBLAS.GxB_SPARSE)
-            I.p.pstart[] = unsafe_load(I.p.Ap[], k)
-            I.p.pend[] = unsafe_load(I.p.Ap[], k + 1)
+            I.p.pstart[] = _loadindex(I.p.Ap64[], I.p.Ap32[], k)
+            I.p.pend[] = _loadindex(I.p.Ap64[], I.p.Ap32[], k + 1)
             I.p.p[] = I.p.pstart[]
             return I.p.p[] >= I.p.pend[] ? LibGraphBLAS.GrB_NO_VALUE : LibGraphBLAS.GrB_SUCCESS
         else
@@ -125,13 +129,13 @@ end
     return k >= I.p.anvec[] ? 
         I.p.avdim[] : 
         I.p.A_sparsity[] == LibGraphBLAS.GxB_HYPERSPARSE ?
-            unsafe_load(I.p.Ah[], k) :
+            _loadindex(I.p.Ah64[], I.p.Ah32[], k) :
             k
 end
 
 @inline function _rc_geti(I::GxBIterator)
-    return I.p.Ai[] != C_NULL ?
-        unsafe_load(I.p.Ai[], I.p.p[]) : I.p.p[] - I.p.pstart[]
+    return I.p.Ai64[] != C_NULL || I.p.Ai32[] != C_NULL ?
+        _loadindex(I.p.Ai64[], I.p.Ai32[], I.p.p[]) : I.p.p[] - I.p.pstart[]
 end
 
 @inline nextrow(I::GxBIterator{RowMajor()}) = _rc_knext(I)
@@ -194,7 +198,7 @@ end
     k = I.p.k[] + 1
     I.p.k[] = k
     anvec = I.p.anvec[]
-    if k >= anvec || k > (V.v.stop - 1)
+    if k >= anvec || !_invectors(V)
         I.p.pstart[] = 0
         I.p.pend[] = 0
         I.p.p[] = typemax(Int64) - 10 # Hmm is this correct? We don't want this iterator to be reused.
@@ -202,8 +206,8 @@ end
         return nothing
     else
         if I.p.A_sparsity[] <= Int(LibGraphBLAS.GxB_SPARSE)
-            I.p.pstart[] = unsafe_load(I.p.Ap[], k)
-            I.p.pend[] = unsafe_load(I.p.Ap[], k + 1)
+            I.p.pstart[] = _loadindex(I.p.Ap64[], I.p.Ap32[], k)
+            I.p.pend[] = _loadindex(I.p.Ap64[], I.p.Ap32[], k + 1)
             I.p.p[] = I.p.pstart[]
             return I.p.p[] >= I.p.pend[] ?  knext(V) : (get_element(I), nothing)
         else
@@ -270,8 +274,13 @@ iteraterows(A::AbstractGBArray, v, iteratevalues::Bool, indexiteration::IndexIte
 iteraterows(A::AbstractGBArray, v, indexiteration::IndexIteratorType = NeighborIterator()) =
     RowIterator(A, v, indexiteration)
 
+# A hypersparse seek lands on the next stored vector, which may be past the requested ones.
+_invectors(I::VectorIterator) = increment(_rc_getj(I.iterator)) <= last(I.v)
+
 function Base.iterate(I::VectorIterator)
-    return _seek(I.iterator, I.v isa Int64 ? I.v : I.v.start) == LibGraphBLAS.GrB_NO_VALUE ? knext(I) : (get_element(I), nothing)
+    info = _seek(I.iterator, first(I.v))
+    _invectors(I) || return nothing
+    return info == LibGraphBLAS.GrB_NO_VALUE ? knext(I) : (get_element(I), nothing)
 end
 Base.iterate(I::VectorIterator, ::Nothing) = inext(I)
 
