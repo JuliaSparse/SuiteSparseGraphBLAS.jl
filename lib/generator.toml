@@ -13,7 +13,10 @@ output_ignorelist = [
     "GxB_STDC_VERSION",
     "GB_restrict",
     "GrB_INDEX_MAX",
-    "GxB_INDEX_MAX"
+    "GxB_INDEX_MAX",
+    "GB_DECLARE_14",
+    "GxB_FC64_t",
+    "GxB_FC32_t"
 ]
 
 [codegen]

@@ -7,6 +7,7 @@ function _unpackdensematrix!(
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(C_NULL)
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
         A,
         values,
@@ -33,6 +34,7 @@ function _unpackdensematrix!(
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(C_NULL)
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullC(
         A,
         values,
@@ -61,6 +63,7 @@ function _unpackdensematrixR!(
     Csize = Ref{LibGraphBLAS.GrB_Index}(length(A) * sizeof(T))
     values = Ref{Ptr{Cvoid}}(C_NULL)
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_FullR(
         A,
         values,
@@ -94,6 +97,7 @@ function _unpackcscmatrix!(
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSC(
         A,
         colptr,
@@ -145,6 +149,7 @@ function _unpackcsrmatrix!(
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_CSR(
         A,
         rowptr,
@@ -194,6 +199,7 @@ function _unpackbitmapmatrix!(
     bytemap = Ref{Ptr{Int8}}(C_NULL)
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
     nnonzeros = Ref{LibGraphBLAS.GrB_Index}(nnz(A))
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_BitmapC(
         A,
         bytemap,
@@ -231,6 +237,7 @@ function _unpackbitmapmatrixR!(
     bytemap = Ref{Ptr{Int8}}(C_NULL)
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
     nonzeros = Ref{LibGraphBLAS.GrB_Index}(0)
+    _makeowned!(A)
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_BitmapR(
         A,
         bytemap,
@@ -273,6 +280,8 @@ function _unpackhypermatrix!(
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
+
+    _makeowned!(A)
 
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_HyperCSC(
         A,
@@ -337,6 +346,8 @@ desc = _handledescriptor(desc)
     isiso = allowiso ? Ref{Bool}(true) : C_NULL
     isjumbled = C_NULL
     nnonzeros = nnz(A)
+
+    _makeowned!(A)
 
     @wraperror LibGraphBLAS.GxB_Matrix_unpack_HyperCSR(
         A,

@@ -16,12 +16,6 @@ function Base.wait(A::LibGraphBLAS.GrB_BinaryOp)
     return A
 end
 
-function Base.wait(A::LibGraphBLAS.GxB_SelectOp)
-    waitmode = LibGraphBLAS.GrB_MATERIALIZE
-    @wraperror LibGraphBLAS.GrB_SelectOp_wait(A, waitmode)
-    return A
-end
-
 function Base.wait(A::LibGraphBLAS.GrB_IndexUnaryOp)
     waitmode = LibGraphBLAS.GrB_MATERIALIZE
     @wraperror LibGraphBLAS.GrB_IndexUnaryOp_wait(A, waitmode)

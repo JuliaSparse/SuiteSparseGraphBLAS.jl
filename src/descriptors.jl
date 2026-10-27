@@ -6,8 +6,6 @@ Context object which may be optionally passed to many SuiteSparse:GraphBLAS func
 See the SuiteSparse:GraphBLAS User Guide or the SuiteSparseGraphBLAS.jl docs for more information.
 
 # Options
-- `nthreads::Int = Sys.CPU_THREADS ÷ 2`: Specify the maximum number of threads to be used by
-a function, defaults to avoid hyperthreading, which is typically most performant.
 - `replace_output`: Clear the output array before assignment.
 - `structural_mask::Bool`: Utilize the structure of the mask argument, rather than its values.
 - `complement_mask::Bool`: Values which are true in the complement of the mask will be kept.
@@ -45,23 +43,12 @@ function symtodescfield(sym::Symbol)
         return LibGraphBLAS.GrB_MASK
     sym === :transpose_input1 && return LibGraphBLAS.GrB_INP0
     sym === :transpose_input2 && return LibGraphBLAS.GrB_INP1
-    sym === :nthreads && return LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS
-    sym === :chunk && return LibGraphBLAS.GxB_DESCRIPTOR_CHUNK
     sym === :sort && return LibGraphBLAS.GxB_SORT
     throw(ArgumentError("$sym is not a valid Descriptor field"))
 end
-function descfieldtype(sym::Symbol)
-    if sym ∈ [:replace_output, :transpose_input1, :transpose_input2]
-        return LibGraphBLAS.GrB_Desc_Value
-    elseif sym ∈ [:chunk]
-        return Float64
-    else
-        return Int32
-    end
-end
 function Desc_get(d::Descriptor, field::Symbol)
-    o = Ref{descfieldtype(field)}()
-    @wraperror LibGraphBLAS.GxB_Desc_get(d, symtodescfield(field), o)
+    o = Ref{Int32}()
+    @wraperror LibGraphBLAS.GxB_Desc_get_INT32(d, symtodescfield(field), o)
     return o[]
 end
 
@@ -71,7 +58,7 @@ function Base.getproperty(d::Descriptor, s::Symbol)
     end
     x = Desc_get(d, s)
     if s === :replace_output
-        return x == LibGraphBLAS.GrB_REPLACE
+        return x == Integer(LibGraphBLAS.GrB_REPLACE)
     elseif s === :complement_mask
         return x == Integer(LibGraphBLAS.GrB_COMP) || x == 
             (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
@@ -79,8 +66,8 @@ function Base.getproperty(d::Descriptor, s::Symbol)
         return x == Integer(LibGraphBLAS.GrB_STRUCTURE) || x == 
             (LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
     elseif s === :transpose_input1 || s === :transpose_input2
-        return x == LibGraphBLAS.GrB_TRAN
-    elseif s === :nthreads || s === :chunk || s === :sort
+        return x == Integer(LibGraphBLAS.GrB_TRAN)
+    elseif s === :sort
         return x
     end
 end
@@ -90,42 +77,38 @@ function Base.setproperty!(d::Descriptor, s::Symbol, x)
         setfield!(d, s, x)
         return nothing
     elseif s === :replace_output
-        x ? (y = LibGraphBLAS.GrB_REPLACE) : (y = LibGraphBLAS.GxB_DEFAULT)
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_OUTP, y)
+        x ? (y = LibGraphBLAS.GrB_REPLACE) : (y = LibGraphBLAS.GrB_DEFAULT)
+        LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_OUTP, y)
     elseif s === :complement_mask
         if x == false
             if d.structural_mask
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE)
+                LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE)
             else
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GxB_DEFAULT)
+                LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_DEFAULT)
             end
         else
             if d.structural_mask
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
+                LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE + LibGraphBLAS.GrB_COMP)
             else
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
+                LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
             end
         end
     elseif s === :structural_mask
         if x == false
             if d.complement_mask
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
+                LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_COMP)
             else
-                LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GxB_DEFAULT)
+                LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_DEFAULT)
             end
         else
-            LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE)
+            LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_MASK, LibGraphBLAS.GrB_STRUCTURE)
         end
     elseif s === :transpose_input1
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_INP0, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GxB_DEFAULT)
+        LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_INP0, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GrB_DEFAULT)
     elseif s === :transpose_input2
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GrB_INP1, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GxB_DEFAULT)
-    elseif s === :nthreads
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GxB_DESCRIPTOR_NTHREADS, x)
-    elseif s === :chunk
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GxB_DESCRIPTOR_CHUNK, x)
+        LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GrB_INP1, x ? LibGraphBLAS.GrB_TRAN : LibGraphBLAS.GrB_DEFAULT)
     elseif s === :sort
-        LibGraphBLAS.GxB_Desc_set(d, LibGraphBLAS.GxB_SORT, x ? 3 : 0)
+        LibGraphBLAS.GxB_Desc_set_INT32(d, LibGraphBLAS.GxB_SORT, x ? 3 : 0)
     end
 end
 function Base.propertynames(::Descriptor)
@@ -135,8 +118,6 @@ function Base.propertynames(::Descriptor)
     :structural_mask,
     :transpose_input1,
     :transpose_input2,
-    :nthreads,
-    :chunk,
     :sort,
     )
 end

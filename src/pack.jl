@@ -205,9 +205,32 @@ function _packhypermatrix!(
 
 end
 
-function makeshallow!(A)
-    ccall((:GB_make_shallow, libgraphblas), Cvoid, (LibGraphBLAS.GrB_Matrix,), parent(A))
+# Set how GraphBLAS treats the memory behind each component of A: GxB_IS_READONLY means it
+# never frees or writes it (shallow), GrB_DEFAULT hands ownership back so it can be unpacked.
+function _sethandling!(A, handling)
+    C = Ref{LibGraphBLAS.GxB_Container}()
+    @wraperror LibGraphBLAS.GxB_Container_new(C)
+    try
+        @wraperror LibGraphBLAS.GxB_unload_Matrix_into_Container(parent(A), C[], C_NULL)
+        c = unsafe_load(C[])
+        for V in (c.p, c.h, c.b, c.i, c.x)
+            X = Ref{Ptr{Cvoid}}()
+            T = Ref{LibGraphBLAS.GrB_Type}()
+            n = Ref{UInt64}()
+            sz = Ref{UInt64}()
+            h = Ref{Cint}()
+            @wraperror LibGraphBLAS.GxB_Vector_unload(V, X, T, n, sz, h, C_NULL)
+            @wraperror LibGraphBLAS.GxB_Vector_load(V, X, T[], n[], sz[], handling, C_NULL)
+        end
+        @wraperror LibGraphBLAS.GxB_load_Matrix_from_Container(parent(A), C[], C_NULL)
+    finally
+        LibGraphBLAS.GxB_Container_free(C)
+    end
+    return A
 end
+makeshallow!(A) = _sethandling!(A, LibGraphBLAS.GxB_IS_READONLY)
+# GraphBLAS 10 refuses to unpack read-only memory; the caller tracks shallowness itself.
+_makeowned!(A) = isshallow(A) && _sethandling!(A, LibGraphBLAS.GrB_DEFAULT)
 
 function unsafepack!(
     A::AbstractGBArray, M::StridedVecOrMat, shallow::Bool = true; 
@@ -215,7 +238,7 @@ function unsafepack!(
     )
     _packdensematrix!(A, M; order)
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    LibGraphBLAS.GxB_Matrix_Option_set_INT32(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -225,7 +248,7 @@ function unsafepack!(
 ) where {T <: Union{Int8, Bool}}
     _packbitmap!(A, M, V; order)
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    LibGraphBLAS.GxB_Matrix_Option_set_INT32(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -239,7 +262,7 @@ function unsafepack!(
         _packcsrmatrix!(A, ptr, idx, values; decrementindices)
     end
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    LibGraphBLAS.GxB_Matrix_Option_set_INT32(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 
@@ -249,7 +272,7 @@ function unsafepack!(
 )
     _packhypermatrix!(A, ptr, idx1, idx2, values; order, decrementindices)
     shallow && makeshallow!(A)
-    LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
+    LibGraphBLAS.GxB_Matrix_Option_set_INT32(A, LibGraphBLAS.GxB_FORMAT, option_toconst(storageorder(A)))
     return A
 end
 

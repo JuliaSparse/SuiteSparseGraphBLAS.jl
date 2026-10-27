@@ -51,7 +51,8 @@
 
     @testset "#88" begin
         A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
-        @test reduce(any, A, dims=2) == GBVector([1,3,5,6,8,9,10])
+        r = reduce(any, A, dims=2) # `any` may return any entry of each row
+        @test all(r[i] ∈ v for (i, v) in enumerate(([1,2], [3,4], [5], [6,7], [8], [9], [10,11,12])))
     end
 
     @testset "#109ish" begin
