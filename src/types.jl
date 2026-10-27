@@ -527,7 +527,7 @@ macro gbmatrixtype(typename)
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A, 1), 1; fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
+            return unsafepack!(C, _copytoraw(A, T)..., false)
         end
         $typename{T}(
             A::SparseVector;
@@ -543,7 +543,7 @@ macro gbmatrixtype(typename)
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A)...; fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
+            return unsafepack!(C, _copytoraw(A, T)..., false)
         end
         $typename{T}(
             A::SparseMatrixCSC;
@@ -739,7 +739,7 @@ macro gbvectortype(typename)
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A, 1); fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
+            return unsafepack!(C, _copytoraw(A, T)..., false)
         end
         $typename{T}(
             A::SparseVector;

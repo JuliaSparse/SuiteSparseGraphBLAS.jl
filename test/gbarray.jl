@@ -52,6 +52,14 @@
             vnz = findnz(v)
             xnz = findnz(x)
             @test vnz == xnz
+
+            # narrower indices and eltype conversion (#144)
+            S = SparseMatrixCSC{Float64, Int32}(sparse([1, 3], [1, 2], [1.0, 2.0], 3, 3))
+            @test SparseMatrixCSC(GBMatrix(S)) == S
+            @test eltype(GBMatrix{Float32}(S)) == Float32 && SparseMatrixCSC(GBMatrix{Float32}(S)) == S
+            s = SparseVector{Float64, Int32}(5, Int32[2, 4], [1.0, 2.0])
+            @test SparseVector(GBVector(s)) == s
+            @test_throws ArgumentError SuiteSparseGraphBLAS.unsafepack!(GBMatrix{Float64}(3, 3), S)
         end
     end
 
