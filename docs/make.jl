@@ -26,4 +26,5 @@ makedocs(
 
 deploydocs(
     repo = "github.com/JuliaSparse/SuiteSparseGraphBLAS.jl.git",
+    devbranch = "v11",
 )
