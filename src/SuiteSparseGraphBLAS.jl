@@ -109,7 +109,6 @@ include("solvers/klu.jl")
 include("solvers/umfpack.jl")
 include("solvers/cholmod.jl")
 
-export SparseArrayCompat
 export LibGraphBLAS
 # export UnaryOps, BinaryOps, Monoids, Semirings #Submodules
 export unaryop, binaryop, Monoid, semiring #UDFs
@@ -131,7 +130,7 @@ export firsti, firstj, secondi, secondj
 #SelectOps not found in Julia/stdlibs
 export offdiag
 
-export extract, extract!, subassign!, assign!, hvcat! #array functions
+export extract, extract!, subassign!, assign! #array functions
 
 #operations
 export select, select!, eadd, eadd!, emul, emul!, gbtranspose, gbtranspose!,
