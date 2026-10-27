@@ -44,6 +44,10 @@ macro wraperror(code)
                 throw(ErrorException("Invalid Object"))
             elseif info == LibGraphBLAS.GrB_EMPTY_OBJECT
                 throw(ErrorException("Empty Object"))
+            elseif info == LibGraphBLAS.GxB_JIT_ERROR
+                throw(ErrorException("GraphBLAS JIT compilation failed. See `SuiteSparseGraphBLAS.jit!`."))
+            elseif info == LibGraphBLAS.GxB_OUTPUT_IS_READONLY
+                throw(ErrorException("GraphBLAS output is read-only (shallow)."))
             else
                 throw(ErrorException("Unknown GraphBLAS Exception."))
             end

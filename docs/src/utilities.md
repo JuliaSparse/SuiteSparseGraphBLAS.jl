@@ -5,6 +5,7 @@ sparsitystatus
 format
 setstorageorder!
 gbset
+SuiteSparseGraphBLAS.jit!
 Descriptor
 SuiteSparseGraphBLAS.set_lib!
 empty!
