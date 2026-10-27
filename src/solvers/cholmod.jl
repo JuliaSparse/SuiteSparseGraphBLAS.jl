@@ -237,7 +237,7 @@ end
 
 (\)(L::FactorComponent, B::Adjoint{<:Any,<:AbstractGBMatrix}) = L \ copy(B)
 (\)(L::FactorComponent, B::Transpose{<:Any,<:AbstractGBMatrix}) = L \ copy(B)
-\(adjL::Adjoint{<:Any,<:FactorComponent}, B::Union{VecOrMat,AbstractGBArray}) = (L = adjL.parent; adjoint(L)\B)
+\(adjL::Adjoint{<:Any,<:FactorComponent}, B::AbstractGBArray) = (L = adjL.parent; adjoint(L)\B) # VecOrMat is SparseArrays'
 (\)(L::Factor, B::S) where {S<:AbstractGBMatrix} = S(spsolve(CHOLMOD_A, L, CHOLMOD.Sparse(B, 0)))
 (\)(L::Factor, B::Adjoint{<:Any,<:AbstractGBMatrix}) = L \ copy(B)
 (\)(L::Factor, B::Transpose{<:Any,<:AbstractGBMatrix}) = L \ copy(B)

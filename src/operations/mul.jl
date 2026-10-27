@@ -145,6 +145,10 @@ function Base.:*(v::Transpose{<:Real, <:AbstractGBVector{T, F, O} where O} where
     u::AbstractGBVector{T, F, O} where {T, F, O})
     *(v, u, (+, *))
 end
+# Dense matrix times a GraphBLAS vector also matches SparseArrays' triangular/adjoint * sparse vector methods.
+Base.:*(A::DenseMatrix, v::AbstractGBVector) = *(A, v, (+, *))
+Base.:*(A::Transpose{<:Any, <:DenseMatrix}, v::AbstractGBVector) = *(A, v, (+, *))
+Base.:*(A::Transpose{<:Real, <:DenseMatrix}, v::AbstractGBVector) = *(A, v, (+, *))
 # u' * x for real dense x, also matched by LinearAlgebra's dot-product method.
 Base.:*(v::Transpose{<:Real, <:AbstractGBVector}, u::DenseVector{<:Real}) = *(v, u, (+, *))
 
