@@ -21,4 +21,15 @@
     @test m' * n == Matrix(m)' * Vector(n)
     @test n' * m == Vector(n)' * Matrix(m)
     @test n' * n == GBVector([Vector(n)' * Vector(n)])
+
+    # mul! into dense outputs runs in GraphBLAS (#125)
+    S = sprand(ComplexF64, 20, 15, 0.3)
+    A = GBMatrix(S)
+    x, X, y, Y = rand(ComplexF64, 15), rand(ComplexF64, 15, 3), rand(ComplexF64, 20), rand(ComplexF64, 20, 3)
+    @test mul!(copy(y), A, x) ≈ S * x
+    @test mul!(copy(y), A, x, 2, 3) ≈ 2 * S * x + 3 * y
+    @test mul!(copy(Y), A, X) ≈ S * X
+    @test mul!(copy(Y), A, X, 2, 3) ≈ 2 * S * X + 3 * Y
+    @test mul!(zeros(ComplexF64, 15), A', y) ≈ S' * y
+    @test mul!(view(zeros(ComplexF64, 25), 3:22), A, view([x; x], 16:30)) ≈ S * x
 end
