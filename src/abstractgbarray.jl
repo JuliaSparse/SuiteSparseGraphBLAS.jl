@@ -287,7 +287,7 @@ Base.reshape(
     dims::Tuple{Union{Integer, Base.OneTo}, Vararg{Union{Integer, Base.OneTo}}};
     bycol = true
 ) = reshape(A, dims...; bycol)
-Base.reshape(A::AbstractGBMatrix, dims::Tuple{Integer, Vararg{Integer}}; bycol = true) = reshape(A, dims...; bycol)
+Base.reshape(A::AbstractGBMatrix, dims::Tuple{Integer, Vararg{Integer}}; bycol = true) = reshape(A, map(Int, dims)...; bycol)
 
 function Base.reshape(A::AbstractGBMatrix, ::Colon; bycol = true)
     out = similar(A, length(A))
@@ -1075,9 +1075,14 @@ function Base.getindex(u::AbstractGBVector, ::Colon; mask = nothing, accum = not
 end
 
 # Typed rather than a catch-all, so these don't clash with SparseArrays' AbstractSparseVector methods.
-for IT in (:AbstractVector, :AbstractUnitRange, :(AbstractVector{Bool}), :(AbstractUnitRange{Bool}))
+for IT in (:AbstractVector, :AbstractUnitRange)
     @eval function Base.getindex(u::AbstractGBVector, I::$IT; mask = nothing, accum = nothing, desc = nothing)
         return extract(u, I; mask, accum, desc)
+    end
+end
+for IT in (:(AbstractVector{Bool}), :(AbstractUnitRange{Bool})) # logical indexing
+    @eval function Base.getindex(u::AbstractGBVector, I::$IT; mask = nothing, accum = nothing, desc = nothing)
+        return extract(u, findall(I); mask, accum, desc)
     end
 end
 

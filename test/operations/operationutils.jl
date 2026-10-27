@@ -22,5 +22,8 @@ end
     @test (mask = _handlemask!(d, ~~Structural(v)); 
         !d.complement_mask && d.structural_mask && mask isa GBVector)
 end
+    @test SuiteSparseGraphBLAS.inferbinarytype(Float64, Float64, triu) == Bool
+    gm, gn = GBMatrix([1.0 2]; fill = missing), GBMatrix([1.0 2]; fill = nothing)
+    @test SuiteSparseGraphBLAS._promotefill(gm, gn, +) === missing
+    @test SuiteSparseGraphBLAS._promotefill(gn, gm, +) === missing
 end
-    

@@ -72,6 +72,18 @@
             @test Vector(GBVector((3,), 1.0)) == ones(3)
             @test Matrix(GBMatrix((2, 2), 1.0)) == ones(2, 2)
             @test SuiteSparseGraphBLAS.pack([1.0, 2.0, 3.0])[2] == 2.0 # scalar index on a shallow vector
+            w = GBVector([1.0, 0, 3])
+            @test Vector(w[[true, false, true]]) == [1.0, 3.0] # logical indexing
+            sh = SuiteSparseGraphBLAS.pack([1.0, 2.0])
+            @test_throws SuiteSparseGraphBLAS.ShallowException resize!(sh, 3)
+            @test_throws SuiteSparseGraphBLAS.ShallowException resize!(SuiteSparseGraphBLAS.pack([1.0 2; 3 4]), 3, 3)
+            @test_throws ArgumentError convert(typeof(sh), w)
+            b = SuiteSparseGraphBLAS.build!(GBVector{Float64}(3), [1, 3], [1.0, 2.0])
+            @test Vector(b) == [1.0, 0, 2.0]
+            @test size(reshape(GBMatrix([1.0 2; 3 4]), (Int32(4), Int32(1)))) == (4, 1)
+            mon = SuiteSparseGraphBLAS.Monoids.typedmonoid(+, Float64)
+            @test SuiteSparseGraphBLAS.Monoids.typedmonoid(mon, Float64) === mon
+            @test SuiteSparseGraphBLAS.IndexUnaryOps.indexunaryop(SuiteSparseGraphBLAS.IndexUnaryOps.colleq, Float64, Float64) isa SuiteSparseGraphBLAS.TypedIndexUnaryOperator
         end
     end
 
@@ -156,5 +168,8 @@
         @test isempty(gather(SuiteSparseGraphBLAS.iteratecols(H, 5)))
         @test gather(SuiteSparseGraphBLAS.iteratecols(H, 2:900, SuiteSparseGraphBLAS.IndicesIterator())) ==
             [((1, 2), 1.0), ((7, 2), 2.0), ((3, 900), 3.0)]
+        Hs = H[1:10, 1:3]; D = Matrix(Hs); vals = []
+        for it in SuiteSparseGraphBLAS.iteratecols(Hs, 2, SuiteSparseGraphBLAS.IteratorIterator()); push!(vals, D[it]); end
+        @test vals == [1.0, 2.0] # index a dense matrix at the iterator's position
     end
 end

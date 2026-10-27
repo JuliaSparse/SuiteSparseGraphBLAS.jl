@@ -38,4 +38,8 @@
     @test (GBVector([1.0, 2.0])' * r)[1, 1] == 11.0
     @test R * sparse(r) ≈ [11.0, 25.0]
     @test R * view([0.0, 3, 4], 2:3) ≈ [11.0, 25.0]
+    M = [1.0 2; 3 4]; g = GBVector([1.0, 1.0])
+    @test Vector(M * g) == M * [1.0, 1.0]
+    @test Vector(transpose(M) * g) == transpose(M) * [1.0, 1.0]
+    @test Vector(transpose(ComplexF64.(M)) * GBVector(ComplexF64[1, 1])) == transpose(M) * [1.0, 1.0]
 end
