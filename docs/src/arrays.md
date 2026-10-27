@@ -90,6 +90,7 @@ julia> v = GBVector{ComplexF32}(100)
 julia> v = GBMatrix(ComplexF64[1, 2im, 3 + 4im]; fill = nothing)
 3x1 GraphBLAS double complex matrix, full by col
   3 entries, memory: 288 bytes
+  fill value:  nothing
 
     (1,1)    1 + 0i
     (2,1)    0 + 2i

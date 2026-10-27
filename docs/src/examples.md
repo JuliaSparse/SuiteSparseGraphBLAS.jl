@@ -46,6 +46,7 @@ julia> cohen(A), sandia(A)
 julia> bfs_parents(A, 1, 5)
 5x1 GraphBLAS int64_t matrix, bitmap by col
   5 entries, memory: 288 bytes
+  fill value:  nothing
 
     (1,1)   0
     (2,1)   1
