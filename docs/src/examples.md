@@ -22,6 +22,7 @@ Unless noted otherwise `A` is the adjacency matrix of an undirected graph with `
 | Triangle counting (Sandia) | `Sandia.jl` | `sandia(A)` | |
 | Triangle counting (CMU) | `CMU.jl` | `cmu(A, n)` | |
 | Triangles per vertex | `NodeWiseTriangleCount.jl` | `nodewise_tc(A)` | |
+| Triangle centrality | `triangle_centrality.jl` | `triangle_centrality(A)`, `triangle_centrality1(A)` | `A` has unit weights. |
 | k-truss | `KTruss.jl` | `ktruss(A, k)` | Returns the truss with edge supports as values. |
 | BFS parents | `BFSParents.jl` | `bfs_parents(A, s, n)` | The parent of the source is `0`. |
 | Multi-source BFS parents | `BFSParentsMultiSource.jl` | `ms_bfsp(A, S, n, s)` | Row `i` of the `s × n` matrix `S` marks source `i`. |
@@ -29,6 +30,7 @@ Unless noted otherwise `A` is the adjacency matrix of an undirected graph with `
 | Bellman-Ford | `BellmanFord.jl` | `bellmanford(A, s, n)` | `A[i,j]` is the weight of edge `i → j`, with explicit zeros on the diagonal. |
 | Floyd-Warshall | `FloydWarshall.jl` | `floydwarshall(A, n)` | Same input as Bellman-Ford. |
 | Prim's minimum spanning tree | `BasicPrim.jl`, `AdvancedPrim.jl` | `b_prim(A, n, zeros(n))`, `a_prim(A, n, zeros(n))` | `A` is dense, with `Inf` where there is no edge and zeros on the diagonal. |
+| PageRank | `pagerank.jl` | `pagerank(A)` | `A[i,j]` is the edge `i → j`. Returns `(ranks, iterations)`. Ranks of dangling vertices are not redistributed. |
 | Community detection by label propagation | `CDLP.jl` | `cdlp(A, n, t)` | Runs `t` iterations. Every vertex must have a neighbour. |
 
 The graph below has edges `1-2`, `1-3`, `2-3`, `2-4`, `3-4` and `4-5`, and two triangles, `{1,2,3}` and `{2,3,4}`.

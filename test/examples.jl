@@ -3,7 +3,7 @@ using SuiteSparseGraphBLAS, SparseArrays, LinearAlgebra, Test
 
 for f in ["AdvancedPrim", "BasicPrim", "BellmanFord", "BFSLevelsMultiSource", "BFSParents",
           "BFSParentsMultiSource", "CDLP", "CMU", "Cohen", "FloydWarshall", "KTruss",
-          "NodeWiseTriangleCount", "Sandia"]
+          "NodeWiseTriangleCount", "Sandia", "pagerank", "triangle_centrality"]
     include(joinpath(@__DIR__, "..", "examples", "$f.jl"))
 end
 
@@ -58,5 +58,17 @@ end
     T = T + T'
     @test diag(Matrix(cdlp(T, 6, 2))) == [1, 1, 1, 4, 4, 4]
     @test diag(Matrix(cdlp(A, 5, 1))) == [2, 1, 1, 2, 4]
+end
+
+@testset "centrality" begin
+    Af = GBMatrix(sym(ones(6)))
+    # Vertex 5 is in no triangle and only sees the triangles of its neighbour 4.
+    @test collect(triangle_centrality(Af)) ≈ [5/6, 1, 1, 5/6, 1/2]
+    @test collect(triangle_centrality1(Af)) ≈ [5/6, 1, 1, 5/6, 1/2]
+    # PageRank is uniform on a directed cycle, otherwise compare with dense power iteration.
+    @test collect(pagerank(GBMatrix([1, 2, 3, 4], [2, 3, 4, 1], 1.0))[1]) ≈ fill(0.25, 4)
+    M = Matrix(sym(ones(6))); x = fill(0.2, 5)
+    for _ in 1:100; x = 0.15 / 5 .+ 0.85 .* (M' * (x ./ vec(sum(M, dims=2)))); end
+    @test collect(pagerank(Af)[1]) ≈ x atol=1e-5
 end
 end

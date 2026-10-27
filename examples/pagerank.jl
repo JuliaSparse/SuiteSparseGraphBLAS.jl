@@ -1,6 +1,14 @@
+#=
+PageRank (GAP benchmark variant, dangling vertices are not redistributed):
+- Reference: https://doi.org/10.1109/HPEC49654.2021.9622789, https://en.wikipedia.org/wiki/PageRank
+=#
+
 using SuiteSparseGraphBLAS
+using SuiteSparseGraphBLAS: second
+
+#A is the adjacency matrix (A[i,j] is the edge i->j), d the out-degrees, Output: ranks and number of iterations
 function pagerank(
-    A::SuiteSparseGraphBLAS.GBArray,
+    A,
     d = reduce(+, A; dims=2),
     α = 0.85,
     maxiters = 100,
