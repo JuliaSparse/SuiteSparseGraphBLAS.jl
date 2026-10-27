@@ -56,8 +56,7 @@ jobs:
             Pkg.develop(PackageSpec(path = pwd()))
             Pkg.add(name = "Aqua", version = "0.8")
             using Aqua, SuiteSparseGraphBLAS
-            # ambiguities: ~190 pre-existing.
-            Aqua.test_all(SuiteSparseGraphBLAS; ambiguities = false)'
+            Aqua.test_all(SuiteSparseGraphBLAS)'
   docs:
     name: Documentation
     runs-on: ubuntu-latest

@@ -100,8 +100,8 @@ reshape!(::AbstractGBShallowArray, dims...; kwargs...) = throw(ShallowException(
 reshape!(::AbstractGBShallowArray, n; kwargs...) = throw(ShallowException())
 Base.deleteat!(::GBShallowMatrix, i, j) = throw(ShallowException())
 Base.deleteat!(::GBShallowVector, i) = throw(ShallowException())
-Base.resize!(::GBShallowMatrix, nrows, ncols) = throw(ShallowException())
-Base.resize!(::GBShallowVector, nrows) = throw(ShallowException())
+Base.resize!(::GBShallowMatrix, nrows::Integer, ncols::Integer) = throw(ShallowException())
+Base.resize!(::GBShallowVector, nrows::Integer) = throw(ShallowException())
 build!(::GBShallowMatrix{T}, I::AbstractVector, J::AbstractVector, x::T) where T = throw(ShallowException())
 
 LinearAlgebra.Diagonal(v::GBShallowVector) = Diagonal(copy(v))

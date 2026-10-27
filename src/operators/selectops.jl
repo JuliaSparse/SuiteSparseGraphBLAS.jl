@@ -119,16 +119,16 @@ function rowleq end
 function rowgt end
 const COLLEQ = TypedIndexUnaryOperator{typeof(colleq), Any, Any, Bool}(
     true, false, "GrB_COLLEQ", LibGraphBLAS.GrB_IndexUnaryOp(),colleq)
-indexunaryop(::typeof(colleq), ::Any, ::Any) = COLLEQ
+indexunaryop(::typeof(colleq), ::Type, ::Type) = COLLEQ
 const COLGT = TypedIndexUnaryOperator{typeof(colgt), Any, Any, Bool}(
     true, false, "GrB_OFFDIAG", LibGraphBLAS.GrB_IndexUnaryOp(),colgt)
-indexunaryop(::typeof(colgt), ::Any, ::Any) = COLGT
+indexunaryop(::typeof(colgt), ::Type, ::Type) = COLGT
 const ROWLEQ = TypedIndexUnaryOperator{typeof(rowleq), Any, Any, Bool}(
     true, false, "GrB_OFFDIAG", LibGraphBLAS.GrB_IndexUnaryOp(),rowleq)
-indexunaryop(::typeof(rowleq), ::Any, ::Any) = ROWLEQ
+indexunaryop(::typeof(rowleq), ::Type, ::Type) = ROWLEQ
 const ROWGT = TypedIndexUnaryOperator{typeof(rowgt), Any, Any, Bool}(
     true, false, "GrB_OFFDIAG", LibGraphBLAS.GrB_IndexUnaryOp(),rowgt)
-indexunaryop(::typeof(rowgt), ::Any, ::Any) = ROWGT
+indexunaryop(::typeof(rowgt), ::Type, ::Type) = ROWGT
 
 cardinal_vec = filter(x-> x ∉ [ComplexF64, ComplexF32], valid_vec)
 
@@ -219,7 +219,7 @@ for F ∈ [
     rowgt
 ]
     @eval isindexop(::typeof($F)) = true
-    @eval SuiteSparseGraphBLAS.inferbinarytype(::Any, ::Any, ::typeof($F)) = Bool
+    @eval SuiteSparseGraphBLAS.inferbinarytype(::Type, ::Type, ::typeof($F)) = Bool
 end
 
 end

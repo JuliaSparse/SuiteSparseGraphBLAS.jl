@@ -40,6 +40,7 @@ function typedmonoid(m::Monoid{F, I, Term}, ::Type{T}) where {F, I, Term, T}
 end
 
 typedmonoid(op::TypedMonoid, x...) = op
+typedmonoid(op::TypedMonoid, ::Type) = op
 
 # We default to no available monoid.
 defaultmonoid(f::F, ::Type{T}) where {F, T} = throw(

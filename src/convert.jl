@@ -36,3 +36,5 @@ end
 # TODO: Implement this? 
 Base.convert(::Type{M}, ::AbstractGBArray; fill = nothing) where {M<:AbstractGBShallowArray} = 
     throw(ArgumentError("Cannot convert into a shallow array."))
+Base.convert(::Type{M}, ::AbstractGBVector; fill = nothing) where {M<:AbstractGBShallowArray{<:Any, <:Any, <:Any, <:Any, <:Any, <:Any, 1}} =
+    throw(ArgumentError("Cannot convert into a shallow array."))

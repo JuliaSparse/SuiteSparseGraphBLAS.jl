@@ -10,4 +10,5 @@
     # Julia will map over the entire array, rather than just nnz.
     # so just test [1,1]
     @test map((x) -> 1.5, n)[nonzero...] == map((x) -> 1.5, m)[nonzero...]
+    @test_throws ArgumentError apply!(+, transpose(n), n)
 end

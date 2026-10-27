@@ -284,7 +284,10 @@ function Base.iterate(I::VectorIterator)
 end
 Base.iterate(I::VectorIterator, ::Nothing) = inext(I)
 
-Base.getindex(A::AbstractArray, I::GxBIterator) = getindex(A, getrow(I), getcol(I))
-Base.getindex(A::AbstractArray, v::VectorIterator) = getindex(A, v.iterator)
-Base.setindex!(A::AbstractArray, x, I::GxBIterator) = setindex!(A, x, getrow(I), getcol(I))
-Base.setindex!(A::AbstractArray, x, v::VectorIterator) = setindex!(A, x, v.iterator)
+# Index a matrix at an iterator's position. Restricted to GraphBLAS and dense matrices to avoid
+# ambiguities with SparseArrays' getindex methods.
+const _IterIndexable = Union{AbstractGBMatrix, DenseMatrix}
+Base.getindex(A::_IterIndexable, I::GxBIterator) = getindex(A, getrow(I), getcol(I))
+Base.getindex(A::_IterIndexable, v::VectorIterator) = getindex(A, v.iterator)
+Base.setindex!(A::_IterIndexable, x, I::GxBIterator) = setindex!(A, x, getrow(I), getcol(I))
+Base.setindex!(A::_IterIndexable, x, v::VectorIterator) = setindex!(A, x, v.iterator)

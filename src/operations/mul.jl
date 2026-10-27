@@ -1,3 +1,6 @@
+# A semiring given as a (⊕, ⊗) tuple or a TypedSemiring. Typed so 3-arg `*` can't clash with A * B * C.
+const SemiringSpec = Union{Tuple, TypedSemiring}
+
 function LinearAlgebra.mul!(
     C::GBVecOrMat,
     A::GBArrayOrTranspose,
@@ -86,7 +89,7 @@ The operator syntax `A * B` can be used when the default semiring is desired, an
 function Base.:*(
     A::GBArrayOrTranspose,
     B::GBArrayOrTranspose,
-    op = (+, *);
+    op::SemiringSpec = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -108,7 +111,7 @@ end
 function Base.:*(
     A::VecMatOrTrans,
     B::GBArrayOrTranspose,
-    op = (+, *);
+    op::SemiringSpec = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -119,7 +122,7 @@ end
 function Base.:*(
     A::GBArrayOrTranspose,
     B::VecMatOrTrans,
-    op = (+, *);
+    op::SemiringSpec = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -142,11 +145,17 @@ function Base.:*(v::Transpose{<:Real, <:AbstractGBVector{T, F, O} where O} where
     u::AbstractGBVector{T, F, O} where {T, F, O})
     *(v, u, (+, *))
 end
+# Dense matrix times a GraphBLAS vector also matches SparseArrays' triangular/adjoint * sparse vector methods.
+Base.:*(A::DenseMatrix, v::AbstractGBVector) = *(A, v, (+, *))
+Base.:*(A::Transpose{<:Any, <:DenseMatrix}, v::AbstractGBVector) = *(A, v, (+, *))
+Base.:*(A::Transpose{<:Real, <:DenseMatrix}, v::AbstractGBVector) = *(A, v, (+, *))
+# u' * x for real dense x, also matched by LinearAlgebra's dot-product method.
+Base.:*(v::Transpose{<:Real, <:AbstractGBVector}, u::DenseVector{<:Real}) = *(v, u, (+, *))
 
 function Base.:*(
     A::Transpose{<:T, <:DenseVecOrMat},
     B::GBArrayOrTranspose,
-    op = (+, *);
+    op::SemiringSpec = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -157,7 +166,7 @@ end
 function Base.:*(
     A::GBArrayOrTranspose,
     B::Transpose{<:T, <:DenseVecOrMat},
-    op = (+, *);
+    op::SemiringSpec = (+, *);
     mask = nothing,
     accum = nothing,
     desc = nothing
@@ -226,12 +235,12 @@ function LinearAlgebra.mul!(C::GBVecOrMat, A::G, D::Diagonal, op = (+, *); mask 
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return mul!(C, A, G(D), op; mask, accum, desc)
 end
-function Base.:*(D::Diagonal, A::G, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where
+function Base.:*(D::Diagonal, A::G, op::SemiringSpec = (+, *); mask = nothing, accum = nothing, desc = nothing) where
     {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O},
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return *(G(D), A, op; mask, accum, desc)
 end
-function Base.:*(A::G, D::Diagonal, op = (+, *); mask = nothing, accum = nothing, desc = nothing) where
+function Base.:*(A::G, D::Diagonal, op::SemiringSpec = (+, *); mask = nothing, accum = nothing, desc = nothing) where
     {G <: Union{Transpose{T, <:SuiteSparseGraphBLAS.AbstractGBArray{T1, F, O}} where {T, T1, F, O},
         SuiteSparseGraphBLAS.AbstractGBArray{T, F, O, 2} where {T, F, O}}}
     return *(A, G(D), op; mask, accum, desc)
