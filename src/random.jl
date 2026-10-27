@@ -73,6 +73,12 @@ function gbrand(
     )
 end
 
+"""
+    gbrandn(type, nrows, ncols, density; kwargs...)::GBMatrix
+    gbrandn(rng::AbstractRNG, type, nrows, ncols, density; kwargs...)::GBMatrix
+
+Like [`gbrand`](@ref), but with normally distributed values drawn by `randn`.
+"""
 function gbrandn(
     rng::AbstractRNG, type::DataType, nrows::Integer, ncols::Integer, density::AbstractFloat;
     symmetric=false, pattern=false, skewsymmetric=false, hermitian=false, nodiagonal=false

@@ -1,10 +1,12 @@
 ```@docs
 setfill
 setfill!
+getfill
 sparsitystatus
 format
 setstorageorder!
 gbset
+gbget
 SuiteSparseGraphBLAS.jit!
 Descriptor
 SuiteSparseGraphBLAS.set_lib!
@@ -15,4 +17,5 @@ SuiteSparseGraphBLAS.xtype
 SuiteSparseGraphBLAS.ytype
 SuiteSparseGraphBLAS.ztype
 gbrand
+gbrandn
 ```
