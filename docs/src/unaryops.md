@@ -1,27 +1,53 @@
 # Unary Operators
 
+```@meta
+DocTestSetup = :(using SuiteSparseGraphBLAS)
+DocTestFilters = [r"memory: \d+ bytes", r"Ptr{.*}\(0x[0-9a-f]+\)"]
+```
+
 `UnaryOp`s are fairly straightforward $z = f(x)$ and their meaning should be clear from the name in most cases. 
 
 `UnaryOp`s are used only in the `map` and [`apply`](@ref) functions.
 
-```@repl
-using SuiteSparseGraphBLAS
+```jldoctest
+julia> x = GBVector([1.5, 0, pi])
+3x1 GraphBLAS double matrix, full by col
+  3 entries, memory: 264 bytes
 
-x = GBVector([1.5, 0, pi])
+    (1,1)    1.5
+    (2,1)    0
+    (3,1)    3.14159
 
-y = map(sin, x)
+julia> y = map(sin, x)
+3x1 GraphBLAS double matrix, full by col
+  3 entries, memory: 264 bytes
 
-map(asin, y)
+    (1,1)    0.997495
+    (2,1)    0
+    (3,1)    1.22465e-16
+
+julia> map(asin, y)
+3x1 GraphBLAS double matrix, full by col
+  3 entries, memory: 264 bytes
+
+    (1,1)    1.5
+    (2,1)    0
+    (3,1)    1.22465e-16
 ```
 
 Internally functions are lowered like this:
 
-```@repl
-using SuiteSparseGraphBLAS
+```jldoctest
+julia> op = unaryop(sin, Float64)
+SuiteSparseGraphBLAS.TypedUnaryOperator{typeof(sin), Float64, Float64}(true, true, "GxB_SIN_FP64", Ptr{SuiteSparseGraphBLAS.LibGraphBLAS.GB_UnaryOp_opaque}(0x0000736051454500), sin, nothing)
 
-op = unaryop(sin, Float64)
+julia> map(op, GBVector([1.5, 0, pi]))
+3x1 GraphBLAS double matrix, full by col
+  3 entries, memory: 264 bytes
 
-map(op, GBVector([1.5, 0, pi]))
+    (1,1)    0.997495
+    (2,1)    0
+    (3,1)    1.22465e-16
 ```
 
 ## Built-Ins

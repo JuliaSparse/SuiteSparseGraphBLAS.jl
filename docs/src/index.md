@@ -1,5 +1,10 @@
 # SuiteSparseGraphBLAS.jl
 
+```@meta
+DocTestSetup = :(using SuiteSparseGraphBLAS)
+DocTestFilters = [r"memory: \d+ bytes"]
+```
+
 Fast sparse linear algebra is an essential part of the scientific computing toolkit. Outside of the usual applications, like differential equations, sparse linear algebra provides an elegant way to express graph algorithms on adjacency and incidence matrices. The GraphBLAS standard specifies a set of operations for computing sparse matrix graph algorithm in a vein similar to the BLAS or LAPACK standards.
 
 SuiteSparseGraphBLAS.jl is a blazing fast package for shared memory sparse matrix operations which wraps Tim Davis' SuiteSparse:GraphBLAS. If you use this package in your research please see [Citing](@ref).
@@ -41,21 +46,21 @@ The core SuiteSparseGraphBLAS.jl array types are `GBVector` and `GBMatrix` which
 !!! note "GBArray"
     These docs will often refer to the `GBArray` type, which is the union of `AbstractGBVector`, `AbstractGBMatrix` and their lazy Transpose objects.
 
-```@setup intro
-using SuiteSparseGraphBLAS
-using SparseArrays
-```
+```jldoctest intro
+julia> # create a size 13 empty sparse vector with Float64 elements.
+       v = GBVector{Float64}(13)
+13x1 GraphBLAS double matrix, sparse by col, ints: 32/32/32
+  no entries, memory: 248 bytes
 
-```@repl intro
-# create a size 13 empty sparse vector with Float64 elements.
-v = GBVector{Float64}(13) 
+julia> # create a 1000 x 1000 empty sparse matrix with ComplexF64 elements.
+       A = GBMatrix{ComplexF64}(1000, 1000)
+1000x1000 GraphBLAS double complex matrix, hypersparse by row, ints: 32/32/32
+  no entries, memory: 256 bytes
 
-# create a 1000 x 1000 empty sparse matrix with ComplexF64 elements.
-A = GBMatrix{ComplexF64}(1000, 1000)
-
-# Non-stored values are equal to the fill value of A, 
-# which is by default zero(eltype(A))
-A[1,5] == getfill(A)
+julia> # Non-stored values are equal to the fill value of A,
+       # which is by default zero(eltype(A))
+       A[1,5] == getfill(A)
+true
 ```
 
 Here we can already see several differences compared to `SparseArrays.SparseMatrixCSC`.
@@ -78,19 +83,43 @@ As noted in the example above, `A` has a fill-value, which defaults to `zero(elt
 For normal linear algebra this is a good choice for fill-value, however GraphBLAS is intended for graphs.
 To handle this `SuiteSparseGraphBLAS.jl` support `missing` for the fill value (this is an active area of development, and a new fill value that acts like the identity for most operations is better suited to this task).
 
-```@repl intro
-A[1, 1] == zero(eltype(A))
+```jldoctest intro
+julia> A[1, 1] == zero(eltype(A))
+true
 
-B = setfill(A, missing) # no-copy alias
-B[1, 1]
+julia> B = setfill(A, missing) # no-copy alias
+1000x1000 GraphBLAS double complex matrix, hypersparse by row, ints: 32/32/32
+  no entries, memory: 256 bytes
+
+julia> B[1, 1]
+missing
 ```
 
 An empty matrix and vector won't do us much good, so let's see how to construct the matrix and vector from the graphic above. Both `A` and `v` below are constructed from coordinate format or COO.
 
-```@repl intro
-A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
+```jldoctest intro
+julia> A = GBMatrix([1,1,2,2,3,4,4,5,6,7,7,7], [2,4,5,7,6,1,3,6,3,3,4,5], [1:12...])
+7x7 GraphBLAS int64_t matrix, bitmap by row
+  12 entries, memory: 681 bytes
 
-v = GBVector([4], [10], 7)
+    (1,2)   1
+    (1,4)   2
+    (2,5)   3
+    (2,7)   4
+    (3,6)   5
+    (4,1)   6
+    (4,3)   7
+    (5,6)   8
+    (6,3)   9
+    (7,3)   10
+    (7,4)   11
+    (7,5)   12
+
+julia> v = GBVector([4], [10], 7)
+7x1 GraphBLAS int64_t matrix, bitmap by col
+  1 entry, memory: 304 bytes
+
+    (4,1)   10
 ```
 
 ## GraphBLAS Operations
@@ -131,10 +160,40 @@ These built-in operators are *fast*, and should be used where possible. However,
 
 SuiteSparseGraphBLAS.jl will take care of operators behind the scenes, and in most cases users should pass in normal functions like `+` and `sin`. For example:
 
-```@repl intro
-emul(A, A, ^) # elementwise exponent
+```jldoctest intro
+julia> emul(A, A, ^) # elementwise exponent
+7x7 GraphBLAS int64_t matrix, bitmap by row
+  12 entries, memory: 681 bytes
 
-map(sin, A)
+    (1,2)   1
+    (1,4)   4
+    (2,5)   27
+    (2,7)   256
+    (3,6)   3125
+    (4,1)   46656
+    (4,3)   823543
+    (5,6)   16777216
+    (6,3)   387420489
+    (7,3)   10000000000
+    (7,4)   285311670611
+    (7,5)   8916100448256
+
+julia> map(sin, A)
+7x7 GraphBLAS double matrix, bitmap by row
+  12 entries, memory: 681 bytes
+
+    (1,2)    0.841471
+    (1,4)    0.909297
+    (2,5)    0.14112
+    (2,7)    -0.756802
+    (3,6)    -0.958924
+    (4,1)    -0.279415
+    (4,3)    0.656987
+    (5,6)    0.989358
+    (6,3)    0.412118
+    (7,3)    -0.544021
+    (7,4)    -0.99999
+    (7,5)    -0.536573
 ```
 
 Broadcasting functionality is also supported, `A .^ A` will lower to `emul(A, A, ^)`, and `sin.(A)` will lower to `apply(sin, A)`.
@@ -144,10 +203,27 @@ Matrix multiplication, which accepts a semiring, can be called with either `*(ma
 
 We can also use functions that are not already built into SuiteSparseGraphBLAS.jl:
 
-```@repl intro
-M = GBMatrix([[1,2] [3,4]])
-increment(x) = x + 1
-map(increment, M)
+```jldoctest intro
+julia> M = GBMatrix([[1,2] [3,4]])
+2x2 GraphBLAS int64_t matrix, full by col
+  4 entries, memory: 272 bytes
+
+    (1,1)   1
+    (2,1)   2
+    (1,2)   3
+    (2,2)   4
+
+julia> increment(x) = x + 1
+increment (generic function with 1 method)
+
+julia> map(increment, M)
+2x2 GraphBLAS int64_t matrix, full by col
+  4 entries, memory: 272 bytes
+
+    (1,1)   2
+    (2,1)   3
+    (1,2)   4
+    (2,2)   5
 ```
 
 Unfortunately this has a couple problems. The first is that it's slow.\
@@ -166,22 +242,52 @@ The methods are drawn from the LAGraph [repo](https://github.com/GraphBLAS/LAGra
 Input `A` must be a square, symmetric matrix with any element type.
 We'll test it using the matrix from the GBArray section above, which has two triangles in its undirected form.
 
-```@repl intro
-using SuiteSparseGraphBLAS: pair
-function cohen(A)
-  U = select(triu, A)
-  L = select(tril, A)
-  return reduce(+, *(L, U, (+, pair); mask=A)) ÷ 2
-end
+```jldoctest intro
+julia> using SuiteSparseGraphBLAS: pair
 
-function sandia(A)
-  L = select(tril, A)
-  return reduce(+, *(L, L, (+, pair); mask=L))
-end
+julia> function cohen(A)
+         U = select(triu, A)
+         L = select(tril, A)
+         return reduce(+, *(L, U, (+, pair); mask=A)) ÷ 2
+       end
+cohen (generic function with 1 method)
 
-M = eadd(A, A', +) #Make undirected/symmetric
-cohen(M)
-sandia(M)
+julia> function sandia(A)
+         L = select(tril, A)
+         return reduce(+, *(L, L, (+, pair); mask=L))
+       end
+sandia (generic function with 1 method)
+
+julia> M = eadd(A, A', +) #Make undirected/symmetric
+7x7 GraphBLAS int64_t matrix, bitmap by row
+  20 entries, memory: 681 bytes
+
+    (1,2)   1
+    (1,4)   8
+    (2,1)   1
+    (2,5)   3
+    (2,7)   4
+    (3,4)   7
+    (3,6)   14
+    (3,7)   10
+    (4,1)   8
+    (4,3)   7
+    (4,7)   11
+    (5,2)   3
+    (5,6)   8
+    (5,7)   12
+    (6,3)   14
+    (6,5)   8
+    (7,2)   4
+    (7,3)   10
+    (7,4)   11
+    (7,5)   12
+
+julia> cohen(M)
+2
+
+julia> sandia(M)
+2
 ```
 
 # Citing

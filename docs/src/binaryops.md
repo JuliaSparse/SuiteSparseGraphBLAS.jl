@@ -1,5 +1,10 @@
 # Binary Operators
 
+```@meta
+DocTestSetup = :(using SuiteSparseGraphBLAS)
+DocTestFilters = [r"memory: \d+ bytes", r"Ptr{.*}\(0x[0-9a-f]+\)"]
+```
+
 Binary operators are defined on three domains $D_1 \times D_2 \rightarrow D_3$.
 However, the vast majority of binary operators are defined on a single domain.
 
@@ -7,29 +12,83 @@ However, the vast majority of binary operators are defined on a single domain.
 
 In almost all cases you should pass Julia functions, which will be mapped to built-in operators, or used to create a new user-defined operator.
 
-```@repl
-using SuiteSparseGraphBLAS
+```jldoctest
+julia> x = GBMatrix([[1,2] [3,4]])
+2x2 GraphBLAS int64_t matrix, full by col
+  4 entries, memory: 272 bytes
 
-x = GBMatrix([[1,2] [3,4]])
+    (1,1)   1
+    (2,1)   2
+    (1,2)   3
+    (2,2)   4
 
-x .+ x
-eadd(x, x, +)
+julia> x .+ x
+2x2 GraphBLAS int64_t matrix, full by row
+  4 entries, memory: 272 bytes
 
-x .^ x
-emul(x, x, ^)
+    (1,1)   2
+    (1,2)   6
+    (2,1)   4
+    (2,2)   8
 
-x2 = Float64.(x)
-eadd!(x2, x, x, +; accum=/)
+julia> eadd(x, x, +)
+2x2 GraphBLAS int64_t matrix, full by row
+  4 entries, memory: 272 bytes
+
+    (1,1)   2
+    (1,2)   6
+    (2,1)   4
+    (2,2)   8
+
+julia> x .^ x
+2x2 GraphBLAS int64_t matrix, full by row
+  4 entries, memory: 272 bytes
+
+    (1,1)   1
+    (1,2)   27
+    (2,1)   4
+    (2,2)   256
+
+julia> emul(x, x, ^)
+2x2 GraphBLAS int64_t matrix, full by row
+  4 entries, memory: 272 bytes
+
+    (1,1)   1
+    (1,2)   27
+    (2,1)   4
+    (2,2)   256
+
+julia> x2 = Float64.(x)
+2x2 GraphBLAS double matrix, full by col
+  4 entries, memory: 272 bytes
+
+    (1,1)    1
+    (2,1)    2
+    (1,2)    3
+    (2,2)    4
+
+julia> eadd!(x2, x, x, +; accum=/)
+2x2 GraphBLAS double matrix, full by col
+  4 entries, memory: 272 bytes
+
+    (1,1)    0.5
+    (2,1)    0.5
+    (1,2)    0.5
+    (2,2)    0.5
 ```
 
 Internally functions are lowered like this:
 
-```@repl
-using SuiteSparseGraphBLAS
+```jldoctest
+julia> typedop = binaryop(+, Int64, Int64)
+SuiteSparseGraphBLAS.TypedBinaryOperator{typeof(+), Int64, Int64, Int64}(true, true, "GrB_PLUS_INT64", Ptr{SuiteSparseGraphBLAS.LibGraphBLAS.GB_BinaryOp_opaque}(0x0000736051461e20), +, nothing)
 
-typedop = binaryop(+, Int64, Int64)
+julia> eadd(GBVector([1,2]), GBVector([3,4]), typedop)
+2x1 GraphBLAS int64_t matrix, full by col
+  2 entries, memory: 256 bytes
 
-eadd(GBVector([1,2]), GBVector([3,4]), typedop)
+    (1,1)   4
+    (2,1)   6
 ```
 
 ## Built-Ins
