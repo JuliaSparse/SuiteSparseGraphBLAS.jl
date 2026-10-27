@@ -19,7 +19,8 @@ makedocs(
             "selectops.md"#,
             #"udfs.md"
         ],
-        "Utilities" => "utilities.md"
+        "Utilities" => "utilities.md",
+        "Examples" => "examples.md"
     ]
 )
 
