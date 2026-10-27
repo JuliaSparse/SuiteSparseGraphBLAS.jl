@@ -470,7 +470,7 @@ macro gbmatrixtype(typename)
         $typename{T}(dims::Dims{2}, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(dims, x; fill)
         $typename(dims::Dims{2}, x::T; fill = defaultfill(T)) where T =
-            $typename{T}(dims, x, fill)
+            $typename{T}(dims, x; fill)
 
         $typename{T}(nrows, ncols, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}((nrows, ncols), x; fill)
@@ -683,7 +683,7 @@ macro gbvectortype(typename)
         function $typename(
             I::AbstractVector, x::T, n;
             fill = defaultfill(T)) where {T}
-            $typename{T}(I, J, x, n; fill)
+            $typename{T}(I, x, n; fill)
         end
         $typename(I::AbstractVector, x::T; fill = defaultfill(T)) where T =
             $typename{T}(I, x, maximum(I); fill)
@@ -696,7 +696,7 @@ macro gbvectortype(typename)
         $typename{T}(dims::Dims{1}, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(dims, x; fill)
         $typename(dims::Dims{1}, x::T; fill = defaultfill(T)) where T =
-            $typename{T}(dims, x, fill)
+            $typename{T}(dims, x; fill)
 
         $typename{T}(nrows, x; fill = defaultfill(T)) where T =
             $typename{T}((nrows,), x; fill)

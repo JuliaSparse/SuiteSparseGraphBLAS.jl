@@ -60,6 +60,11 @@
             s = SparseVector{Float64, Int32}(5, Int32[2, 4], [1.0, 2.0])
             @test SparseVector(GBVector(s)) == s
             @test_throws ArgumentError SuiteSparseGraphBLAS.unsafepack!(GBMatrix{Float64}(3, 3), S)
+
+            # scalar-valued constructors
+            @test Vector(GBVector([1, 3], 2.0, 4)) == [2.0, 0, 2, 0]
+            @test Vector(GBVector((3,), 1.0)) == ones(3)
+            @test Matrix(GBMatrix((2, 2), 1.0)) == ones(2, 2)
         end
     end
 
