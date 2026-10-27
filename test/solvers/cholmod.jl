@@ -85,7 +85,8 @@ end
     @test CHOLMOD.check_dense(bDense)
 
     AA = CHOLMOD.eye(3)
-    unsafe_store!(convert(Ptr{Csize_t}, pointer(AA)), 2, 1) # change size, but not stride, of Dense
+    AAp = isdefined(CHOLMOD, :structpointer) ? CHOLMOD.structpointer(AA) : pointer(AA) # pointer(::Dense) is the data on 1.14+
+    unsafe_store!(convert(Ptr{Csize_t}, AAp), 2, 1) # change size, but not stride, of Dense
     @test convert(Matrix, AA) == Matrix(I, 2, 3)
 end
 

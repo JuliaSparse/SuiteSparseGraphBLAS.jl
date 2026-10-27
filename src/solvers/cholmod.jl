@@ -4,11 +4,12 @@ using LinearAlgebra
 import LinearAlgebra: (\),
                  cholesky, cholesky!, det, diag, ishermitian, isposdef,
                  issuccess, issymmetric, ldlt, ldlt!, logdet, Symmetric, Hermitian, lu
-using ..SuiteSparseGraphBLAS: AbstractGBMatrix, AbstractGBVector, unsafepack!, unsafeunpack!, GBMatrix,
-GBVector, AbstractGBArray, LibGraphBLAS, ColMajor, sparsitystatus,
+using ..SuiteSparseGraphBLAS: AbstractGBMatrix, AbstractGBVector, unsafepack!, unsafeunpack!,
+AbstractGBArray, LibGraphBLAS, ColMajor, sparsitystatus,
 _sizedjlmalloc, increment!, isshallow, nnz, tempunpack!, storedeltype
 using SuiteSparseGraphBLAS
-using SuiteSparseGraphBLAS: GBMatrixC, GBMatrixR, defaultfill
+using SuiteSparseGraphBLAS: defaultfill
+import SuiteSparseGraphBLAS: GBVector, GBMatrix, GBMatrixC, GBMatrixR # constructors are extended below
 
 using StorageOrders
 
