@@ -3,6 +3,7 @@ CDLP:
 - Julia version: 1.6.2
 - Author: samuel
 - Date: 2021-09-10
+- Reference: https://doi.org/10.1103/PhysRevE.76.036106 (CDLP as defined in LDBC Graphalytics, https://arxiv.org/abs/2011.15028)
 =#
 
 using SuiteSparseGraphBLAS

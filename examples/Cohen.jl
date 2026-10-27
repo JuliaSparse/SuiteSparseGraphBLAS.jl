@@ -3,6 +3,7 @@ Cohen:
 - Julia version: 1.6.2
 - Author: samuel
 - Date: 2021-09-10
+- Reference: https://doi.org/10.1109/MCSE.2009.120, https://doi.org/10.1109/IPDPSW.2015.75
 =#
 
 using SuiteSparseGraphBLAS
