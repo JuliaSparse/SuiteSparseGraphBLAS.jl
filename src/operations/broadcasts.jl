@@ -138,6 +138,7 @@ mutatingop(::typeof(apply)) = apply!
     else
         left = first(bc.args)
         right = last(bc.args)
+        f = bc.f
         # handle annoyances with the pow operator
         if left isa Base.RefValue{typeof(^)}
             f = ^
@@ -204,7 +205,7 @@ mutatingop(::typeof(apply)) = apply!
                 add = mutatingop(defaultadd(f))
                 return add(C, left, right, f)
             else
-                return apply!(C, f, left, right; accum=second)
+                return apply!(f, C, left, right; accum=second)
             end
         end
     end
@@ -263,6 +264,7 @@ end
     else
         left = first(bc.args)
         right = last(bc.args)
+        f = bc.f
         # handle annoyances with the pow operator
         if left isa Base.RefValue{typeof(^)}
             f = ^
@@ -329,7 +331,7 @@ end
                 add = mutatingop(defaultadd(f))
                 return add(C, left, right, f)
             else
-                return apply!(C, f, left, right; accum=second)
+                return apply!(f, C, left, right; accum=second)
             end
         end
     end
