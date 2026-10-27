@@ -176,7 +176,7 @@ function Base.unsafe_convert(::Type{LibGraphBLAS.GrB_BinaryOp}, op::TypedBinaryO
             opref = Ref{LibGraphBLAS.GrB_BinaryOp}()
             binaryopfn_C = cbinary(binaryopfn, X, Y, Z)
             op.keepalive = (binaryopfn, binaryopfn_C)
-            @wraperror LibGraphBLAS.GB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn))
+            @wraperror LibGraphBLAS.GxB_BinaryOp_new(opref, binaryopfn_C, gbtype(Z), gbtype(X), gbtype(Y), string(fn), C_NULL)
             op.p = opref[]
         end
         op.loaded = true
@@ -889,7 +889,7 @@ mutable struct OrientedGBMatrix{T, F, O} <: AbstractGBMatrix{T, F, O}
         O isa StorageOrders.StorageOrder || throw(ArgumentError("$O is not a valid StorageOrder"))
         A = new{T, F, O}(p, fill)
         order = option_toconst(O)
-        LibGraphBLAS.GxB_Matrix_Option_set(A, LibGraphBLAS.GxB_FORMAT, order)
+        LibGraphBLAS.GxB_Matrix_Option_set_INT32(A, LibGraphBLAS.GxB_FORMAT, order)
         return A
     end
 end

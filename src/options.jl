@@ -12,23 +12,28 @@ Set an option either for a specific GBArray, or globally. The commonly used opti
 """
 function gbset end
 using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Field, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
-GxB_DESCRIPTOR_NTHREADS, GxB_AxB_METHOD, GxB_SORT, GxB_DESCRIPTOR_CHUNK, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH,
+GxB_AxB_METHOD, GxB_SORT, GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH,
 GxB_GLOBAL_CHUNK, GxB_BURBLE, GxB_PRINT_1BASED, GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL, GxB_GLOBAL_NTHREADS
-# manually wrapping these. They use `...` so aren't picked up by Clang.
+# dispatch to the typed variants of the GxB_*_Option_get/set calls.
 
 function GxB_Global_Option_get(field)
-    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH]
+    if field ∈ [GxB_HYPER_SWITCH, GxB_BITMAP_SWITCH, GxB_GLOBAL_CHUNK]
         T = Cdouble
     elseif field ∈ [GxB_FORMAT]
         T = UInt32
-    elseif field ∈ [GxB_GLOBAL_NTHREADS, GxB_GLOBAL_CHUNK]
+    elseif field ∈ [GxB_GLOBAL_NTHREADS]
         T = Cint
     elseif field ∈ [GxB_BURBLE]
         T = Bool
     end
-    v = Ref{T}()
-    LibGraphBLAS.GxB_Global_Option_get(field, v)
-    return v[]
+    if T === Cdouble
+        v = Ref{Cdouble}()
+        LibGraphBLAS.GxB_Global_Option_get_FP64(field, v)
+    else
+        v = Ref{Int32}()
+        LibGraphBLAS.GxB_Global_Option_get_INT32(field, v)
+    end
+    return T(v[])
 end
 
 function GxB_Global_Option_set(field, value)
@@ -39,7 +44,11 @@ function GxB_Global_Option_set(field, value)
     else
         throw(ArgumentError("$field is not a valid Matrix option."))
     end
-    LibGraphBLAS.GxB_Global_Option_set(field, value)
+    if value isa Cdouble
+        LibGraphBLAS.GxB_Global_Option_set_FP64(field, value)
+    else
+        LibGraphBLAS.GxB_Global_Option_set_INT32(field, value)
+    end
 end
 
 function GxB_Matrix_Option_get(A::AbstractGBArray, field)
@@ -48,8 +57,13 @@ function GxB_Matrix_Option_get(A::AbstractGBArray, field)
     elseif field ∈ [GxB_FORMAT, GxB_SPARSITY_STATUS, GxB_SPARSITY_CONTROL]
         T = Cint
     end
-    v = Ref{T}()
-    LibGraphBLAS.GxB_Matrix_Option_get(A, field, v)
+    if T === Cdouble
+        v = Ref{Cdouble}()
+        LibGraphBLAS.GxB_Matrix_Option_get_FP64(A, field, v)
+    else
+        v = Ref{Int32}()
+        LibGraphBLAS.GxB_Matrix_Option_get_INT32(A, field, v)
+    end
     return v[]
 end
 
@@ -65,7 +79,11 @@ function GxB_Matrix_Option_set(A::AbstractGBArray, field, value)
     else
         throw(ArgumentError("$field is not a valid Matrix option."))
     end
-    LibGraphBLAS.GxB_Matrix_Option_set(A, field, value)
+    if value isa Cdouble
+        LibGraphBLAS.GxB_Matrix_Option_set_FP64(A, field, value)
+    else
+        LibGraphBLAS.GxB_Matrix_Option_set_INT32(A, field, value)
+    end
 end
 
 function gbset(option, value)

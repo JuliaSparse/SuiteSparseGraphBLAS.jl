@@ -153,6 +153,8 @@ function __init__()
     # In the future this should hopefully allow us to do no-copy passing of arrays between Julia and SS:GrB.
     # In the meantime it helps Julia respond to memory pressure from SS:GrB and finalize things in a timely fashion.
     @wraperror LibGraphBLAS.GxB_init(LibGraphBLAS.GrB_NONBLOCKING, cglobal(:jl_malloc), cglobal(:jl_calloc), cglobal(:jl_realloc), cglobal(:jl_free))
+    # The JIT defaults to the compiler of the jll build machine, which doesn't exist at runtime.
+    @wraperror LibGraphBLAS.GxB_Global_Option_set_INT32(LibGraphBLAS.GxB_JIT_C_CONTROL, LibGraphBLAS.GxB_JIT_OFF)
     gbset(:nthreads, BLAS.get_num_threads())
 
     # Eagerly load the GrB_Types for builtin numeric types.
@@ -163,12 +165,10 @@ function __init__()
     ALL.p = load_global("GrB_ALL", LibGraphBLAS.GrB_Index)
     # Set printing done by SuiteSparse:GraphBLAS to base-1 rather than base-0.
     gbset(BASE1, 1)
-    atexit() do
-        # Finalize the lib, for now only frees a small internal memory pool.
-        @wraperror LibGraphBLAS.GrB_finalize()
-        @static if artifact_or_path != "default"
-            dlclose(libgraphblas_handle[])
-        end
+    # No GrB_finalize at exit: GraphBLAS 10 reverts to libc free afterwards, and the
+    # finalizers that run after atexit hooks would then free jl_malloc'd memory.
+    @static if artifact_or_path != "default"
+        atexit(() -> dlclose(libgraphblas_handle[]))
     end
 end
 
