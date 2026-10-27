@@ -1019,14 +1019,23 @@ function Base.setindex!(
 end
 
 function Base.show(io::IO, ::MIME"text/plain", A::AbstractGBArray) #fallback printing
-    gxbprint(io, A)
+    str = gxbstring(A)
+    fill = getfill(A)
+    if !isequal(fill, defaultfill(storedeltype(A)))
+        # insert the fill value after the two GraphBLAS header lines, or append it
+        line = "  fill value:  $fill\n"
+        i = findfirst('\n', str)
+        i = i === nothing ? nothing : findnext('\n', str, i + 1)
+        str = i === nothing ? string(chomp(str), '\n', line) : str[1:i] * line * str[i+1:end]
+    end
+    print(io, str)
 end
 
 function Base.show(io::IO, A::AbstractGBArray)
-    gxbprint(io, A)
+    show(io, MIME"text/plain"(), A)
 end
 function Base.show(io::IOContext, A::AbstractGBArray)
-    gxbprint(io, A)
+    show(io, MIME"text/plain"(), A)
 end
 
 

@@ -35,6 +35,9 @@
             @test A'[1, 2] == 2
             deleteat!(A, 1, 1)
             @test A[1, 1] == getfill(A)
+            # #104: non-default fill shows up in show
+            @test !occursin("fill value", sprint(show, MIME"text/plain"(), A))
+            @test occursin("fill value:  17", sprint(show, MIME"text/plain"(), setfill(A, 17)))
         end
         @testset "sparse" begin
             #Construction and indexing correct for sparse matrices

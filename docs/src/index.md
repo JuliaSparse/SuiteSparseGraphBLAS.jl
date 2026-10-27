@@ -90,6 +90,7 @@ true
 julia> B = setfill(A, missing) # no-copy alias
 1000x1000 GraphBLAS double complex matrix, hypersparse by row, ints: 32/32/32
   no entries, memory: 256 bytes
+  fill value:  missing
 
 julia> B[1, 1]
 missing
