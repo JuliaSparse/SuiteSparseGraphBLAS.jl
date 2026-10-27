@@ -56,8 +56,8 @@ jobs:
             Pkg.develop(PackageSpec(path = pwd()))
             Pkg.add(name = "Aqua", version = "0.8")
             using Aqua, SuiteSparseGraphBLAS
-            # ambiguities: ~190 pre-existing. unbound_args: defaultfill(::Type{Union{T, Nothing/Missing}}).
-            Aqua.test_all(SuiteSparseGraphBLAS; ambiguities = false, unbound_args = (; broken = true))'
+            # ambiguities: ~190 pre-existing.
+            Aqua.test_all(SuiteSparseGraphBLAS; ambiguities = false)'
   docs:
     name: Documentation
     runs-on: ubuntu-latest
