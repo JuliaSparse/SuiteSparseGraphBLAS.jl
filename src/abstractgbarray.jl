@@ -287,6 +287,7 @@ Base.reshape(
     dims::Tuple{Union{Integer, Base.OneTo}, Vararg{Union{Integer, Base.OneTo}}};
     bycol = true
 ) = reshape(A, dims...; bycol)
+Base.reshape(A::AbstractGBMatrix, dims::Tuple{Integer, Vararg{Integer}}; bycol = true) = reshape(A, dims...; bycol)
 
 function Base.reshape(A::AbstractGBMatrix, ::Colon; bycol = true)
     out = similar(A, length(A))
@@ -526,7 +527,7 @@ for T ∈ valid_vec
     end
     func = Symbol(prefix, :_Matrix_assign_, suffix(T))
     @eval begin
-        function _assign(C::AbstractGBMatrix{$T}, x, I, ni, J, nj, mask, accum, desc)
+        function _assign(C::AbstractGBMatrix{$T}, x::$T, I, ni, J, nj, mask, accum, desc)
             @wraperror LibGraphBLAS.$func(C, mask, accum, x, I, ni, J, nj, desc)
             return x
         end
@@ -852,7 +853,7 @@ for T ∈ valid_vec
     # Getindex functions
     func = Symbol(prefix, :_Matrix_extractElement_, suffix(T))
     @eval begin
-        function Base.getindex(v::GBVector{$T}, i::Integer)
+        function Base.getindex(v::AbstractGBVector{$T}, i::Integer)
             x = Ref{$T}()
             result = LibGraphBLAS.$func(x, v, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
             if result == LibGraphBLAS.GrB_SUCCESS
@@ -934,7 +935,7 @@ function Base.setindex!(v::AbstractGBVector{T}, x, i::Integer) where {T}
     return LibGraphBLAS.GrB_Matrix_setElement_UDT(v, Ref(x), LibGraphBLAS.GrB_Index(decrement!(i)), 0)
 end
 
-function Base.getindex(v::GBVector{T}, i::Integer) where {T}
+function Base.getindex(v::AbstractGBVector{T}, i::Integer) where {T}
     x = Ref{T}()
     result = LibGraphBLAS.GrB_Matrix_extractElement_UDT(x, v, LibGraphBLAS.GrB_Index(decrement!(i)), 0)
     if result == LibGraphBLAS.GrB_SUCCESS
@@ -973,6 +974,8 @@ function SparseArrays.nonzeroinds(v::GBVector{T}) where {T}
     return increment!(I)
 end
 
+build!(v::AbstractGBVector{T}, I::Vector{<:Integer}, X::AbstractVector; combine = +) where T =
+    invoke(build!, Tuple{AbstractGBVector{T}, AbstractVector{<:Integer}, AbstractVector}, v, I, X; combine)
 function build!(v::AbstractGBVector{T}, I::Vector{<:Integer}, x::T2) where {T, T2}
     _canbeoutput(v) || throw(ShallowException())
     nnz(v) == 0 || throw(OutputNotEmptyError("Cannot build vector with existing elements"))
@@ -1066,22 +1069,16 @@ function Base.getindex(
     return x
 end
 
-function Base.getindex(
-    u::AbstractGBVector, I;
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(u, I; mask, accum, desc)
-end
 
 function Base.getindex(u::AbstractGBVector, ::Colon; mask = nothing, accum = nothing, desc = nothing)
     return extract(u, :)
 end
 
-function Base.getindex(
-    u::AbstractGBVector, i::Union{Vector, UnitRange, StepRange};
-    mask = nothing, accum = nothing, desc = nothing
-)
-    return extract(u, i; mask, accum, desc)
+# Typed rather than a catch-all, so these don't clash with SparseArrays' AbstractSparseVector methods.
+for IT in (:AbstractVector, :AbstractUnitRange, :(AbstractVector{Bool}), :(AbstractUnitRange{Bool}))
+    @eval function Base.getindex(u::AbstractGBVector, I::$IT; mask = nothing, accum = nothing, desc = nothing)
+        return extract(u, I; mask, accum, desc)
+    end
 end
 
 

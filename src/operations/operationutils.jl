@@ -122,6 +122,9 @@ _promotefill(x, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
 _promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, <:Any}, op) = nothing
 _promotefill(::AbstractGBArray{<:Any, <:Any}, ::AbstractGBArray{<:Any, Nothing}, op) = nothing
 
+_promotefill(::AbstractGBArray{<:Any, Missing}, ::AbstractGBArray{<:Any, Nothing}, op) = missing
+_promotefill(::AbstractGBArray{<:Any, Nothing}, ::AbstractGBArray{<:Any, Missing}, op) = missing
+
 _promotefill(x, op) = x
 
 function _promotefill(x::AbstractGBArray{<:Any, T}, y::AbstractGBArray{<:Any, U}, op) where {T, U}

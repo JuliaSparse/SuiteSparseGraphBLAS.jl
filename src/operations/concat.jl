@@ -37,6 +37,6 @@ vcat!(C, A::GBArrayOrTranspose...) = cat!(C, collect(A))
 Base.vcat(A::GBArrayOrTranspose...) = cat(collect(A))
 
 hcat!(C, A::GBArrayOrTranspose...) = cat!(C, permutedims(collect(A)))
-Base.hcat(A::GBArrayOrTranspose...) = cat(permutedims(collect(A)))
+Base.hcat(A::GBArrayOrTranspose, B::GBArrayOrTranspose...) = cat(permutedims(collect((A, B...))))
 
 # TODO split. I don't necessarily see a great need for split though. We have indexing/slicing.

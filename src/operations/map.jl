@@ -69,6 +69,9 @@ function apply!(
     end
     return C
 end
+# Neither of the 3-arg forms applies when both are arrays and the first can't be an output.
+apply!(op, ::GBArrayOrTranspose, ::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing) =
+    throw(ArgumentError("apply! needs a non-transposed output array; for two arrays use `eadd` or `emul`."))
 function apply!(
     op, A::GBArrayOrTranspose, x;
     mask = nothing, accum = nothing, desc = nothing
@@ -141,11 +144,6 @@ end
 function Base.map!(f, A::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing)
     apply!(f, A, A; mask, accum, desc)
 end
-
-Base.:*(x, u::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing) =
-    apply(*, x, u; mask, accum, desc)
-Base.:*(u::GBArrayOrTranspose, x; mask = nothing, accum = nothing, desc = nothing) =
-    apply(*, u, x; mask, accum, desc)
 
 Base.:*(x::Number, u::GBArrayOrTranspose; mask = nothing, accum = nothing, desc = nothing) =
     apply(*, x, u; mask, accum, desc)
