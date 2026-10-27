@@ -9,4 +9,5 @@ benchmarks/results.txt
 /Manifest.toml
 *.cov
 test/Manifest.toml
+lib/Manifest.toml
 .gitignore
