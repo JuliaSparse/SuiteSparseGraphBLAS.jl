@@ -15,6 +15,14 @@
     B .= sqrt.(A .^ 2)
     @test B == A
 
+    # C .= A .op B where C is neither operand (#124)
+    C = GBVector(zeros(3))
+    C .= GBVector([1.0, 2, 3]) .+ GBVector([4.0, 5, 6])
+    @test Vector(C) == [5.0, 7, 9]
+    D = GBMatrix(zeros(2, 2))
+    D .= A .- 1
+    @test Matrix(D) == [0 2; 1 3]
+
     u = rand(1000)
     v = GBVector(u)
     @test sin.(u) ≈ Vector(sin.(v))

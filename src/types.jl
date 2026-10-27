@@ -470,7 +470,7 @@ macro gbmatrixtype(typename)
         $typename{T}(dims::Dims{2}, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(dims, x; fill)
         $typename(dims::Dims{2}, x::T; fill = defaultfill(T)) where T =
-            $typename{T}(dims, x, fill)
+            $typename{T}(dims, x; fill)
 
         $typename{T}(nrows, ncols, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}((nrows, ncols), x; fill)
@@ -527,7 +527,7 @@ macro gbmatrixtype(typename)
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A, 1), 1; fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
+            return unsafepack!(C, _copytoraw(A, T)..., false)
         end
         $typename{T}(
             A::SparseVector;
@@ -543,7 +543,7 @@ macro gbmatrixtype(typename)
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A)...; fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
+            return unsafepack!(C, _copytoraw(A, T)..., false)
         end
         $typename{T}(
             A::SparseMatrixCSC;
@@ -683,7 +683,7 @@ macro gbvectortype(typename)
         function $typename(
             I::AbstractVector, x::T, n;
             fill = defaultfill(T)) where {T}
-            $typename{T}(I, J, x, n; fill)
+            $typename{T}(I, x, n; fill)
         end
         $typename(I::AbstractVector, x::T; fill = defaultfill(T)) where T =
             $typename{T}(I, x, maximum(I); fill)
@@ -696,7 +696,7 @@ macro gbvectortype(typename)
         $typename{T}(dims::Dims{1}, x; fill::F = defaultfill(T)) where {T, F} =
             $typename{T, F}(dims, x; fill)
         $typename(dims::Dims{1}, x::T; fill = defaultfill(T)) where T =
-            $typename{T}(dims, x, fill)
+            $typename{T}(dims, x; fill)
 
         $typename{T}(nrows, x; fill = defaultfill(T)) where T =
             $typename{T}((nrows,), x; fill)
@@ -739,7 +739,7 @@ macro gbvectortype(typename)
             fill = defaultfill(F)
         ) where {T, F}
             C = $typename{T, F}(size(A, 1); fill)
-            return unsafepack!(C, _copytoraw(A)..., false)
+            return unsafepack!(C, _copytoraw(A, T)..., false)
         end
         $typename{T}(
             A::SparseVector;
@@ -772,19 +772,24 @@ end
     GBVector{T, F} <: AbstractSparseArray{T, UInt64, 1}
 
 One-dimensional GraphBLAS array with elements of type T. `F` is the type of the fill-value,
-which is typically `Missing` or `T`.
+which is typically `Nothing`, `Missing`, or `T`.
 Internal representation is specified as opaque, but may be either a dense vector, bitmap vector, or
 compressed sparse vector.
 
 See also: [`GBMatrix`](@ref).
 
-# Construction Signatures
+# Constructors
 
     GBVector{T, F}(n::Integer; fill = defaultfill(F))
     GBVector{T}(n::Integer; fill = defaultfill(T))
-    GBVector(I::AbstractVector, X::AbstractVector{T}, n; fill=defaultfill(T), combine=+)
-    GBVector(I::AbstractVector, x::T, n; fill=defaultfill(T), combine=+)
-    GBVector(v::Union{<:AbstractGBVector, <:AbstractVector}; fill = defaultfill(eltype(v)))
+    GBVector(v::AbstractVector; fill = defaultfill(eltype(v)))
+    GBVector(I::AbstractVector, X::AbstractVector{T}, n; fill = defaultfill(T), combine = +)
+    GBVector(I::AbstractVector, x::T, n; fill = defaultfill(T))
+
+The first two create an empty vector. `v` may be a dense `Vector`, a `SparseVector`, or
+another `GBVector`. The coordinate forms store `X[k]` (or the scalar `x`) at `I[k]`,
+merging duplicates with `combine`; `n` defaults to `maximum(I)`. `fill` is the value of
+entries that are not stored, `zero(T)` by default.
 
 All constructors, no matter their input, may specify parameters for
 element type `T` as well as a fill type `F`, conversions are handled internally.
@@ -812,7 +817,7 @@ GBVector{T}(
     GBMatrix{T, F} <: AbstractSparseArray{T, UInt64, 2}
 
 Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value,
-which is typically `Missing` or `T`.
+which is typically `Nothing`, `Missing`, or `T`.
 Internal representation is specified as opaque, but in this implementation is stored as one of
 the following in either row or column orientation:
 
@@ -823,13 +828,19 @@ the following in either row or column orientation:
 
 The storage type is automatically determined by the library.
 
-#Signatures
+# Constructors
 
     GBMatrix{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F))
     GBMatrix{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
-    GBMatrix(I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
-    GBMatrix(I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
-    GBMatrix(A::Union{<:AbstractGBArray, <:AbstractMatrix}; fill = defaultfill(eltype(A)))
+    GBMatrix(A::AbstractMatrix; fill = defaultfill(eltype(A)))
+    GBMatrix(I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, nrows, ncols; fill = defaultfill(T), combine = +)
+    GBMatrix(I::AbstractVector, J::AbstractVector, x::T, nrows, ncols; fill = defaultfill(T))
+
+The first two create an empty matrix. `A` may be a dense `Matrix`, a `SparseMatrixCSC`, or
+another GraphBLAS array. The coordinate (COO) forms store `X[k]` (or the scalar `x`) at
+`(I[k], J[k])`, merging duplicates with `combine`; `nrows` and `ncols` default to
+`maximum(I)` and `maximum(J)`. `fill` is the value of entries that are not stored,
+`zero(T)` by default.
 
 All constructors, no matter their input, may specify an element type `T`
 as well as a fill type `F`, conversions are handled internally.
@@ -861,18 +872,18 @@ GBMatrix{T}(
     OrientedGBMatrix{T, F, O} <: AbstractSparseArray{T, UInt64, 2}
 
 Two-dimensional GraphBLAS array with elements of type `T`. `F` is the type of the fill-value,
-which is typically `Missing` or `T`.
+which is typically `Nothing`, `Missing`, or `T`.
 Exactly the same as [`GBMatrix`](@ref), except the memory orientation is static: either
 `StorageOrders.RowMajor()` (default) or `StorageOrders.ColMajor()`.
 
 The aliases `GBMatrixC` and `GBMatrixR` are the preferred construction methods.
 
-#Signatures
+# Constructors
 
     GBMatrix[R | C]{T, F}(nrows::Integer, ncols::Integer; fill = defaultfill(F))
     GBMatrix[R | C]{T}(nrows::Integer, ncols::Integer; fill = defaultfill(T))
     GBMatrix[R | C](I::AbstractVector, J::AbstractVector, X::AbstractVector{T}, dims...; fill=defaultfill(T), combine=+)
-    GBMatrix[R | C](I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T), combine=+)
+    GBMatrix[R | C](I::AbstractVector, J::AbstractVector, x::T, dims...; fill=defaultfill(T))
     GBMatrix[R | C](A::Union{<:AbstractGBArray, <:AbstractMatrix}; fill = defaultfill(eltype(A)))
 
 All constructors, no matter their input, may specify an element type `T`

@@ -21,10 +21,16 @@ function _copytoraw(A::DenseVecOrMat{T}) where {T}
     return unsafe_wrap(Array, ptr, size(A))
 end
 
-function _copytoraw(A::SparseMatrixCSC)
-    return _copytoraw(getcolptr(A)), _copytoraw(getrowval(A)), _copytoraw(getnzval(A))
+# GraphBLAS indices are 64-bit, so narrower index types (e.g. Int32) are widened first.
+_int64(v::Vector{Int64}) = v
+_int64(v::AbstractVector{<:Integer}) = convert(Vector{Int64}, v)
+
+function _copytoraw(A::SparseMatrixCSC, ::Type{T} = eltype(A)) where {T}
+    return _copytoraw(_int64(getcolptr(A))), _copytoraw(_int64(getrowval(A))),
+        _copytoraw(convert(Vector{T}, getnzval(A)))
 end
 
-function _copytoraw(v::SparseVector)
-    return _copytoraw([1, length(v.nzind) + 1]), _copytoraw(v.nzind), _copytoraw(v.nzval)
+function _copytoraw(v::SparseVector, ::Type{T} = eltype(v)) where {T}
+    return _copytoraw([1, length(v.nzind) + 1]), _copytoraw(_int64(v.nzind)),
+        _copytoraw(convert(Vector{T}, v.nzval))
 end

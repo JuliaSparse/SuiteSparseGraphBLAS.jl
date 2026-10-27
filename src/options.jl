@@ -3,12 +3,15 @@
     gbset(option, value)
 
 Set an option either for a specific GBArray, or globally. The commonly used options are:
-    - `:format = [RowMajor() | ColMajor()]`: The global default or array specific
-    column major or row major ordering.
-    - `:nthreads = [Integer]`: The global number of OpenMP threads to use.
-    - `:burble = [Bool]`: Print diagnostic output.
-    - `:sparsity_control = [:full | :bitmap | :sparse | :hypersparse]`: Set the sparsity of a
-    single GBArray.
+
+- `:format = [RowMajor() | ColMajor()]`: The global default or array specific
+  column major or row major ordering.
+- `:nthreads = [Integer]`: The global number of OpenMP threads to use.
+- `:burble = [Bool]`: Print diagnostic output.
+- `:sparsity_control = [:full | :bitmap | :sparse | :hypersparse]`: Set the sparsity of a
+  single GBArray.
+
+See also: [`gbget`](@ref).
 """
 function gbset end
 using .LibGraphBLAS: GrB_Descriptor, GrB_Info, GrB_Desc_Field, GrB_Desc_Value, GrB_OUTP, GrB_MASK, GrB_INP0, GrB_INP1,
@@ -93,6 +96,12 @@ function gbset(option, value)
     return nothing
 end
 
+"""
+    gbget(A::GBArray, option)
+    gbget(option)
+
+Get the value of an option for a specific GBArray, or globally. See [`gbset`](@ref).
+"""
 function gbget(option)
     option = option_toconst(option)
     return GxB_Global_Option_get(option)

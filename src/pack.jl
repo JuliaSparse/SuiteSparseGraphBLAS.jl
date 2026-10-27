@@ -277,14 +277,20 @@ function unsafepack!(
 end
 
 function unsafepack!(A::AbstractGBArray, S::SparseMatrixCSC, shallow::Bool = true; decrementindices =  true)
+    _checkindices(S)
     unsafepack!(A, getcolptr(S), getrowval(S), getnzval(S), shallow; decrementindices)
 end
+# GraphBLAS reads indices as 64-bit, so narrower ones can't be shared without a copy.
+_checkindices(::Union{SparseMatrixCSC{<:Any, Int64}, SparseVector{<:Any, Int64}}) = nothing
+_checkindices(S) = throw(ArgumentError(
+    "unsafepack! needs Int64 indices, got $(eltype(rowvals(S))). Use the GBMatrix/GBVector constructor to copy instead."))
 unsafepack!(
     A::AbstractGBArray, 
     S::Transpose{<:Any, <:SparseMatrixCSC}, shallow; decrementindices = true
 ) = transpose(unsafepack!(A, parent(S), shallow; decrementindices))
 
 function unsafepack!(A::AbstractGBArray, s::SparseVector, shallow::Bool = true; decrementindices = true)
+    _checkindices(s)
     ptrvec = [1, length(s.nzind) + 1]
     ptrvec = shallow ? ptrvec : _copytoraw(ptrvec) # TODO: potential segfault when ptrvec goes out.
     unsafepack!(A, ptrvec, s.nzind, s.nzval, shallow; decrementindices)

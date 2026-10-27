@@ -1094,6 +1094,11 @@ function setfill(A::AbstractGBArray, x) # aliasing form.
     return B
 end
 
+"""
+    getfill(A::AbstractGBArray)
+
+Return the fill value of `A`, the value of entries that are not stored.
+"""
 getfill(A::AbstractGBArray) = A.fill
 getfill(A::LinearAlgebra.AdjOrTrans{<:Any, <:AbstractGBArray}) = getfill(parent(A))
 
