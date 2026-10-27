@@ -165,6 +165,44 @@ function Base.:*(
     return @_densepack B (*(A, B, op; mask, accum, desc))
 end
 
+# Dense outputs: C = α * A * B + β * C, so that mul! callers (Arpack, KrylovKit, ...) run in
+# GraphBLAS rather than the generic LinearAlgebra fallback. See #125.
+# pack needs a DenseArray: alias contiguous views (e.g. Arpack's views into workd), copy others.
+_asdense(B::DenseVecOrMat) = B
+_asdense(B::Transpose) = transpose(_asdense(parent(B)))
+function _asdense(B::StridedVecOrMat)
+    contiguous = stride(B, 1) == 1 && (B isa AbstractVector || stride(B, 2) == size(B, 1))
+    return contiguous ? unsafe_wrap(Array, pointer(B), size(B)) : copy(B)
+end
+
+function _densemul!(C, A, B, α, β)
+    size(A, 2) == size(B, 1) || throw(DimensionMismatch("size(A, 2) != size(B, 1)"))
+    size(A, 1) == size(C, 1) || throw(DimensionMismatch("size(A, 1) != size(C, 1)"))
+    size(B, 2) == size(C, 2) || throw(DimensionMismatch("size(B, 2) != size(C, 2)"))
+    T = GC.@preserve B A * pack(_asdense(B))
+    R = unsafeunpack!(T, Dense())
+    try
+        R′ = reshape(R, size(C))
+        iszero(β) ? (C .= α .* R′) : (C .= α .* R′ .+ β .* C)
+    finally
+        _jlfree(R)
+    end
+    return C
+end
+
+const _GBVecMatOrTrans = Union{GBMatrixOrTranspose, GBVectorOrTranspose}
+
+for (TC, TB) in (
+    (:StridedVector, :(StridedVector{<:valid_union})),
+    (:StridedMatrix, :(Union{StridedVecOrMat{<:valid_union}, Transpose{<:Any, <:StridedVecOrMat{<:valid_union}}})),
+)
+    @eval begin
+        LinearAlgebra.mul!(C::$TC, A::_GBVecMatOrTrans, B::$TB, α::Number, β::Number) =
+            _densemul!(C, A, B, α, β)
+        LinearAlgebra.mul!(C::$TC, A::_GBVecMatOrTrans, B::$TB) = _densemul!(C, A, B, true, false)
+    end
+end
+
 function Base.:*((⊕)::Monoid, (⊗)::Function)
     return function(A::GBArrayOrTranspose, B::GBArrayOrTranspose; mask=nothing, accum=nothing, desc=nothing)
         *(A, B, (⊕, ⊗); mask, accum, desc)
