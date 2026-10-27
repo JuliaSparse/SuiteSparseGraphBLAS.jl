@@ -98,6 +98,28 @@ function gbget(option)
     return GxB_Global_Option_get(option)
 end
 
+"""
+    jit!(enable::Bool = true; compiler = Sys.which("cc"), cache = nothing)
+
+Turn the SuiteSparse:GraphBLAS JIT on or off. It is off by default.
+
+When on, GraphBLAS compiles kernels it doesn't ship precompiled with `compiler`, caching
+them in `cache` (default `~/.SuiteSparse/GrB<version>`) for later sessions. The first call
+that needs a new kernel pays the compile time. The default flags assume gcc with OpenMP,
+so this currently works out of the box on Linux.
+"""
+function jit!(enable::Bool = true; compiler = Sys.which("cc"), cache = nothing)
+    if enable
+        compiler === nothing && throw(ArgumentError("No C compiler found; pass `compiler`."))
+        @wraperror LibGraphBLAS.GxB_Global_Option_set_CHAR(LibGraphBLAS.GxB_JIT_C_COMPILER_NAME, compiler)
+        cache === nothing ||
+            @wraperror LibGraphBLAS.GxB_Global_Option_set_CHAR(LibGraphBLAS.GxB_JIT_CACHE_PATH, cache)
+    end
+    control = enable ? LibGraphBLAS.GxB_JIT_ON : LibGraphBLAS.GxB_JIT_OFF
+    @wraperror LibGraphBLAS.GxB_Global_Option_set_INT32(LibGraphBLAS.GxB_JIT_C_CONTROL, control)
+    return enable
+end
+
 function gbset(A::AbstractGBArray, option, value)
     option = option_toconst(option)
     if option == GxB_FORMAT && _hasconstantorder(A) && 
