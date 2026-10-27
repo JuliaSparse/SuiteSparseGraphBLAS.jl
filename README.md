@@ -12,7 +12,7 @@ Pkg.add("SuiteSparseGraphBLAS")
 ## Benchmarks
 
 ```julia
-julia> using SuiteSparseGraphBLAS
+julia> using SuiteSparseGraphBLAS, BenchmarkTools
 # Standard arithmetic semiring (+, *) matrix multiplication
 julia> s = sprand(Float64, 100000, 100000, 0.05);
 julia> v = sprand(Float64, 100000, 1000, 0.1);
