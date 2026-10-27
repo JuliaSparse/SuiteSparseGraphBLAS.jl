@@ -38,6 +38,9 @@
             # #104: non-default fill shows up in show
             @test !occursin("fill value", sprint(show, MIME"text/plain"(), A))
             @test occursin("fill value:  17", sprint(show, MIME"text/plain"(), setfill(A, 17)))
+            A = GBMatrix(sprand(ComplexF64, 5, 4, 0.5))
+            @test Matrix(A') == Matrix(A)'
+            @test Matrix(transpose(A)) == transpose(Matrix(A))
         end
         @testset "sparse" begin
             #Construction and indexing correct for sparse matrices

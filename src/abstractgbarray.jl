@@ -177,7 +177,7 @@ function Base.copy(A::M) where {M<:AbstractGBArray}
     M(_copyGrBMat(A.p), A.fill)
 end
 
-function Base.Matrix(A::GBArrayOrTranspose)
+function Base.Matrix(A::AbstractGBArray)
     format = sparsitystatus(A)
     if format === Dense()
         T = unsafeunpack!(A, Dense())
@@ -195,7 +195,7 @@ function Base.Matrix(A::GBArrayOrTranspose)
     return M
 end
 
-function Base.Vector(A::GBVectorOrTranspose)
+function Base.Vector(A::AbstractGBVector)
     format = sparsitystatus(A)
     if format === Dense()
         T = unsafeunpack!(A, Dense())
@@ -212,6 +212,10 @@ function Base.Vector(A::GBVectorOrTranspose)
     end
     return M
 end
+
+# The unpacking above needs an AbstractGBArray, so materialize the transpose first.
+Base.Matrix(A::Transpose{<:Any, <:AbstractGBArray}) = Matrix(copy(A))
+Base.Vector(A::Transpose{<:Any, <:AbstractGBVector}) = Vector(parent(A))
 
 function SparseArrays.SparseMatrixCSC(A::GBArrayOrTranspose)
     T = copy(A) # avoid changing sparsity of A and destroying it.
