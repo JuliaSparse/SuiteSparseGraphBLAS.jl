@@ -14,7 +14,7 @@ using LinearAlgebra
 function sandia(A)
 
     L = tril(A)
-    C = *(+, *; mask=L)(L, L)
+    C = *(L, L, (+, *); mask=L)
     return reduce(+, C, dims=:)
 
 end

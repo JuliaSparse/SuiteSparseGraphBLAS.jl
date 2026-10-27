@@ -13,8 +13,8 @@ using LinearAlgebra
 #A is the input matrix. Output: triangles originated by each node
 function nodewise_tc(A)
 
-    partial = mul(A, A, (+, *), mask=A)
+    partial = *(A, A, (+, *), mask=A)
     t = reduce(+, partial, dims=2)
-    return t/2
+    return t .÷ 2
 
 end

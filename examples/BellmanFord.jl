@@ -9,7 +9,8 @@ BellmanFord:
 using SuiteSparseGraphBLAS
 using SparseArrays
 
-#A is the input matrix, s is the source node, and n is the number of nodes, Output: Shortest path from source node
+#A is the input matrix (A[i,j] is the weight of edge i->j, with explicit zeros on the diagonal),
+#s is the source node, and n is the number of nodes, Output: Shortest path from source node
 function bellmanford(A, s, n)
 
     #vector init +inf
@@ -20,7 +21,7 @@ function bellmanford(A, s, n)
 
     d[s]=0.0
     for _ ∈ 1:n
-           d = mul(d, A, (min, +), mask=d, desc=Descriptors.S)
+           d = *(A', d, (min, +))
     end
 
     return d

@@ -9,6 +9,7 @@ BFSLevelsMultiSource:
 using SuiteSparseGraphBLAS
 using SparseArrays
 using LinearAlgebra
+using SuiteSparseGraphBLAS: Complement, ∨, ∧
 
 #A is the input matrix, S is the source matrix, and n is the number of nodes, s is the number of sources in the matrix S, Output: Levels matrix
 function ms_bfsl(A, S, n, s)
@@ -32,14 +33,14 @@ function ms_bfsl(A, S, n, s)
 
             for i = 1:s
                 for j = 1:n
-                    if(S[i, j]!=0 && distance[i, j] ∉ levels) #*
+                    if(S[i, j] !== nothing && S[i, j] != 0 && distance[i, j] ∉ levels) #*
                     distance[i, j] = level #*
                     end
                 end
             end
 
 
-            S = mul(S, A, Semirings.LOR_LAND, mask=distance, desc=Descriptors.RC)
+            S = *(S, A, (∨, ∧), mask=Complement(distance), desc=Descriptor(replace_output=true))
 
     end
 

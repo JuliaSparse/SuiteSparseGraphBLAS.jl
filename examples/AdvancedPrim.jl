@@ -22,7 +22,8 @@ end
     return infinito
 end
 
-#A is the input matrix, n is the number of nodes, m is the source matrix. Output: minimum spanning tree and minimum spanning tree cost
+#A is the input matrix (dense, Inf where there is no edge and zeros on the diagonal), n is the number of nodes,
+#m is a vector of n zeros (Inf marks nodes already in the tree). Output: minimum spanning tree cost and edge weights in the order they were added
 function a_prim(A, n, m)
 
     d = GBVector{Float64}(n)
@@ -30,19 +31,15 @@ function a_prim(A, n, m)
     weight = 0.0
 
     d = A[1,:]
-    mst = GBVector{Float64}(n) #minimum spanning tree
+    mst = Float64[] #minimum spanning tree
 
     while(stoppingCondition(m, n) == false)
 
-        u = argmin(m'+d)
-        m[u[2]] = Inf
-        push!(mst, d[u[2]])
-        weight = weight + d[u[2]]
-        print("WEIGHT: ")
-        print(weight)
-        d = emul(d, A[u[1],:],  BinaryOps.MIN)
-        print("  ITERATION FINISHED")
-        print("\n\n\n")
+        u = argmin(m+d)
+        m[u] = Inf
+        push!(mst, d[u])
+        weight = weight + d[u]
+        d = emul(d, A[u,:], min)
     end
 
     return weight, mst

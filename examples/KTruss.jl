@@ -9,19 +9,17 @@ KTruss:
 using SuiteSparseGraphBLAS
 using SparseArrays
 using LinearAlgebra
+using SuiteSparseGraphBLAS: ∧
 
-#A is the original matrix, k is the requested truss, n the nodes in the original matrix, Output: K-Truss graph
-function ktruss(A, k, n)
+#A is the original matrix, k is the requested truss, Output: K-Truss graph (values are edge supports)
+function ktruss(A, k)
 
     C = A
-    for _ ∈ 1:n-1
-       C = mul(C, C, Semirings.PLUS_LAND, mask=C)
+    while true
+       nz = nnz(C)
+       C = *(C, C, (+, ∧), mask=C)
        C = select(>=, C, k-2)
-       print(C)
+       nnz(C) == nz && return C
     end
-    return C
 
 end
-
-#***
-#optional: we could also tell the algorithm to stop if the non zero values didn't change from the previous iteration

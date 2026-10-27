@@ -9,6 +9,7 @@ BFSParents:
 using SuiteSparseGraphBLAS
 using SparseArrays
 using LinearAlgebra
+using SuiteSparseGraphBLAS: Structural, Complement, second
 
 #function to insert inside the result array
 function insert(p, result)
@@ -37,34 +38,33 @@ end
 #A is the input matrix, s is the source node, and n is the number of nodes, Output: parent matrix
 function bfs_parents(A, s, n)
 
-    index = GBVector{Int64}(n)
+    index = GBVector{Int64}(n; fill=nothing)
         for i = 1:n
             index[i] = i
         end
 
     #wavefront vector -> w[s]=source node insrted in wavefront
-    f = GBVector{Int64}(n)
-    f[s] = 1
+    f = GBVector{Int64}(n; fill=nothing)
+    f[s] = s
 
     #parent vector -> p[s]=1 because the source is already visited
-    p = GBVector{Int64}(n)
+    p = GBVector{Int64}(n; fill=nothing)
 
     #result vector -> result[s]=0 because the parent of the source is considered node 0
-    result = GBVector{Int64}(n)
+    result = GBVector{Int64}(n; fill=nothing)
     result[s] = 0
 
     #visited vector -> v[s]=1 because the source is already visited
-    visited = GBVector{Bool}(n)
+    visited = GBVector{Bool}(n; fill=nothing)
     visited[s] = true
 
     for i = 1:n-1
-            f = mul(f, A, Semirings.MIN_FIRST, mask=p, desc=Descriptors.SC)
-            p = f[:, mask=f, desc=Descriptors.S]
-            f = index[:, mask=f, desc=Descriptors.S]
+            f = *(A', f, (min, second), mask=Complement(Structural(p)))
+            p = copy(f)
+            f = mask(index, Structural(f))
             result = insert(p, result)
             visited = updateVisited(f, visited)
-            unvisited = filter(x -> x!=true, visited)
-            if(isempty(unvisited))
+            if(nnz(visited) == n)
                 break
             end
 

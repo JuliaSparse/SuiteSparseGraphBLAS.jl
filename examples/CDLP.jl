@@ -9,34 +9,18 @@ CDLP:
 using SuiteSparseGraphBLAS
 using SparseArrays
 using LinearAlgebra
-using DataStructures
 
 #minMode function: given a collection [1, 5, 5, 3, 3, 7] will return 3 because the highest repetition is 2
 #and the lowest most repeated number is 3
 function minMode(c)
 
-    minVal = -1
-    i = 0
-
-    for row in eachrow(c)
-    i = i+1
-    row = collect(row)
-    temp = filter(x -> x!=0, row)
-    count = counter(temp)
-    sortedCollection = sort(collect(count), by=x->x[2], rev=true)
-    minVal = sortedCollection[1][1]
-    repetitions = sortedCollection[1][2]
-    for (key, value) in sortedCollection
-        if(value == repetitions)
-            if(key < minVal)
-                minVal = key
-            end
-        end
+    temp = filter(x -> x!=0, c)
+    count = Dict{eltype(temp), Int}()
+    for x in temp
+        count[x] = get(count, x, 0) + 1
     end
-
-    end
-
-    return minVal
+    repetitions = maximum(values(count))
+    return minimum(key for (key, value) in count if value == repetitions)
 end
 
 #can be useful to tweak the algorithm
@@ -71,8 +55,7 @@ function cdlp(A, n, t)
     for k = 1:t
             F = A * lab
             for i = 1:n
-            r = F[i,:]
-            r = sort(r, dims=2)
+            r = nonzeros(F[i,:])
             lab[i, i] = minMode(r)
         end
     end

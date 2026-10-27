@@ -9,18 +9,17 @@ FloydWarshall:
 using SuiteSparseGraphBLAS
 using SparseArrays
 
-#A is the input matrix for Floyd-Warshall multiple sources multiple destinations, Output: shortest paths
+#A is the input matrix for Floyd-Warshall multiple sources multiple destinations
+#(A[i,j] is the weight of edge i->j, with explicit zeros on the diagonal), Output: shortest paths
 function floydwarshall(A, n)
 
     #distance matrix = input matrix
     D = A
-    result = GBMatrix{Int64}(n, n)
 
     for i = 1:n
-            partial = mul(D[:,i], D[i,:], (min, +))
-            D = emul(D, partial,  min)
-            result = partial
+            partial = *(D[:, i:i], D[i:i, :], (min, +))
+            D = eadd(D, partial, min)
     end
-    return result
+    return D
 
 end

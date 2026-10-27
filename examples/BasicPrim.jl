@@ -21,7 +21,8 @@ end
     return infinito
 end
 
-#A is the input matrix, n is the number of nodes, m is the source matrix Output: minimum spanning tree cost
+#A is the input matrix (dense, Inf where there is no edge and zeros on the diagonal), n is the number of nodes,
+#m is a vector of n zeros (Inf marks nodes already in the tree) Output: minimum spanning tree cost
 function b_prim(A, n, m)
 
     d = GBVector{Float64}(n)
@@ -29,15 +30,12 @@ function b_prim(A, n, m)
     weight = 0.0
 
     d = A[1,:]
-    print("INITIAL WEIGHT: ")
-    print(weight)
-    print("\n\n")
     while(stoppingCondition(m, n) == false)
 
-        u = argmin(m'+d)
-        m[u[2]] = Inf
-        weight = weight + d[u[2]]
-        d = min.(d, A[u[1],:])
+        u = argmin(m+d)
+        m[u] = Inf
+        weight = weight + d[u]
+        d = min.(d, A[u,:])
     end
 
     return weight
